@@ -18,10 +18,12 @@
 | EXP-10-01 | `smoke` | 5 个单元测试；重建与 shifted probe 排名反转 | 手工标量表征，不是 JEPA 性能 |
 | 第11章 动作条件视频世界模型 | `drafted` | 动作/latent action、counterfactual、rollout、renderer/simulator/planner 边界及最新闭源案例 | 视频训练、checkpoint、仿真和 GPU 均未运行 |
 | EXP-11-01 | `smoke` | 6 个单元测试；动作敏感性与未见序列组合 | 确定性网格和 ASCII 帧，不是视频模型 |
+| 第12章 可行动的空间表征 | `drafted` | 3D 零基础入口、三态 occupancy、动态空间、affordance 与自动驾驶正文 | 真实 RGB-D/驾驶数据、学习模型、仿真和 GPU 均未运行 |
+| EXP-12-01 | `smoke` | 6 个单元测试；遮挡未知、坐标偏移与动态路径假安全 | 2D 无噪声射线格子，不是 occupancy 网络或安全证明 |
 | 第13章 模仿学习与动作分块 | `drafted` | 误差累积、动作块延迟、自动驾驶安全时域正文 | LeRobot BC/ACT 与 24GB GPU 验证 |
 | EXP-13-01 | `smoke` | 0.02 动作偏差在 20 步积分为 0.40；chunk 调用—延迟权衡 | 手工标量 fixture，不是策略性能 |
 | 第20章 具身评测 | `drafted` | 协议可比性、证据阶梯、自动驾驶指标正文 | 第15/17/19章接口与实际仿真 |
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
-| 文档站 | `smoke` | 9 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 文档站 | `smoke` | 10 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

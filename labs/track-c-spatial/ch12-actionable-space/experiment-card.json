@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "id": "EXP-12-01",
+  "chapter": 12,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-12-02", "CLAIM-12-03", "CLAIM-12-04"],
+  "claim_scope": [
+    "cells behind a depth return remain unknown rather than observed free in the ray-grid fixture",
+    "a one-cell coordinate shift can destroy occupied-cell alignment",
+    "treating unknown cells as free can mark a dynamically occupied path falsely safe"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library tri-state ray grid and actionability fixture"
+  },
+  "data": {
+    "name": "procedural three-ray seven-by-seven BEV fixture",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch12-smoke",
+    "evaluate": "python3 labs/track-c-spatial/ch12-actionable-space/scripts/smoke.py",
+    "report": "python3 labs/track-c-spatial/ch12-actionable-space/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "free_cell_count", "value": 10, "unit": "cell", "split": "three-ray-grid"},
+    {"name": "occupied_cell_count", "value": 3, "unit": "cell", "split": "three-ray-grid"},
+    {"name": "unknown_cell_count", "value": 36, "unit": "cell", "split": "three-ray-grid"},
+    {"name": "one_cell_shift_occupied_iou", "value": 0.0, "unit": "ratio", "split": "three-ray-grid"},
+    {"name": "binary_unknown_as_free_false_safe", "value": 1.0, "unit": "boolean", "split": "dynamic-path"}
+  ],
+  "artifacts": ["results/ch12/EXP-12-01-smoke.json"],
+  "limitations": [
+    "two-dimensional integer grid with three noiseless rays",
+    "hand-defined dynamic update and approach affordance rather than learned prediction",
+    "no height, semantics, velocity uncertainty, robot footprint, or real calibration"
+  ]
+}

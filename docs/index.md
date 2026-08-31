@@ -17,10 +17,11 @@
 - [第9章：世界模型如何评测与失败](part-02-world-models/ch09-evaluation.md)
 - [第10章：非生成式预测表示——从 I-JEPA 到 V-JEPA 2.x](part-03-representations/ch10-jepa-representations.md)
 - [第11章：动作条件视频世界模型](part-03-representations/ch11-action-conditioned-video.md)
+- [第12章：可行动的空间表征](part-03-representations/ch12-actionable-space.md)
 - [第13章：模仿学习、误差累积与动作分块](part-04-policies/ch13-imitation-and-action-chunks.md)
 - [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
 - [编写状态](status.md)
 
 ## 当前限制
 
-当前版本已进入全书分批编写阶段。已接入正文的章节均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、状态更新、几何和评测协议，不是 Dreamer、ACT、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。
+当前版本已进入全书分批编写阶段。已接入正文的章节均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、状态更新、几何、空间状态和评测协议，不是 Dreamer、ACT、occupancy 网络、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。
