@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "id": "EXP-03-01",
+  "chapter": 3,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-03-02", "CLAIM-03-03"],
+  "claim_scope": [
+    "pinhole back-projection and explicit frame transforms can be validated by an exact projection round trip",
+    "observation feedback can reduce fixed actuator-bias error in the deterministic planar-arm fixture"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library RGB-D and two-link planar-arm fixtures"
+  },
+  "data": {
+    "name": "procedural three-pixel RGB-D and planar-arm fixture",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch03-smoke",
+    "evaluate": "python3 labs/track-c-spatial/ch03-geometry-control/scripts/smoke.py",
+    "report": "python3 labs/track-c-spatial/ch03-geometry-control/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "max_reprojection_error", "value": 0.0, "unit": "pixel", "split": "three-pixel-fixture"},
+    {"name": "depth_unit_fault_scale_ratio", "value": 1000.0, "unit": "ratio", "split": "three-pixel-fixture"},
+    {"name": "extrinsic_fault_mean_shift", "value": 0.1, "unit": "metre", "split": "three-pixel-fixture"},
+    {"name": "open_loop_endpoint_error", "value": 0.12594964573326087, "unit": "metre", "split": "planar-arm-fixture"},
+    {"name": "feedback_endpoint_error", "value": 0.019049255190981548, "unit": "metre", "split": "planar-arm-fixture"}
+  ],
+  "artifacts": ["results/ch03/EXP-03-01-smoke.json"],
+  "limitations": [
+    "three exact pinhole samples without lens distortion or missing depth",
+    "kinematic planar arm without contact, inertia, saturation, or timing jitter",
+    "demonstrates interface checks rather than real sensor or controller performance"
+  ]
+}

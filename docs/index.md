@@ -11,11 +11,14 @@
 ## 当前可读内容
 
 - [第2章：世界模型到底是什么](part-01-loop/ch02-what-is-a-world-model.md)
+- [第3章：具身任务的最小机器人学与决策基础](part-01-loop/ch03-minimal-robotics-and-decision.md)
 - [第4章：数据、基线与实验协议](part-01-loop/ch04-data-and-protocols.md)
 - [第6章：World Models 与循环状态空间模型](part-02-world-models/ch06-rssm.md)
 - [第9章：世界模型如何评测与失败](part-02-world-models/ch09-evaluation.md)
+- [第13章：模仿学习、误差累积与动作分块](part-04-policies/ch13-imitation-and-action-chunks.md)
+- [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
 - [编写状态](status.md)
 
 ## 当前限制
 
-当前版本已进入全书分批编写阶段。第6章和第9章已有 CPU smoke；第2章和第4章的轻量实验仍为 planned。现有实验用于验证数据流、状态更新和评测协议，不是 Dreamer、PlaNet 或大型 benchmark 的完整复现，也没有验证 24 GB GPU 训练成本。
+当前版本已进入全书分批编写阶段。已接入正文的章节均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、状态更新、几何和评测协议，不是 Dreamer、ACT、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。

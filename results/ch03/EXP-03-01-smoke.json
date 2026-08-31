@@ -1,0 +1,23 @@
+{
+  "experiment_id": "EXP-03-01",
+  "gpu_verified": false,
+  "metrics": {
+    "control": {
+      "feedback_endpoint_error_m": 0.019049255190981548,
+      "feedback_q1_error_rad": 0.013895363555757045,
+      "open_loop_endpoint_error_m": 0.12594964573326087,
+      "open_loop_q1_error_rad": 0.09999999999999998
+    },
+    "geometry": {
+      "body_points_m": [[0.48, -0.01, 2.2], [0.5, 0.0, 1.2], [0.52, 0.01, 2.2]],
+      "camera_points_m": [[-0.02, -0.01, 2.0], [0.0, 0.0, 1.0], [0.02, 0.01, 2.0]],
+      "depth_unit_fault_scale_ratio": 1000.0,
+      "extrinsic_fault_mean_shift_m": 0.09999999999999998,
+      "max_reprojection_error_px": 0.0,
+      "occupied_bev_cells": [[1, -1], [2, 0]],
+      "point_count": 3
+    }
+  },
+  "scope": "exact RGB-D geometry and planar feedback fixtures; not calibrated hardware",
+  "status": "smoke"
+}

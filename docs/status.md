@@ -8,6 +8,8 @@
 | 第2章 世界模型到底是什么 | `reviewed` | 正文、8 类四轴系统卡、4 个单元测试与 CPU smoke | 上游逐版本运行核验 |
 | 第4章 数据、基线与实验协议 | `reviewed` | 正文、5 类注入错误审计、5 个单元测试与 CPU smoke | 真实数据集审计 |
 | EXP-02-01 | `smoke` | 8/8 类别、来源和证据限制记录 | 不是性能 benchmark，未运行上游系统 |
+| 第3章 最小机器人学与决策基础 | `drafted` | 零基础坐标/点云/BEV/运动学/MDP 桥接和动作 schema | 真实标定、动力学、接触和时间同步 |
+| EXP-03-01 | `smoke` | 5 个单元测试；投影、尺度、外参与二维反馈固定结果 | 理想针孔和运动学 fixture，不是实机结果 |
 | EXP-04-01 | `smoke` | 有效 fixture 0 问题，5/5 注入问题类型检出 | 未审计真实数据、媒体、标定和隐私 |
 | 第9章 世界模型如何评测与失败 | `reviewed` | 正文、指标排序反转 CPU smoke 与自动驾驶评测矩阵 | benchmark card Schema 与上游运行 |
 | 第6章正文 | `reviewed` | prior/posterior、自动驾驶正文、资源边界与 CPU smoke 交叉审查 | PyTorch mini-RSSM 与 GPU 验证 |
@@ -16,6 +18,6 @@
 | EXP-13-01 | `smoke` | 0.02 动作偏差在 20 步积分为 0.40；chunk 调用—延迟权衡 | 手工标量 fixture，不是策略性能 |
 | 第20章 具身评测 | `drafted` | 协议可比性、证据阶梯、自动驾驶指标正文 | 第15/17/19章接口与实际仿真 |
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
-| 文档站 | `smoke` | 6 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 文档站 | `smoke` | 7 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。
