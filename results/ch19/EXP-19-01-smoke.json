@@ -1,0 +1,52 @@
+{
+  "experiment_id": "EXP-19-01",
+  "gpu_verified": false,
+  "metrics": {
+    "broad_randomization_covers_target": true,
+    "calibrated_held_out_gap": {
+      "observation_mae": 0.0,
+      "state_mae": 0.0,
+      "terminal_state_error": 0.0
+    },
+    "calibration_candidate_count": 12,
+    "calibration_observation_mae": 0.0,
+    "dynamics_calibrated_visual_uncalibrated_gap": {
+      "observation_mae": 0.1625,
+      "state_mae": 0.0,
+      "terminal_state_error": 0.0
+    },
+    "narrow_randomization_covers_target": false,
+    "nominal_held_out_gap": {
+      "observation_mae": 0.625,
+      "state_mae": 0.6625,
+      "terminal_state_error": 1.0
+    },
+    "recovered_parameters": {
+      "action_delay_steps": 1,
+      "actuator_gain": 0.8,
+      "observation_scale": 1.25
+    },
+    "target_held_out_rollout": {
+      "applied_actions": [
+        0.0,
+        0.5,
+        1.0,
+        -0.25
+      ],
+      "observations": [
+        0.0,
+        0.5,
+        1.5000000000000002,
+        1.2500000000000002
+      ],
+      "states": [
+        0.0,
+        0.4,
+        1.2000000000000002,
+        1.0000000000000002
+      ]
+    }
+  },
+  "scope": "scalar calibration and bias-attribution fixture; not a physics simulator or sim-to-real result",
+  "status": "smoke"
+}

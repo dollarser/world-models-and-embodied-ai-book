@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "id": "EXP-19-01",
+  "chapter": 19,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-19-02", "CLAIM-19-03", "CLAIM-19-04"],
+  "claim_scope": [
+    "nominal dynamics, latency, and observation parameters can produce a measurable held-out rollout gap",
+    "a calibration fit must be checked on a separate action sequence",
+    "domain-randomization coverage depends on whether the target parameter vector lies inside the declared support"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library scalar actuator, delay, observation-scale calibration fixture"
+  },
+  "data": {
+    "name": "procedural calibration and held-out action sequences",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch19-smoke",
+    "evaluate": "python3 labs/track-a-world-model-control/ch19-sim-gap/scripts/smoke.py",
+    "report": "python3 labs/track-a-world-model-control/ch19-sim-gap/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "nominal_held_out_state_mae", "value": 0.6625, "unit": "state", "split": "held-out-actions"},
+    {"name": "nominal_held_out_observation_mae", "value": 0.625, "unit": "observation", "split": "held-out-actions"},
+    {"name": "calibrated_held_out_state_mae", "value": 0.0, "unit": "state", "split": "held-out-actions"},
+    {"name": "narrow_randomization_target_coverage", "value": 0.0, "unit": "boolean", "split": "declared-support"},
+    {"name": "broad_randomization_target_coverage", "value": 1.0, "unit": "boolean", "split": "declared-support"}
+  ],
+  "artifacts": ["results/ch19/EXP-19-01-smoke.json"],
+  "limitations": [
+    "one-dimensional deterministic dynamics rather than rigid-body/contact simulation",
+    "target parameters are contained in a small hand-authored calibration grid",
+    "zero held-out error is a fixture property and not expected for real system identification",
+    "no images, contacts, stochasticity, policy learning, simulator, hardware, vehicle, or GPU"
+  ]
+}

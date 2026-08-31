@@ -4,7 +4,7 @@
 | --- | --- | --- | --- |
 | 执行规格 | `drafted` | 章节、术语、风格、证据、manifest、实验卡、MIT 许可/数据政策、图表和门禁已建立；严格 Schema 检查通过 | benchmark card Schema 与发布门禁扩展 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
-| 批次 B（部分通过）：第13、14、15、20章 | `drafted` | 第13–15章四类审查通过；四章共 24 个单元测试与零下载 CPU smoke | 第17章已成稿；第20章仍等待第19章与批次 D 一致性审查；上游策略/仿真未运行 |
+| 批次 B（部分通过）：第13、14、15、20章 | `drafted` | 第13–15章四类审查通过；四章共 24 个单元测试与零下载 CPU smoke | 第17、19章已成稿；第20章等待跨批次一致性审查；上游策略/仿真未运行 |
 | 第2章 世界模型到底是什么 | `reviewed` | 正文、8 类四轴系统卡、4 个单元测试与 CPU smoke | 上游逐版本运行核验 |
 | 第4章 数据、基线与实验协议 | `reviewed` | 正文、5 类注入错误审计、5 个单元测试与 CPU smoke | 真实数据集审计 |
 | EXP-02-01 | `smoke` | 8/8 类别、来源和证据限制记录 | 不是性能 benchmark，未运行上游系统 |
@@ -30,8 +30,10 @@
 | EXP-16-01 | `smoke` | 7 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0 | 两维手工动作，不是 learned transfer 性能 |
 | 第17章 世界模型帮助策略的五种方式 | `drafted` | 五类用途、评测替身风险、model exploitation、自动驾驶四角色正文 | learned world model、真实仿真器、上游 checkpoint 与 GPU 均未运行 |
 | EXP-17-01 | `smoke` | 6 个单元测试；8/9 转移一致仍造成策略排序反转与碰撞 | 手工 corridor，不是 learned simulator 性能 |
-| 第20章 具身评测 | `drafted` | 内容、代码、教学审查通过；第17章 simulator-gap 接口已接入 | 第19章仿真接口、批次 D 一致性与实际仿真 |
+| 第19章 物理仿真、Real2Sim 与 Sim2Real | `drafted` | 仿真合同、gap 分解、环境矩阵、系统辨识、域随机化与自动驾驶正文 | MuJoCo/MetaDrive/CARLA/Isaac、真实系统、资产和 GPU 均未运行 |
+| EXP-19-01 | `smoke` | 8 个单元测试；名义 held-out state MAE 0.6625，12 个候选恢复预设参数 | 标量确定性 fixture，不是物理仿真或 Sim2Real 性能 |
+| 第20章 具身评测 | `drafted` | 内容、代码、教学审查通过；第17、19章接口已接入 | 批次 C/D 一致性与实际仿真 |
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
-| 文档站 | `smoke` | 14 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 文档站 | `smoke` | 15 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

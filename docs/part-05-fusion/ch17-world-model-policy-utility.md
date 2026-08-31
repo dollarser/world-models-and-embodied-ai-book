@@ -172,7 +172,7 @@ make ch17-smoke
 
 S 档 `EXP-17-01` 使用 Python 标准库、CPU、零下载和 MIT fixture，不运行学习模型。
 
-M 档在第19章锁定的轻量仿真中采集小型状态/动作 rollout，训练紧凑 latent dynamics，并与真实 simulator 做 held-out transition、return gap 和策略排序对照；目标为 24 GB 单卡以内。先用低维状态或低分辨率观察、小 horizon 和固定策略，不要求购买硬件。当前没有 GPU，因此此路径为 `planned`。
+M 档在第19章锁定的轻量仿真中采集小型状态/动作 rollout：机器人动力学优先 MuJoCo，驾驶闭环优先 MetaDrive；训练紧凑 latent dynamics，并与真实 simulator 做 held-out transition、return gap 和策略排序对照。目标为 24 GB 单卡以内，先用低维状态或低分辨率观察、小 horizon 和固定策略，不要求购买硬件。当前没有 GPU，且尚未安装仿真器，因此此路径为 `planned`。
 
 L1 可运行 TD-MPC2 小任务或 V-JEPA 2.1 80M encoder 的冻结 probe，但上游默认配置、数据和显存需单独实测；V-JEPA 2-AC 官方 action-conditioned checkpoint 基于更大的 ViT-g，不能用 80M encoder 规模替代其控制证据。
 
