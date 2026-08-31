@@ -1,0 +1,95 @@
+{
+  "fixture_version": 1,
+  "audit_date": "2026-08-31",
+  "scope": "classification worksheet; not a performance benchmark",
+  "cards": [
+    {
+      "id": "video-predictor-videogpt",
+      "name": "VideoGPT",
+      "category": "no_action_video_predictor",
+      "evidence": {"source_type": "paper", "snapshot": "arXiv:2104.10157", "url": "https://arxiv.org/abs/2104.10157"},
+      "axes": {"representation": "discrete video latents", "dynamics": "autoregressive learned sequence model", "conditioning": "past video", "use": "future video generation"},
+      "action_conditioning": false,
+      "learned_dynamics": true,
+      "relation": "predictive_model_not_counterfactual_planner",
+      "unsupported_claims": ["reliable action counterfactuals", "closed-loop planning utility"]
+    },
+    {
+      "id": "action-video-genie",
+      "name": "Genie",
+      "category": "action_conditioned_predictor",
+      "evidence": {"source_type": "paper", "snapshot": "arXiv:2402.15391", "url": "https://arxiv.org/abs/2402.15391"},
+      "axes": {"representation": "video tokens and latent actions", "dynamics": "learned generative dynamics", "conditioning": "history and inferred latent action", "use": "interactive environment generation"},
+      "action_conditioning": true,
+      "learned_dynamics": true,
+      "relation": "action_conditioned_world_model_candidate",
+      "unsupported_claims": ["robot control without action grounding", "real-world safety"]
+    },
+    {
+      "id": "latent-world-model-dreamerv3",
+      "name": "DreamerV3",
+      "category": "latent_world_model",
+      "evidence": {"source_type": "paper", "snapshot": "doi:10.1038/s41586-025-08744-2", "url": "https://www.nature.com/articles/s41586-025-08744-2"},
+      "axes": {"representation": "recurrent deterministic and discrete stochastic latents", "dynamics": "learned latent transition", "conditioning": "history and environment action", "use": "imagined policy learning"},
+      "action_conditioning": true,
+      "learned_dynamics": true,
+      "relation": "learned_latent_world_model",
+      "unsupported_claims": ["all physical domains solved", "24 GB training reproducibility in this book"]
+    },
+    {
+      "id": "value-equivalent-muzero",
+      "name": "MuZero",
+      "category": "value_equivalent_model",
+      "evidence": {"source_type": "paper", "snapshot": "doi:10.1038/s41586-020-03051-4", "url": "https://www.nature.com/articles/s41586-020-03051-4"},
+      "axes": {"representation": "decision-relevant latent state", "dynamics": "learned recurrent transition", "conditioning": "latent state and action", "use": "planning with reward value and policy predictions"},
+      "action_conditioning": true,
+      "learned_dynamics": true,
+      "relation": "value_equivalent_world_model",
+      "unsupported_claims": ["pixel-level reconstruction", "general physical simulation"]
+    },
+    {
+      "id": "vla-policy-pi0",
+      "name": "pi0",
+      "category": "vla_policy",
+      "evidence": {"source_type": "paper", "snapshot": "arXiv:2410.24164", "url": "https://arxiv.org/abs/2410.24164"},
+      "axes": {"representation": "vision language and proprioceptive tokens", "dynamics": "no independently evaluated environment transition interface in this card", "conditioning": "observation language and robot state", "use": "continuous action generation"},
+      "action_conditioning": false,
+      "learned_dynamics": false,
+      "relation": "policy_not_automatically_world_model",
+      "unsupported_claims": ["callable counterfactual environment model", "independent long-horizon rollout"]
+    },
+    {
+      "id": "physics-simulator-mujoco",
+      "name": "MuJoCo",
+      "category": "physical_simulator",
+      "evidence": {"source_type": "official_docs", "snapshot": "documentation audited 2026-08-31", "url": "https://mujoco.readthedocs.io/"},
+      "axes": {"representation": "explicit generalized coordinates and model assets", "dynamics": "numerical rigid-body and contact simulation", "conditioning": "controls forces and state", "use": "interactive environment simulation"},
+      "action_conditioning": true,
+      "learned_dynamics": false,
+      "relation": "explicit_environment_model",
+      "unsupported_claims": ["learned world representation", "automatic real-world fidelity"]
+    },
+    {
+      "id": "digital-twin-archetype",
+      "name": "Asset-synchronized digital twin archetype",
+      "category": "digital_twin",
+      "evidence": {"source_type": "official_framework", "snapshot": "NIST Digital Twins program audited 2026-08-31", "url": "https://www.nist.gov/digital-twins"},
+      "axes": {"representation": "asset-specific state and lifecycle records", "dynamics": "rules simulation learned components or hybrids", "conditioning": "telemetry maintenance and control inputs", "use": "monitoring prediction and lifecycle decisions"},
+      "action_conditioning": true,
+      "learned_dynamics": false,
+      "relation": "scope_dependent_environment_replica",
+      "unsupported_claims": ["general-purpose learned world model", "transfer beyond the synchronized asset"]
+    },
+    {
+      "id": "driving-simulator-carla",
+      "name": "CARLA",
+      "category": "automatic_driving_case",
+      "evidence": {"source_type": "paper", "snapshot": "arXiv:1711.03938", "url": "https://arxiv.org/abs/1711.03938"},
+      "axes": {"representation": "explicit road actors sensors and vehicle state", "dynamics": "simulation rules vehicle physics and rendering", "conditioning": "vehicle control scenario and traffic configuration", "use": "autonomous-driving training and closed-loop evaluation"},
+      "action_conditioning": true,
+      "learned_dynamics": false,
+      "relation": "driving_simulator_not_learned_world_model",
+      "unsupported_claims": ["real-world deployment safety", "learned counterfactual fidelity"]
+    }
+  ]
+}

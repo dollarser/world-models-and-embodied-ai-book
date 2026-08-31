@@ -1,4 +1,4 @@
-.PHONY: check check-local check-strict docs-build docs-serve ch06-smoke ch06-smoke-local ch06-test-local ch09-smoke ch09-smoke-local ch09-test-local
+.PHONY: check check-local check-strict docs-build docs-serve ch02-smoke ch02-smoke-local ch02-test-local ch04-smoke ch04-smoke-local ch04-test-local ch06-smoke ch06-smoke-local ch06-test-local ch09-smoke ch09-smoke-local ch09-test-local
 
 check-local:
 	python3 scripts/check_book.py
@@ -17,6 +17,24 @@ docs-build:
 
 docs-serve:
 	python3 scripts/docker_compose.py run --rm --service-ports docs mkdocs serve --dev-addr=0.0.0.0:8000
+
+ch02-smoke:
+	python3 scripts/docker_compose.py run --rm ch02-smoke
+
+ch02-smoke-local:
+	python3 labs/track-a-world-model-control/ch02-system-cards/scripts/smoke.py
+
+ch02-test-local:
+	python3 -m unittest discover -s labs/track-a-world-model-control/ch02-system-cards/tests -p 'test_*.py'
+
+ch04-smoke:
+	python3 scripts/docker_compose.py run --rm ch04-smoke
+
+ch04-smoke-local:
+	python3 labs/track-a-world-model-control/ch04-data-audit/scripts/smoke.py
+
+ch04-test-local:
+	python3 -m unittest discover -s labs/track-a-world-model-control/ch04-data-audit/tests -p 'test_*.py'
 
 ch06-smoke:
 	python3 scripts/docker_compose.py run --rm ch06-smoke

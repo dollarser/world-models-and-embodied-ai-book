@@ -21,6 +21,32 @@ services:
       - "8000:8000"
     command: mkdocs build --strict
 
+  ch02-smoke:
+    build:
+      context: .
+      dockerfile: docker/cpu/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro
+    command: >-
+      sh -c "python3 -m unittest discover
+      -s labs/track-a-world-model-control/ch02-system-cards/tests
+      -p 'test_*.py' &&
+      python3 labs/track-a-world-model-control/ch02-system-cards/scripts/smoke.py"
+
+  ch04-smoke:
+    build:
+      context: .
+      dockerfile: docker/cpu/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro
+    command: >-
+      sh -c "python3 -m unittest discover
+      -s labs/track-a-world-model-control/ch04-data-audit/tests
+      -p 'test_*.py' &&
+      python3 labs/track-a-world-model-control/ch04-data-audit/scripts/smoke.py"
+
   ch06-smoke:
     build:
       context: .

@@ -2,8 +2,8 @@
   "schema_version": 2,
   "id": "EXP-02-01",
   "chapter": 2,
-  "status": "planned",
-  "claim_ids": ["CLAIM-02-01", "CLAIM-02-02", "CLAIM-02-03"],
+  "status": "smoke",
+  "claim_ids": ["CLAIM-02-01", "CLAIM-02-02", "CLAIM-02-03", "CLAIM-02-04"],
   "claim_scope": [
     "classify candidate systems by representation dynamics conditioning and use",
     "separate VLA policies video predictors simulators and learned world models",
@@ -12,11 +12,11 @@
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "structured eight-system model-card worksheet; implementation pending"
+    "config": "standard-library validation of fixtures/system-cards.json"
   },
   "data": {
     "name": "official paper and repository metadata worksheet",
-    "version": "planned-v1",
+    "version": "v1",
     "license": "MIT for original worksheet; upstream sources retain their licenses",
     "classification": "fixture",
     "fixture": true,
@@ -30,12 +30,21 @@
     "disk_bytes": 0,
     "gpu_verified": false
   },
-  "commands": {},
-  "metrics": [],
-  "artifacts": [],
+  "commands": {
+    "smoke": "make ch02-smoke",
+    "evaluate": "python3 labs/track-a-world-model-control/ch02-system-cards/scripts/smoke.py",
+    "report": "python3 labs/track-a-world-model-control/ch02-system-cards/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "system_card_count", "value": 8, "unit": "cards", "split": "fixture-v1"},
+    {"name": "category_count", "value": 8, "unit": "categories", "split": "fixture-v1"},
+    {"name": "cards_with_evidence", "value": 8, "unit": "cards", "split": "fixture-v1"},
+    {"name": "cards_with_unsupported_claims", "value": 8, "unit": "cards", "split": "fixture-v1"}
+  ],
+  "artifacts": ["results/ch02/EXP-02-01-smoke.json"],
   "limitations": [
     "classification is use-dependent rather than a universal ontology",
-    "individual projects must be checked at a pinned version",
-    "structured worksheet and automated checks are not implemented yet"
+    "individual projects must be checked at a pinned version before runtime claims",
+    "paper and documentation metadata were summarized rather than runtime-tested"
   ]
 }

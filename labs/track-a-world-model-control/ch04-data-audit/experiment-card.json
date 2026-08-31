@@ -2,7 +2,7 @@
   "schema_version": 2,
   "id": "EXP-04-01",
   "chapter": 4,
-  "status": "planned",
+  "status": "smoke",
   "claim_ids": ["CLAIM-04-01", "CLAIM-04-02", "CLAIM-04-03", "CLAIM-04-04", "CLAIM-04-05"],
   "claim_scope": [
     "audit episode boundaries timestamps action alignment and group splits",
@@ -12,11 +12,11 @@
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library metadata audit fixture; implementation pending"
+    "config": "standard-library audit of valid and injected-failure metadata fixtures"
   },
   "data": {
     "name": "procedural multimodal episode metadata fixture",
-    "version": "planned-v1",
+    "version": "v1",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -30,12 +30,21 @@
     "disk_bytes": 0,
     "gpu_verified": false
   },
-  "commands": {},
-  "metrics": [],
-  "artifacts": [],
+  "commands": {
+    "smoke": "make ch04-smoke",
+    "evaluate": "python3 labs/track-a-world-model-control/ch04-data-audit/scripts/smoke.py",
+    "report": "python3 labs/track-a-world-model-control/ch04-data-audit/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "valid_fixture_issue_count", "value": 0, "unit": "issues", "split": "valid-fixture"},
+    {"name": "injected_issue_count", "value": 5, "unit": "issues", "split": "injected-failures"},
+    {"name": "injected_issue_types_detected", "value": 5, "unit": "issue-types", "split": "injected-failures"},
+    {"name": "group_overlap_count", "value": 1, "unit": "groups", "split": "injected-failures"}
+  ],
+  "artifacts": ["results/ch04/EXP-04-01-smoke.json"],
   "limitations": [
     "synthetic fixture cannot establish the quality of any real dataset",
     "dataset-specific units calibration and licenses require separate review",
-    "fixture and audit script are not implemented yet"
+    "does not audit media decoding privacy or real sensor calibration"
   ]
 }

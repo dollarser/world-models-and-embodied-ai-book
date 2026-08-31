@@ -70,6 +70,14 @@ def check_manifest() -> list[str]:
         document = chapter.get("document")
         if isinstance(document, str) and not (ROOT / document).is_file():
             errors.append(f"chapter {number} document is missing: {document}")
+        if isinstance(document, str) and (ROOT / document).is_file():
+            document_text = (ROOT / document).read_text(encoding="utf-8")
+            for claim_id in chapter.get("claims", []):
+                if claim_id not in document_text:
+                    errors.append(f"chapter {number} document does not contain registered claim: {claim_id}")
+            for figure_id in chapter.get("figures", []):
+                if figure_id not in document_text:
+                    errors.append(f"chapter {number} document does not contain registered figure/table: {figure_id}")
         experiment_ids.extend(chapter.get("experiments", []))
     if len(experiment_ids) != len(set(experiment_ids)):
         errors.append("manifest contains duplicate experiment IDs")

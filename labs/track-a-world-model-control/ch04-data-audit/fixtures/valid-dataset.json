@@ -1,0 +1,36 @@
+{
+  "fixture_version": 1,
+  "dataset": {
+    "name": "valid procedural episode metadata",
+    "fps": 10,
+    "normalization_scope": "train",
+    "action_range": [-1.0, 1.0],
+    "features": {
+      "observation.state": {"dtype": "float32", "shape": [2], "unit": "normalized_position_velocity"},
+      "action": {"dtype": "float32", "shape": [1], "unit": "normalized_control"},
+      "timestamp": {"dtype": "float64", "shape": [], "unit": "seconds"}
+    }
+  },
+  "episodes": [
+    {
+      "episode_id": "train-001",
+      "group_id": "route-a",
+      "split": "train",
+      "frames": [
+        {"frame_index": 0, "timestamp": 0.0, "action": 0.1, "terminated": false},
+        {"frame_index": 1, "timestamp": 0.1, "action": 0.0, "terminated": false},
+        {"frame_index": 2, "timestamp": 0.2, "action": null, "terminated": true}
+      ]
+    },
+    {
+      "episode_id": "eval-001",
+      "group_id": "route-b",
+      "split": "eval",
+      "frames": [
+        {"frame_index": 0, "timestamp": 0.0, "action": -0.1, "terminated": false},
+        {"frame_index": 1, "timestamp": 0.1, "action": 0.0, "terminated": false},
+        {"frame_index": 2, "timestamp": 0.2, "action": null, "terminated": true}
+      ]
+    }
+  ]
+}

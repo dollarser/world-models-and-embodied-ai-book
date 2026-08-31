@@ -1,0 +1,36 @@
+{
+  "experiment_id": "EXP-04-01",
+  "status": "smoke",
+  "scope": "metadata audit smoke; not validation of a real dataset",
+  "environment": {
+    "runtime": "CPython 3.12",
+    "device": "CPU",
+    "container": true,
+    "container_validated": true,
+    "base_image": "python:3.12-slim-bookworm@sha256:0f5b26b9518d002b6173fd61daad821fa340635ebfec5bba471013f9ca114579",
+    "gpu_verified": false
+  },
+  "fixture": {
+    "name": "valid metadata plus five injected failure types",
+    "version": 1,
+    "download_bytes": 0
+  },
+  "metrics": {
+    "valid_fixture_issue_count": 0,
+    "injected_issue_count": 5,
+    "injected_issue_types_detected": 5,
+    "group_overlap_count": 1
+  },
+  "detected_codes": [
+    "action_out_of_range",
+    "group_split_overlap",
+    "noncontiguous_frame_index",
+    "normalization_scope",
+    "timestamp_cadence"
+  ],
+  "limitations": [
+    "injected errors are known in advance",
+    "synthetic metadata does not establish the quality of a real dataset",
+    "does not audit media decoding calibration privacy or license terms"
+  ]
+}

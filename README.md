@@ -21,6 +21,8 @@
 make check
 make ch06-smoke-local
 make ch09-smoke-local
+make ch02-smoke-local
+make ch04-smoke-local
 ```
 
 优先使用 Docker：
@@ -28,6 +30,8 @@ make ch09-smoke-local
 ```bash
 make ch06-smoke
 make ch09-smoke
+make ch02-smoke
+make ch04-smoke
 make docs-build
 ```
 

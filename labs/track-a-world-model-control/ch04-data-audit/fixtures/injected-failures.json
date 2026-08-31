@@ -1,0 +1,35 @@
+{
+  "fixture_version": 1,
+  "dataset": {
+    "name": "procedural metadata with five injected failure types",
+    "fps": 10,
+    "normalization_scope": "all",
+    "action_range": [-1.0, 1.0],
+    "features": {
+      "observation.state": {"dtype": "float32", "shape": [2], "unit": "normalized_position_velocity"},
+      "action": {"dtype": "float32", "shape": [1], "unit": "normalized_control"},
+      "timestamp": {"dtype": "float64", "shape": [], "unit": "seconds"}
+    }
+  },
+  "episodes": [
+    {
+      "episode_id": "train-bad",
+      "group_id": "shared-route",
+      "split": "train",
+      "frames": [
+        {"frame_index": 0, "timestamp": 0.0, "action": 1.5, "terminated": false},
+        {"frame_index": 1, "timestamp": 0.1, "action": 0.0, "terminated": false},
+        {"frame_index": 3, "timestamp": 0.35, "action": null, "terminated": true}
+      ]
+    },
+    {
+      "episode_id": "eval-bad",
+      "group_id": "shared-route",
+      "split": "eval",
+      "frames": [
+        {"frame_index": 0, "timestamp": 0.0, "action": -0.1, "terminated": false},
+        {"frame_index": 1, "timestamp": 0.1, "action": null, "terminated": true}
+      ]
+    }
+  ]
+}
