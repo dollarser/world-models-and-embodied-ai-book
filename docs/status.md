@@ -35,6 +35,8 @@
 | EXP-19-01 | `smoke` | 8 个单元测试；名义 held-out state MAE 0.6625，12 个候选恢复预设参数 | 标量确定性 fixture，不是物理仿真或 Sim2Real 性能 |
 | 第20章 具身评测 | `drafted` | 内容、代码、教学审查通过；第17、19章接口已接入 | 批次 C/D 一致性与实际仿真 |
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
-| 文档站 | `smoke` | 15 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 第21章 部署、实时性与安全边界 | `drafted` | deadline、尾延迟、异步 chunk、watchdog、fallback 与自动驾驶 MRM 正文 | 真实墙钟、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
+| EXP-21-01 | `smoke` | 7 个单元测试；mean 45 ms 掩盖 150 ms 尾部，五类异常分别拒绝 | 手工 latency/packet，不是实时或安全证明 |
+| 文档站 | `smoke` | 16 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

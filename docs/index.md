@@ -25,6 +25,7 @@
 - [第17章：世界模型帮助策略的五种方式](part-05-fusion/ch17-world-model-policy-utility.md)
 - [第19章：物理仿真、Real2Sim 与 Sim2Real](part-06-systems/ch19-physical-simulation-and-sim2real.md)
 - [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
+- [第21章：部署、实时性与安全边界](part-06-systems/ch21-deployment-realtime-and-safety.md)
 - [编写状态](status.md)
 
 ## 当前限制

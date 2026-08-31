@@ -1,0 +1,72 @@
+{
+  "experiment_id": "EXP-21-01",
+  "gpu_verified": false,
+  "metrics": {
+    "allowed_count": 1,
+    "decisions": {
+      "expired": {
+        "allowed": false,
+        "reasons": [
+          "action_chunk_expired"
+        ],
+        "selected_mode": "hold_position"
+      },
+      "healthy": {
+        "allowed": true,
+        "reasons": [],
+        "selected_mode": "policy_action"
+      },
+      "late": {
+        "allowed": false,
+        "reasons": [
+          "deadline_miss"
+        ],
+        "selected_mode": "hold_position"
+      },
+      "non_finite": {
+        "allowed": false,
+        "reasons": [
+          "invalid_action"
+        ],
+        "selected_mode": "hold_position"
+      },
+      "out_of_bounds": {
+        "allowed": false,
+        "reasons": [
+          "action_out_of_bounds"
+        ],
+        "selected_mode": "hold_position"
+      },
+      "stale": {
+        "allowed": false,
+        "reasons": [
+          "stale_observation"
+        ],
+        "selected_mode": "hold_position"
+      }
+    },
+    "fallback_count": 5,
+    "fallback_is_profile_specific": {
+      "manipulator": "hold_position",
+      "mobile_robot": "controlled_stop",
+      "vehicle": "request_minimum_risk_maneuver"
+    },
+    "latency": {
+      "all_cycles_meet_deadline": false,
+      "deadline_miss_rate": 0.166667,
+      "max_ms": 150.0,
+      "mean_ms": 45.0,
+      "mean_passes_deadline": true,
+      "p95_ms": 150.0
+    },
+    "reason_counts": {
+      "action_chunk_expired": 1,
+      "action_out_of_bounds": 1,
+      "deadline_miss": 1,
+      "invalid_action": 1,
+      "stale_observation": 1
+    }
+  },
+  "scope": "deadline and action-gate fixture; not real-time, safety, or deployment certification",
+  "status": "smoke"
+}

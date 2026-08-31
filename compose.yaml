@@ -215,3 +215,16 @@ services:
       -s labs/track-b-policy/ch20-evaluation/tests
       -p 'test_*.py' &&
       python3 labs/track-b-policy/ch20-evaluation/scripts/smoke.py"
+
+  ch21-smoke:
+    build:
+      context: .
+      dockerfile: docker/cpu/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro
+    command: >-
+      sh -c "python3 -m unittest discover
+      -s labs/track-b-policy/ch21-deployment-gate/tests
+      -p 'test_*.py' &&
+      python3 labs/track-b-policy/ch21-deployment-gate/scripts/smoke.py"
