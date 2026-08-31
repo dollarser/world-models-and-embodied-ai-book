@@ -46,5 +46,6 @@ nav:
   - 第四部分：从看懂世界到生成动作:
       - 第13章 模仿学习、误差累积与动作分块: part-04-policies/ch13-imitation-and-action-chunks.md
       - 第14章 生成动作：Diffusion Policy 与 Flow Matching: part-04-policies/ch14-generative-actions.md
+      - 第15章 VLA 的架构模式: part-04-policies/ch15-vla-architecture-patterns.md
   - 第六部分：仿真、评测与部署:
       - 第20章 具身评测：从成功率到部署证据: part-06-systems/ch20-embodied-evaluation.md

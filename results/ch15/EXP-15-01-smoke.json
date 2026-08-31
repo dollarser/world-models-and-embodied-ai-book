@@ -1,0 +1,46 @@
+{
+  "experiment_id": "EXP-15-01",
+  "gpu_verified": false,
+  "metrics": {
+    "continuous_decoded_action": [
+      0.3,
+      -0.4
+    ],
+    "discrete_tokens": [
+      3,
+      1
+    ],
+    "flow_chunk_executed_prefix_steps": 1,
+    "flow_chunk_predicted_steps": 3,
+    "high_level_text_directly_executable": false,
+    "malformed_packet_count": 5,
+    "malformed_packet_issues": {
+      "high_level_text": [
+        "non_executable_source",
+        "missing_action_values"
+      ],
+      "out_of_bounds": [
+        "out_of_bounds:linear_velocity"
+      ],
+      "stale": [
+        "stale_or_future_timestamp"
+      ],
+      "wrong_frame": [
+        "frame_mismatch"
+      ],
+      "wrong_units": [
+        "unit_mismatch"
+      ]
+    },
+    "malformed_rejection_rate": 1.0,
+    "token_mean_absolute_normalized_error": 0.1,
+    "valid_packet_count": 3,
+    "valid_packet_issues": {
+      "continuous": [],
+      "discrete_tokens": [],
+      "flow_chunk": []
+    }
+  },
+  "scope": "action-schema decoding and gateway fixture; not VLA inference or policy quality",
+  "status": "smoke"
+}

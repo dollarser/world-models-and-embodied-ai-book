@@ -20,9 +20,10 @@
 - [第12章：可行动的空间表征](part-03-representations/ch12-actionable-space.md)
 - [第13章：模仿学习、误差累积与动作分块](part-04-policies/ch13-imitation-and-action-chunks.md)
 - [第14章：生成动作——Diffusion Policy 与 Flow Matching](part-04-policies/ch14-generative-actions.md)
+- [第15章：VLA 的架构模式](part-04-policies/ch15-vla-architecture-patterns.md)
 - [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
 - [编写状态](status.md)
 
 ## 当前限制
 
-当前版本已进入全书分批编写阶段。已接入正文的章节均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、状态更新、几何、空间状态和评测协议，不是 Dreamer、ACT、occupancy 网络、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。
+当前版本已进入全书分批编写阶段。已接入正文的章节均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、状态更新、几何、空间状态、动作合同和评测协议，不是 Dreamer、ACT、VLA、occupancy 网络、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。

@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "id": "EXP-15-01",
+  "chapter": 15,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-15-02", "CLAIM-15-03", "CLAIM-15-04"],
+  "claim_scope": [
+    "continuous, discrete-token, and flow-chunk outputs can share one explicit executable action schema",
+    "coarse per-dimension tokenization introduces measurable action quantization error",
+    "a contract gateway rejects high-level text, stale, wrong-frame, wrong-unit, and out-of-bounds commands"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library mobile-base action schema and execution gateway"
+  },
+  "data": {
+    "name": "procedural VLA action packets",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch15-smoke",
+    "evaluate": "python3 labs/track-b-policy/ch15-vla-contract/scripts/smoke.py",
+    "report": "python3 labs/track-b-policy/ch15-vla-contract/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "valid_packet_count", "value": 3, "unit": "packet", "split": "executable-heads"},
+    {"name": "malformed_rejection_rate", "value": 1.0, "unit": "ratio", "split": "gateway-errors"},
+    {"name": "token_mean_absolute_normalized_error", "value": 0.1, "unit": "normalized-action", "split": "five-bin-tokenizer"},
+    {"name": "flow_chunk_predicted_steps", "value": 3, "unit": "step", "split": "receding-horizon"},
+    {"name": "flow_chunk_executed_prefix_steps", "value": 1, "unit": "step", "split": "receding-horizon"}
+  ],
+  "artifacts": ["results/ch15/EXP-15-01-smoke.json"],
+  "limitations": [
+    "two-dimensional mobile-base command rather than robot manipulation action",
+    "five-bin tokenization is a teaching example and not FAST or OpenVLA vocabulary",
+    "packets are hand-authored and no VLA or VLM API is executed",
+    "range/schema checks are not collision avoidance or functional safety"
+  ]
+}

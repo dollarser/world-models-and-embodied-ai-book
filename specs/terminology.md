@@ -43,6 +43,10 @@
 | Flow Matching | 通过回归条件向量场连接 base 与目标分布的生成建模方法 | 自动等于一步采样或 rectified flow |
 | prediction horizon | 策略一次预测的未来动作长度 | 实际盲执行的动作步数 |
 | execution horizon | 一个预测块中实际执行后再重规划的步数 | prediction horizon 或控制频率 |
+| action token | 将连续/离散动作或动作序列编码成离散词元后的表示 | 自然语言词元或已解码控制量 |
+| action grounding | 将语义/模型输出映射为指定本体可执行动作的过程 | 文本看起来合理或字段可解析 |
+| action schema | 规定动作字段、顺序、frame、单位、频率、horizon、范围和版本的合同 | 只有 tensor shape |
+| embodiment | 传感器、机构、动作空间与控制接口共同定义的本体配置 | 仅机器人型号名称 |
 
 ## 统一符号
 
@@ -70,6 +74,7 @@
 - “occupancy”必须说明 frame、范围、分辨率、时间、free/occupied/unknown 规则和动态更新；
 - “affordance”必须说明本体、动作族、约束、预测时刻和可执行性验证；
 - “生成式动作”必须说明条件、动作表示、prediction/execution horizon、采样器、调用数、随机种子与安全筛选；
+- “VLA”必须说明视觉/语言/状态输入、动作头、action schema、grounding、本体、执行频率和闭环评测；
 - “实时”必须同时给出硬件、batch、输入尺寸和延迟统计方式；
 - “复现”必须对应 `R0–R4` 的具体状态；
 - “开源”必须区分代码、权重、训练数据、评测数据和许可；
