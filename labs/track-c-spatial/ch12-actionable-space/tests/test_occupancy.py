@@ -47,6 +47,10 @@ class ActionableOccupancyTests(unittest.TestCase):
     def test_empty_occupancy_iou_is_defined(self):
         self.assertEqual(occupied_iou(set(), set()), 1.0)
 
+    def test_out_of_bounds_is_never_treated_as_free(self):
+        grid = build_occupancy()
+        self.assertFalse(path_is_safe(grid, ((3, 0), (3, -1)), unknown_is_free=True))
+
 
 if __name__ == "__main__":
     unittest.main()

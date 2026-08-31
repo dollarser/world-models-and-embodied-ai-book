@@ -77,7 +77,9 @@ def approach_affordances(grid: dict[Cell, str]) -> set[Cell]:
 
 def path_is_safe(grid: dict[Cell, str], path: tuple[Cell, ...], unknown_is_free: bool = False) -> bool:
     for cell in path:
-        status = grid.get(cell, "unknown")
+        if cell not in grid:
+            return False
+        status = grid[cell]
         if status == "occupied" or (status == "unknown" and not unknown_is_free):
             return False
     return True

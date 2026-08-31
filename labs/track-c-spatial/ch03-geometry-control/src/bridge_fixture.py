@@ -76,6 +76,8 @@ def forward_kinematics(joints_rad: tuple[float, float], links_m: tuple[float, fl
 
 def control_audit(steps: int = 20) -> dict[str, float]:
     """Compare fixed open-loop increments with proportional observation feedback."""
+    if isinstance(steps, bool) or not isinstance(steps, int) or steps <= 0:
+        raise ValueError("steps must be a positive integer")
     target = (0.6, -0.4)
     actuator_bias = (0.005, -0.003)
     noise = ((0.02, -0.01), (-0.015, 0.012), (0.01, 0.0), (-0.005, -0.008))

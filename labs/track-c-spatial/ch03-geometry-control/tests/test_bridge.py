@@ -42,6 +42,11 @@ class GeometryControlBridgeTests(unittest.TestCase):
         result = control_audit()
         self.assertLess(result["feedback_endpoint_error_m"], result["open_loop_endpoint_error_m"])
 
+    def test_invalid_control_horizon_is_rejected(self):
+        for steps in (0, -1, True, 1.5):
+            with self.subTest(steps=steps), self.assertRaises(ValueError):
+                control_audit(steps)
+
 
 if __name__ == "__main__":
     unittest.main()
