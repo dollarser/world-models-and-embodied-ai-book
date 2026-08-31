@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "id": "EXP-13-01",
+  "chapter": 13,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-13-01", "CLAIM-13-02"],
+  "claim_scope": [
+    "small teacher-forced action error can integrate into a larger closed-loop state error",
+    "longer action chunks can reduce planning calls while increasing stale-action reaction delay"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library deterministic imitation protocol fixture"
+  },
+  "data": {
+    "name": "procedural action-bias and perturbation-timing fixture",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch13-smoke",
+    "evaluate": "python3 labs/track-b-policy/ch13-imitation/scripts/smoke.py",
+    "report": "python3 labs/track-b-policy/ch13-imitation/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "open_loop_action_rmse", "value": 0.02, "unit": "action", "split": "procedural-fixture"},
+    {"name": "closed_loop_final_state_error", "value": 0.4, "unit": "state", "split": "procedural-fixture"},
+    {"name": "chunk_1_planning_calls", "value": 16, "unit": "count", "split": "procedural-fixture"},
+    {"name": "chunk_8_planning_calls", "value": 2, "unit": "count", "split": "procedural-fixture"},
+    {"name": "chunk_8_max_reaction_delay", "value": 7, "unit": "steps", "split": "procedural-fixture"}
+  ],
+  "artifacts": ["results/ch13/EXP-13-01-smoke.json"],
+  "limitations": [
+    "hand-designed scalar dynamics rather than a learned BC or ACT policy",
+    "reaction delay is measured in abstract steps without robot timing jitter",
+    "demonstrates protocol trade-offs, not expected real-task effect sizes"
+  ]
+}

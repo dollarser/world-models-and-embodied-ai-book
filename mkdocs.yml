@@ -38,3 +38,7 @@ nav:
   - 第二部分：学习一个可用于决策的世界:
       - 第6章 World Models 与 RSSM: part-02-world-models/ch06-rssm.md
       - 第9章 世界模型如何评测与失败: part-02-world-models/ch09-evaluation.md
+  - 第四部分：从看懂世界到生成动作:
+      - 第13章 模仿学习、误差累积与动作分块: part-04-policies/ch13-imitation-and-action-chunks.md
+  - 第六部分：仿真、评测与部署:
+      - 第20章 具身评测：从成功率到部署证据: part-06-systems/ch20-embodied-evaluation.md

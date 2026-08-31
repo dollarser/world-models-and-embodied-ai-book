@@ -1,4 +1,4 @@
-.PHONY: check check-local check-strict docs-build docs-serve ch02-smoke ch02-smoke-local ch02-test-local ch04-smoke ch04-smoke-local ch04-test-local ch06-smoke ch06-smoke-local ch06-test-local ch09-smoke ch09-smoke-local ch09-test-local
+.PHONY: check check-local check-strict docs-build docs-serve ch02-smoke ch02-smoke-local ch02-test-local ch04-smoke ch04-smoke-local ch04-test-local ch06-smoke ch06-smoke-local ch06-test-local ch09-smoke ch09-smoke-local ch09-test-local ch13-smoke ch13-smoke-local ch13-test-local ch20-smoke ch20-smoke-local ch20-test-local
 
 check-local:
 	python3 scripts/check_book.py
@@ -6,6 +6,8 @@ check-local:
 	python3 scripts/validate_experiment_card.py labs/track-a-world-model-control/ch04-data-audit/experiment-card.json
 	python3 scripts/validate_experiment_card.py labs/track-a-world-model-control/ch06-rssm/experiment-card.json
 	python3 scripts/validate_experiment_card.py labs/track-a-world-model-control/ch09-evaluation/experiment-card.json
+	python3 scripts/validate_experiment_card.py labs/track-b-policy/ch13-imitation/experiment-card.json
+	python3 scripts/validate_experiment_card.py labs/track-b-policy/ch20-evaluation/experiment-card.json
 
 check-strict:
 	python3 scripts/docker_compose.py run --rm checks
@@ -53,3 +55,21 @@ ch09-smoke-local:
 
 ch09-test-local:
 	python3 -m unittest discover -s labs/track-a-world-model-control/ch09-evaluation/tests -p 'test_*.py'
+
+ch13-smoke:
+	python3 scripts/docker_compose.py run --rm ch13-smoke
+
+ch13-smoke-local:
+	python3 labs/track-b-policy/ch13-imitation/scripts/smoke.py
+
+ch13-test-local:
+	python3 -m unittest discover -s labs/track-b-policy/ch13-imitation/tests -p 'test_*.py'
+
+ch20-smoke:
+	python3 scripts/docker_compose.py run --rm ch20-smoke
+
+ch20-smoke-local:
+	python3 labs/track-b-policy/ch20-evaluation/scripts/smoke.py
+
+ch20-test-local:
+	python3 -m unittest discover -s labs/track-b-policy/ch20-evaluation/tests -p 'test_*.py'

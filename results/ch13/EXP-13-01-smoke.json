@@ -1,0 +1,14 @@
+{
+  "experiment_id": "EXP-13-01",
+  "gpu_verified": false,
+  "metrics": {
+    "chunk_tradeoff": [
+      {"chunk_size": 1, "deadline_pass_rate": 1.0, "max_reaction_delay_steps": 0, "mean_reaction_delay_steps": 0.0, "planning_calls": 16},
+      {"chunk_size": 4, "deadline_pass_rate": 0.7333333333333333, "max_reaction_delay_steps": 3, "mean_reaction_delay_steps": 1.6, "planning_calls": 4},
+      {"chunk_size": 8, "deadline_pass_rate": 0.3333333333333333, "max_reaction_delay_steps": 7, "mean_reaction_delay_steps": 3.7333333333333334, "planning_calls": 2}
+    ],
+    "compounding_error": {"amplification_factor": 20.0, "closed_loop_final_state_error": 0.4, "horizon": 20, "open_loop_action_rmse": 0.02}
+  },
+  "scope": "deterministic protocol fixture; not a learned policy comparison",
+  "status": "smoke"
+}
