@@ -16,6 +16,7 @@
 - [第6章：World Models 与循环状态空间模型](part-02-world-models/ch06-rssm.md)
 - [第9章：世界模型如何评测与失败](part-02-world-models/ch09-evaluation.md)
 - [第10章：非生成式预测表示——从 I-JEPA 到 V-JEPA 2.x](part-03-representations/ch10-jepa-representations.md)
+- [第11章：动作条件视频世界模型](part-03-representations/ch11-action-conditioned-video.md)
 - [第13章：模仿学习、误差累积与动作分块](part-04-policies/ch13-imitation-and-action-chunks.md)
 - [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
 - [编写状态](status.md)

@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "id": "EXP-11-01",
+  "chapter": 11,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-11-02", "CLAIM-11-03"],
+  "claim_scope": [
+    "an action-blind predictor can produce plausible average motion while failing same-state counterfactual sensitivity",
+    "an action-conditioned transition table can compose individually observed actions into held-out sequences in the deterministic fixture"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library learned transition-table and ASCII-frame fixture"
+  },
+  "data": {
+    "name": "procedural four-action grid-transition fixture",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch11-smoke",
+    "evaluate": "python3 labs/track-c-spatial/ch11-action-video/scripts/smoke.py",
+    "report": "python3 labs/track-c-spatial/ch11-action-video/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "action_blind_action_sensitivity", "value": 0.25, "unit": "ratio", "split": "same-state-four-action"},
+    {"name": "action_conditioned_action_sensitivity", "value": 1.0, "unit": "ratio", "split": "same-state-four-action"},
+    {"name": "action_blind_unseen_sequence_endpoint_error", "value": 1.3385214790248792, "unit": "grid", "split": "three-held-out-sequences"},
+    {"name": "action_conditioned_unseen_sequence_endpoint_error", "value": 0.0, "unit": "grid", "split": "three-held-out-sequences"}
+  ],
+  "artifacts": ["results/ch11/EXP-11-01-smoke.json"],
+  "limitations": [
+    "discrete deterministic state transitions and ASCII frames rather than learned video pixels",
+    "all individual actions are observed during training; only their sequences are held out",
+    "no stochastic actors, occlusion, appearance change, collision physics, or uncertainty"
+  ]
+}

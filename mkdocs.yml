@@ -41,6 +41,7 @@ nav:
       - 第9章 世界模型如何评测与失败: part-02-world-models/ch09-evaluation.md
   - 第三部分：可扩展的世界表征:
       - 第10章 非生成式预测表示：从 I-JEPA 到 V-JEPA 2.x: part-03-representations/ch10-jepa-representations.md
+      - 第11章 动作条件视频世界模型: part-03-representations/ch11-action-conditioned-video.md
   - 第四部分：从看懂世界到生成动作:
       - 第13章 模仿学习、误差累积与动作分块: part-04-policies/ch13-imitation-and-action-chunks.md
   - 第六部分：仿真、评测与部署:

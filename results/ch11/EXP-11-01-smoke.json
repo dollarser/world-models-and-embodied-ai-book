@@ -1,0 +1,22 @@
+{
+  "experiment_id": "EXP-11-01",
+  "gpu_verified": false,
+  "metrics": {
+    "action_blind": {
+      "action_sensitivity": 0.25,
+      "left_right_separation": 0.0,
+      "mean_unseen_sequence_endpoint_error": 1.3385214790248792,
+      "one_step_frame_accuracy": 0.25,
+      "one_step_state_rmse": 0.5863019699779287
+    },
+    "action_conditioned": {
+      "action_sensitivity": 1.0,
+      "left_right_separation": 2.0,
+      "mean_unseen_sequence_endpoint_error": 0.0,
+      "one_step_frame_accuracy": 1.0,
+      "one_step_state_rmse": 0.0
+    }
+  },
+  "scope": "learned transition-table and ASCII-frame fixture; not a video world model",
+  "status": "smoke"
+}
