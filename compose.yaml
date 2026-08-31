@@ -86,6 +86,19 @@ services:
       -p 'test_*.py' &&
       python3 labs/track-a-world-model-control/ch09-evaluation/scripts/smoke.py"
 
+  ch10-smoke:
+    build:
+      context: .
+      dockerfile: docker/cpu/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro
+    command: >-
+      sh -c "python3 -m unittest discover
+      -s labs/track-c-spatial/ch10-jepa-probing/tests
+      -p 'test_*.py' &&
+      python3 labs/track-c-spatial/ch10-jepa-probing/scripts/smoke.py"
+
   ch13-smoke:
     build:
       context: .

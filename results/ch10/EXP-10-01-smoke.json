@@ -1,0 +1,11 @@
+{
+  "experiment_id": "EXP-10-01",
+  "gpu_verified": false,
+  "metrics": {
+    "appearance": {"reconstruction_mse": 1.25, "shifted_probe_accuracy": 0.0, "shifted_task_rmse": 3.1622776601683795},
+    "collapsed": {"reconstruction_mse": 126.25, "shifted_probe_accuracy": 0.5, "shifted_task_rmse": 1.5811388300841898},
+    "task_predictive": {"reconstruction_mse": 125.0, "shifted_probe_accuracy": 1.0, "shifted_task_rmse": 0.0}
+  },
+  "scope": "hand-designed representation ranking reversal; not V-JEPA inference",
+  "status": "smoke"
+}

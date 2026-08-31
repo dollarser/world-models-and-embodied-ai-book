@@ -14,10 +14,12 @@
 | 第9章 世界模型如何评测与失败 | `reviewed` | 正文、指标排序反转 CPU smoke 与自动驾驶评测矩阵 | benchmark card Schema 与上游运行 |
 | 第6章正文 | `reviewed` | prior/posterior、自动驾驶正文、资源边界与 CPU smoke 交叉审查 | PyTorch mini-RSSM 与 GPU 验证 |
 | EXP-06-01 | `smoke` | 宿主与 Docker CPU 数据流、3 个单元测试、固定指标 | PyTorch 训练、24GB GPU 资源 |
+| 第10章 非生成式预测表示 | `drafted` | JEPA 谱系、V-JEPA 2.1 更新、probe 协议与自动驾驶状态读出 | 官方 checkpoint、Ego4D/EPIC-KITCHENS 与 GPU 未运行 |
+| EXP-10-01 | `smoke` | 5 个单元测试；重建与 shifted probe 排名反转 | 手工标量表征，不是 JEPA 性能 |
 | 第13章 模仿学习与动作分块 | `drafted` | 误差累积、动作块延迟、自动驾驶安全时域正文 | LeRobot BC/ACT 与 24GB GPU 验证 |
 | EXP-13-01 | `smoke` | 0.02 动作偏差在 20 步积分为 0.40；chunk 调用—延迟权衡 | 手工标量 fixture，不是策略性能 |
 | 第20章 具身评测 | `drafted` | 协议可比性、证据阶梯、自动驾驶指标正文 | 第15/17/19章接口与实际仿真 |
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
-| 文档站 | `smoke` | 7 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 文档站 | `smoke` | 8 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "id": "EXP-10-01",
+  "chapter": 10,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-10-02", "CLAIM-10-03"],
+  "claim_scope": [
+    "low reconstruction error need not imply that a representation retains the task variable under nuisance shift",
+    "a collapsed-representation negative control can detect an uninformative probing protocol"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library hand-designed representation and shifted-probe fixture"
+  },
+  "data": {
+    "name": "procedural task-and-texture representation fixture",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch10-smoke",
+    "evaluate": "python3 labs/track-c-spatial/ch10-jepa-probing/scripts/smoke.py",
+    "report": "python3 labs/track-c-spatial/ch10-jepa-probing/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "appearance_reconstruction_mse", "value": 1.25, "unit": "squared-signal", "split": "shifted-test"},
+    {"name": "task_predictive_reconstruction_mse", "value": 125.0, "unit": "squared-signal", "split": "shifted-test"},
+    {"name": "appearance_shifted_probe_accuracy", "value": 0.0, "unit": "ratio", "split": "shifted-test"},
+    {"name": "task_predictive_shifted_probe_accuracy", "value": 1.0, "unit": "ratio", "split": "shifted-test"},
+    {"name": "collapsed_shifted_probe_accuracy", "value": 0.5, "unit": "ratio", "split": "shifted-test"}
+  ],
+  "artifacts": ["results/ch10/EXP-10-01-smoke.json"],
+  "limitations": [
+    "hand-designed scalar representations rather than learned image or video encoders",
+    "four train and four shifted test samples without statistical uncertainty",
+    "demonstrates metric non-equivalence, not relative performance of JEPA models"
+  ]
+}
