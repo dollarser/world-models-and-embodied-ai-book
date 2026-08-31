@@ -1,0 +1,44 @@
+# 《世界模型与具身智能：从表征、预测到行动》
+
+面向计算机视觉算法工程师的开源教材与可复现实验书。
+
+当前已进入全书分批编写阶段：先完成定义、实验纪律、RSSM 和评测主干，再按依赖批次扩展策略、空间、仿真和系统章节。当前开发设备无 GPU，只运行 Docker/CPU smoke 和微型 fixture；GPU 与大数据实验明确延后。
+
+## 当前入口
+
+- [书籍设计方案](specs/PRD/世界模型与具身智能_书籍设计方案-v0_6.md)
+- [编写与审查流程](specs/PRD/书籍编写与审查执行流程.md)
+- [可执行 Specs 索引](specs/README.md)
+- [第2章定义与边界](docs/part-01-loop/ch02-what-is-a-world-model.md)
+- [第4章实验协议](docs/part-01-loop/ch04-data-and-protocols.md)
+- [第6章纵向样章](docs/part-02-world-models/ch06-rssm.md)
+- [第9章评测样章](docs/part-02-world-models/ch09-evaluation.md)
+- [章节状态](docs/status.md)
+
+## 最小命令
+
+```bash
+make check
+make ch06-smoke-local
+make ch09-smoke-local
+```
+
+优先使用 Docker：
+
+```bash
+make ch06-smoke
+make ch09-smoke
+make docs-build
+```
+
+首次构建 Docker 镜像会下载轻量 Python/文档依赖，不会下载模型权重或实验数据集。
+
+## 状态边界
+
+- `reviewed`：正文和 CPU smoke 已审查，但可能仍待 GPU 验证；
+- `reproducible`：目标硬件实验与冷启动复现均通过；
+- 当前任何章节都不得把上游论文结果写成本书实测结果。
+
+## 许可证
+
+本仓库中的原创正文、图表、教学材料和代码采用 [MIT License](LICENSE)。第三方代码、数据、模型、论文和图片仍遵循各自的许可证与使用条款。

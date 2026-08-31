@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cv2embodied:schema:experiment-card:v2",
+  "title": "CV2Embodied Experiment Card",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "chapter",
+    "status",
+    "claim_scope",
+    "code",
+    "data",
+    "resources",
+    "commands",
+    "metrics",
+    "artifacts",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "id": {"type": "string", "pattern": "^EXP-[0-9]{2}-[0-9]{2}$"},
+    "chapter": {"type": "integer", "minimum": 1, "maximum": 22},
+    "status": {
+      "type": "string",
+      "enum": ["planned", "smoke", "experimented", "reviewed", "reproducible"]
+    },
+    "claim_ids": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^CLAIM-[0-9]{2}-[0-9]{2}$"},
+      "uniqueItems": true
+    },
+    "claim_scope": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1
+    },
+    "code": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "config"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "commit": {"type": "string", "minLength": 1},
+        "config": {"type": "string", "minLength": 1},
+        "upstream_commits": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "license", "classification", "fixture", "download_bytes"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "license": {"type": "string", "minLength": 1},
+        "classification": {
+          "type": "string",
+          "enum": ["fixture", "downloadable", "application_required", "restricted", "private"]
+        },
+        "checksum": {"type": ["string", "null"]},
+        "fixture": {"type": "boolean"},
+        "download_bytes": {"type": "integer", "minimum": 0}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"fixture": {"const": true}}, "required": ["fixture"]},
+          "then": {
+            "properties": {
+              "classification": {"const": "fixture"},
+              "download_bytes": {"const": 0}
+            }
+          }
+        }
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier", "device", "duration_seconds", "disk_bytes", "gpu_verified"],
+      "properties": {
+        "tier": {"type": "string", "enum": ["S", "M", "L1", "L2"]},
+        "device": {"type": "string", "minLength": 1},
+        "cpu_memory_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "peak_vram_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "disk_bytes": {"type": "integer", "minimum": 0},
+        "duration_seconds": {"type": "number", "minimum": 0},
+        "gpu_verified": {"type": "boolean"},
+        "gpu_model": {"type": "string", "minLength": 1},
+        "driver_version": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"gpu_verified": {"const": true}}, "required": ["gpu_verified"]},
+          "then": {
+            "required": ["peak_vram_bytes", "gpu_model", "driver_version"],
+            "properties": {"peak_vram_bytes": {"type": "integer", "minimum": 1}}
+          }
+        }
+      ]
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "os", "container", "hardware"],
+      "properties": {
+        "runtime": {"type": "string", "minLength": 1},
+        "os": {"type": "string", "minLength": 1},
+        "container": {"type": "boolean"},
+        "container_image": {"type": ["string", "null"]},
+        "hardware": {"type": "string", "minLength": 1}
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prepare": {"type": "string", "minLength": 1},
+        "smoke": {"type": "string", "minLength": 1},
+        "train": {"type": "string", "minLength": 1},
+        "evaluate": {"type": "string", "minLength": 1},
+        "report": {"type": "string", "minLength": 1}
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value", "split"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "value": {"type": "number"},
+          "unit": {"type": "string"},
+          "split": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "reviews": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content", "code", "consistency", "teaching", "record"],
+      "properties": {
+        "content": {"$ref": "#/$defs/review"},
+        "code": {"$ref": "#/$defs/review"},
+        "consistency": {"$ref": "#/$defs/review"},
+        "teaching": {"$ref": "#/$defs/review"},
+        "record": {"type": "string", "minLength": 1}
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "review": {
+      "type": "string",
+      "enum": ["not_started", "in_progress", "passed", "changes_requested"]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"status": {"enum": ["smoke", "experimented", "reviewed", "reproducible"]}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "commands": {"required": ["smoke", "evaluate", "report"]},
+          "metrics": {"minItems": 1}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"status": {"enum": ["experimented", "reviewed", "reproducible"]}},
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["environment"],
+        "properties": {"artifacts": {"minItems": 1}}
+      }
+    },
+    {
+      "if": {
+        "properties": {"status": {"enum": ["reviewed", "reproducible"]}},
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["reviews"],
+        "properties": {
+          "reviews": {
+            "properties": {
+              "content": {"const": "passed"},
+              "code": {"const": "passed"},
+              "consistency": {"const": "passed"},
+              "teaching": {"const": "passed"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "reproducible"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "code": {"properties": {"commit": {"pattern": "^[0-9a-f]{7,64}$"}}},
+          "data": {"properties": {"license": {"pattern": "^(?!.*pending).+"}}},
+          "artifacts": {"minItems": 1}
+        }
+      }
+    }
+  ]
+}

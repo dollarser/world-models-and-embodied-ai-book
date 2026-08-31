@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cv2embodied:schema:chapter-status:v1",
+  "title": "CV2Embodied Chapter Status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phase",
+    "content_review",
+    "code_review",
+    "consistency_review",
+    "teaching_review",
+    "gpu_status"
+  ],
+  "properties": {
+    "phase": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "contracted",
+        "smoke",
+        "experimented",
+        "drafted",
+        "reviewed",
+        "reproducible",
+        "published"
+      ]
+    },
+    "content_review": {"$ref": "#/$defs/review"},
+    "code_review": {"$ref": "#/$defs/review"},
+    "consistency_review": {"$ref": "#/$defs/review"},
+    "teaching_review": {"$ref": "#/$defs/review"},
+    "gpu_status": {
+      "type": "string",
+      "enum": ["not_required", "pending", "verified"]
+    }
+  },
+  "$defs": {
+    "review": {
+      "type": "string",
+      "enum": ["not_started", "in_progress", "passed", "changes_requested"]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"phase": {"const": "reviewed"}}},
+      "then": {
+        "properties": {
+          "content_review": {"const": "passed"},
+          "code_review": {"const": "passed"},
+          "consistency_review": {"const": "passed"},
+          "teaching_review": {"const": "passed"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"phase": {"enum": ["reproducible", "published"]}}},
+      "then": {
+        "properties": {
+          "content_review": {"const": "passed"},
+          "code_review": {"const": "passed"},
+          "consistency_review": {"const": "passed"},
+          "teaching_review": {"const": "passed"},
+          "gpu_status": {"enum": ["not_required", "verified"]}
+        }
+      }
+    }
+  ]
+}

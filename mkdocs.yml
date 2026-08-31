@@ -1,0 +1,40 @@
+site_name: 世界模型与具身智能
+site_description: 从表征、预测到行动的开源教材与可复现实验书
+docs_dir: docs
+site_dir: site
+strict: true
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3.2.2/es5/tex-mml-chtml.js
+
+nav:
+  - 首页: index.md
+  - 编写状态: status.md
+  - 第一部分：从视觉识别到闭环智能:
+      - 第2章 世界模型到底是什么: part-01-loop/ch02-what-is-a-world-model.md
+      - 第4章 数据、基线与实验协议: part-01-loop/ch04-data-and-protocols.md
+  - 第二部分：学习一个可用于决策的世界:
+      - 第6章 World Models 与 RSSM: part-02-world-models/ch06-rssm.md
+      - 第9章 世界模型如何评测与失败: part-02-world-models/ch09-evaluation.md

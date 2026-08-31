@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "id": "EXP-09-01",
+  "chapter": 9,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-09-01", "CLAIM-09-02"],
+  "claim_scope": [
+    "lower one-step prediction error need not imply better closed-loop action selection",
+    "action sensitivity must be evaluated when a model is used under intervention"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library deterministic ranking-reversal fixture"
+  },
+  "data": {
+    "name": "procedural 1D intervention and goal-reaching fixture",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch09-smoke",
+    "evaluate": "python3 labs/track-a-world-model-control/ch09-evaluation/scripts/smoke.py",
+    "report": "python3 labs/track-a-world-model-control/ch09-evaluation/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "action_blind_one_step_rmse", "value": 0.05773502691896258, "unit": "position", "split": "procedural-fixture"},
+    {"name": "action_faithful_one_step_rmse", "value": 0.12, "unit": "position", "split": "procedural-fixture"},
+    {"name": "action_blind_closed_loop_success_rate", "value": 0.0, "unit": "ratio", "split": "two-goal-fixture"},
+    {"name": "action_faithful_closed_loop_success_rate", "value": 1.0, "unit": "ratio", "split": "two-goal-fixture"}
+  ],
+  "artifacts": ["results/ch09/EXP-09-01-smoke.json"],
+  "limitations": [
+    "deterministic hand-designed predictors rather than learned world models",
+    "one-dimensional dynamics and a one-step planner",
+    "demonstrates logical possibility, not frequency in real benchmarks"
+  ]
+}

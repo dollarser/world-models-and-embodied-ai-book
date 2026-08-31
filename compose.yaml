@@ -1,0 +1,48 @@
+services:
+  checks:
+    build:
+      context: .
+      dockerfile: docker/checks/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro
+    command: >-
+      sh -c "python3 scripts/validate_specs.py &&
+      python3 -m unittest discover -s tests/specs -p 'test_*.py'"
+
+  docs:
+    build:
+      context: .
+      dockerfile: docker/docs/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    ports:
+      - "8000:8000"
+    command: mkdocs build --strict
+
+  ch06-smoke:
+    build:
+      context: .
+      dockerfile: docker/cpu/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro
+    command: >-
+      sh -c "python3 -m unittest discover
+      -s labs/track-a-world-model-control/ch06-rssm/tests
+      -p 'test_*.py' &&
+      python3 labs/track-a-world-model-control/ch06-rssm/scripts/smoke.py"
+
+  ch09-smoke:
+    build:
+      context: .
+      dockerfile: docker/cpu/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro
+    command: >-
+      sh -c "python3 -m unittest discover
+      -s labs/track-a-world-model-control/ch09-evaluation/tests
+      -p 'test_*.py' &&
+      python3 labs/track-a-world-model-control/ch09-evaluation/scripts/smoke.py"
