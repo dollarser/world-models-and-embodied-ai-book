@@ -9,6 +9,7 @@
 - [书籍设计方案](specs/PRD/世界模型与具身智能_书籍设计方案-v0_6.md)
 - [编写与审查流程](specs/PRD/书籍编写与审查执行流程.md)
 - [可执行 Specs 索引](specs/README.md)
+- [第1章从看见到行动](docs/part-01-loop/ch01-from-seeing-to-acting.md)
 - [第2章定义与边界](docs/part-01-loop/ch02-what-is-a-world-model.md)
 - [第4章实验协议](docs/part-01-loop/ch04-data-and-protocols.md)
 - [第5章生成式预测基础](docs/part-02-world-models/ch05-generative-foundations.md)
@@ -28,6 +29,7 @@
 
 ```bash
 make check
+make ch01-smoke-local
 make ch06-smoke-local
 make ch09-smoke-local
 make ch02-smoke-local
@@ -40,6 +42,7 @@ make ch18-smoke-local
 
 ```bash
 make ch06-smoke
+make ch01-smoke
 make ch09-smoke
 make ch02-smoke
 make ch04-smoke

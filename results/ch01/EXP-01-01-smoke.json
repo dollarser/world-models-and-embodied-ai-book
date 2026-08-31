@@ -1,0 +1,43 @@
+{
+  "experiment_id": "EXP-01-01",
+  "gpu_verified": false,
+  "metrics": {
+    "alternating_residual": {
+      "bound_violated": false,
+      "final_lateral_state": 0.1,
+      "first_violation_step": null,
+      "maximum_abs_lateral_state": 0.1,
+      "offline_residual_mae": 0.1,
+      "safety_bound": 0.3,
+      "state_trace": [
+        0.1,
+        0.0,
+        0.1,
+        0.0,
+        0.1
+      ],
+      "step_count": 5
+    },
+    "final_state_gap": 0.4,
+    "offline_mae_gap": 0.0,
+    "persistent_residual": {
+      "bound_violated": true,
+      "final_lateral_state": 0.5,
+      "first_violation_step": 4,
+      "maximum_abs_lateral_state": 0.5,
+      "offline_residual_mae": 0.1,
+      "safety_bound": 0.3,
+      "state_trace": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "step_count": 5
+    },
+    "scope": "unit-gain scalar integrator with hand-authored residual actions"
+  },
+  "scope": "scalar residual integration; not perception, controller, robot, or vehicle performance",
+  "status": "smoke"
+}

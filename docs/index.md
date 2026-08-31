@@ -10,6 +10,7 @@
 
 ## 当前可读内容
 
+- [第1章：从“看见”到“行动”](part-01-loop/ch01-from-seeing-to-acting.md)
 - [第2章：世界模型到底是什么](part-01-loop/ch02-what-is-a-world-model.md)
 - [第3章：具身任务的最小机器人学与决策基础](part-01-loop/ch03-minimal-robotics-and-decision.md)
 - [第4章：数据、基线与实验协议](part-01-loop/ch04-data-and-protocols.md)
