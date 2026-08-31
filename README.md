@@ -11,6 +11,7 @@
 - [可执行 Specs 索引](specs/README.md)
 - [第2章定义与边界](docs/part-01-loop/ch02-what-is-a-world-model.md)
 - [第4章实验协议](docs/part-01-loop/ch04-data-and-protocols.md)
+- [第5章生成式预测基础](docs/part-02-world-models/ch05-generative-foundations.md)
 - [第6章纵向样章](docs/part-02-world-models/ch06-rssm.md)
 - [第9章评测样章](docs/part-02-world-models/ch09-evaluation.md)
 - [第17章世界模型与策略效用](docs/part-05-fusion/ch17-world-model-policy-utility.md)

@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "id": "EXP-05-01",
+  "chapter": 5,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-05-02", "CLAIM-05-03", "CLAIM-05-04"],
+  "claim_scope": [
+    "the squared-error optimal point can lie outside the support of a fixed multimodal future",
+    "an explicit conditional distribution can preserve both fixture futures",
+    "diffusion and straight flow paths have distinct parameterizations with checkable endpoints"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library multimodal distribution and probability-path fixture"
+  },
+  "data": {
+    "name": "procedural fork and deterministic-context outcomes",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch05-smoke",
+    "evaluate": "python3 labs/track-a-world-model-control/ch05-generative-foundations/scripts/smoke.py",
+    "report": "python3 labs/track-a-world-model-control/ch05-generative-foundations/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "point_mean_distance_to_support", "value": 1.0, "unit": "state", "split": "fork"},
+    {"name": "point_mean_expected_mse", "value": 1.0, "unit": "squared-state", "split": "fork"},
+    {"name": "fork_categorical_nll", "value": 0.69314718056, "unit": "nats", "split": "fork"},
+    {"name": "conditional_dataset_nll", "value": 0.34657359028, "unit": "nats", "split": "all"},
+    {"name": "unconditional_dataset_nll", "value": 0.562335144619, "unit": "nats", "split": "all"}
+  ],
+  "artifacts": ["results/ch05/EXP-05-01-smoke.json"],
+  "limitations": [
+    "two scalar outcomes and two hand-authored contexts rather than images or video",
+    "empirical categorical probabilities rather than a learned model",
+    "diffusion and flow checks are analytic endpoints, not training or sampling benchmarks",
+    "no neural network, optimization, data download, GPU, or closed-loop task"
+  ]
+}

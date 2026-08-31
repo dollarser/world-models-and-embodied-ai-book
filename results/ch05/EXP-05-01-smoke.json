@@ -1,0 +1,39 @@
+{
+  "experiment_id": "EXP-05-01",
+  "gpu_verified": false,
+  "metrics": {
+    "conditional_dataset_nll": 0.34657359028,
+    "diffusion_endpoints": {
+      "clean": 1.0,
+      "noise": -2.0
+    },
+    "flow_endpoints_and_velocity": {
+      "end": [
+        1.0,
+        3.0
+      ],
+      "start": [
+        -2.0,
+        3.0
+      ]
+    },
+    "fork_categorical_nll": 0.69314718056,
+    "fork_distribution": {
+      "-1.0": 0.5,
+      "1.0": 0.5
+    },
+    "fork_quantile_samples": [
+      -1.0,
+      -1.0,
+      1.0,
+      1.0
+    ],
+    "fork_sample_support_coverage": 1.0,
+    "point_mean": 0.0,
+    "point_mean_distance_to_nearest_supported_future": 1.0,
+    "point_mean_expected_mse": 1.0,
+    "unconditional_dataset_nll": 0.562335144619
+  },
+  "scope": "analytic multimodal and probability-path fixture; not a trained generative model",
+  "status": "smoke"
+}

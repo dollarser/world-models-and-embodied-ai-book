@@ -13,6 +13,7 @@
 - [第2章：世界模型到底是什么](part-01-loop/ch02-what-is-a-world-model.md)
 - [第3章：具身任务的最小机器人学与决策基础](part-01-loop/ch03-minimal-robotics-and-decision.md)
 - [第4章：数据、基线与实验协议](part-01-loop/ch04-data-and-protocols.md)
+- [第5章：预测模型的生成式基础](part-02-world-models/ch05-generative-foundations.md)
 - [第6章：World Models 与循环状态空间模型](part-02-world-models/ch06-rssm.md)
 - [第9章：世界模型如何评测与失败](part-02-world-models/ch09-evaluation.md)
 - [第10章：非生成式预测表示——从 I-JEPA 到 V-JEPA 2.x](part-03-representations/ch10-jepa-representations.md)
