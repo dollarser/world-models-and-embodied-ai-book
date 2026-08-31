@@ -14,6 +14,7 @@
 - [第5章生成式预测基础](docs/part-02-world-models/ch05-generative-foundations.md)
 - [第6章纵向样章](docs/part-02-world-models/ch06-rssm.md)
 - [第7章模型规划](docs/part-02-world-models/ch07-model-based-planning.md)
+- [第8章 Dreamer 与想象学习](docs/part-02-world-models/ch08-imagination-learning.md)
 - [第9章评测样章](docs/part-02-world-models/ch09-evaluation.md)
 - [第17章世界模型与策略效用](docs/part-05-fusion/ch17-world-model-policy-utility.md)
 - [第19章物理仿真与 Sim2Real](docs/part-06-systems/ch19-physical-simulation-and-sim2real.md)
@@ -30,6 +31,7 @@ make ch06-smoke-local
 make ch09-smoke-local
 make ch02-smoke-local
 make ch04-smoke-local
+make ch08-smoke-local
 ```
 
 优先使用 Docker：
@@ -39,6 +41,7 @@ make ch06-smoke
 make ch09-smoke
 make ch02-smoke
 make ch04-smoke
+make ch08-smoke
 make docs-build
 ```
 

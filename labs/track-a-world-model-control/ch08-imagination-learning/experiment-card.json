@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "id": "EXP-08-01",
+  "chapter": 8,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-08-02", "CLAIM-08-03", "CLAIM-08-04"],
+  "claim_scope": [
+    "lambda changes the fixed finite-horizon critic targets when bootstrap values are imperfect",
+    "a fixed imagined terminal-reward error propagates to every earlier full-return target",
+    "a continuation mask prevents a post-terminal reward from leaking into earlier targets"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library analytic lambda-return fixture"
+  },
+  "data": {
+    "name": "hand-authored reward, discount, continuation, and value sequences",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch08-smoke",
+    "evaluate": "python3 labs/track-a-world-model-control/ch08-imagination-learning/scripts/smoke.py",
+    "report": "python3 labs/track-a-world-model-control/ch08-imagination-learning/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "lambda_0_start_target", "value": 0.4, "unit": "return", "split": "reference"},
+    {"name": "lambda_0_5_start_target", "value": 0.65, "unit": "return", "split": "reference"},
+    {"name": "lambda_1_start_target", "value": 1.0, "unit": "return", "split": "reference"},
+    {"name": "biased_reward_start_target_gap", "value": 1.0, "unit": "return", "split": "biased-model"},
+    {"name": "missing_continuation_mask_leakage_gap", "value": 10.0, "unit": "return", "split": "terminal-mask"}
+  ],
+  "artifacts": ["results/ch08/EXP-08-01-smoke.json"],
+  "limitations": [
+    "hand-authored scalar rewards and values rather than a learned world model or critic",
+    "no gradients, actor update, replay buffer, neural network, simulator, or environment interaction",
+    "the biased reward is a constructed counterexample rather than a measured model error",
+    "no Dreamer checkpoint, benchmark, GPU, robot, or vehicle"
+  ]
+}

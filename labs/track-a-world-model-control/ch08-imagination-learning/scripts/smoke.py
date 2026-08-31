@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""Run EXP-08-01 without RL training, model weights, data downloads, or GPU."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import sys
+
+
+LAB_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(LAB_ROOT / "src"))
+
+from imagination_fixture import evaluate  # noqa: E402
+
+
+def main() -> int:
+    metrics = evaluate()
+    if metrics["lambda_targets"]["lambda_0_5"] != (0.65, 0.9, 1.0):
+        raise AssertionError("the fixed lambda-return reference changed")
+    if metrics["reward_model_bias"]["start_target_gap"] != 1.0:
+        raise AssertionError("the fixed imagined reward bias must reach the start target")
+    if metrics["continuation_mask"]["leakage_gap"] != 10.0:
+        raise AssertionError("the fixture must expose post-terminal reward leakage")
+    report = {
+        "experiment_id": "EXP-08-01",
+        "status": "smoke",
+        "scope": "analytic lambda-return and continuation fixture; not Dreamer training or policy improvement",
+        "metrics": metrics,
+        "gpu_verified": False,
+    }
+    print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

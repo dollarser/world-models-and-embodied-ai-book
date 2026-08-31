@@ -20,7 +20,7 @@
 - 本章补齐：五类用途、用途—证据映射、simulator gap、model exploitation 和评测替身风险；
 - 不要求：强化学习推导、3D 视觉、真实机器人/车辆、下载 checkpoint 或 GPU。
 
-第7章尚未成稿，因此本文先给出 model predictive control（MPC）所需的最小接口；第7章完成后仍要做全书一致性复核。
+第7章已经给出 model predictive control（MPC）、terminal value 与重规划接口；本章在此基础上审查世界模型如何改变策略排序，并把第8章 imagined target 的误差传播连接进来。
 
 ### 非目标
 

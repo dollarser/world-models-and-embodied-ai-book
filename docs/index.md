@@ -16,6 +16,7 @@
 - [第5章：预测模型的生成式基础](part-02-world-models/ch05-generative-foundations.md)
 - [第6章：World Models 与循环状态空间模型](part-02-world-models/ch06-rssm.md)
 - [第7章：用模型做规划——从 PlaNet 到价值等价模型](part-02-world-models/ch07-model-based-planning.md)
+- [第8章：在想象中学习——Dreamer 系列](part-02-world-models/ch08-imagination-learning.md)
 - [第9章：世界模型如何评测与失败](part-02-world-models/ch09-evaluation.md)
 - [第10章：非生成式预测表示——从 I-JEPA 到 V-JEPA 2.x](part-03-representations/ch10-jepa-representations.md)
 - [第11章：动作条件视频世界模型](part-03-representations/ch11-action-conditioned-video.md)
@@ -32,4 +33,4 @@
 
 ## 当前限制
 
-当前版本已进入全书分批编写阶段。已接入正文的章节均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、状态更新、几何、空间状态、动作合同和评测协议，不是 Dreamer、ACT、VLA、occupancy 网络、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。
+当前版本已进入全书分批编写阶段。已接入正文的章节均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、target、状态更新、几何、空间状态、动作合同和评测协议，不是 Dreamer、ACT、VLA、occupancy 网络、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。

@@ -1,0 +1,53 @@
+{
+  "experiment_id": "EXP-08-01",
+  "gpu_verified": false,
+  "metrics": {
+    "continuation_mask": {
+      "correct_start_target": 1.0,
+      "correct_targets": [
+        1.0,
+        1.0,
+        10.0
+      ],
+      "leakage_gap": 10.0,
+      "leaked_start_target": 11.0,
+      "missing_mask_targets": [
+        11.0,
+        11.0,
+        10.0
+      ]
+    },
+    "lambda_targets": {
+      "lambda_0": [
+        0.4,
+        0.8,
+        1.0
+      ],
+      "lambda_0_5": [
+        0.65,
+        0.9,
+        1.0
+      ],
+      "lambda_1": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "reward_model_bias": {
+      "biased_targets": [
+        2.0,
+        2.0,
+        2.0
+      ],
+      "reference_targets": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "start_target_gap": 1.0
+    }
+  },
+  "scope": "analytic lambda-return and continuation fixture; not Dreamer training or policy improvement",
+  "status": "smoke"
+}
