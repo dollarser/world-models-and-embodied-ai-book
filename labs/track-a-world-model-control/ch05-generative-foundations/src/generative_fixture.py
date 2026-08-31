@@ -22,6 +22,16 @@ def _finite_number(value: object) -> bool:
     return not isinstance(value, bool) and isinstance(value, (int, float)) and isfinite(value)
 
 
+def _normalized_distribution(distribution: object) -> bool:
+    return (
+        isinstance(distribution, dict)
+        and bool(distribution)
+        and all(_finite_number(value) for value in distribution)
+        and all(_finite_number(probability) and probability >= 0.0 for probability in distribution.values())
+        and abs(sum(distribution.values()) - 1.0) <= 1e-12
+    )
+
+
 def empirical_distribution(values: tuple[float, ...]) -> dict[float, float]:
     if not values:
         raise ValueError("at least one value is required")
@@ -51,8 +61,10 @@ def expected_squared_error(prediction: float, context: str) -> float:
 def negative_log_likelihood(distribution: dict[float, float], values: tuple[float, ...]) -> float:
     if not values:
         raise ValueError("at least one target is required")
-    if any(not _finite_number(probability) or probability < 0.0 for probability in distribution.values()):
-        raise ValueError("distribution probabilities must be finite and non-negative")
+    if not _normalized_distribution(distribution):
+        raise ValueError("distribution must have finite numeric support and normalized probabilities")
+    if any(not _finite_number(value) for value in values):
+        raise ValueError("targets must be finite numbers")
     probabilities = []
     for value in values:
         probability = distribution.get(float(value), 0.0)
@@ -63,13 +75,9 @@ def negative_log_likelihood(distribution: dict[float, float], values: tuple[floa
 
 
 def quantile_samples(distribution: dict[float, float], quantiles: tuple[float, ...]) -> tuple[float, ...]:
-    if (
-        not distribution
-        or any(not _finite_number(probability) or probability < 0.0 for probability in distribution.values())
-        or abs(sum(distribution.values()) - 1.0) > 1e-12
-    ):
-        raise ValueError("distribution must be normalized")
-    if any(not 0.0 <= quantile < 1.0 for quantile in quantiles):
+    if not _normalized_distribution(distribution):
+        raise ValueError("distribution must have finite numeric support and normalized probabilities")
+    if any(not _finite_number(quantile) or not 0.0 <= quantile < 1.0 for quantile in quantiles):
         raise ValueError("quantiles must lie in [0, 1)")
     items = sorted(distribution.items())
     samples = []

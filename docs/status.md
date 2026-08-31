@@ -2,12 +2,13 @@
 
 | 资产 | 状态 | 已验证 | 待验证 |
 | --- | --- | --- | --- |
-| 执行规格 | `drafted` | 章节、术语、风格、证据、manifest、实验卡、MIT 许可/数据政策、图表和门禁已建立；严格 Schema 检查通过 | benchmark card Schema 与发布门禁扩展 |
+| 执行规格 | `reviewed` | 章节、术语、风格、证据、manifest、实验卡、MIT 许可/数据政策、图表和门禁已建立；严格 Schema 检查通过 | benchmark card Schema 属后续可选扩展 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
 | 批次 B：第13、14、15、20章 | `reviewed` | 第13–15章在批次 B 通过；第20章由批次 D 关闭第17/19章一致性门 | 上游策略、仿真、真实数据和 GPU 未运行 |
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
 | 批次 D：第8、16、17、18、20、21章 | `reviewed` | 六章四类审查通过；40 个单元测试；imagined target—后训练—评测—部署合同闭合 | Dreamer/VLA/world model、仿真、真实系统和 GPU 未运行 |
-| 第1章 从看见到行动 | `drafted` | 零 3D/RL 入口、闭环地图、三条阅读路线、机器人/自动驾驶双案例与 S 档反例 | 真实感知、控制器、仿真和硬件未运行 |
+| 全书终审：第1、5、7、22章 | `reviewed` | 四章内容、代码、一致性和教学审查通过；29 个单元测试；记录见 `reviews/final-book-review.md` | GPU、大数据、真实仿真与硬件限制保持未验证 |
+| 第1章 从看见到行动 | `reviewed` | 零 3D/RL 入口、闭环地图、三条阅读路线、机器人/自动驾驶双案例与 S 档反例 | 真实感知、控制器、仿真和硬件未运行 |
 | EXP-01-01 | `smoke` | 6 个单元测试；相同 MAE、不同积分状态和边界结局 | 标量手工 residual，不是感知、控制或安全性能 |
 | 第2章 世界模型到底是什么 | `reviewed` | 正文、8 类四轴系统卡、4 个单元测试与 CPU smoke | 上游逐版本运行核验 |
 | 第4章 数据、基线与实验协议 | `reviewed` | 正文、5 类注入错误审计、5 个单元测试与 CPU smoke | 真实数据集审计 |
@@ -15,12 +16,12 @@
 | 第3章 最小机器人学与决策基础 | `reviewed` | 零基础坐标/点云/BEV/运动学/MDP 桥接、动作 schema 与四类审查 | 真实标定、动力学、接触和时间同步 |
 | EXP-03-01 | `smoke` | 6 个单元测试；投影、尺度、外参与二维反馈固定结果 | 理想针孔和运动学 fixture，不是实机结果 |
 | EXP-04-01 | `smoke` | 有效 fixture 0 问题，5/5 注入问题类型检出 | 未审计真实数据、媒体、标定和隐私 |
-| 第5章 预测模型的生成式基础 | `drafted` | VAE/token/自回归/masked/diffusion/flow、自动驾驶多未来与解析 fixture | 神经生成模型、图像/视频、采样性能和 GPU 未运行 |
+| 第5章 预测模型的生成式基础 | `reviewed` | VAE/token/自回归/masked/diffusion/flow、自动驾驶多未来与解析 fixture；四类审查通过 | 神经生成模型、图像/视频、采样性能和 GPU 未运行 |
 | EXP-05-01 | `smoke` | 7 个单元测试；点均值落在 support 外，条件 NLL 优于无条件 | 八个标量样本和解析路径，不是生成模型性能 |
 | 第9章 世界模型如何评测与失败 | `reviewed` | 正文、指标排序反转 CPU smoke 与自动驾驶评测矩阵 | benchmark card Schema 与上游运行 |
 | 第6章正文 | `reviewed` | prior/posterior、自动驾驶正文、资源边界与 CPU smoke 交叉审查 | PyTorch mini-RSSM 与 GPU 验证 |
 | EXP-06-01 | `smoke` | 宿主与 Docker CPU 数据流、3 个单元测试、固定指标 | PyTorch 训练、24GB GPU 资源 |
-| 第7章 用模型做规划 | `drafted` | MPC/CEM/tree search/value equivalence、自动驾驶候选轨迹与延迟回报 fixture | learned model、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
+| 第7章 用模型做规划 | `reviewed` | MPC/CEM/tree search/value equivalence、自动驾驶候选轨迹与延迟回报 fixture；四类审查通过 | learned model、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
 | EXP-07-01 | `smoke` | 7 个单元测试；H=1/3、terminal value、扰动重规划和受限 Bellman gap | 三状态已知规则，不是 learned planning 性能 |
 | 第8章 在想象中学习 | `reviewed` | Dreamer V1–V4 谱系、λ-return、continuation、误差传播、自动驾驶正文与四类审查 | world model、actor/critic 训练、上游 checkpoint、仿真和 GPU 未运行 |
 | EXP-08-01 | `smoke` | 7 个单元测试；λ=0/0.5/1 target、reward bias 传播和终止后 reward 泄漏 | 三步解析序列，不是 Dreamer、策略改进或样本效率结果 |
@@ -48,8 +49,8 @@
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
 | 第21章 部署、实时性与安全边界 | `reviewed` | deadline、尾延迟、异步 chunk、watchdog、fallback、自动驾驶 MRM 与四类审查 | 真实墙钟、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
 | EXP-21-01 | `smoke` | 7 个单元测试；mean 45 ms 掩盖 150 ms 尾部，五类异常分别拒绝 | 手工 latency/packet，不是实时或安全证明 |
-| 第22章 可审计综合项目 | `drafted` | 可证伪问题、五条选题轨道、交付物、阶段提交、驾驶合同与研究雷达已接入正文 | 四类终审；模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
-| EXP-22-01 | `smoke` | 8 个单元测试；完整包 0 issue，无效包 15 个具名 issue | metadata 字典存在性检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `smoke` | 22 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
+| EXP-22-01 | `smoke` | 9 个单元测试；完整包 0 issue，无效包 15 个具名 issue | metadata 字典存在性检查，不验证 artifact 内容、科学正确性或安全性 |
+| 文档站 | `release-candidate` | 22 章正文、22 张实验卡、136 个单元测试、22 组 smoke—结果精确比对、严格规格与 MkDocs 构建 | 尚未部署；当前主机浏览器运行时不可用，浏览器/多尺寸视觉抽查待发布操作完成 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

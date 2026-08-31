@@ -1,6 +1,6 @@
 # 第1章 从“看见”到“行动”
 
-> 状态：`drafted`
+> 状态：`reviewed`
 > 资料核查日期：2026-08-31
 > 关联实验：`EXP-01-01`
 > 关联声明：`CLAIM-01-01`～`CLAIM-01-05`
@@ -185,8 +185,9 @@ make ch01-smoke
 
 第2章将定义 state、belief、transition、reward、continuation 和 world model，避免把所有“预测未来”的系统混成一类；若暂时只想走 VLA 路线，也应先读第2章术语卡再跳转。
 
-- 内容审查：修改中；
-- 代码审查：修改中；
-- 一致性审查：修改中；
-- 教学审查：修改中；
+- 内容审查：通过；
+- 代码审查：通过；
+- 一致性审查：通过；
+- 教学审查：通过；
+- 审查记录路径：`reviews/final-book-review.md`；
 - 已知限制：标量积分和手工 residual，没有图像、学习模型、反馈 controller、仿真、GPU、机器人或车辆。

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from math import isfinite
+
 
 REQUIRED_ARTIFACTS = (
     "experiment_card",
@@ -71,7 +73,10 @@ def audit_project(package: object) -> list[str]:
         or gpu_count < 0
         or isinstance(vram_gb_each, bool)
         or not isinstance(vram_gb_each, (int, float))
+        or not isfinite(vram_gb_each)
         or vram_gb_each < 0
+        or (gpu_count == 0 and vram_gb_each != 0)
+        or (gpu_count > 0 and vram_gb_each == 0)
     ):
         issues.append("invalid_resource_record")
     elif gpu_count > 2 or (gpu_count == 1 and vram_gb_each > 24) or (gpu_count == 2 and vram_gb_each > 80):

@@ -2,7 +2,7 @@
 
 面向计算机视觉算法工程师的开源教材与可复现实验书。
 
-全书 22 章正文和对应 S 档实验骨架均已接入，正在进行最终交叉审查。当前开发设备无 GPU，只运行 Docker/CPU smoke 和微型 fixture；GPU 与大数据实验明确延后。
+全书 22 章正文和对应 S 档实验骨架均已接入并完成四类审查，当前为证据范围受限的在线发布候选。当前开发设备无 GPU，只运行 Docker/CPU smoke 和微型 fixture；GPU 与大数据实验明确延后。
 
 ## 当前入口
 
@@ -24,12 +24,15 @@
 - [第22章可审计综合项目](docs/part-07-capstone/ch22-auditable-capstone.md)
 - [批次 A 四类交叉审查](reviews/batch-a-review.md)
 - [批次 B 四类交叉审查](reviews/batch-b-review.md)
+- [全书终审与发布候选审查](reviews/final-book-review.md)
 - [章节状态](docs/status.md)
+- [发布候选说明](docs/release-notes.md)
 
 ## 最小命令
 
 ```bash
 make check
+make smoke-all
 make ch01-smoke-local
 make ch06-smoke-local
 make ch09-smoke-local

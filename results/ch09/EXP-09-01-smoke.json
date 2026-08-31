@@ -1,35 +1,18 @@
 {
   "experiment_id": "EXP-09-01",
-  "status": "smoke",
-  "scope": "metric-ranking fixture; not learned world-model evaluation",
-  "environment": {
-    "runtime": "CPython 3.12",
-    "device": "CPU",
-    "container": true,
-    "container_validated": true,
-    "base_image": "python:3.12-slim-bookworm@sha256:0f5b26b9518d002b6173fd61daad821fa340635ebfec5bba471013f9ca114579",
-    "gpu_verified": false
-  },
-  "fixture": {
-    "name": "procedural 1D intervention and goal-reaching fixture",
-    "episodes": 2,
-    "download_bytes": 0
-  },
+  "gpu_verified": false,
   "metrics": {
     "action_blind": {
-      "one_step_rmse": 0.05773502691896257,
       "closed_loop_success_rate": 0.0,
-      "mean_final_distance": 2.0
+      "mean_final_distance": 2.0,
+      "one_step_rmse": 0.05773502691896257
     },
     "action_faithful_biased": {
-      "one_step_rmse": 0.12000000000000001,
       "closed_loop_success_rate": 1.0,
-      "mean_final_distance": 0.10000000000000003
+      "mean_final_distance": 0.10000000000000003,
+      "one_step_rmse": 0.12000000000000001
     }
   },
-  "limitations": [
-    "deterministic hand-designed predictors rather than learned world models",
-    "one-dimensional dynamics and a one-step planner",
-    "demonstrates logical possibility, not frequency in real benchmarks"
-  ]
+  "scope": "metric-ranking fixture; not learned world-model evaluation",
+  "status": "smoke"
 }

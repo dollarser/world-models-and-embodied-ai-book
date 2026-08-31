@@ -1,29 +1,12 @@
 {
   "experiment_id": "EXP-02-01",
-  "status": "smoke",
-  "scope": "classification worksheet; not a performance benchmark",
-  "environment": {
-    "runtime": "CPython 3.12",
-    "device": "CPU",
-    "container": true,
-    "container_validated": true,
-    "base_image": "python:3.12-slim-bookworm@sha256:0f5b26b9518d002b6173fd61daad821fa340635ebfec5bba471013f9ca114579",
-    "gpu_verified": false
-  },
-  "fixture": {
-    "name": "eight four-axis system cards",
-    "version": 1,
-    "download_bytes": 0
-  },
+  "gpu_verified": false,
   "metrics": {
-    "system_card_count": 8,
-    "category_count": 8,
     "cards_with_evidence": 8,
-    "cards_with_unsupported_claims": 8
+    "cards_with_unsupported_claims": 8,
+    "category_count": 8,
+    "system_card_count": 8
   },
-  "limitations": [
-    "classification is use-dependent rather than a universal ontology",
-    "paper and documentation metadata were summarized rather than runtime-tested",
-    "not a model quality or performance comparison"
-  ]
+  "scope": "classification worksheet; not a performance benchmark",
+  "status": "smoke"
 }

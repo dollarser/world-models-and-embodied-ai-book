@@ -56,6 +56,17 @@ class ProjectAuditTests(unittest.TestCase):
         package["resources"] = {"tier": "S", "gpu_count": True, "vram_gb_each": 0, "gpu_verified": False}
         self.assertIn("invalid_resource_record", audit_project(package))
 
+    def test_non_finite_and_inconsistent_gpu_records_are_rejected(self):
+        for resources in (
+            {"tier": "S", "gpu_count": 0, "vram_gb_each": float("nan"), "gpu_verified": False},
+            {"tier": "S", "gpu_count": 0, "vram_gb_each": 24, "gpu_verified": False},
+            {"tier": "L1", "gpu_count": 1, "vram_gb_each": 0, "gpu_verified": False},
+        ):
+            package = copy.deepcopy(VALID_DRIVING_PACKAGE)
+            package["resources"] = resources
+            with self.subTest(resources=resources):
+                self.assertIn("invalid_resource_record", audit_project(package))
+
 
 if __name__ == "__main__":
     unittest.main()

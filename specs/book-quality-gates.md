@@ -10,11 +10,12 @@
 
 | 命令 | 环境 | 检查范围 | 失败等级 |
 | --- | --- | --- | --- |
-| `make check-local` | 宿主标准库 | 文件、JSON 语法、链接、章节数量、manifest 唯一性 | `BLOCK` |
+| `make check-local` | 宿主标准库 | 文件、JSON、链接、manifest 与 22 组 smoke—结果精确一致性 | `BLOCK` |
 | `make check-strict` | Docker | JSON Schema、manifest、实验卡条件规则 | `BLOCK` |
 | `make check` | 宿主 + Docker | 依次执行 local 与 strict | `BLOCK` |
 | `make docs-build` | Docker | MkDocs 严格构建、导航、Markdown 扩展 | `BLOCK` |
 | `make chNN-smoke` | Docker/CPU | 章节最小数据流、指标与测试 | `BLOCK`，仅针对已实现章节 |
+| `make smoke-all` | Docker/CPU | 依次运行 22 章单元测试与固定 smoke | `BLOCK`，发布候选必跑 |
 
 ## 3. 提交前门禁
 
@@ -58,4 +59,4 @@
 - `reproducible`：章节所需目标硬件实验与冷启动复现均通过；若章节不需要 GPU，状态写 `not_required`；
 - `published`：发布门禁通过并生成不可变版本说明。
 
-`drafted` 和 `reviewed` 可以继续驱动后续章节起草，但不能把待验证的性能或资源声明作为正式结论发布。
+章节成熟度与站点发布是两条相关但不同的轴：全书可由 `reviewed` 章节组成证据范围受限的在线版本；只有完成目标硬件/数据冷启动的章节才能标为 `reproducible`。任何版本都不能把待验证的性能或资源声明作为正式结论发布。

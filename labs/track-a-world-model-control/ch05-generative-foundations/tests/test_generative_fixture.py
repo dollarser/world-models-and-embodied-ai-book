@@ -54,6 +54,12 @@ class GenerativeFoundationTests(unittest.TestCase):
             empirical_distribution((float("nan"),))
         with self.assertRaises(ValueError):
             quantile_samples({-1.0: -1.0, 1.0: 2.0}, (0.25,))
+        with self.assertRaises(ValueError):
+            negative_log_likelihood({-1.0: 2.0}, (-1.0,))
+        with self.assertRaises(ValueError):
+            quantile_samples({"left": 1.0}, (0.25,))
+        with self.assertRaises(ValueError):
+            quantile_samples({-1.0: 1.0}, (False,))
 
     def test_invalid_probability_path_inputs_are_rejected(self):
         with self.assertRaises(ValueError):
