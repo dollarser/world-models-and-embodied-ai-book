@@ -1,0 +1,33 @@
+{
+  "experiment_id": "EXP-16-01",
+  "gpu_verified": false,
+  "metrics": {
+    "canonical_actions": {
+      "a-1": [
+        0.02,
+        1.0
+      ],
+      "a-2": [
+        -0.01,
+        0.0
+      ],
+      "b-1": [
+        0.02,
+        1.0
+      ],
+      "b-2": [
+        -0.01,
+        0.0
+      ]
+    },
+    "maximum_adapter_round_trip_error": 0.0,
+    "missing_embodiment_metadata_rejected": true,
+    "naive_raw_pooling_semantic_mae": 0.28375,
+    "raw_action_dimension": 2,
+    "record_count": 4,
+    "same_shape_but_semantics_differ": true,
+    "schema_aware_pooling_semantic_mae": 0.0
+  },
+  "scope": "cross-embodiment action-schema fixture; not learned transfer or policy performance",
+  "status": "smoke"
+}

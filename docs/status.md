@@ -4,7 +4,7 @@
 | --- | --- | --- | --- |
 | 执行规格 | `drafted` | 章节、术语、风格、证据、manifest、实验卡、MIT 许可/数据政策、图表和门禁已建立；严格 Schema 检查通过 | benchmark card Schema 与发布门禁扩展 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
-| 批次 B（进行中）：第13、14、15、20章 | `drafted` | 四章正文、22 个单元测试与零下载 CPU smoke | 等待第16/17/19章后做一致性审查；上游策略/仿真未运行 |
+| 批次 B（进行中）：第13–16、20章 | `drafted` | 五章正文、29 个单元测试与零下载 CPU smoke | 第13–16章待批次交叉审查；第20章等待第17/19章；上游策略/仿真未运行 |
 | 第2章 世界模型到底是什么 | `reviewed` | 正文、8 类四轴系统卡、4 个单元测试与 CPU smoke | 上游逐版本运行核验 |
 | 第4章 数据、基线与实验协议 | `reviewed` | 正文、5 类注入错误审计、5 个单元测试与 CPU smoke | 真实数据集审计 |
 | EXP-02-01 | `smoke` | 8/8 类别、来源和证据限制记录 | 不是性能 benchmark，未运行上游系统 |
@@ -26,8 +26,10 @@
 | EXP-14-01 | `smoke` | 7 个单元测试；条件均值无效、refinement 调用—距离权衡 | 解析双峰和 oracle flow，不是方法性能比较 |
 | 第15章 VLA 架构模式 | `drafted` | action token/FAST/连续 expert/双系统、VLM 边界和自动驾驶分层 | VLA checkpoint、VLM API、机器人、仿真和 GPU 均未运行 |
 | EXP-15-01 | `smoke` | 7 个单元测试；三类动作头统一 schema，5/5 错误包被拒绝 | 手工移动底盘 packet，不是 VLA 或安全性能 |
+| 第16章 数据规模化与跨本体适配 | `drafted` | mixture、canonical action、迁移矩阵、OFT/LoRA/蒸馏和跨车队正文 | 真实数据、learned adapter、迁移实验与 GPU 均未运行 |
+| EXP-16-01 | `smoke` | 7 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0 | 两维手工动作，不是 learned transfer 性能 |
 | 第20章 具身评测 | `drafted` | 协议可比性、证据阶梯、自动驾驶指标正文 | 第15/17/19章接口与实际仿真 |
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
-| 文档站 | `smoke` | 12 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 文档站 | `smoke` | 13 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。
