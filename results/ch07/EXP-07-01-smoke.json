@@ -1,0 +1,55 @@
+{
+  "experiment_id": "EXP-07-01",
+  "gpu_verified": false,
+  "metrics": {
+    "horizon_1": {
+      "actions": [
+        "harvest"
+      ],
+      "candidate_count": 2,
+      "predicted_return": 0.0
+    },
+    "horizon_1_with_terminal_value": {
+      "actions": [
+        "advance"
+      ],
+      "candidate_count": 2,
+      "predicted_return": 0.8
+    },
+    "horizon_3": {
+      "actions": [
+        "advance",
+        "advance",
+        "harvest"
+      ],
+      "candidate_count": 8,
+      "predicted_return": 0.8
+    },
+    "open_loop_after_disturbance": {
+      "final_state": 1,
+      "post_disturbance_actions": [
+        "advance",
+        "harvest"
+      ],
+      "return": -0.2,
+      "terminated": true
+    },
+    "receding_horizon_after_disturbance": {
+      "final_state": 2,
+      "post_disturbance_actions": [
+        "advance",
+        "advance",
+        "harvest"
+      ],
+      "return": 0.7,
+      "terminated": true
+    },
+    "value_equivalence_fixture": {
+      "max_bellman_backup_gap": 0.0,
+      "observation_match_rate": 0.0,
+      "scope": "one fixed transition/reward model and one value function"
+    }
+  },
+  "scope": "enumerated delayed-reward planning fixture; not learned-model or CEM performance",
+  "status": "smoke"
+}

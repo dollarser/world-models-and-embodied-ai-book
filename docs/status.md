@@ -17,6 +17,8 @@
 | 第9章 世界模型如何评测与失败 | `reviewed` | 正文、指标排序反转 CPU smoke 与自动驾驶评测矩阵 | benchmark card Schema 与上游运行 |
 | 第6章正文 | `reviewed` | prior/posterior、自动驾驶正文、资源边界与 CPU smoke 交叉审查 | PyTorch mini-RSSM 与 GPU 验证 |
 | EXP-06-01 | `smoke` | 宿主与 Docker CPU 数据流、3 个单元测试、固定指标 | PyTorch 训练、24GB GPU 资源 |
+| 第7章 用模型做规划 | `drafted` | MPC/CEM/tree search/value equivalence、自动驾驶候选轨迹与延迟回报 fixture | learned model、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
+| EXP-07-01 | `smoke` | 7 个单元测试；H=1/3、terminal value、扰动重规划和受限 Bellman gap | 三状态已知规则，不是 learned planning 性能 |
 | 第10章 非生成式预测表示 | `reviewed` | 四类审查通过；JEPA 谱系、probe 协议与第5章非生成式边界 | 官方 checkpoint、真实数据与 GPU 未运行 |
 | EXP-10-01 | `smoke` | 5 个单元测试；重建与 shifted probe 排名反转 | 手工标量表征，不是 JEPA 性能 |
 | 第11章 动作条件视频世界模型 | `reviewed` | 四类审查通过；动作反事实、生成式谱系与 renderer/simulator/planner 边界 | 视频训练、checkpoint、仿真和 GPU 未运行 |
@@ -39,6 +41,6 @@
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
 | 第21章 部署、实时性与安全边界 | `drafted` | deadline、尾延迟、异步 chunk、watchdog、fallback 与自动驾驶 MRM 正文 | 真实墙钟、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
 | EXP-21-01 | `smoke` | 7 个单元测试；mean 45 ms 掩盖 150 ms 尾部，五类异常分别拒绝 | 手工 latency/packet，不是实时或安全证明 |
-| 文档站 | `smoke` | 17 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 文档站 | `smoke` | 18 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。
