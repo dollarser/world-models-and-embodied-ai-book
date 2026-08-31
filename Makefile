@@ -1,4 +1,4 @@
-.PHONY: check check-local check-strict docs-build docs-serve ch02-smoke ch02-smoke-local ch02-test-local ch03-smoke ch03-smoke-local ch03-test-local ch04-smoke ch04-smoke-local ch04-test-local ch05-smoke ch05-smoke-local ch05-test-local ch06-smoke ch06-smoke-local ch06-test-local ch07-smoke ch07-smoke-local ch07-test-local ch08-smoke ch08-smoke-local ch08-test-local ch09-smoke ch09-smoke-local ch09-test-local ch10-smoke ch10-smoke-local ch10-test-local ch11-smoke ch11-smoke-local ch11-test-local ch12-smoke ch12-smoke-local ch12-test-local ch13-smoke ch13-smoke-local ch13-test-local ch14-smoke ch14-smoke-local ch14-test-local ch15-smoke ch15-smoke-local ch15-test-local ch16-smoke ch16-smoke-local ch16-test-local ch17-smoke ch17-smoke-local ch17-test-local ch19-smoke ch19-smoke-local ch19-test-local ch20-smoke ch20-smoke-local ch20-test-local ch21-smoke ch21-smoke-local ch21-test-local
+.PHONY: check check-local check-strict docs-build docs-serve ch02-smoke ch02-smoke-local ch02-test-local ch03-smoke ch03-smoke-local ch03-test-local ch04-smoke ch04-smoke-local ch04-test-local ch05-smoke ch05-smoke-local ch05-test-local ch06-smoke ch06-smoke-local ch06-test-local ch07-smoke ch07-smoke-local ch07-test-local ch08-smoke ch08-smoke-local ch08-test-local ch09-smoke ch09-smoke-local ch09-test-local ch10-smoke ch10-smoke-local ch10-test-local ch11-smoke ch11-smoke-local ch11-test-local ch12-smoke ch12-smoke-local ch12-test-local ch13-smoke ch13-smoke-local ch13-test-local ch14-smoke ch14-smoke-local ch14-test-local ch15-smoke ch15-smoke-local ch15-test-local ch16-smoke ch16-smoke-local ch16-test-local ch17-smoke ch17-smoke-local ch17-test-local ch18-smoke ch18-smoke-local ch18-test-local ch19-smoke ch19-smoke-local ch19-test-local ch20-smoke ch20-smoke-local ch20-test-local ch21-smoke ch21-smoke-local ch21-test-local
 
 check-local:
 	python3 scripts/check_book.py
@@ -18,6 +18,7 @@ check-local:
 	python3 scripts/validate_experiment_card.py labs/track-b-policy/ch15-vla-contract/experiment-card.json
 	python3 scripts/validate_experiment_card.py labs/track-b-policy/ch16-cross-embodiment/experiment-card.json
 	python3 scripts/validate_experiment_card.py labs/track-a-world-model-control/ch17-policy-utility/experiment-card.json
+	python3 scripts/validate_experiment_card.py labs/track-b-policy/ch18-post-training/experiment-card.json
 	python3 scripts/validate_experiment_card.py labs/track-a-world-model-control/ch19-sim-gap/experiment-card.json
 	python3 scripts/validate_experiment_card.py labs/track-b-policy/ch20-evaluation/experiment-card.json
 	python3 scripts/validate_experiment_card.py labs/track-b-policy/ch21-deployment-gate/experiment-card.json
@@ -176,6 +177,15 @@ ch17-smoke-local:
 
 ch17-test-local:
 	python3 -m unittest discover -s labs/track-a-world-model-control/ch17-policy-utility/tests -p 'test_*.py'
+
+ch18-smoke:
+	python3 scripts/docker_compose.py run --rm ch18-smoke
+
+ch18-smoke-local:
+	python3 labs/track-b-policy/ch18-post-training/scripts/smoke.py
+
+ch18-test-local:
+	python3 -m unittest discover -s labs/track-b-policy/ch18-post-training/tests -p 'test_*.py'
 
 ch19-smoke:
 	python3 scripts/docker_compose.py run --rm ch19-smoke

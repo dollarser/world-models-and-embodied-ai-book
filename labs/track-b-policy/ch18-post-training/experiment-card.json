@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "id": "EXP-18-01",
+  "chapter": 18,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-18-02", "CLAIM-18-03"],
+  "claim_scope": [
+    "fixed episode-reward weights move a two-phase scalar action target toward the successful subset mean",
+    "the same weighting reduces effective sample size and the normalized weight assigned to recovery examples"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library four-trajectory reward-reweighting fixture"
+  },
+  "data": {
+    "name": "four hand-authored two-phase trajectories",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch18-smoke",
+    "evaluate": "python3 labs/track-b-policy/ch18-post-training/scripts/smoke.py",
+    "report": "python3 labs/track-b-policy/ch18-post-training/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "uniform_reference_mae", "value": 0.3, "unit": "action", "split": "fixture"},
+    {"name": "reward_weighted_reference_mae", "value": 0.15, "unit": "action", "split": "fixture"},
+    {"name": "uniform_effective_sample_size", "value": 4.0, "unit": "trajectories", "split": "fixture"},
+    {"name": "reward_weighted_effective_sample_size", "value": 3.2, "unit": "trajectories", "split": "fixture"},
+    {"name": "uniform_recovery_mass", "value": 0.5, "unit": "fraction", "split": "fixture"},
+    {"name": "reward_weighted_recovery_mass", "value": 0.25, "unit": "fraction", "split": "fixture"}
+  ],
+  "artifacts": ["results/ch18/EXP-18-01-smoke.json"],
+  "limitations": [
+    "four scalar trajectories and a hand-authored successful-subset reference",
+    "episode-level binary labels rather than learned rewards, per-step credit, advantages, or human corrections",
+    "weighted action means rather than an optimizer or policy update",
+    "no VLA, world model, simulator, LIBERO, checkpoint, GPU, robot, or vehicle"
+  ]
+}

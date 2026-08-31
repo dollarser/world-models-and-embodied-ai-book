@@ -37,12 +37,14 @@
 | EXP-16-01 | `smoke` | 7 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0 | 两维手工动作，不是 learned transfer 性能 |
 | 第17章 世界模型帮助策略的五种方式 | `drafted` | 五类用途、评测替身风险、model exploitation、自动驾驶四角色正文 | learned world model、真实仿真器、上游 checkpoint 与 GPU 均未运行 |
 | EXP-17-01 | `smoke` | 6 个单元测试；8/9 转移一致仍造成策略排序反转与碰撞 | 手工 corridor，不是 learned simulator 性能 |
+| 第18章 VLA 后训练与 WAM | `drafted` | 五类后训练、稀疏 credit、长时层级/记忆、WAM 四类接口、自动驾驶独立闭环真值 | VLA/RL/world model、LIBERO、仿真、GPU 和硬件未运行 |
+| EXP-18-01 | `smoke` | 7 个单元测试；reward-weighted target、ESS、recovery coverage 与 support gate | 四条标量轨迹，不是 offline RL 或 policy 改进 |
 | 第19章 物理仿真、Real2Sim 与 Sim2Real | `reviewed` | 仿真合同、gap 分解、环境矩阵、系统辨识、域随机化、自动驾驶正文与四类审查 | MuJoCo/MetaDrive/CARLA/Isaac、真实系统、资产和 GPU 均未运行 |
 | EXP-19-01 | `smoke` | 8 个单元测试；名义 held-out state MAE 0.6625，12 个候选恢复预设参数 | 标量确定性 fixture，不是物理仿真或 Sim2Real 性能 |
 | 第20章 具身评测 | `drafted` | 内容、代码、教学审查通过；第17、19章接口已接入 | 批次 C/D 一致性与实际仿真 |
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
 | 第21章 部署、实时性与安全边界 | `drafted` | deadline、尾延迟、异步 chunk、watchdog、fallback 与自动驾驶 MRM 正文 | 真实墙钟、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
 | EXP-21-01 | `smoke` | 7 个单元测试；mean 45 ms 掩盖 150 ms 尾部，五类异常分别拒绝 | 手工 latency/packet，不是实时或安全证明 |
-| 文档站 | `smoke` | 19 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 文档站 | `smoke` | 20 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

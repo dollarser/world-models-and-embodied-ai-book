@@ -26,6 +26,7 @@
 - [第15章：VLA 的架构模式](part-04-policies/ch15-vla-architecture-patterns.md)
 - [第16章：数据规模化、跨本体迁移与高效适配](part-04-policies/ch16-data-scaling-and-adaptation.md)
 - [第17章：世界模型帮助策略的五种方式](part-05-fusion/ch17-world-model-policy-utility.md)
+- [第18章：VLA 后训练、长时序与 World-Action Models](part-05-fusion/ch18-vla-post-training-and-wam.md)
 - [第19章：物理仿真、Real2Sim 与 Sim2Real](part-06-systems/ch19-physical-simulation-and-sim2real.md)
 - [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
 - [第21章：部署、实时性与安全边界](part-06-systems/ch21-deployment-realtime-and-safety.md)

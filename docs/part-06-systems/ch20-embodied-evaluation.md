@@ -182,7 +182,7 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 - [LIBERO 官方仓库](https://github.com/Lifelong-Robot-Learning/LIBERO)，`[O,R1]`，终身机器人学习 benchmark；
 - [SimplerEnv 官方项目](https://simpler-env.github.io/)，`[O,R0]`，真实到仿真的策略评测案例，尚未运行；
 - [RoboCasa 官方项目](https://robocasa.ai/)，`[O,R0]`，日常任务仿真环境，尚未运行；
-- [MetaDrive 官方文档](https://metadriverse.github.io/metadrive/)，`[O,R0]`，驾驶闭环候选环境，等待第19章锁定版本；
+- [MetaDrive 官方文档](https://metadriverse.github.io/metadrive/)，`[O,R0]`，第19章已锁定为驾驶默认闭环环境，当前尚未运行；
 - [CARLA 官方文档](https://carla.readthedocs.io/)，`[O,R0]`，高保真扩展，非默认必需路径。
 
 ## 下一章接口

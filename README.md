@@ -17,6 +17,7 @@
 - [第8章 Dreamer 与想象学习](docs/part-02-world-models/ch08-imagination-learning.md)
 - [第9章评测样章](docs/part-02-world-models/ch09-evaluation.md)
 - [第17章世界模型与策略效用](docs/part-05-fusion/ch17-world-model-policy-utility.md)
+- [第18章 VLA 后训练与 World-Action Models](docs/part-05-fusion/ch18-vla-post-training-and-wam.md)
 - [第19章物理仿真与 Sim2Real](docs/part-06-systems/ch19-physical-simulation-and-sim2real.md)
 - [第21章部署、实时性与安全边界](docs/part-06-systems/ch21-deployment-realtime-and-safety.md)
 - [批次 A 四类交叉审查](reviews/batch-a-review.md)
@@ -32,6 +33,7 @@ make ch09-smoke-local
 make ch02-smoke-local
 make ch04-smoke-local
 make ch08-smoke-local
+make ch18-smoke-local
 ```
 
 优先使用 Docker：
@@ -42,6 +44,7 @@ make ch09-smoke
 make ch02-smoke
 make ch04-smoke
 make ch08-smoke
+make ch18-smoke
 make docs-build
 ```
 

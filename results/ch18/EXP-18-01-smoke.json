@@ -1,0 +1,57 @@
+{
+  "experiment_id": "EXP-18-01",
+  "gpu_verified": false,
+  "metrics": {
+    "reward_weighted": {
+      "action_target": [
+        0.4,
+        0.6
+      ],
+      "effective_sample_size": 3.2,
+      "recovery_mass": 0.25,
+      "reference_mae": 0.15,
+      "weights": [
+        3.0,
+        3.0,
+        1.0,
+        1.0
+      ]
+    },
+    "success_only": {
+      "action_target": [
+        0.25,
+        0.75
+      ],
+      "effective_sample_size": 2.0,
+      "recovery_mass": 0.0,
+      "reference_mae": 0.0,
+      "weights": [
+        1.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "support_gate": {
+      "out_of_support_proposal_accepted": false,
+      "successful_reference_in_support": true
+    },
+    "uniform": {
+      "action_target": [
+        0.55,
+        0.45
+      ],
+      "effective_sample_size": 4.0,
+      "recovery_mass": 0.5,
+      "reference_mae": 0.3,
+      "weights": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "scope": "offline scalar trajectory reweighting; not VLA/RL training or policy improvement",
+  "status": "smoke"
+}
