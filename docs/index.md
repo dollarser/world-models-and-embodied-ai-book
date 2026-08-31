@@ -22,6 +22,7 @@
 - [第14章：生成动作——Diffusion Policy 与 Flow Matching](part-04-policies/ch14-generative-actions.md)
 - [第15章：VLA 的架构模式](part-04-policies/ch15-vla-architecture-patterns.md)
 - [第16章：数据规模化、跨本体迁移与高效适配](part-04-policies/ch16-data-scaling-and-adaptation.md)
+- [第17章：世界模型帮助策略的五种方式](part-05-fusion/ch17-world-model-policy-utility.md)
 - [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
 - [编写状态](status.md)
 

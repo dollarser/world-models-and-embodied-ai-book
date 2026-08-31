@@ -1,0 +1,37 @@
+{
+  "experiment_id": "EXP-17-01",
+  "gpu_verified": false,
+  "metrics": {
+    "learned_model_returns": {
+      "idle": -0.2,
+      "phantom_shortcut": 1.0,
+      "safe_route": 0.85
+    },
+    "learned_model_selected_policy": "phantom_shortcut",
+    "maximum_absolute_return_gap": 2.0,
+    "mean_absolute_return_gap": 0.6666666666666666,
+    "model_exploitation_regret": 1.85,
+    "policy_ranking_matches": false,
+    "selected_policy_true_terminal": "collision",
+    "spearman_rank_correlation": -0.5,
+    "transition_agreement": {
+      "accuracy": 0.8888888888888888,
+      "case_count": 9,
+      "matching_count": 8,
+      "mismatches": [
+        {
+          "action": "shortcut",
+          "position": 0
+        }
+      ]
+    },
+    "true_best_policy": "safe_route",
+    "true_returns": {
+      "idle": -0.2,
+      "phantom_shortcut": -1.0,
+      "safe_route": 0.85
+    }
+  },
+  "scope": "deterministic model-gap and policy-exploitation fixture; not learned-world-model performance",
+  "status": "smoke"
+}

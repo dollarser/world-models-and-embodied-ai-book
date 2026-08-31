@@ -13,7 +13,9 @@
 - [第4章实验协议](docs/part-01-loop/ch04-data-and-protocols.md)
 - [第6章纵向样章](docs/part-02-world-models/ch06-rssm.md)
 - [第9章评测样章](docs/part-02-world-models/ch09-evaluation.md)
+- [第17章世界模型与策略效用](docs/part-05-fusion/ch17-world-model-policy-utility.md)
 - [批次 A 四类交叉审查](reviews/batch-a-review.md)
+- [批次 B 四类交叉审查](reviews/batch-b-review.md)
 - [章节状态](docs/status.md)
 
 ## 最小命令

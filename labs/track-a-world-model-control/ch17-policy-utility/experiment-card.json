@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "id": "EXP-17-01",
+  "chapter": 17,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-17-02", "CLAIM-17-03"],
+  "claim_scope": [
+    "high average transition agreement can coexist with a decision-critical model error",
+    "a planner can exploit one optimistic model error and reverse the true policy ranking",
+    "world-model utility must be measured with downstream return gaps and held-out true-environment anchors"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library corridor transition and policy-ranking fixture"
+  },
+  "data": {
+    "name": "procedural safe-route and phantom-shortcut transitions",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch17-smoke",
+    "evaluate": "python3 labs/track-a-world-model-control/ch17-policy-utility/scripts/smoke.py",
+    "report": "python3 labs/track-a-world-model-control/ch17-policy-utility/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "transition_agreement", "value": 0.8888888888888888, "unit": "ratio", "split": "nine-held-out-transitions"},
+    {"name": "spearman_rank_correlation", "value": -0.5, "unit": "correlation", "split": "three-fixed-policies"},
+    {"name": "maximum_absolute_return_gap", "value": 2.0, "unit": "return", "split": "three-fixed-policies"},
+    {"name": "model_exploitation_regret", "value": 1.85, "unit": "return", "split": "model-selected-policy"}
+  ],
+  "artifacts": ["results/ch17/EXP-17-01-smoke.json"],
+  "limitations": [
+    "hand-authored deterministic corridor rather than a learned neural world model",
+    "three fixed policies and one deliberately optimistic shortcut error",
+    "return units and effect sizes do not represent any real task",
+    "no images, uncertainty estimator, policy training, simulator, robot, vehicle, or GPU"
+  ]
+}
