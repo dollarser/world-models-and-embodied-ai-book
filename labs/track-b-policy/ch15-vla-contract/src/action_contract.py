@@ -45,6 +45,8 @@ def unnormalize_action(values: tuple[float, ...], schema: ActionSchema) -> tuple
         raise ValueError("action dimension does not match schema")
     physical = []
     for value, field in zip(values, schema.fields):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError("normalized action must be numeric")
         if not -1.0 <= value <= 1.0:
             raise ValueError("normalized action must be in [-1, 1]")
         physical.append(field.minimum + (value + 1.0) * (field.maximum - field.minimum) / 2.0)
@@ -52,11 +54,13 @@ def unnormalize_action(values: tuple[float, ...], schema: ActionSchema) -> tuple
 
 
 def encode_tokens(values: tuple[float, ...], bins: int = 5) -> tuple[int, ...]:
-    if bins < 2:
+    if isinstance(bins, bool) or not isinstance(bins, int) or bins < 2:
         raise ValueError("at least two bins are required")
     step = 2.0 / (bins - 1)
     tokens = []
     for value in values:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError("normalized action must be numeric")
         if not -1.0 <= value <= 1.0:
             raise ValueError("normalized action must be in [-1, 1]")
         tokens.append(round((value + 1.0) / step))
@@ -64,7 +68,15 @@ def encode_tokens(values: tuple[float, ...], bins: int = 5) -> tuple[int, ...]:
 
 
 def decode_tokens(tokens: tuple[int, ...], bins: int = 5) -> tuple[float, ...]:
-    if bins < 2 or any(token < 0 or token >= bins for token in tokens):
+    if isinstance(bins, bool) or not isinstance(bins, int) or bins < 2:
+        raise ValueError("at least two bins are required")
+    if any(
+        isinstance(token, bool)
+        or not isinstance(token, int)
+        or token < 0
+        or token >= bins
+        for token in tokens
+    ):
         raise ValueError("token is outside the action vocabulary")
     step = 2.0 / (bins - 1)
     return tuple(-1.0 + token * step for token in tokens)
@@ -105,7 +117,12 @@ def validate_packet(
     if packet.get("units") != expected_units:
         issues.append("unit_mismatch")
     timestamp = packet.get("timestamp_ms")
-    if not isinstance(timestamp, int) or timestamp > now_ms or now_ms - timestamp > schema.max_age_ms:
+    if (
+        isinstance(timestamp, bool)
+        or not isinstance(timestamp, int)
+        or timestamp > now_ms
+        or now_ms - timestamp > schema.max_age_ms
+    ):
         issues.append("stale_or_future_timestamp")
     if packet.get("control_hz") != schema.control_hz:
         issues.append("control_rate_mismatch")
@@ -114,10 +131,21 @@ def validate_packet(
     if not isinstance(actions, tuple) or not actions:
         issues.append("missing_action_values")
         return tuple(issues)
+    declared_prediction_horizon = packet.get("prediction_horizon")
+    if (
+        not isinstance(declared_prediction_horizon, int)
+        or isinstance(declared_prediction_horizon, bool)
+        or declared_prediction_horizon != len(actions)
+    ):
+        issues.append("prediction_horizon_mismatch")
     if len(actions) > schema.prediction_horizon:
         issues.append("prediction_horizon_exceeded")
     execution_horizon = packet.get("execution_horizon")
-    if not isinstance(execution_horizon, int) or not 1 <= execution_horizon <= len(actions):
+    if (
+        isinstance(execution_horizon, bool)
+        or not isinstance(execution_horizon, int)
+        or not 1 <= execution_horizon <= len(actions)
+    ):
         issues.append("invalid_execution_horizon")
 
     for action in actions:
@@ -125,7 +153,11 @@ def validate_packet(
             issues.append("action_dimension_mismatch")
             continue
         for value, field in zip(action, schema.fields):
-            if not isinstance(value, (int, float)) or not field.minimum <= value <= field.maximum:
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not field.minimum <= value <= field.maximum
+            ):
                 issues.append(f"out_of_bounds:{field.name}")
     return tuple(dict.fromkeys(issues))
 

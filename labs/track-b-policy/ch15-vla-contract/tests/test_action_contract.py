@@ -27,6 +27,8 @@ class ActionContractTests(unittest.TestCase):
             unnormalize_action((0.0,), MOBILE_BASE_SCHEMA)
         with self.assertRaises(ValueError):
             unnormalize_action((1.2, 0.0), MOBILE_BASE_SCHEMA)
+        with self.assertRaises(ValueError):
+            unnormalize_action((True, 0.0), MOBILE_BASE_SCHEMA)
 
     def test_token_round_trip_has_explicit_quantization(self):
         tokens = encode_tokens((0.6, -0.4), bins=5)
@@ -36,6 +38,16 @@ class ActionContractTests(unittest.TestCase):
     def test_token_decoder_rejects_invalid_vocabulary_item(self):
         with self.assertRaises(ValueError):
             decode_tokens((5,), bins=5)
+        with self.assertRaises(ValueError):
+            decode_tokens((True,), bins=5)
+        with self.assertRaises(ValueError):
+            decode_tokens((1.5,), bins=5)
+
+    def test_token_encoder_rejects_boolean_action(self):
+        with self.assertRaises(ValueError):
+            encode_tokens((True,), bins=5)
+        with self.assertRaises(ValueError):
+            encode_tokens((0.0,), bins=True)
 
     def test_valid_chunk_passes_and_preserves_receding_horizon(self):
         action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
@@ -53,9 +65,19 @@ class ActionContractTests(unittest.TestCase):
         action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
         base = make_packet("continuous", (action,))
         self.assertIn("stale_or_future_timestamp", validate_packet({**base, "timestamp_ms": 800}))
+        self.assertIn("stale_or_future_timestamp", validate_packet({**base, "timestamp_ms": True}, now_ms=1))
         self.assertIn("frame_mismatch", validate_packet({**base, "frame_id": "camera"}))
         self.assertIn("unit_mismatch", validate_packet({**base, "units": ("km/h", "deg/s")}))
         self.assertIn("out_of_bounds:linear_velocity", validate_packet(make_packet("continuous", ((0.8, 0.0),))))
+        self.assertIn("invalid_execution_horizon", validate_packet({**base, "execution_horizon": True}))
+
+    def test_gateway_rejects_boolean_and_forged_horizon(self):
+        boolean_action = make_packet("continuous", ((True, 0.0),))
+        self.assertIn("out_of_bounds:linear_velocity", validate_packet(boolean_action))
+
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        forged_horizon = {**make_packet("continuous", (action,)), "prediction_horizon": 3}
+        self.assertIn("prediction_horizon_mismatch", validate_packet(forged_horizon))
 
 
 if __name__ == "__main__":

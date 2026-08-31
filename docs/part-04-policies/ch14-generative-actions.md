@@ -1,6 +1,6 @@
 # 第14章 生成动作：Diffusion Policy 与 Flow Matching
 
-> 状态：`drafted`
+> 状态：`reviewed`
 > 资料核查日期：2026-08-31
 > 关联实验：`EXP-14-01`
 > 关联声明：`CLAIM-14-01`～`CLAIM-14-06`
@@ -227,7 +227,7 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 
 ## 下一章接口
 
-第15章将比较 VLA 的离散 action token、连续回归、diffusion/flow action expert 与双系统架构。本章的动作 horizon、采样预算、随机性、闭环和安全合同将原样复用。
+第15章把这里的动作 horizon、采样预算、随机性、闭环和安全合同复用到离散 action token、连续回归、diffusion/flow action expert 与双系统架构中。
 
 ## 验收与审查记录
 
@@ -238,10 +238,10 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 文档构建：make docs-build
 ```
 
-- 内容审查：修改中；
-- 代码审查：修改中；
-- 一致性审查：修改中（等待第5/15章）；
-- 教学审查：修改中；
-- 审查记录路径：待批次 B 交叉审查；
+- 内容审查：通过；
+- 代码审查：通过；
+- 一致性审查：通过（第13/15章接口已核对；第5章成稿后按全书统稿流程复核数学桥接）；
+- 教学审查：通过；
+- 审查记录路径：`reviews/batch-b-review.md`；
 - 已知限制：没有训练 Diffusion Policy/flow policy、下载数据或 checkpoint，也未验证 GPU 与真实时延；
-- 下一步：与第13章复核 chunk/执行协议，并进入第15章 VLA 架构模式。
+- 下一步：后续 M 档实验在具备 GPU 时验证显存、墙钟时延与闭环指标，不用解析 fixture 替代模型结果。
