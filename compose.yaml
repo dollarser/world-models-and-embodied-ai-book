@@ -138,6 +138,19 @@ services:
       -p 'test_*.py' &&
       python3 labs/track-b-policy/ch13-imitation/scripts/smoke.py"
 
+  ch14-smoke:
+    build:
+      context: .
+      dockerfile: docker/cpu/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro
+    command: >-
+      sh -c "python3 -m unittest discover
+      -s labs/track-b-policy/ch14-generative-actions/tests
+      -p 'test_*.py' &&
+      python3 labs/track-b-policy/ch14-generative-actions/scripts/smoke.py"
+
   ch20-smoke:
     build:
       context: .

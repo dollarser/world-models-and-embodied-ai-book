@@ -19,6 +19,7 @@
 - [第11章：动作条件视频世界模型](part-03-representations/ch11-action-conditioned-video.md)
 - [第12章：可行动的空间表征](part-03-representations/ch12-actionable-space.md)
 - [第13章：模仿学习、误差累积与动作分块](part-04-policies/ch13-imitation-and-action-chunks.md)
+- [第14章：生成动作——Diffusion Policy 与 Flow Matching](part-04-policies/ch14-generative-actions.md)
 - [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
 - [编写状态](status.md)
 

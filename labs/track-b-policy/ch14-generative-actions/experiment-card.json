@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "id": "EXP-14-01",
+  "chapter": 14,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-14-02", "CLAIM-14-03", "CLAIM-14-04"],
+  "claim_scope": [
+    "the conditional mean falls between two equally weighted valid scalar action modes",
+    "iterative mode refinement trades model evaluations for distance to a valid mode",
+    "an oracle straight-flow fixture reaches its assigned modes but does not represent learned flow-policy quality"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library bimodal action and sampler-interface fixture"
+  },
+  "data": {
+    "name": "procedural symmetric two-mode scalar action fixture",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch14-smoke",
+    "evaluate": "python3 labs/track-b-policy/ch14-generative-actions/scripts/smoke.py",
+    "report": "python3 labs/track-b-policy/ch14-generative-actions/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "mse_mean_invalid_action_rate", "value": 1.0, "unit": "ratio", "split": "two-mode-action"},
+    {"name": "refinement_1_step_mean_mode_distance", "value": 0.275, "unit": "action", "split": "fixed-base-samples"},
+    {"name": "refinement_4_steps_mean_mode_distance", "value": 0.034375, "unit": "action", "split": "fixed-base-samples"},
+    {"name": "refinement_4_steps_covered_modes", "value": 2, "unit": "mode", "split": "fixed-base-samples"},
+    {"name": "oracle_flow_1_step_mean_mode_distance", "value": 0.0, "unit": "action", "split": "fixed-base-samples"}
+  ],
+  "artifacts": ["results/ch14/EXP-14-01-smoke.json"],
+  "limitations": [
+    "one-dimensional symmetric action modes with hand-selected base samples",
+    "mode-refinement update is not a DDPM or learned denoiser",
+    "straight flow uses oracle target assignment and cannot compare learned policy quality",
+    "abstract model-evaluation budget is not measured wall-clock latency"
+  ]
+}

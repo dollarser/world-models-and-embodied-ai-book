@@ -1,0 +1,45 @@
+{
+  "experiment_id": "EXP-14-01",
+  "gpu_verified": false,
+  "metrics": {
+    "control_budget": {
+      "available_model_evaluations_per_replan": 8,
+      "refinement_16_steps_feasible": false,
+      "refinement_4_steps_feasible": true
+    },
+    "mode_refinement_1_step": {
+      "covered_mode_count": 2,
+      "invalid_action_rate": 0.4,
+      "mean_nearest_mode_distance": 0.275,
+      "model_evaluations": 10,
+      "sample_count": 10,
+      "sample_mean": 0.0
+    },
+    "mode_refinement_4_steps": {
+      "covered_mode_count": 2,
+      "invalid_action_rate": 0.0,
+      "mean_nearest_mode_distance": 0.034375,
+      "model_evaluations": 40,
+      "sample_count": 10,
+      "sample_mean": 0.0
+    },
+    "mse_mean": {
+      "covered_mode_count": 0,
+      "invalid_action_rate": 1.0,
+      "mean_nearest_mode_distance": 1.0,
+      "model_evaluations": 10,
+      "sample_count": 10,
+      "sample_mean": 0.0
+    },
+    "oracle_straight_flow_1_step": {
+      "covered_mode_count": 2,
+      "invalid_action_rate": 0.0,
+      "mean_nearest_mode_distance": 0.0,
+      "model_evaluations": 10,
+      "sample_count": 10,
+      "sample_mean": 0.0
+    }
+  },
+  "scope": "analytic bimodal action and sampler-interface fixture; not trained diffusion or flow policy",
+  "status": "smoke"
+}
