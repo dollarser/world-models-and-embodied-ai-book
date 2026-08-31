@@ -3,6 +3,7 @@
   "id": "EXP-06-01",
   "chapter": 6,
   "status": "smoke",
+  "claim_ids": ["CLAIM-06-01", "CLAIM-06-02", "CLAIM-06-03", "CLAIM-06-04"],
   "claim_scope": [
     "prior uses history and action",
     "posterior uses observations for correction",

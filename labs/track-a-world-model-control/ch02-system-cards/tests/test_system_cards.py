@@ -32,6 +32,11 @@ class SystemCardTest(unittest.TestCase):
         errors = validate_fixture(changed)
         self.assertTrue(any("unsupported claim" in error for error in errors))
 
+    def test_scope_dependent_digital_twin_does_not_force_binary_dynamics(self) -> None:
+        digital_twin = next(card for card in self.fixture["cards"] if card["category"] == "digital_twin")
+        self.assertIsNone(digital_twin["learned_dynamics"])
+        self.assertIsNone(digital_twin["action_conditioning"])
+
 
 if __name__ == "__main__":
     unittest.main()

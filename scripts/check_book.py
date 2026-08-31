@@ -31,6 +31,7 @@ REQUIRED = (
     "docs/part-02-world-models/ch06-rssm.md",
 )
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+CHAPTER_STATUS_PATTERN = re.compile(r"^> 状态：`([^`]+)`", re.MULTILINE)
 
 
 def check_required() -> list[str]:
@@ -72,12 +73,27 @@ def check_manifest() -> list[str]:
             errors.append(f"chapter {number} document is missing: {document}")
         if isinstance(document, str) and (ROOT / document).is_file():
             document_text = (ROOT / document).read_text(encoding="utf-8")
+            status_match = CHAPTER_STATUS_PATTERN.search(document_text)
+            manifest_phase = chapter.get("status", {}).get("phase")
+            if not status_match:
+                errors.append(f"chapter {number} document has no status header")
+            elif status_match.group(1) != manifest_phase:
+                errors.append(
+                    f"chapter {number} document status {status_match.group(1)} != manifest status {manifest_phase}"
+                )
             for claim_id in chapter.get("claims", []):
                 if claim_id not in document_text:
                     errors.append(f"chapter {number} document does not contain registered claim: {claim_id}")
             for figure_id in chapter.get("figures", []):
                 if figure_id not in document_text:
                     errors.append(f"chapter {number} document does not contain registered figure/table: {figure_id}")
+            if manifest_phase in {"reviewed", "reproducible", "published"}:
+                for review_name in ("内容审查", "代码审查", "一致性审查", "教学审查"):
+                    if f"- {review_name}：通过" not in document_text:
+                        errors.append(f"chapter {number} is {manifest_phase} but {review_name} is not passed in the document")
+                record_match = re.search(r"审查记录路径：`([^`]+)`", document_text)
+                if not record_match or not (ROOT / record_match.group(1)).is_file():
+                    errors.append(f"chapter {number} is {manifest_phase} but its review record is missing")
         experiment_ids.extend(chapter.get("experiments", []))
     if len(experiment_ids) != len(set(experiment_ids)):
         errors.append("manifest contains duplicate experiment IDs")

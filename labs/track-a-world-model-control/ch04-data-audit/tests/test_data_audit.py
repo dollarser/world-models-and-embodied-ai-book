@@ -34,6 +34,11 @@ class DataAuditTest(unittest.TestCase):
         changed["dataset"]["normalization_scope"] = "all"
         self.assertIn("normalization_scope", {issue.code for issue in audit(changed)})
 
+    def test_non_numeric_action_is_reported_instead_of_crashing(self) -> None:
+        changed = deepcopy(self.valid)
+        changed["episodes"][0]["frames"][0]["action"] = "left"
+        self.assertIn("invalid_action_type", {issue.code for issue in audit(changed)})
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -70,9 +70,12 @@ def audit(fixture: dict[str, Any]) -> list[Issue]:
             is_final = frame_position == len(frames) - 1
             if not is_final and action is None:
                 issues.append(Issue("missing_transition_action", f"{episode_id}:{frame_position}", "non-final frame needs action"))
-            if action is not None and isinstance(lower, (int, float)) and isinstance(upper, (int, float)):
-                if not lower <= action <= upper:
-                    issues.append(Issue("action_out_of_range", f"{episode_id}:{frame_position}", f"{action} not in [{lower}, {upper}]"))
+            if action is not None:
+                if isinstance(action, bool) or not isinstance(action, (int, float)):
+                    issues.append(Issue("invalid_action_type", f"{episode_id}:{frame_position}", f"found {type(action).__name__}"))
+                elif isinstance(lower, (int, float)) and isinstance(upper, (int, float)):
+                    if not lower <= action <= upper:
+                        issues.append(Issue("action_out_of_range", f"{episode_id}:{frame_position}", f"{action} not in [{lower}, {upper}]"))
             if frame.get("terminated") and not is_final:
                 issues.append(Issue("early_termination", f"{episode_id}:{frame_position}", "terminated before final frame"))
         if frames and not frames[-1].get("terminated"):

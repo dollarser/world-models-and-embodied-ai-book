@@ -114,11 +114,15 @@ def validate_experiments(schema: dict[str, object], manifest: dict[str, object])
                 errors.append(f"{label}: review record does not exist: {record}")
 
     manifest_ids: dict[str, int] = {}
+    manifest_claims: dict[int, set[str]] = {}
     for chapter in manifest.get("chapters", []):
         if not isinstance(chapter, dict):
             continue
+        chapter_number = chapter.get("number")
+        if isinstance(chapter_number, int):
+            manifest_claims[chapter_number] = set(chapter.get("claims", []))
         for experiment_id in chapter.get("experiments", []):
-            manifest_ids[experiment_id] = chapter.get("number")
+            manifest_ids[experiment_id] = chapter_number
 
     for experiment_id, chapter_number in manifest_ids.items():
         if experiment_id not in cards:
@@ -127,6 +131,9 @@ def validate_experiments(schema: dict[str, object], manifest: dict[str, object])
         card_chapter = cards[experiment_id][1].get("chapter")
         if card_chapter != chapter_number:
             errors.append(f"{experiment_id}: card chapter {card_chapter} != manifest chapter {chapter_number}")
+        for claim_id in cards[experiment_id][1].get("claim_ids", []):
+            if claim_id not in manifest_claims.get(chapter_number, set()):
+                errors.append(f"{experiment_id}: claim is not registered in chapter {chapter_number}: {claim_id}")
     for experiment_id in cards:
         if experiment_id not in manifest_ids:
             errors.append(f"experiment card is not registered in manifest: {experiment_id}")

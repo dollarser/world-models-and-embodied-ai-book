@@ -75,8 +75,8 @@
       "category": "digital_twin",
       "evidence": {"source_type": "official_framework", "snapshot": "NIST Digital Twins program audited 2026-08-31", "url": "https://www.nist.gov/digital-twins"},
       "axes": {"representation": "asset-specific state and lifecycle records", "dynamics": "rules simulation learned components or hybrids", "conditioning": "telemetry maintenance and control inputs", "use": "monitoring prediction and lifecycle decisions"},
-      "action_conditioning": true,
-      "learned_dynamics": false,
+      "action_conditioning": null,
+      "learned_dynamics": null,
       "relation": "scope_dependent_environment_replica",
       "unsupported_claims": ["general-purpose learned world model", "transfer beyond the synchronized asset"]
     },

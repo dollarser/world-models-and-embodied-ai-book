@@ -68,6 +68,11 @@ def validate_fixture(fixture: dict[str, Any]) -> list[str]:
             errors.append(f"{label} evidence must include source_type, snapshot, and url")
         if not isinstance(card["unsupported_claims"], list) or not card["unsupported_claims"]:
             errors.append(f"{label} must record at least one unsupported claim")
+        elif any(not isinstance(claim, str) or not claim for claim in card["unsupported_claims"]):
+            errors.append(f"{label} unsupported claims must be non-empty strings")
+        for field in ("action_conditioning", "learned_dynamics"):
+            if card[field] is not None and not isinstance(card[field], bool):
+                errors.append(f"{label} {field} must be boolean or null when scope-dependent")
 
     if categories != EXPECTED_CATEGORIES:
         errors.append(f"category coverage mismatch: {sorted(categories)}")

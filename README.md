@@ -13,6 +13,7 @@
 - [第4章实验协议](docs/part-01-loop/ch04-data-and-protocols.md)
 - [第6章纵向样章](docs/part-02-world-models/ch06-rssm.md)
 - [第9章评测样章](docs/part-02-world-models/ch09-evaluation.md)
+- [批次 A 四类交叉审查](reviews/batch-a-review.md)
 - [章节状态](docs/status.md)
 
 ## 最小命令
