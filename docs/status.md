@@ -48,6 +48,8 @@
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
 | 第21章 部署、实时性与安全边界 | `reviewed` | deadline、尾延迟、异步 chunk、watchdog、fallback、自动驾驶 MRM 与四类审查 | 真实墙钟、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
 | EXP-21-01 | `smoke` | 7 个单元测试；mean 45 ms 掩盖 150 ms 尾部，五类异常分别拒绝 | 手工 latency/packet，不是实时或安全证明 |
-| 文档站 | `smoke` | 21 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
+| 第22章 可审计综合项目 | `drafted` | 可证伪问题、五条选题轨道、交付物、阶段提交、驾驶合同与研究雷达已接入正文 | 四类终审；模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
+| EXP-22-01 | `smoke` | 8 个单元测试；完整包 0 issue，无效包 15 个具名 issue | metadata 字典存在性检查，不验证 artifact 内容、科学正确性或安全性 |
+| 文档站 | `smoke` | 22 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

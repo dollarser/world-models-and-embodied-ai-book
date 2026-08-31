@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "id": "EXP-22-01",
+  "chapter": 22,
+  "status": "smoke",
+  "claim_ids": ["CLAIM-22-02"],
+  "claim_scope": [
+    "a complete fixed driving project package passes the metadata audit while an intentionally incomplete package triggers fifteen named contract issues"
+  ],
+  "code": {
+    "repository": "cv2embodied",
+    "commit": "UNCOMMITTED",
+    "config": "standard-library project-package metadata audit fixture"
+  },
+  "data": {
+    "name": "two hand-authored project metadata packages",
+    "version": "v1",
+    "license": "MIT",
+    "classification": "fixture",
+    "fixture": true,
+    "download_bytes": 0
+  },
+  "resources": {
+    "tier": "S",
+    "device": "CPU",
+    "duration_seconds": 0,
+    "peak_vram_bytes": null,
+    "disk_bytes": 0,
+    "gpu_verified": false
+  },
+  "commands": {
+    "smoke": "make ch22-smoke",
+    "evaluate": "python3 labs/track-d-capstone/ch22-project-audit/scripts/smoke.py",
+    "report": "python3 labs/track-d-capstone/ch22-project-audit/scripts/smoke.py"
+  },
+  "metrics": [
+    {"name": "valid_package_issue_count", "value": 0, "unit": "issues", "split": "valid"},
+    {"name": "invalid_package_issue_count", "value": 15, "unit": "issues", "split": "invalid"},
+    {"name": "required_artifact_count", "value": 5, "unit": "artifacts", "split": "contract"},
+    {"name": "required_driving_metric_count", "value": 3, "unit": "metrics", "split": "contract"}
+  ],
+  "artifacts": ["results/ch22/EXP-22-01-smoke.json"],
+  "limitations": [
+    "metadata dictionaries rather than a real project directory or artifact content audit",
+    "presence checks do not establish scientific correctness, file integrity, privacy, licensing, or safety",
+    "the resource policy encodes this book's limits rather than universal hardware requirements",
+    "no model, dataset, training, simulator, GPU, robot, vehicle, or deployment"
+  ]
+}

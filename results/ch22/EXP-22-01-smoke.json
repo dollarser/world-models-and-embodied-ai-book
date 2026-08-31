@@ -1,0 +1,36 @@
+{
+  "experiment_id": "EXP-22-01",
+  "gpu_verified": false,
+  "metrics": {
+    "driving_metric_count": 3,
+    "invalid_package": {
+      "accepted": false,
+      "issue_count": 15,
+      "issues": [
+        "missing_research_question",
+        "missing_claim_id",
+        "missing_data_license",
+        "private_data_without_authorization",
+        "train_eval_group_overlap",
+        "missing_result",
+        "missing_failure_record",
+        "missing_reproduction_command",
+        "missing_failure_injection",
+        "missing_known_limitations",
+        "resource_limit_exceeded",
+        "gpu_result_unverified",
+        "evaluation_not_independent",
+        "driving_metrics_incomplete",
+        "missing_safety_gateway"
+      ]
+    },
+    "required_artifact_count": 5,
+    "valid_package": {
+      "accepted": true,
+      "issue_count": 0,
+      "issues": []
+    }
+  },
+  "scope": "project-metadata contract audit; not end-to-end model or deployment validation",
+  "status": "smoke"
+}

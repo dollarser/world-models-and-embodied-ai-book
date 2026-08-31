@@ -31,8 +31,9 @@
 - [第19章：物理仿真、Real2Sim 与 Sim2Real](part-06-systems/ch19-physical-simulation-and-sim2real.md)
 - [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
 - [第21章：部署、实时性与安全边界](part-06-systems/ch21-deployment-realtime-and-safety.md)
+- [第22章：端到端综合项目——一个可审计的具身研究闭环](part-07-capstone/ch22-auditable-capstone.md)
 - [编写状态](status.md)
 
 ## 当前限制
 
-当前版本已进入全书分批编写阶段。已接入正文的章节均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、target、状态更新、几何、空间状态、动作合同和评测协议，不是 Dreamer、ACT、VLA、occupancy 网络、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。
+当前版本已接入 22 章正文。每章均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、target、状态更新、几何、空间状态、动作合同和评测协议，不是 Dreamer、ACT、VLA、occupancy 网络、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。

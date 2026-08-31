@@ -2,7 +2,7 @@
 
 面向计算机视觉算法工程师的开源教材与可复现实验书。
 
-当前已进入全书分批编写阶段：先完成定义、实验纪律、RSSM 和评测主干，再按依赖批次扩展策略、空间、仿真和系统章节。当前开发设备无 GPU，只运行 Docker/CPU smoke 和微型 fixture；GPU 与大数据实验明确延后。
+全书 22 章正文和对应 S 档实验骨架均已接入，正在进行最终交叉审查。当前开发设备无 GPU，只运行 Docker/CPU smoke 和微型 fixture；GPU 与大数据实验明确延后。
 
 ## 当前入口
 
@@ -21,6 +21,7 @@
 - [第18章 VLA 后训练与 World-Action Models](docs/part-05-fusion/ch18-vla-post-training-and-wam.md)
 - [第19章物理仿真与 Sim2Real](docs/part-06-systems/ch19-physical-simulation-and-sim2real.md)
 - [第21章部署、实时性与安全边界](docs/part-06-systems/ch21-deployment-realtime-and-safety.md)
+- [第22章可审计综合项目](docs/part-07-capstone/ch22-auditable-capstone.md)
 - [批次 A 四类交叉审查](reviews/batch-a-review.md)
 - [批次 B 四类交叉审查](reviews/batch-b-review.md)
 - [章节状态](docs/status.md)
@@ -36,6 +37,7 @@ make ch02-smoke-local
 make ch04-smoke-local
 make ch08-smoke-local
 make ch18-smoke-local
+make ch22-smoke-local
 ```
 
 优先使用 Docker：
@@ -48,6 +50,7 @@ make ch02-smoke
 make ch04-smoke
 make ch08-smoke
 make ch18-smoke
+make ch22-smoke
 make docs-build
 ```
 
