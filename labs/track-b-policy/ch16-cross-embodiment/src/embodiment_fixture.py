@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 
 
 CanonicalAction = tuple[float, float]  # (delta_x_m, gripper_open_fraction)
@@ -16,15 +17,36 @@ class EmbodimentAdapter:
     delta_x_scale_to_m: float
     gripper_polarity: int
 
+    def __post_init__(self) -> None:
+        if not self.embodiment_id or not self.delta_x_unit:
+            raise ValueError("embodiment_id and delta_x_unit must be explicit")
+        if (
+            isinstance(self.delta_x_scale_to_m, bool)
+            or not isinstance(self.delta_x_scale_to_m, (int, float))
+            or not isfinite(self.delta_x_scale_to_m)
+            or self.delta_x_scale_to_m <= 0.0
+        ):
+            raise ValueError("delta_x_scale_to_m must be a finite positive number")
+        if isinstance(self.gripper_polarity, bool) or self.gripper_polarity not in (-1, 1):
+            raise ValueError("gripper_polarity must be -1 or 1")
+
+    @staticmethod
+    def _validated_action(action: tuple[float, float], name: str) -> tuple[float, float]:
+        if not isinstance(action, tuple) or len(action) != 2:
+            raise ValueError(f"{name} must be a two-value tuple")
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value) for value in action):
+            raise ValueError(f"{name} must contain finite numbers")
+        return float(action[0]), float(action[1])
+
     def to_canonical(self, raw: RawAction) -> CanonicalAction:
-        delta_x, gripper = raw
+        delta_x, gripper = self._validated_action(raw, "raw action")
         if not -1.0 <= gripper <= 1.0:
             raise ValueError("raw gripper value must be in [-1, 1]")
         open_fraction = (self.gripper_polarity * gripper + 1.0) / 2.0
         return (delta_x * self.delta_x_scale_to_m, open_fraction)
 
     def from_canonical(self, action: CanonicalAction) -> RawAction:
-        delta_x_m, open_fraction = action
+        delta_x_m, open_fraction = self._validated_action(action, "canonical action")
         if not 0.0 <= open_fraction <= 1.0:
             raise ValueError("canonical gripper fraction must be in [0, 1]")
         return (
@@ -62,11 +84,16 @@ def canonicalize(record: dict[str, object]) -> CanonicalAction:
 
 
 def mean_action(actions: tuple[RawAction, ...]) -> RawAction:
-    return tuple(sum(action[index] for action in actions) / len(actions) for index in range(2))  # type: ignore[return-value]
+    if not actions:
+        raise ValueError("at least one action is required")
+    validated = tuple(EmbodimentAdapter._validated_action(action, "pooled action") for action in actions)
+    return tuple(sum(action[index] for action in validated) / len(validated) for index in range(2))  # type: ignore[return-value]
 
 
 def mean_absolute_error(first: CanonicalAction, second: CanonicalAction) -> float:
-    return sum(abs(a - b) for a, b in zip(first, second)) / len(first)
+    first_ = EmbodimentAdapter._validated_action(first, "first action")
+    second_ = EmbodimentAdapter._validated_action(second, "second action")
+    return sum(abs(a - b) for a, b in zip(first_, second_)) / len(first_)
 
 
 def naive_raw_pooling_error() -> float:

@@ -1,6 +1,6 @@
 # 第8章 在想象中学习：Dreamer 系列
 
-> 状态：`drafted`
+> 状态：`reviewed`
 > 资料核查日期：2026-08-31
 > 关联实验：`EXP-08-01`
 > 关联声明：`CLAIM-08-01`～`CLAIM-08-06`
@@ -226,8 +226,9 @@ Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中�
 
 第9章用外部指标检查“模型预测得好”是否真的支持决策；第17章专门展示 actor/planner 利用模型漏洞；第18章把 imagined rollout、reward/critic 与后训练连接到 VLA 和长时任务。
 
-- 内容审查：修改中；
-- 代码审查：修改中；
-- 一致性审查：修改中；
-- 教学审查：修改中；
+- 内容审查：通过；
+- 代码审查：通过；
+- 一致性审查：通过；
+- 教学审查：通过；
+- 审查记录路径：`reviews/batch-d-review.md`；
 - 已知限制：只有解析 target 和手工反例，没有 world model、actor/critic 更新、上游 checkpoint、仿真、GPU 或真实闭环。

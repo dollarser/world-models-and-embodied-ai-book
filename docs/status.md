@@ -4,8 +4,9 @@
 | --- | --- | --- | --- |
 | 执行规格 | `drafted` | 章节、术语、风格、证据、manifest、实验卡、MIT 许可/数据政策、图表和门禁已建立；严格 Schema 检查通过 | benchmark card Schema 与发布门禁扩展 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
-| 批次 B（部分通过）：第13、14、15、20章 | `drafted` | 第13–15章四类审查通过；四章共 24 个单元测试与零下载 CPU smoke | 第17、19章已成稿；第20章等待跨批次一致性审查；上游策略/仿真未运行 |
+| 批次 B：第13、14、15、20章 | `reviewed` | 第13–15章在批次 B 通过；第20章由批次 D 关闭第17/19章一致性门 | 上游策略、仿真、真实数据和 GPU 未运行 |
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
+| 批次 D：第8、16、17、18、20、21章 | `reviewed` | 六章四类审查通过；40 个单元测试；imagined target—后训练—评测—部署合同闭合 | Dreamer/VLA/world model、仿真、真实系统和 GPU 未运行 |
 | 第2章 世界模型到底是什么 | `reviewed` | 正文、8 类四轴系统卡、4 个单元测试与 CPU smoke | 上游逐版本运行核验 |
 | 第4章 数据、基线与实验协议 | `reviewed` | 正文、5 类注入错误审计、5 个单元测试与 CPU smoke | 真实数据集审计 |
 | EXP-02-01 | `smoke` | 8/8 类别、来源和证据限制记录 | 不是性能 benchmark，未运行上游系统 |
@@ -19,7 +20,7 @@
 | EXP-06-01 | `smoke` | 宿主与 Docker CPU 数据流、3 个单元测试、固定指标 | PyTorch 训练、24GB GPU 资源 |
 | 第7章 用模型做规划 | `drafted` | MPC/CEM/tree search/value equivalence、自动驾驶候选轨迹与延迟回报 fixture | learned model、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
 | EXP-07-01 | `smoke` | 7 个单元测试；H=1/3、terminal value、扰动重规划和受限 Bellman gap | 三状态已知规则，不是 learned planning 性能 |
-| 第8章 在想象中学习 | `drafted` | Dreamer V1–V4 谱系、λ-return、continuation、误差传播、自动驾驶 imagined learning 与资源边界 | world model、actor/critic 训练、上游 checkpoint、仿真和 GPU 未运行 |
+| 第8章 在想象中学习 | `reviewed` | Dreamer V1–V4 谱系、λ-return、continuation、误差传播、自动驾驶正文与四类审查 | world model、actor/critic 训练、上游 checkpoint、仿真和 GPU 未运行 |
 | EXP-08-01 | `smoke` | 7 个单元测试；λ=0/0.5/1 target、reward bias 传播和终止后 reward 泄漏 | 三步解析序列，不是 Dreamer、策略改进或样本效率结果 |
 | 第10章 非生成式预测表示 | `reviewed` | 四类审查通过；JEPA 谱系、probe 协议与第5章非生成式边界 | 官方 checkpoint、真实数据与 GPU 未运行 |
 | EXP-10-01 | `smoke` | 5 个单元测试；重建与 shifted probe 排名反转 | 手工标量表征，不是 JEPA 性能 |
@@ -33,17 +34,17 @@
 | EXP-14-01 | `smoke` | 7 个单元测试；条件均值无效、refinement 调用—距离权衡 | 解析双峰和 oracle flow，不是方法性能比较 |
 | 第15章 VLA 架构模式 | `reviewed` | action token/FAST/连续 expert/双系统、VLM 边界、自动驾驶分层及四类审查 | VLA checkpoint、VLM API、机器人、仿真和 GPU 均未运行 |
 | EXP-15-01 | `smoke` | 9 个单元测试；三类动作头统一 schema，5/5 固定错误包被拒绝，另覆盖布尔动作与 horizon 篡改 | 手工移动底盘 packet，不是 VLA 或安全性能 |
-| 第16章 数据规模化与跨本体适配 | `drafted` | mixture、canonical action、迁移矩阵、OFT/LoRA/蒸馏和跨车队正文 | 真实数据、learned adapter、迁移实验与 GPU 均未运行 |
-| EXP-16-01 | `smoke` | 7 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0 | 两维手工动作，不是 learned transfer 性能 |
-| 第17章 世界模型帮助策略的五种方式 | `drafted` | 五类用途、评测替身风险、model exploitation、自动驾驶四角色正文 | learned world model、真实仿真器、上游 checkpoint 与 GPU 均未运行 |
+| 第16章 数据规模化与跨本体适配 | `reviewed` | mixture、canonical action、迁移矩阵、OFT/LoRA/蒸馏、跨车队正文与四类审查 | 真实数据、learned adapter、迁移实验与 GPU 均未运行 |
+| EXP-16-01 | `smoke` | 9 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0，拒绝非法 adapter/action | 两维手工动作，不是 learned transfer 性能 |
+| 第17章 世界模型帮助策略的五种方式 | `reviewed` | 五类用途、评测替身风险、model exploitation、自动驾驶四角色正文与四类审查 | learned world model、真实仿真器、上游 checkpoint 与 GPU 均未运行 |
 | EXP-17-01 | `smoke` | 6 个单元测试；8/9 转移一致仍造成策略排序反转与碰撞 | 手工 corridor，不是 learned simulator 性能 |
-| 第18章 VLA 后训练与 WAM | `drafted` | 五类后训练、稀疏 credit、长时层级/记忆、WAM 四类接口、自动驾驶独立闭环真值 | VLA/RL/world model、LIBERO、仿真、GPU 和硬件未运行 |
+| 第18章 VLA 后训练与 WAM | `reviewed` | 五类后训练、稀疏 credit、长时层级/记忆、WAM 四类接口、自动驾驶正文与四类审查 | VLA/RL/world model、LIBERO、仿真、GPU 和硬件未运行 |
 | EXP-18-01 | `smoke` | 7 个单元测试；reward-weighted target、ESS、recovery coverage 与 support gate | 四条标量轨迹，不是 offline RL 或 policy 改进 |
 | 第19章 物理仿真、Real2Sim 与 Sim2Real | `reviewed` | 仿真合同、gap 分解、环境矩阵、系统辨识、域随机化、自动驾驶正文与四类审查 | MuJoCo/MetaDrive/CARLA/Isaac、真实系统、资产和 GPU 均未运行 |
 | EXP-19-01 | `smoke` | 8 个单元测试；名义 held-out state MAE 0.6625，12 个候选恢复预设参数 | 标量确定性 fixture，不是物理仿真或 Sim2Real 性能 |
-| 第20章 具身评测 | `drafted` | 内容、代码、教学审查通过；第17、19章接口已接入 | 批次 C/D 一致性与实际仿真 |
+| 第20章 具身评测 | `reviewed` | 四类审查通过；第17章 model exploitation 与第19章 simulator gap 已接入 | 统计区间 smoke 与实际仿真 |
 | EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
-| 第21章 部署、实时性与安全边界 | `drafted` | deadline、尾延迟、异步 chunk、watchdog、fallback 与自动驾驶 MRM 正文 | 真实墙钟、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
+| 第21章 部署、实时性与安全边界 | `reviewed` | deadline、尾延迟、异步 chunk、watchdog、fallback、自动驾驶 MRM 与四类审查 | 真实墙钟、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
 | EXP-21-01 | `smoke` | 7 个单元测试；mean 45 ms 掩盖 150 ms 尾部，五类异常分别拒绝 | 手工 latency/packet，不是实时或安全证明 |
 | 文档站 | `smoke` | 20 章正文接入 MkDocs Material Docker 严格构建 | 发布部署与浏览器视觉审查 |
 

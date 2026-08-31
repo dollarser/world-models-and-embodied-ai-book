@@ -1,6 +1,6 @@
 # 第18章 VLA 后训练、长时序与 World-Action Models
 
-> 状态：`drafted`
+> 状态：`reviewed`
 > 资料核查日期：2026-08-31
 > 关联实验：`EXP-18-01`
 > 关联声明：`CLAIM-18-01`～`CLAIM-18-06`
@@ -217,8 +217,9 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 
 第19章提供物理 simulator 与 sim-gap 锚点；第20章固定 policy 评测协议；第21章把更新后的 policy 放入时延、watchdog 和 fallback 边界。第22章将把这些合同收束成一个可审计综合项目。
 
-- 内容审查：修改中；
-- 代码审查：修改中；
-- 一致性审查：修改中；
-- 教学审查：修改中；
+- 内容审查：通过；
+- 代码审查：通过；
+- 一致性审查：通过；
+- 教学审查：通过；
+- 审查记录路径：`reviews/batch-d-review.md`；
 - 已知限制：只有离线标量重加权，没有 VLA/RL/world-model 训练、LIBERO、物理仿真、GPU、机器人或车辆。

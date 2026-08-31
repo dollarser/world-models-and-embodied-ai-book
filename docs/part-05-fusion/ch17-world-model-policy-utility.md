@@ -1,6 +1,6 @@
 # 第17章 世界模型帮助策略的五种方式
 
-> 状态：`drafted`
+> 状态：`reviewed`
 > 资料核查日期：2026-08-31
 > 关联实验：`EXP-17-01`
 > 关联声明：`CLAIM-17-01`～`CLAIM-17-06`
@@ -220,7 +220,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 
 ## 下一章接口
 
-第18章将把交互环境、reward/critic 和 imagined rollout 用于 VLA 后训练与长时任务，并继续检查 world-model error 如何污染优势与奖励。第19章再建立真实物理仿真锚点，使本章的 return gap 和 policy exploitation 从手工反例进入可校准环境。
+第18章把交互环境、reward/critic 和 imagined rollout 用于 VLA 后训练与长时任务，并继续检查 world-model error 如何污染优势与奖励。第19章建立物理仿真锚点，使本章的 return gap 和 policy exploitation 可进入后续可校准环境。
 
 ## 验收与审查记录
 
@@ -231,10 +231,10 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 文档构建：make docs-build
 ```
 
-- 内容审查：修改中；
-- 代码审查：修改中；
-- 一致性审查：修改中（已对齐第7/8/9/13/15/18/19/20章，等待批次 D 统一复核）；
-- 教学审查：修改中；
-- 审查记录路径：待批次 D 交叉审查；
+- 内容审查：通过；
+- 代码审查：通过；
+- 一致性审查：通过；
+- 教学审查：通过；
+- 审查记录路径：`reviews/batch-d-review.md`；
 - 已知限制：未训练 learned world model，未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
-- 下一步：与第8/16/18/20/21章执行批次 D 内容、代码、一致性和教学审查。
+- 下一步：在第22章综合项目中复用 return gap、策略错排和真实性锚点。
