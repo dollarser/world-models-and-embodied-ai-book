@@ -1,7 +1,7 @@
 # 第6章 World Models 与循环状态空间模型
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-06-01`
 > 关联声明：`CLAIM-06-01`～`CLAIM-06-06`
 > 关联图表：`FIG-06-01` / `TAB-06-01` / `TAB-06-02`
@@ -199,7 +199,7 @@ make ch06-smoke
 
 原始结果记录在 `results/ch06/EXP-06-01-smoke.json`。这些数字只属于 `EXP-06-01` 的固定教学 fixture，不与论文分数比较，也不用于声称学习方法优于其他模型。
 
-同一协议已冻结为 `benchmarks/BENCH-06-01.json`：它把 31 个有效转移、seed 7、filtering/open-loop 的观测可见性、persistence 基线、三项指标实现和禁止声明写成机器可校验字段。`experiment-card.json` 继续记录本次运行的代码、资源和命令，结果 JSON 只保存测量值。三类文件分开后，改变 seed、horizon 或未来观测可见性就属于协议变更，不能仍以同一 benchmark 版本横向比较。
+同一协议已冻结为 `benchmarks/BENCH-06-01.json` v2：它除登记31个有效转移、seed 7、filtering/open-loop 的观测可见性、persistence 基线与三项 RMSE，还登记两组 categorical posterior/prior、`KL(q‖p)` 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
 
 `CLAIM-06-03`（result）：在 `EXP-06-01` 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
 
@@ -335,5 +335,5 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch06-kl-routing-review-2026-09-01.md`、`reviews/ch06-benchmark-kl-contract-review-2026-09-02.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
 - 已知限制与下一步：PyTorch mini-RSSM、24 GB 单卡资源和完整训练仍待后续阶段验证。

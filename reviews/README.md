@@ -17,6 +17,7 @@
 - [第22章跨章证据 Trace 审查](capstone-traceability-review-2026-09-01.md)
 - [第13章执行时域与时间集成审查](ch13-execution-temporal-review-2026-09-01.md)
 - [第6章 KL 路由与 free-nats 审查](ch06-kl-routing-review-2026-09-01.md)
+- [第6章 benchmark KL 合同一致性审查](ch06-benchmark-kl-contract-review-2026-09-02.md)
 - [第9章长时分母与动作干预审查](ch09-horizon-denominator-review-2026-09-01.md)
 - [第2章三态能力蕴含审查](ch02-capability-implication-review-2026-09-01.md)
 - [第20章评测有效性与证据层级审查](ch20-evaluation-validity-review-2026-09-01.md)

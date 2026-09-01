@@ -31,7 +31,7 @@
 | EXP-05-01 | `smoke` | 14 个单元测试；点均值落在 support 外、条件 NLL 优于无条件，区分条件忽略/mode collapse/虚构 mode，并证明共同错误可在 range 0 时漏过门禁 | 八个分布样本与三个手写成员；观察 support 不等于真实连续 support，range 不是校准或 OOD 保证 |
 | 第9章 世界模型如何评测与失败 | `reviewed` | one-step/E2/E4 排序反转、逐 horizon attempted/available/coverage、缺失分母反例、proper probability score 与分箱 ECE 负对照、自动驾驶矩阵、risk–coverage 协议与 benchmark card | WorldArena/KineBench 等上游未运行；手工概率/缺失表与机器结构不证明总体校准、uncertainty 或外部效度 |
 | EXP-09-01 | `smoke` | 12 个单元测试；action sensitivity 0/0.2；fragile 第4步 coverage 1/3，available-case 与固定分母排序相反；两 forecast 单 bin ECE 同为0但 Brier 为0.25/0.01 | 手工一维预测器、误差表与4个二元结果，不是模型崩溃率、总体校准、自然误差尺度或安全测量 |
-| 第6章正文 | `reviewed` | prior/posterior、DreamerV3 dyn/rep stop-gradient 路由、free-nats 日志边界、自动驾驶正文、资源边界与冻结 benchmark card | PyTorch mini-RSSM 与 GPU 验证 |
+| 第6章正文 | `reviewed` | prior/posterior、DreamerV3 dyn/rep stop-gradient 路由、free-nats 日志边界、自动驾驶正文、资源边界；`BENCH-06-01` v2 已把31个 rollout 转移与两组 KL 阈值/scale/目标标签统一冻结 | PyTorch mini-RSSM、真实自动微分梯度与 GPU 验证 |
 | EXP-06-01 | `smoke` | 9 个单元测试；固定 filtering/open-loop 指标，以及 raw KL 在 free-nats 阈值两侧的解析诊断 | 不运行自动微分或神经训练，24GB GPU 资源未验证 |
 | 第7章 用模型做规划 | `reviewed` | MPC/CEM/tree search/value equivalence、PETS 粒子传播接口、固定动作预算的扰动重规划、环境 reward/terminal value 分账、风险目标排序反例与自动驾驶正文；四类审查通过 | learned probabilistic model、概率校准、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
 | EXP-07-01 | `smoke` | 13 个单元测试；H=1/3、terminal value、扰动协议负对照、固定两动作槽的 reward-only/bootstrapped objective、受限 Bellman gap 与风险排序反转 | 三状态已知规则、一个固定扰动和五个手工等权场景；不是 learned planning、真实概率或安全性能 |
