@@ -1,7 +1,7 @@
 # 第13章 模仿学习、误差累积与动作分块
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-13-01`
 > 关联声明：`CLAIM-13-01`～`CLAIM-13-06`
 > 关联图表：`FIG-13-01` / `TAB-13-01` / `TAB-13-02`
@@ -114,7 +114,7 @@ ACT 的 temporal ensemble 会把不同查询对当前动作的重叠预测做指
 \bar a_t=\frac{\sum_{i=0}^{n-1}\exp(-m i)\hat a_t^{(i)}}{\sum_{i=0}^{n-1}\exp(-m i)}.
 \]
 
-[ACT 原仓库评测脚本](https://github.com/tonyzhaozh/act/blob/main/imitate_episodes.py)当前把 `m` 固定为 `0.01`；LeRobot 快照 `128d332` 的[配置默认说明](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)也是 `0.01`，其 [`ACTTemporalEnsembler`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/modeling_act.py)明确让 `i=0` 对应最旧预测。正的 `m` 因而给旧预测更大权重：它能抑制逐次查询抖动，也会在目标真的变化时产生惯性。权重方向、系数、reset 时机和有效 mask 都是协议字段，不能只写“使用 temporal aggregation”。
+[ACT 原仓库评测脚本快照 `742c753`](https://github.com/tonyzhaozh/act/blob/742c753c0d4a5d87076c8f69e5628c79a8cc5488/imitate_episodes.py)把 `m` 固定为 `0.01`；LeRobot 快照 `128d332` 的[配置默认说明](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)也是 `0.01`，其 [`ACTTemporalEnsembler`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/modeling_act.py)明确让 `i=0` 对应最旧预测。正的 `m` 因而给旧预测更大权重：它能抑制逐次查询抖动，也会在目标真的变化时产生惯性。权重方向、系数、reset 时机和有效 mask 都是协议字段，不能只写“使用 temporal aggregation”。
 
 ## 13.5 EXP-13-01：三个协议反例
 
@@ -249,5 +249,5 @@ S 档下载量 0、无 GPU、无外部数据，代码和 fixture 按 MIT 发布�
 - 代码审查：通过；
 - 一致性审查：通过（当前 schema 与策略主线接口；第3章进入 `reviewed` 后仍按全书统稿流程复核）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-b-review.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/batch-b-review.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：未运行 LeRobot、BC 或 ACT，GPU 与数据资源均待验证。

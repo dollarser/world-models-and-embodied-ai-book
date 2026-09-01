@@ -1,7 +1,7 @@
 # 第15章 VLA 的架构模式
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-15-01`
 > 关联声明：`CLAIM-15-01`～`CLAIM-15-09`
 > 关联图表：`FIG-15-01` / `TAB-15-01`～`TAB-15-04`
@@ -105,13 +105,13 @@ flowchart LR
 
 另一条路线让 VLM 提供语义/视觉上下文，由专门的连续 action expert 产生 chunk。第14章解释了 diffusion/flow 接口。这样可以避免长动作 token 序列，也引入采样 solver、专家容量、缓存和异步执行问题。
 
-[SmolVLA](https://arxiv.org/abs/2506.01844) 的公开论文与 LeRobot 实现以较小 VLM 加 action expert、flow matching 和异步推理为主线 `[A/O,R1]`。当前 LeRobot 配置显式区分 `chunk_size`、`n_action_steps`、动作/状态归一化、空相机和 flow 采样步数；[异步推理实现](https://github.com/huggingface/lerobot/blob/main/src/lerobot/async_inference/policy_server.py)还为 chunk 中每个动作附加 observation 起点、环境 timestep 和逐步时间戳，再由客户端管理队列与重叠 chunk。本书没有执行其 checkpoint。
+[SmolVLA](https://arxiv.org/abs/2506.01844) 的公开论文与 LeRobot 实现以较小 VLM 加 action expert、flow matching 和异步推理为主线 `[A/O,R1]`。LeRobot 快照 `128d332` 的配置显式区分 `chunk_size`、`n_action_steps`、动作/状态归一化、空相机和 flow 采样步数；[异步推理实现](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/async_inference/policy_server.py)从 observation 的时间戳和 timestep 构造 chunk 中每个动作的预期执行时间与步号，再由客户端管理队列与重叠 chunk。本书没有执行其 checkpoint。
 
 ## 15.4 双系统与分层：快慢不是安全边界
 
 双系统通常让较慢的视觉语言模块解释场景和任务，让较快 action expert 生成连续控制。它可以缓存语义前缀、异步刷新动作块，也可以端到端联合训练。所谓 System 2 不保证形式化推理，System 1 也不保证硬实时。
 
-[Isaac GR00T](https://github.com/NVIDIA/Isaac-GR00T) 的当前主分支在核查日标为 N1.7，官方 README 描述 VLM 主干加 flow-matching DiT action head、相对末端动作和 LeRobot 数据接口，并公开 Apache-2.0 代码/权重说明 `[O,R1]`。当前主分支说明 action dimension 已扩至 132、模型最大 action horizon 已从 16 扩至 40，rollout 参数也从 `action-horizon` 改名为 `execution-horizon`。但官方 [`data_config.md`](https://github.com/NVIDIA/Isaac-GR00T/blob/main/getting_started/data_config.md) 的示例仍使用 16 步 `delta_indices`，并要求改变窗口后重新生成逐步统计；这不是矛盾结果，而是不同合同层。
+[Isaac GR00T README 快照 `51d4c89`](https://github.com/NVIDIA/Isaac-GR00T/blob/51d4c89f72fda44cbf77285c6a8114b52676b8a1/README.md)标为 N1.7，描述 VLM 主干加 flow-matching DiT action head、相对末端动作和 LeRobot 数据接口，并公开 Apache-2.0 代码说明 `[O,R1]`。该快照说明 action dimension 已扩至 132、模型最大 action horizon 已从 16 扩至 40，rollout 参数也从 `action-horizon` 改名为 `execution-horizon`。但同一快照的 [`data_config.md`](https://github.com/NVIDIA/Isaac-GR00T/blob/51d4c89f72fda44cbf77285c6a8114b52676b8a1/getting_started/data_config.md)示例仍使用 16 步 `delta_indices`，并要求改变窗口后重新生成逐步统计；这不是矛盾结果，而是模型上限、数据窗口与实际执行窗口三个不同合同层。权重访问和模型许可还需按具体 checkpoint 单独核对，不能由代码仓库的 Apache-2.0 直接推出。
 
 | 层 | GR00T N1.7 当前例子 | 必须锁定的问题 |
 | --- | --- | --- |
@@ -333,6 +333,6 @@ Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺
 - 代码审查：通过；
 - 一致性审查：通过（已与第10/12/13/14/16/17章及第20/21章合同对齐）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch15-command-integrity-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch15-command-integrity-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载或运行任何 VLA、VLM API、机器人、仿真或 GPU；
 - 下一步：可沿第17章核对世界模型与 VLA 的组合边界，再用第20、21章完成评测与部署证据检查。

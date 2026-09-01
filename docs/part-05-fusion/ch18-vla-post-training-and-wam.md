@@ -1,7 +1,7 @@
 # 第18章 VLA 后训练、长时序与 World-Action Models
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-18-01`
 > 关联声明：`CLAIM-18-01`～`CLAIM-18-08`
 > 关联图表：`FIG-18-01` / `TAB-18-01` / `TAB-18-02` / `TAB-18-03` / `TAB-18-04`
@@ -132,7 +132,7 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 
 ## 18.4 交互式后训练：稀疏成功信号也有代价
 
-[RIPT-VLA](https://arxiv.org/abs/2505.17016)用稀疏二元 success 做 VLA interactive post-training，并采用动态 rollout sampling 与 leave-one-out advantage estimation；作者[代码仓库](https://github.com/Ariostgx/ript-vla/blob/main/train_ript.py)当前入口显式传递 `rloo_batch_size`、dynamic sampling、PPO epoch/batch 和 clipping 配置，提供 QueST/OpenVLA-OFT + LIBERO 路线 `[A/O,R1]`。它展示的是交互环境中的 RL，不是 learned world model 路线。
+[RIPT-VLA](https://arxiv.org/abs/2505.17016)用稀疏二元 success 做 VLA interactive post-training，并采用动态 rollout sampling 与 leave-one-out advantage estimation；作者[训练入口快照 `440990e`](https://github.com/Ariostgx/ript-vla/blob/440990e8864e12e4578b490ff6359e4f2c49ae3e/train_ript.py)显式传递 `rloo_batch_size`、dynamic sampling、PPO epoch/batch 和 clipping 配置，提供 QueST + LIBERO 路线 `[A/O,R1]`。该文件本身不能证明 OpenVLA-OFT 路线已经接入；项目级支持范围应另查配置、README 和 revision。它展示的是交互环境中的 RL，不是 learned world model 路线。
 
 二元 success 避免手工 dense reward 的部分偏置，却没有消除 credit assignment：需要同任务/初态下足够多的成功与失败 rollout 才能形成可用组内相对信号。若一组全失败或全成功，fixture 所示的 REINFORCE Leave-One-Out（RLOO）相对优势退化。dynamic sampling 丢弃并重采这类组可以恢复梯度信号，却会改变实际 task/难度分布、增加 rollout 成本，并可能长期饿死过难或过易任务；必须报告 attempted、discarded、resampled 和 used group 数。若 policy 更新太快，旧 rollout 与新 policy 不匹配；若 simulator success 使用 privileged state，真实部署未必拥有同一 verifier。
 
@@ -286,5 +286,5 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：只有离线标量重加权，没有 VLA/RL/world-model 训练、LIBERO、物理仿真、GPU、机器人或车辆。

@@ -10,7 +10,7 @@
 
 | 命令 | 环境 | 检查范围 | 失败等级 |
 | --- | --- | --- | --- |
-| `make check-local` | 宿主标准库 | 文件、JSON、链接、manifest、PRD 22 章 S 档—实验卡映射与可选 M/L 路径、22 个实验资产包、当前正文显式 `EXP/BENCH` 版本与卡片同步、声明/图表双向登记、`fact`/`inference` 证据登记、关键 `recommendation` 适用性登记、快速演进研究雷达、贯穿案例—22章阅读地图、Mermaid 无障碍元数据、标题层级、章节教学/接口区段、manifest 登记章节的练习—自检双向对应、读者关键术语、`result`—实验卡绑定/定义句边界与 22 组 smoke—结果精确一致性 | `BLOCK` |
+| `make check-local` | 宿主标准库 | 文件、JSON、链接、正文 GitHub 实现来源不可变性、manifest、PRD 22 章 S 档—实验卡映射与可选 M/L 路径、22 个实验资产包、当前正文显式 `EXP/BENCH` 版本与卡片同步、声明/图表双向登记、`fact`/`inference` 证据登记、关键 `recommendation` 适用性登记、快速演进研究雷达、贯穿案例—22章阅读地图、Mermaid 无障碍元数据、标题层级、章节教学/接口区段、manifest 登记章节的练习—自检双向对应、读者关键术语、`result`—实验卡绑定/定义句边界与 22 组 smoke—结果精确一致性 | `BLOCK` |
 | `make check-strict` | Docker | JSON Schema、manifest、实验卡/benchmark card 条件与跨资产规则 | `BLOCK` |
 | `make check` | 宿主 + Docker | 依次执行 local 与 strict | `BLOCK` |
 | `make docs-build` | Docker | MkDocs 严格构建、导航、Markdown 扩展 | `BLOCK` |
@@ -36,6 +36,7 @@
 | 关键建议 | 自动 + 人工 `BLOCK` | 会改变资源升级、数据纳入、评测发布、运行激活或安全关键执行的建议，登记适用条件、要求动作、替代/停止路径和未授权事项；登记项仍必须是正文中的 `recommendation` |
 | 结果解释 | 自动 + 人工 `BLOCK` | 每个 `result` 由实验卡绑定，并在定义句直接说明不证明、不外推或只适用的边界；章节上下文解释机制而非只罗列数字 |
 | 来源成熟度 | 人工 `BLOCK` | `P` 有已接收/发表的一手元数据；只有 arXiv、项目页或投稿状态时标为 `A`，官方资产 `O` 不替论文成熟度 |
+| 实现来源快照 | 自动 + 人工 `BLOCK` | 当前读者文档不得使用 GitHub `blob/main`、`tree/main`、`blob/master` 或 `tree/master` 作为实现证据；引用具体文件或目录时锁完整 40 位 commit，仓库落地页只作发现入口，不支撑版本化实现声明 |
 | 研究雷达 | 自动 + 人工 `BLOCK` | 快速演进工作登记核查日期、一手/官方来源 revision、章节归属、资产开放度、复现状态、资源路径、不可外推边界与复核触发器；GitHub 官方仓库 URL 锁完整 commit 且与 revision 一致；作者报告不升级为本书 `result` |
 | 贯穿案例 | 自动 + 人工 `BLOCK` | 阅读地图恰好链接 manifest 中每章一次，保留杯子操作与施工改道两条任务主线，解释七个核心术语的证据递进，并明确案例不是新增实验、22组独立 smoke 不是端到端运行证据 |
 | 图表追溯 | 自动 + 人工 `BLOCK` | 正文 `FIG/TAB` 与 manifest 双向相等、章节归属正确；Mermaid 有登记 ID 开头的 `accTitle` 和关系型 `accDescr`；caption、来源、许可和解释边界完整 |

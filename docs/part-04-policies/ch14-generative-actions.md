@@ -1,7 +1,7 @@
 # 第14章 生成动作：Diffusion Policy 与 Flow Matching
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-14-01`
 > 关联声明：`CLAIM-14-01`～`CLAIM-14-08`
 > 关联图表：`FIG-14-01` / `TAB-14-01`～`TAB-14-04`
@@ -207,7 +207,7 @@ fixture 还把“接近演示模式”和“当前场景允许执行”分开。
 
 S 档 `EXP-14-01` 使用 Python 标准库、CPU、零下载与 MIT fixture，只验证多峰、候选—batch 预算和独立安全筛选接口。
 
-M 档优先使用 [LeRobot](https://github.com/huggingface/lerobot) 中的 Diffusion Policy 接口，在同一 Push-T 或小型许可数据划分上比较 MSE chunk policy 与 diffusion policy。[当前官方配置](https://github.com/huggingface/lerobot/blob/main/src/lerobot/policies/diffusion/configuration_diffusion.py)明确区分 `n_obs_steps`、`horizon`、`n_action_steps`、`num_train_timesteps` 与 `num_inference_steps`；未指定推理步数时会回落到训练 timestep 数，sample clipping 还要求动作归一化范围与之匹配，padding loss mask 则需显式选择 `[O,R1]`。这些是必须冻结的配置，不是通用推荐值。默认目标为 24 GB 单卡以内；先跑状态输入或低分辨率视觉、小 batch、少量 episode 和 2–3 seeds。当前未下载、未训练、未验证显存。
+M 档优先使用 [LeRobot](https://github.com/huggingface/lerobot) 中的 Diffusion Policy 接口，在同一 Push-T 或小型许可数据划分上比较 MSE chunk policy 与 diffusion policy。[官方配置快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/diffusion/configuration_diffusion.py)明确区分 `n_obs_steps`、`horizon`、`n_action_steps`、`num_train_timesteps` 与 `num_inference_steps`；未指定推理步数时会回落到训练 timestep 数，sample clipping 还要求动作归一化范围与之匹配，padding loss mask 则需显式选择 `[O,R1]`。这些是必须冻结的配置，不是通用推荐值。默认目标为 24 GB 单卡以内；先跑状态输入或低分辨率视觉、小 batch、少量 episode 和 2–3 seeds。当前未下载、未训练、未验证显存。
 
 L1 可加入 flow-matching action head，并在固定 backbone/数据下按模型调用数和墙钟时延比较。openpi README 的上游估算是推理需大于 8 GB、LoRA 微调大于 22.5 GB、全量微调大于 70 GB；这是官方当前配置说明 `[O,R1]`，不是本书实测。仓库同时提供 JAX 与 PyTorch 路线，但当前 PyTorch 说明仍列出不支持 π0-FAST、mixed precision、FSDP、LoRA 与 EMA 等差异，不能跨后端照搬显存结论。LoRA 已贴近 24 GB 边界，必须先做显存预检；full fine-tune 属于可选 L2，最多 2×80 GB，不是必做，也不要求购置硬件。
 
@@ -307,6 +307,6 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 - 代码审查：通过；
 - 一致性审查：通过（第5章生成基础、第13章执行时域与第15章动作 schema 接口已核对）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch14-generative-budget-review-2026-09-01.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch14-generative-budget-review-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有训练 Diffusion Policy/flow policy、下载数据或 checkpoint，也未验证 GPU 与真实时延；
 - 下一步：后续 M 档实验在具备 GPU 时验证显存、墙钟时延与闭环指标，不用解析 fixture 替代模型结果。

@@ -106,6 +106,9 @@ RESULT_BOUNDARY_MARKERS = ("不", "不能", "只", "未", "无法", "并非", "�
 PINNED_GITHUB_URL_PATTERN = re.compile(
     r"^https://github\.com/[^/]+/[^/]+/(?:blob|tree|commit)/([0-9a-f]{40})(?:/|$)"
 )
+FLOATING_GITHUB_BRANCH_PATTERN = re.compile(
+    r"https://github\.com/[^\s)]+/(?:blob|tree)/(?:main|master)(?:/|\b)"
+)
 
 
 def pinned_github_commit(url: str) -> str | None:
@@ -113,6 +116,18 @@ def pinned_github_commit(url: str) -> str | None:
 
     match = PINNED_GITHUB_URL_PATTERN.match(url)
     return match.group(1) if match else None
+
+
+def check_floating_github_source_contract(documents: dict[str, str]) -> list[str]:
+    """Reject mutable GitHub branch links in current reader-facing documents."""
+
+    errors: list[str] = []
+    for document, text in documents.items():
+        for match in FLOATING_GITHUB_BRANCH_PATTERN.finditer(text):
+            errors.append(
+                f"current document {document} uses floating GitHub implementation source: {match.group(0)}"
+            )
+    return errors
 
 
 def check_required() -> list[str]:
@@ -922,6 +937,14 @@ def check_markdown_links() -> list[str]:
     return errors
 
 
+def check_floating_github_sources() -> list[str]:
+    documents = {
+        str(path.relative_to(ROOT)): path.read_text(encoding="utf-8")
+        for path in sorted((ROOT / "docs").rglob("*.md"))
+    }
+    return check_floating_github_source_contract(documents)
+
+
 def check_prd_chapters() -> list[str]:
     prd = ROOT / "specs/PRD/世界模型与具身智能_书籍设计方案-v0_6.md"
     if not prd.is_file():
@@ -1075,6 +1098,7 @@ def main() -> int:
         + check_manifest()
         + check_experiment_assets()
         + check_markdown_links()
+        + check_floating_github_sources()
         + check_prd_chapters()
         + check_glossary_files()
         + check_fact_evidence_files()
@@ -1091,7 +1115,7 @@ def main() -> int:
         "experiment asset packages, explicit asset versions, heading hierarchy, chapter teaching sections, exercise self-checks, reader terminology, "
         "fact/inference evidence, critical "
         "recommendation policy, research radar, running-case reading map, manifest, "
-        "local links, 22-chapter PRD tier mapping"
+        "local links, immutable reader-facing GitHub implementation sources, 22-chapter PRD tier mapping"
     )
     return 0
 

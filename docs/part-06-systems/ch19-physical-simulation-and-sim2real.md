@@ -1,7 +1,7 @@
 # 第19章 物理仿真、Real2Sim 与 Sim2Real
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-19-01`
 > 关联声明：`CLAIM-19-01`～`CLAIM-19-07`
 > 关联图表：`FIG-19-01` / `TAB-19-01` / `TAB-19-02`
@@ -97,7 +97,7 @@ flowchart LR
 
 *TAB-19-01：本书的仿真环境角色。许可和资源来自核查日官方仓库/文档，执行前仍需按具体版本复核。*
 
-[MuJoCo](https://github.com/google-deepmind/mujoco) 适合把控制、接触和系统辨识讲清楚；当前官方 Python 包还提供 [sysid toolbox](https://github.com/google-deepmind/mujoco/blob/main/python/mujoco/sysid/README.md)：用带 box constraint 的 nonlinear least squares、finite-difference Jacobian 和批量 rollout 拟合物理或测量参数，并可组合多个 `ModelSequences`、自定义 residual、time delay 与 confidence interval `[O,R1]`。工具能优化不等于参数必然可辨识；residual 对两个参数只依赖其乘积时，优化器仍会面对等价解。
+[MuJoCo](https://github.com/google-deepmind/mujoco) 适合把控制、接触和系统辨识讲清楚；官方 [sysid toolbox 快照 `005b351`](https://github.com/google-deepmind/mujoco/blob/005b35170d16cf20d1eb5afcecf67328e6ec0875/python/mujoco/sysid/README.md)使用带 box constraint 的 nonlinear least squares、finite-difference Jacobian 和批量 rollout 拟合物理或测量参数，并可组合多个 `ModelSequences`、自定义 residual、time delay 与 confidence interval `[O,R1]`。工具能优化不等于参数必然可辨识；residual 对两个参数只依赖其乘积时，优化器仍会面对等价解。
 
 [MetaDrive](https://github.com/metadriverse/metadrive) 是本书自动驾驶 M 档默认入口，因为它提供程序化场景和状态、激光雷达、俯视图、RGB 等观测。官方给出的高帧率是特定设置下的上限，不应写成本书通用实测。
 
@@ -248,7 +248,7 @@ gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限�
 ## 延伸阅读
 
 - [MuJoCo 官方仓库](https://github.com/google-deepmind/mujoco) 与 [MJX 文档](https://mujoco.readthedocs.io/en/stable/mjx.html)，`[O,R1]`；
-- [MuJoCo 官方 System Identification Toolbox](https://github.com/google-deepmind/mujoco/blob/main/python/mujoco/sysid/README.md)，`[O,R1]`；
+- [MuJoCo 官方 System Identification Toolbox 快照 `005b351`](https://github.com/google-deepmind/mujoco/blob/005b35170d16cf20d1eb5afcecf67328e6ec0875/python/mujoco/sysid/README.md)，`[O,R1]`；
 - [MetaDrive 官方仓库](https://github.com/metadriverse/metadrive) 与 [官方文档](https://metadrive-simulator.readthedocs.io/en/latest/)，`[O,R1]`；
 - [CARLA 官方仓库](https://github.com/carla-simulator/carla)，`[O,R1]`；
 - [Isaac Lab 官方仓库](https://github.com/isaac-sim/IsaacLab)，`[O,R1]`；
@@ -273,5 +273,5 @@ gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：只运行标准库标量 fixture；没有安装仿真器、下载资产、运行 GPU 或真实硬件。

@@ -1,7 +1,7 @@
 # 第4章 数据、基线与实验协议
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-04-01`（smoke）
 > 关联声明：`CLAIM-04-01`～`CLAIM-04-09`
 > 关联图表：`FIG-04-01` / `TAB-04-01` / `TAB-04-02`
@@ -385,7 +385,7 @@ S 档使用几条程序化 metadata：验证 schema、frame/unit/timestamp、spl
 ## 延伸阅读
 
 - [LeRobot Dataset v3 官方文档](https://huggingface.co/docs/lerobot/lerobot-dataset-v3)，`[O,R1]`，多模态 episode、metadata 与时间窗口；
-- [LeRobotDataset 当前实现](https://github.com/huggingface/lerobot/blob/main/src/lerobot/datasets/lerobot_dataset.py)，`[O]`，timestamp 与时间窗口检查入口；
+- [LeRobotDataset 快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/datasets/lerobot_dataset.py)，`[O]`，timestamp 与时间窗口检查入口；
 - [Gymnasium：Handling Time Limits](https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/)，`[O]`，termination、truncation 与 bootstrap 语义；
 - [ROS 2 message_filters](https://docs.ros.org/en/ros2_packages/rolling/api/message_filters/message_filters.html)，`[O]`，header timestamp、exact/approximate sync 与容差；
 - Agarwal et al., [Deep Reinforcement Learning at the Edge of the Statistical Precipice](https://arxiv.org/abs/2108.13264)，`[P]`，少量运行下的统计报告风险；
@@ -408,6 +408,6 @@ S 档使用几条程序化 metadata：验证 schema、frame/unit/timestamp、spl
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch04-content-identity-leakage-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch04-content-identity-leakage-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：真实 LeRobot/驾驶数据审计尚未执行；
 - 下一步：episode 截断、缺帧 mask、多传感器 skew 和已登记身份交集已进入 S 档；仍需在真实数据上冻结并验证近重复检索方法，同时审计 clock domain/漂移、视频解码、标定、隐私和许可。

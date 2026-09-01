@@ -11,6 +11,7 @@ from scripts.check_book import (
     check_documented_asset_version_contract,
     check_exercise_self_check_contract,
     check_fact_evidence_contract,
+    check_floating_github_source_contract,
     check_experiment_asset_contract,
     check_figure_contract,
     check_glossary_contract,
@@ -21,6 +22,32 @@ from scripts.check_book import (
     check_research_radar_contract,
     check_reading_map_contract,
 )
+
+
+class FloatingGitHubSourceContractTest(unittest.TestCase):
+    def test_rejects_main_and_master_but_accepts_full_commit(self) -> None:
+        commit = "0123456789abcdef0123456789abcdef01234567"
+        errors = check_floating_github_source_contract(
+            {
+                "docs/ch01.md": "https://github.com/example/project/blob/main/model.py",
+                "docs/ch02.md": "https://github.com/example/project/tree/master/docs",
+                "docs/ch03.md": f"https://github.com/example/project/blob/{commit}/model.py",
+            }
+        )
+        self.assertEqual(2, len(errors))
+        self.assertTrue(any("docs/ch01.md" in item and "blob/main" in item for item in errors))
+        self.assertTrue(any("docs/ch02.md" in item and "tree/master" in item for item in errors))
+
+    def test_accepts_non_github_and_repository_landing_pages(self) -> None:
+        self.assertEqual(
+            [],
+            check_floating_github_source_contract(
+                {
+                    "docs/ch01.md": "https://arxiv.org/abs/1234.56789",
+                    "docs/ch02.md": "https://github.com/example/project",
+                }
+            ),
+        )
 
 
 class ClaimContractTest(unittest.TestCase):

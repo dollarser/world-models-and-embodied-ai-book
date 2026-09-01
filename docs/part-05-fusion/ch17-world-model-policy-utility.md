@@ -1,7 +1,7 @@
 # 第17章 世界模型帮助策略的五种方式
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-17-01`
 > 关联声明：`CLAIM-17-01`～`CLAIM-17-08`
 > 关联图表：`FIG-17-01` / `TAB-17-01` / `TAB-17-02`
@@ -86,7 +86,7 @@ flowchart LR
 
 世界模型可改变初态、背景、对象、天气、任务进度或动作条件未来，以扩充稀有场景和长尾组合。合成数据要保留生成条件、动作、时间、过滤器、随机种子和来源许可；只有视频而没有可信动作/状态标签时，不能直接加入控制监督。
 
-[Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5/blob/main/docs/inference_robot_action_cond.md) 是会漂移的平台案例：官方仓库提供 action-conditioned 机器人视频生成、action loader 和 post-training/distillation 路径 `[O,R1]`。其默认转换会从机器人 state 计算相对末端动作，因此 action frame、scale、gripper 语义和 fps 都是生成合同，不是附属参数。当前 [Cosmos 3](https://github.com/NVIDIA/cosmos) 又把 action modeling 分为 policy、inverse dynamics 和 forward dynamics 三种 mode；只有 forward dynamics 接收候选 action chunk 来预测未来，不能把“模型能输出动作”自动写成“模型验证了这组动作”。
+[Cosmos-Predict2.5 推理指南快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/blob/a2c298b0a3df3778b973fe65e9e58877b292d8a7/docs/inference_robot_action_cond.md)提供 action-conditioned 机器人视频生成与可替换 action loader 入口 `[O,R1]`；[默认 loader 实现](https://github.com/nvidia-cosmos/cosmos-predict2.5/blob/a2c298b0a3df3778b973fe65e9e58877b292d8a7/cosmos_predict2/action_conditioned.py)会从机器人 state 计算相邻帧的相对末端动作，并应用 fps 下采样和 action/gripper scale。因此 action frame、scale、gripper 语义和 fps 都是生成合同，不是附属参数。[Cosmos 3 action cookbook 快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/blob/9aa98e5a0773a5558f07d2699e640858f7ca8827/cookbooks/cosmos3/generator/action/README.md)又把 action modeling 分为 policy、inverse dynamics 和 forward dynamics 三种 mode；只有 forward dynamics 接收候选 action chunk 来预测未来，不能把“模型能输出动作”自动写成“模型验证了这组动作”。
 
 有效实验至少要有：只用真实数据、真实+同量复制、真实+合成，以及匹配算力/样本数的对照；报告覆盖率、重复率、标签一致性和闭环效用。合成数据增加不等于信息增加。
 
@@ -275,8 +275,8 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - Assran et al., [V-JEPA 2](https://arxiv.org/abs/2506.09985) 与[官方代码](https://github.com/facebookresearch/vjepa2)，`[A/O,R1]`；
 - Li et al., [WorldEval](https://arxiv.org/abs/2505.19017)，`[A,R0]`；
 - Quevedo et al., [WorldGym](https://arxiv.org/abs/2506.00613) 与[官方代码](https://github.com/world-model-eval/world-model-eval)，`[A/O,R1]`；
-- NVIDIA, [Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5)，`[O,R1]`。
-- NVIDIA, [Cosmos 3 action modes](https://github.com/NVIDIA/cosmos)，`[O,R1]`。
+- NVIDIA, [Cosmos-Predict2.5 快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/tree/a2c298b0a3df3778b973fe65e9e58877b292d8a7)，`[O,R1]`。
+- NVIDIA, [Cosmos 3 action modes 快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/blob/9aa98e5a0773a5558f07d2699e640858f7ca8827/cookbooks/cosmos3/generator/action/README.md)，`[O,R1]`。
 - Yu et al., [MOPO: Model-based Offline Policy Optimization](https://proceedings.neurips.cc/paper_files/paper/2020/hash/a322852ce0df73e204b7e67cbbef0d0a-Abstract.html)，`[P,R1]`。
 
 ## 下一章接口
@@ -296,6 +296,6 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
+- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
 - 已知限制：两套 support 都是手工声明，只验证 coverage gate 的逻辑边界；未训练 learned world model，未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
 - 下一步：在第22章综合项目中复用 return gap、策略错排和真实性锚点。

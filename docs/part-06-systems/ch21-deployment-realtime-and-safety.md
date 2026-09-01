@@ -81,7 +81,7 @@ flowchart LR
 2. 新 chunk 使用的观测是否已经陈旧；
 3. 新旧 chunk 重叠时如何对齐、融合或丢弃。
 
-[LeRobot 官方文档](https://github.com/huggingface/lerobot/blob/main/docs/source/inference.mdx) 当前同时提供 sync 与 Real-Time Chunking，后台线程生成 chunk、主控制环轮询动作；其[异步推理指南](https://github.com/huggingface/lerobot/blob/main/docs/source/async.mdx)把 `actions_per_chunk`、queue threshold 和控制 FPS 暴露为调参项，并明确提示生产/消费速度失配会导致空队列 `[O,R1]`。这些是 2026-09-01 核验的上游接口，不是本书实测；文档中的设备内存和加速数字也不能直接移植到读者机器。
+[LeRobot inference 快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/inference.mdx)同时提供 sync 与 Real-Time Chunking，后台线程生成 chunk、主控制环轮询动作；其[异步推理指南](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/async.mdx)把 `actions_per_chunk`、queue threshold 和控制 FPS 暴露为调参项，并明确提示生产/消费速度失配会导致空队列 `[O,R1]`。这些是锁定快照中的上游接口，不是本书实测；文档中的设备内存和加速数字也不能直接移植到读者机器。
 
 异步系统还必须冻结队列策略：FIFO 会保序但可能执行陈旧 chunk，latest-wins 会丢工作并改变动作连续性，重叠融合则要求 action index、观测版本和 prefix 对齐。队列“非空”只说明还有数值，不说明这些数值由足够新的观测生成；反过来，最新 chunk 已计算完成也不代表它在目标 start step 前到达。
 
@@ -255,7 +255,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 驾驶系统要分别监控传感器 age、定位健康、规划轨迹 age、控制命令 age、车辆反馈、计算 deadline 和通信 liveliness。高层 world model/VLA 的轨迹不得绕过车辆动力学、道路边界、碰撞检查和 command gate。
 
-[Autoware Universe](https://github.com/autowarefoundation/autoware_universe)包含 operation mode、command gate、diagnostics 和 minimum-risk maneuver 相关组件 `[O,R1]`。其当前 [operation mode transition manager 文档](https://github.com/autowarefoundation/autoware_universe/blob/main/control/autoware_operation_mode_transition_manager/README.md)明确区分 `IN TRANSITION` 与 `COMPLETED`：切换完成前仍由原 operator 负责控制，组件还要检查 transition completion；如果在 `transition_timeout` 内未完成，则视为 transition failure `[O,R1]`。command-mode 文档又区分 emergency stop、comfortable stop 与尚未支持的 pull over。这个结构支持本章的核心边界：模式请求、过渡责任、可用性和完成确认是不同状态，不能把一个 `fallback` 字符串当作 MRM 已成功。
+[Autoware Universe 快照 `af47e1e`](https://github.com/autowarefoundation/autoware_universe/tree/af47e1e26cfb40240439f3876fee0356bb4a1c75)包含 operation mode、command gate、diagnostics 和 minimum-risk maneuver 相关组件 `[O,R1]`。其 [operation mode transition manager 文档](https://github.com/autowarefoundation/autoware_universe/blob/af47e1e26cfb40240439f3876fee0356bb4a1c75/control/autoware_operation_mode_transition_manager/README.md)明确区分 `IN TRANSITION` 与 `COMPLETED`：切换完成前仍由原 operator 负责控制，组件还要检查 transition completion；如果在 `transition_timeout` 内未完成，则视为 transition failure `[O,R1]`。command-mode 文档又区分 emergency stop、comfortable stop 与尚未支持的 pull over。这个结构支持本章的核心边界：模式请求、过渡责任、可用性和完成确认是不同状态，不能把一个 `fallback` 字符串当作 MRM 已成功。
 
 `CLAIM-21-06`（recommendation）：自动驾驶降级应按故障可用性选择减速、保持车道、受控停车、靠边、远程/人工接管或其他 MRM，并在直道、弯道、低附着、密集交通和传感器组合故障中闭环验证；不得用单一零控制向量代表安全。
 
@@ -339,8 +339,8 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 ## 延伸阅读
 
-- [LeRobot inference 与 RTC 文档](https://github.com/huggingface/lerobot/blob/main/docs/source/inference.mdx)，`[O,R1]`；
-- [LeRobot async inference 文档](https://github.com/huggingface/lerobot/blob/main/docs/source/async.mdx)，`[O,R1]`；
+- [LeRobot inference 与 RTC 文档快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/inference.mdx)，`[O,R1]`；
+- [LeRobot async inference 文档快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/async.mdx)，`[O,R1]`；
 - [OpenVLA 官方仓库](https://github.com/openvla/openvla)，`[O,R1]`；
 - [ROS 2 QoS 官方说明](https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html)，`[O,R1]`；
 - [ROS 2 实时系统设计说明](https://design.ros2.org/articles/realtime_background.html)，`[O,R1]`，deadline、确定性执行和实时路径约束；
@@ -371,5 +371,5 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/ch21-reactivation-authorization-review-2026-09-01.md`、`reviews/ch21-fallback-lifecycle-review-2026-09-02.md`、`reviews/ch15-ch21-reactivation-receipt-review-2026-09-02.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/ch21-reactivation-authorization-review-2026-09-01.md`、`reviews/ch21-fallback-lifecycle-review-2026-09-02.md`、`reviews/ch15-ch21-reactivation-receipt-review-2026-09-02.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有测量真实墙钟、调度器、网络、模型、uncertainty estimator、ROS、机器人、车辆或 GPU；异步 schedule、状态机和 receipt 均为离散合同，不验证执行器可达性、MRM 完成、身份认证、消息完整性或安全认证。
