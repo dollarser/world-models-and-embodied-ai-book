@@ -249,6 +249,45 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 4. **自动驾驶迁移**：设计一套同时防止“慢而安全”和“快而危险”垄断总分的指标表。
 5. **统计协议**：把四条 route 改成你自己的不平衡重复表，先声明目标是按实际暴露量还是 route 等权，再比较 micro、macro 与 cluster bootstrap。
 
+## 自检要点
+
+统计练习先声明 estimand、独立采样单元和分母。下面的计算用于暴露不确定性与加权选择，不构成模型优越性的显著性证明。
+
+<details>
+<summary>SELF-CHECK-20-01：90%/20 不能只凭点估计胜出</summary>
+
+若 A 的 90% 指 `18/20`、B 的 80% 指 `160/200`，按本章 Wilson 95% 公式，区间约为 A `[0.6990,0.9721]`、B `[0.7391,0.8495]`；A 点估计更高但不确定性更大且区间重叠。选择还要求两者共享任务总体、route/seed、成功定义、timeout、无效运行规则和资源预算，并预先定义风险/成本效用。不能由区间重叠推出“完全相同”，也不能因 A 区间更宽就自动选 B；应扩充配对或分层样本，报告 effect 与区间，再按决策损失判断。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-20-02：一次重试产生两个不同 estimand</summary>
+
+把每个 task/seed 最多运行两次，第二次只在首次失败后发生，并保存 `task_id, attempt_id, attempted, outcome, cost`。per-attempt 成功率的分母是所有实际 attempt，回答“任一执行尝试成功的概率”；best-of-two 的分母是 task，每个 task 只要一次成功即记成功，回答“允许该恢复政策后任务成功的概率”。若独立且每次成功率恒为 `p`，理论 best-of-two 为 `1-(1-p)^2`，但自适应重试通常不满足独立同分布，实测应按 task 聚合。报告还要包含平均/尾部尝试数、时延、干预与第二次尝试的安全风险；不能把 best-of-two 与只允许一次执行的部署系统直接比较。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-20-03：benchmark card 的已知与未知</summary>
+
+最低提取字段包括论文/代码 revision、环境与资产版本、任务/route/seed、观测和 action schema、控制频率、reset/termination/timeout、成功与安全定义、episode accounting、训练/选择/评测切分、基线公平性、重复次数/区间、资源和 evaluator。论文未明确的随机 seed、失败重试、技术无效运行、checkpoint 选择、相机延迟或统计独立单元必须标为 `unknown`，不能凭常见默认值补齐。提取结果应链接一手正文、补充材料或代码行，并区分作者报告与本书运行。字段缺失意味着可比性受限，不等价于论文方法错误。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-20-04：驾驶指标要保留速度与安全的 Pareto 关系</summary>
+
+不要只给可互相抵消的总分。至少并列 route completion/progress、到达时间或有效平均速度、碰撞/越界/红灯（按事件与每公里暴露量）、intervention、舒适、MRM 触发/完成和 P95/P99 latency；碰撞、动作越界和 MRM 失败作为硬 gate。先在 safety gate 内比较效率，或报告 safety–progress Pareto frontier，并按城市/高速、天气和稀有事件分层。这样“慢而安全”会在效率上暴露，“快而危险”会被安全 gate 拒绝。权重总分可作为次级摘要，但必须发布原始分项和预注册权重。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-20-05：不平衡 route 会改变目标量</summary>
+
+构造三条 route 的配对差：A 有 8 对且每对 candidate-baseline 为 `+1`，B、C 各 1 对且差为 `-1`。若目标是按实际 episode 暴露量，micro 差为 `(8-1-1)/10=0.6`；若目标是让每条 route 等权，macro 差为 `(1-1-1)/3≈-0.3333`，结论方向反转。cluster bootstrap 应有放回重采 3 条 route，再在每条 route 保留其成组观测，而不是把 10 对当独立样本。只有 3 个手工 cluster 时区间会很离散；它展示 estimand 敏感性，不提供可靠 population coverage。
+
+</details>
+
 ## 延伸阅读
 
 - [LIBERO 官方仓库](https://github.com/Lifelong-Robot-Learning/LIBERO)，`[O,R1]`，终身机器人学习 benchmark；
@@ -277,5 +316,5 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch20-evaluation-validity-review-2026-09-01.md`、`reviews/ch20-clustered-paired-statistics-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
+- 审查记录路径：`reviews/ch20-evaluation-validity-review-2026-09-01.md`、`reviews/ch20-clustered-paired-statistics-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：未运行 LIBERO、SimplerEnv、RoboArena、MetaDrive、CARLA 或真实硬件；Wilson 区间只覆盖独立二项比例；cluster bootstrap 只有四个手工 route、简单 percentile 区间与宏平均 estimand，不能作为校准 population inference；2×2 格只是协议算术反事实；无效运行反例只验证拒绝路径，没有估计真实 reset/logging 故障率。

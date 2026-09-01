@@ -231,11 +231,50 @@ make ch22-smoke
 
 ## 练习
 
-1. 从 `TAB-22-01` 选一轨，写一个只含一个主变量的研究问题。
-2. 给有效项目包删除一个字段，预测并验证 audit issue。
-3. 为目标方法设计 oracle、负对照和独立真实性锚点。
-4. 写一个“应停止而不是继续加算力”的失败场景。
-5. 为驾驶项目划分互斥 route，并定义碰撞、干预和最小风险 gate。
+1. **研究问题**：从 `TAB-22-01` 选一轨，写一个只含一个主变量的研究问题。
+2. **审计注入**：给有效项目包删除一个字段，预测并验证 audit issue。
+3. **三类对照**：为目标方法设计 oracle、负对照和独立真实性锚点。
+4. **停止规则**：写一个“应停止而不是继续加算力”的失败场景。
+5. **驾驶终测**：为驾驶项目划分互斥 route，并定义碰撞、干预和最小风险 gate。
+
+## 自检要点
+
+综合项目允许多种选题，但必须让第三方从问题一路追到失败与停止条件。先写自己的项目卡，再用以下示例检查是否误把代理分数、字段布尔值或更多算力当作证据。
+
+<details>
+<summary>SELF-CHECK-22-01：一个主变量的驾驶研究问题</summary>
+
+选择 `TAB-22-01` 的“驾驶世界模型”轨道，可写：在固定 policy、MetaDrive 版本、route/seed、候选数、动作 schema 和 50 ms deadline 下，仅把 MPC horizon 从 5 步改为 10 步，是否降低独立 simulator 的 route failure，且不增加碰撞、干预和 deadline miss？主变量只有 horizon；terminal value、模型、数据和 planner budget 不能同时改变。主要 estimand、置信区间、安全 gate 与停止条件须在看结果前冻结。该问题若只改善 model return、没有改善独立闭环 outcome，结论只能是代理指标改善。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-22-02：删除一个字段并预测唯一 issue</summary>
+
+深拷贝 `EXP-22-01` 的有效 package，只删除 `evaluation.protocol_frozen_before_evaluation`，其余字段与 digest 不变；预期 audit 包含 `evaluation_protocol_not_frozen`。运行 `make ch22-smoke` 或对应单测，断言该 issue 出现且有效包仍为 0 issue；若测试要求精确集合，则断言没有额外 issue。也可删除某个 split 的 `similarity_cluster_ids`，但应预期相应 `missing_split_identity`。这个测试证明 schema/auditor 捕捉缺字段，不证明填写为 `true` 的协议确实在现实中提前冻结。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-22-03：oracle、负对照与真实性锚点职责不同</summary>
+
+以 world-model MPC 为例：oracle 用目标 simulator 的真实 transition/termination 在相同候选预算内规划，用于估计模型误差上界；负对照可打乱 action 条件或使用 action-blind dynamics，检查 planner 是否其实未消费动作后果；独立真实性锚点是在未参与 world model、planner、阈值或 checkpoint 选择的固定物理 simulator route/seed 上执行最终 policy。三者共享观察、动作、候选和评测协议，差异进入 confounder 表。oracle 不可部署、负对照失败不等于目标方法正确、一个 simulator 锚点也不能代表真实世界。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-22-04：安全或证据 gate 失败时停止</summary>
+
+例如扩大 world model 与训练时长后，model-only return 持续上升，但独立 MetaDrive 中所选 policy 的碰撞率升高、策略排序反转，且失败集中在模型乐观预测的施工区。此时更多同类算力可能强化 exploitation；应冻结资产、保存失败轨迹，停止该决策用途，检查数据/support/reward，或把主张缩小到表征/候选筛选。类似地，数据许可不明、最终 split 泄漏、evaluator digest 无法追溯或资源超过 2×80 GB 上限也应停止。停止是符合预注册合同的结果，不是缺少实验勇气。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-22-05：驾驶 route 隔离与三类 gate</summary>
+
+按 route group 划分 train/selection/final evaluation，三者在 `group_id、source_asset_id、content_fingerprint、similarity_cluster_id` 四层互斥；同一路段相邻帧、重命名 log 或近重复场景不得跨 split。最终 route/seed 在评测前冻结，报告 route completion、碰撞和 intervention 的逐 route 值、分母与区间。碰撞 gate 可规定任何责任碰撞或碰撞率上界超阈值即拒绝；干预 gate 规定每公里/每任务干预率不得劣于基线阈值；MRM gate 要求触发时动作新鲜、受控停车完成且无碰撞/越界，任何失败单列。三类 gate 都不能被总 route reward 抵消，通过也只支持该 simulator、ODD 和协议内结论。
+
+</details>
 
 ## 延伸阅读
 
@@ -259,5 +298,5 @@ make ch22-smoke
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch22-artifact-provenance-review-2026-09-01.md`、`reviews/ch04-ch22-split-identity-propagation-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch22-artifact-provenance-review-2026-09-01.md`、`reviews/ch04-ch22-split-identity-propagation-review-2026-09-02.md`、`reviews/capstone-traceability-review-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：审计只读取内存 fixture payload 并重算摘要，不遍历真实目录、不执行复现命令；没有模型、数据、仿真、GPU、机器人、车辆或部署。
