@@ -14,6 +14,7 @@ from policy_utility import (  # noqa: E402
     policy_returns,
     rollout,
     spearman_rank_correlation,
+    support_gate_audit,
     support_gated_selection,
     support_issues,
     transition,
@@ -75,6 +76,25 @@ class PolicyUtilityTests(unittest.TestCase):
         self.assertEqual(gated["selected_policy"], "safe_route")
         self.assertEqual(gated["selected_policy_true_terminal"], "goal")
         self.assertEqual(gated["model_exploitation_regret"], 0.0)
+
+    def test_support_gate_does_not_detect_an_in_support_model_error(self):
+        audit = support_gate_audit()
+        in_support = audit["in_support_model_error"]
+        self.assertEqual(in_support["rejected_policy_count"], 0)
+        self.assertEqual(in_support["selected_policy"], "phantom_shortcut")
+        self.assertEqual(in_support["selected_policy_true_terminal"], "collision")
+        self.assertAlmostEqual(in_support["model_exploitation_regret"], 1.85)
+
+    def test_invalid_support_declarations_are_rejected(self):
+        invalid = (
+            {(0, "advance")},
+            frozenset({(True, "advance")}),
+            frozenset({(0, "teleport")}),
+            frozenset({(4, "wait")}),
+        )
+        for support in invalid:
+            with self.subTest(support=support), self.assertRaises(ValueError):
+                support_gated_selection(support)  # type: ignore[arg-type]
 
     def test_state_and_model_selector_contracts_are_validated(self):
         invalid_states = (

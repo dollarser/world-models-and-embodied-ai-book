@@ -3,7 +3,7 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-17-01`
-> 关联声明：`CLAIM-17-01`～`CLAIM-17-07`
+> 关联声明：`CLAIM-17-01`～`CLAIM-17-08`
 > 关联图表：`FIG-17-01` / `TAB-17-01` / `TAB-17-02`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
@@ -94,7 +94,7 @@ flowchart LR
 
 策略可在学习模型中产生动作，世界模型递归生成下一状态、奖励和终止，再用 imagined trajectories 更新策略。[DreamerV3](https://github.com/danijar/dreamerv3) 在学习的世界模型中训练 actor-critic；[TD-MPC2](https://github.com/nicklashansen/tdmpc2) 学习面向控制的潜在模型并结合规划 `[O/P,R1]`。这类系统追求任务相关预测，不要求像素逐点完美。
 
-危险在于训练策略不是被动测试集：它会主动寻找预测模型最乐观的区域。模型最初在行为策略分布上准确，优化后的新策略可能把状态推到 OOD。缓解方式包括短 rollout、真实数据混合、ensemble/不确定性惩罚、support/coverage gate、保守目标、周期性真实性回查和发现盲区后重采样；没有任何一种能把 learned simulator 变成无条件真值。
+危险在于训练策略不是被动测试集：它会主动寻找预测模型最乐观的区域。模型最初在行为策略分布上准确，优化后的新策略可能把状态推到 OOD。缓解方式包括短 rollout、真实数据混合、ensemble/不确定性惩罚、support/coverage gate、保守目标、周期性真实性回查和发现盲区后重采样；没有任何一种能把 learned simulator 变成无条件真值。[MOPO](https://proceedings.neurips.cc/paper_files/paper/2020/hash/a322852ce0df73e204b7e67cbbef0d0a-Abstract.html) 是用模型不确定性惩罚缓解离线分布偏移的代表性一手论文 `[P,R1]`，但本书没有复现其算法或 benchmark，也不把“处于数据 support 内”写成模型一定准确。
 
 终止语义也会改变 imagined target。[TD-MPC2](https://github.com/nicklashansen/tdmpc2) 当前官方实现虽然已经支持 episodic task，但 `episodic=true` 仍需显式开启且默认关闭以保持旧结果可复现 `[O,R1]`。因此比较 checkpoint 或复现实验时要同时登记 termination 开关、horizon 和 bootstrap 规则，不能只写算法名。
 
@@ -150,6 +150,9 @@ make ch17-smoke
 | 模型所选首转移是否正确 | false | 平均 8/9 掩盖选择诱导分布上的首步错误 |
 | support gate 后选择/真实终点 | `safe_route` / goal | 拒绝唯一 support 外策略 |
 | support gate 后 regret | 0.0 | 本 fixture 固定支持集上的结果 |
+| 把错误 state-action 声明为 support 内后的拒绝数 | 0 | 同一模型错误、只改变手工 support 声明 |
+| support 内负对照的选择/真实终点 | `phantom_shortcut` / collision | coverage membership 不检查预测是否正确 |
+| support 内负对照的 regret | 1.85 | 与无 gate 相同 |
 
 *TAB-17-01：`EXP-17-01` 的模型 gap 与策略排序。固定规则用于说明接口，不是 learned simulator benchmark。*
 
@@ -157,7 +160,9 @@ make ch17-smoke
 
 这个反例不是说 88.89% 必然不够，而是说明错误权重取决于策略访问频率和后果。安全关键转移应分桶、加权并做压力测试，不能被大量容易的 `wait/advance` 样本稀释。
 
-`CLAIM-17-07`（result）：fixture 的 support gate 拒绝唯一未覆盖的 `phantom_shortcut`，从剩余两个策略选中 `safe_route`，使真实 exploitation regret 从 `1.85` 降为 `0`。这是手工已知 support 的机制对照；它不证明 learned OOD estimator 校准，也无法捕获 support 内错误或 ensemble 共同偏差。
+`CLAIM-17-07`（result）：在 fixture 的 support 外设置中，gate 拒绝唯一未覆盖的 `phantom_shortcut`，从剩余两个策略选中 `safe_route`，使真实 exploitation regret 从 `1.85` 降为 `0`。这是手工已知 support 的机制对照，不证明 learned OOD estimator 校准。
+
+`CLAIM-17-08`（result）：保持世界模型、策略和真实规则不变，只把 `(position=0, shortcut)` 加入手工 support 后，gate 接受全部三个策略，仍选中真实会碰撞的 `phantom_shortcut`，exploitation regret 保持 `1.85`。该负对照只证明 coverage membership 不能发现 support 内模型错误，也不估计真实数据覆盖质量或 learned uncertainty 的失效率。
 
 ## 17.9 五类用途的验收矩阵
 
@@ -171,7 +176,7 @@ make ch17-smoke
 
 *TAB-17-02：用途决定证据。一个系统可跨多行，但必须分别报告。*
 
-coverage gate 的分母也要明确：按单步 state-action、完整 action chunk、整条候选轨迹，还是本体/任务级 coverage。轨迹中任一步超出支持就应记录 first unsupported step；只对起始观测做 OOD 检查，无法约束 planner 后续把 rollout 推出覆盖范围。
+coverage gate 的分母也要明确：按单步 state-action、完整 action chunk、整条候选轨迹，还是本体/任务级 coverage。轨迹中任一步超出支持就应记录 first unsupported step；只对起始观测做 OOD 检查，无法约束 planner 后续把 rollout 推出覆盖范围。反过来，整条轨迹都被标为 covered 也只说明满足 coverage 定义，不证明 transition、reward、termination 或风险预测正确；仍要在第9章 E3/E4 的独立真实性锚点上回查。
 
 ## 17.10 自动驾驶正文：四个角色，四套证据
 
@@ -205,7 +210,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 8/9 转移一致但策略错排；support gate 对照阻断 support 外捷径 | `EXP-17-01` | CPU smoke | 手工 corridor 与 oracle support |
+| 本书结果 | 8/9 转移一致但策略错排；gate 阻断 support 外捷径、却不能阻断同一 support 内错误 | `EXP-17-01` | CPU smoke | 手工 corridor 与两套 authored support 声明 |
 | 论文/代码 | 表征预训练后训练 action-conditioned planner | V-JEPA 2/2.1 | `[A/O,R1]` | 本书未运行 |
 | 论文/代码 | imagined actor-critic 与 latent MPC | DreamerV3、TD-MPC2 | `[P/O,R1]` | 本书未运行 |
 | 开源平台 | 生成/动作条件 world foundation model | Cosmos | `[O,R1]` | 版本和许可会漂移 |
@@ -214,7 +219,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 
 ## 小结
 
-世界模型不是一种单一增益模块。它可以同时提供表征、数据、交互环境、规划/价值和安全反事实，每条路径都要用对应下游指标验收。策略会主动寻找模型盲区，因此平均预测分数必须与真实性锚点上的 return gap、风险漏检、coverage 和策略排序一起报告；support gate 是拒绝机制而非真值证明，代理评测也只能筛选，不能取消最终目标环境验证。
+世界模型不是一种单一增益模块。它可以同时提供表征、数据、交互环境、规划/价值和安全反事实，每条路径都要用对应下游指标验收。策略会主动寻找模型盲区，因此平均预测分数必须与真实性锚点上的 return gap、风险漏检、coverage 和策略排序一起报告；support gate 只能拒绝按其定义超出覆盖的候选，不能验证覆盖内预测，代理评测也只能筛选，不能取消最终目标环境验证。
 
 ## 练习
 
@@ -233,6 +238,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - Quevedo et al., [WorldGym](https://arxiv.org/abs/2506.00613) 与[官方代码](https://github.com/world-model-eval/world-model-eval)，`[A/O,R1]`；
 - NVIDIA, [Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5)，`[O,R1]`。
 - NVIDIA, [Cosmos 3 action modes](https://github.com/NVIDIA/cosmos)，`[O,R1]`。
+- Yu et al., [MOPO: Model-based Offline Policy Optimization](https://proceedings.neurips.cc/paper_files/paper/2020/hash/a322852ce0df73e204b7e67cbbef0d0a-Abstract.html)，`[P,R1]`。
 
 ## 下一章接口
 
@@ -251,6 +257,6 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch17-support-gate-review-2026-09-01.md`；
-- 已知限制：未训练 learned world model，未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
+- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
+- 已知限制：两套 support 都是手工声明，只验证 coverage gate 的逻辑边界；未训练 learned world model，未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
 - 下一步：在第22章综合项目中复用 return gap、策略错排和真实性锚点。

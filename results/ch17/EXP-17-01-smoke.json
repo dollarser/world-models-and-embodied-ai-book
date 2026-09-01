@@ -15,21 +15,32 @@
     "policy_ranking_matches": false,
     "selected_policy_true_terminal": "collision",
     "spearman_rank_correlation": -0.5,
-    "support_gate": {
-      "accepted_policy_count": 2,
-      "model_exploitation_regret": 0.0,
-      "rejected_policies": {
-        "phantom_shortcut": [
-          {
-            "action": "shortcut",
-            "position": 0,
-            "step": 0
-          }
-        ]
+    "support_gate_audit": {
+      "in_support_model_error": {
+        "accepted_policy_count": 3,
+        "model_exploitation_regret": 1.85,
+        "rejected_policies": {},
+        "rejected_policy_count": 0,
+        "selected_policy": "phantom_shortcut",
+        "selected_policy_true_terminal": "collision"
       },
-      "rejected_policy_count": 1,
-      "selected_policy": "safe_route",
-      "selected_policy_true_terminal": "goal"
+      "out_of_support_error": {
+        "accepted_policy_count": 2,
+        "model_exploitation_regret": 0.0,
+        "rejected_policies": {
+          "phantom_shortcut": [
+            {
+              "action": "shortcut",
+              "position": 0,
+              "step": 0
+            }
+          ]
+        },
+        "rejected_policy_count": 1,
+        "selected_policy": "safe_route",
+        "selected_policy_true_terminal": "goal"
+      },
+      "scope": "same deterministic model error under two authored support declarations"
     },
     "transition_agreement": {
       "accuracy": 0.8888888888888888,

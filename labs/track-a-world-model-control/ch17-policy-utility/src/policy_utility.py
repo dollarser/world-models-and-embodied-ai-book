@@ -41,6 +41,7 @@ SUPPORTED_STATE_ACTIONS = frozenset(
     for position in range(GOAL_POSITION)
     for action in ("advance", "wait")
 )
+SUPPORT_WITH_SHORTCUT = SUPPORTED_STATE_ACTIONS | {(0, "shortcut")}
 
 
 def transition(state: State, action: str, learned: bool) -> tuple[State, float]:
@@ -125,12 +126,29 @@ def spearman_rank_correlation(first: dict[str, float], second: dict[str, float])
     return covariance / (first_scale * second_scale)
 
 
-def support_issues(actions: tuple[str, ...]) -> tuple[dict[str, object], ...]:
+def _validate_support(supported_state_actions: frozenset[tuple[int, str]]) -> None:
+    if not isinstance(supported_state_actions, frozenset) or any(
+        not isinstance(item, tuple)
+        or len(item) != 2
+        or isinstance(item[0], bool)
+        or not isinstance(item[0], int)
+        or not 0 <= item[0] < GOAL_POSITION
+        or item[1] not in {"advance", "wait", "shortcut"}
+        for item in supported_state_actions
+    ):
+        raise ValueError("support must be a frozenset of valid running state-action pairs")
+
+
+def support_issues(
+    actions: tuple[str, ...],
+    supported_state_actions: frozenset[tuple[int, str]] = SUPPORTED_STATE_ACTIONS,
+) -> tuple[dict[str, object], ...]:
     """Find state-action queries outside the learned model's observed support."""
+    _validate_support(supported_state_actions)
     state = State()
     issues = []
     for step, action in enumerate(actions):
-        if (state.position, action) not in SUPPORTED_STATE_ACTIONS:
+        if (state.position, action) not in supported_state_actions:
             issues.append({"step": step, "position": state.position, "action": action})
             break
         state, _ = transition(state, action, learned=True)
@@ -139,12 +157,15 @@ def support_issues(actions: tuple[str, ...]) -> tuple[dict[str, object], ...]:
     return tuple(issues)
 
 
-def support_gated_selection() -> dict[str, object]:
+def support_gated_selection(
+    supported_state_actions: frozenset[tuple[int, str]] = SUPPORTED_STATE_ACTIONS,
+) -> dict[str, object]:
     """Select only among policies whose learned rollouts stay in observed support."""
+    _validate_support(supported_state_actions)
     accepted_returns = {}
     rejected = {}
     for name, actions in POLICIES.items():
-        issues = support_issues(actions)
+        issues = support_issues(actions, supported_state_actions)
         if issues:
             rejected[name] = issues
         else:
@@ -161,6 +182,16 @@ def support_gated_selection() -> dict[str, object]:
         "selected_policy": selected,
         "selected_policy_true_terminal": rollout(POLICIES[selected], learned=False)["terminal"],
         "model_exploitation_regret": true_returns[true_best] - true_returns[selected],
+    }
+
+
+def support_gate_audit() -> dict[str, object]:
+    """Contrast an out-of-support error with the same error declared in support."""
+
+    return {
+        "out_of_support_error": support_gated_selection(SUPPORTED_STATE_ACTIONS),
+        "in_support_model_error": support_gated_selection(SUPPORT_WITH_SHORTCUT),
+        "scope": "same deterministic model error under two authored support declarations",
     }
 
 
@@ -192,6 +223,7 @@ def evaluate() -> dict[str, object]:
     absolute_gaps = {name: abs(model_returns[name] - true_returns[name]) for name in POLICIES}
     agreement = transition_agreement()
     selected_action = POLICIES[model_selected][0]
+    gate_audit = support_gate_audit()
     return {
         "true_returns": true_returns,
         "learned_model_returns": model_returns,
@@ -207,6 +239,6 @@ def evaluate() -> dict[str, object]:
             transition(State(), selected_action, learned=False)
             == transition(State(), selected_action, learned=True)
         ),
-        "support_gate": support_gated_selection(),
+        "support_gate_audit": gate_audit,
         "transition_agreement": agreement,
     }

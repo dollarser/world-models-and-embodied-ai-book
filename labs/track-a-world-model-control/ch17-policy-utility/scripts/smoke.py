@@ -24,10 +24,15 @@ def main() -> int:
         raise AssertionError("model-selected shortcut must fail in the true simulator")
     if metrics["model_selected_first_transition_matches"]:
         raise AssertionError("the model-selected first transition must expose the optimistic error")
-    if metrics["support_gate"]["selected_policy"] != "safe_route":
+    gate_audit = metrics["support_gate_audit"]
+    if gate_audit["out_of_support_error"]["selected_policy"] != "safe_route":
         raise AssertionError("support gate must reject the unsupported shortcut")
-    if metrics["support_gate"]["model_exploitation_regret"] != 0.0:
+    if gate_audit["out_of_support_error"]["model_exploitation_regret"] != 0.0:
         raise AssertionError("support-gated selection must remove exploitation regret in this fixture")
+    if gate_audit["in_support_model_error"]["selected_policy_true_terminal"] != "collision":
+        raise AssertionError("support membership must not hide the in-support model error")
+    if gate_audit["in_support_model_error"]["model_exploitation_regret"] != metrics["model_exploitation_regret"]:
+        raise AssertionError("the in-support error must preserve the ungated exploitation regret")
 
     report = {
         "experiment_id": "EXP-17-01",

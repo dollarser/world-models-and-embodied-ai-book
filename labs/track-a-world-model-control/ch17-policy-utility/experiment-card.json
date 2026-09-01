@@ -3,12 +3,13 @@
   "id": "EXP-17-01",
   "chapter": 17,
   "status": "smoke",
-  "claim_ids": ["CLAIM-17-02", "CLAIM-17-03", "CLAIM-17-07"],
+  "claim_ids": ["CLAIM-17-02", "CLAIM-17-03", "CLAIM-17-07", "CLAIM-17-08"],
   "claim_scope": [
     "high average transition agreement can coexist with a decision-critical model error",
     "a planner can exploit one optimistic model error and reverse the true policy ranking",
     "world-model utility must be measured with downstream return gaps and held-out true-environment anchors",
-    "an explicit observed-support gate rejects the unsupported shortcut in this fixture and changes the selected policy"
+    "an explicit observed-support gate rejects the unsupported shortcut in this fixture and changes the selected policy",
+    "the same gate accepts the erroneous shortcut and preserves exploitation regret when that state-action is authored as covered"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -17,7 +18,7 @@
   },
   "data": {
     "name": "procedural safe-route and phantom-shortcut transitions",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -42,7 +43,9 @@
     {"name": "maximum_absolute_return_gap", "value": 2.0, "unit": "return", "split": "three-fixed-policies"},
     {"name": "model_exploitation_regret", "value": 1.85, "unit": "return", "split": "ungated-model-selected-policy"},
     {"name": "support_gated_exploitation_regret", "value": 0.0, "unit": "return", "split": "two-supported-policies"},
-    {"name": "unsupported_policy_rejection_rate", "value": 1.0, "unit": "ratio", "split": "one-unsupported-policy"}
+    {"name": "unsupported_policy_rejection_rate", "value": 1.0, "unit": "ratio", "split": "one-unsupported-policy"},
+    {"name": "in_support_error_rejected_policy_count", "value": 0, "unit": "count", "split": "three-covered-policies"},
+    {"name": "in_support_error_exploitation_regret", "value": 1.85, "unit": "return", "split": "three-covered-policies"}
   ],
   "artifacts": ["results/ch17/EXP-17-01-smoke.json"],
   "limitations": [
@@ -50,6 +53,7 @@
     "three fixed policies and one deliberately optimistic shortcut error",
     "return units and effect sizes do not represent any real task",
     "no images, learned uncertainty estimator, policy training, simulator, robot, vehicle, or GPU",
-    "support set is hand-authored and cannot detect errors inside observed support or shared model bias"
+    "both support declarations are hand-authored rather than learned coverage estimates",
+    "support membership cannot detect errors inside observed support or shared model bias"
   ]
 }
