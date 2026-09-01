@@ -3,18 +3,19 @@
   "id": "EXP-22-01",
   "chapter": 22,
   "status": "smoke",
-  "claim_ids": ["CLAIM-22-02"],
+  "claim_ids": ["CLAIM-22-02", "CLAIM-22-07"],
   "claim_scope": [
-    "a complete fixed driving project package passes the metadata audit while an intentionally incomplete package triggers fifteen named contract issues"
+    "a complete fixed driving project package passes the metadata audit while an intentionally incomplete package triggers sixteen named contract issues",
+    "a five-stage cross-chapter evidence trace is accepted only when every stage has an allowed chapter, artifact, decision, and frozen dependency set"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library project-package metadata audit fixture"
+    "config": "standard-library v2 project-package and five-stage traceability audit fixture"
   },
   "data": {
     "name": "two hand-authored project metadata packages",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -35,14 +36,15 @@
   },
   "metrics": [
     {"name": "valid_package_issue_count", "value": 0, "unit": "issues", "split": "valid"},
-    {"name": "invalid_package_issue_count", "value": 15, "unit": "issues", "split": "invalid"},
+    {"name": "invalid_package_issue_count", "value": 16, "unit": "issues", "split": "invalid"},
     {"name": "required_artifact_count", "value": 5, "unit": "artifacts", "split": "contract"},
-    {"name": "required_driving_metric_count", "value": 3, "unit": "metrics", "split": "contract"}
+    {"name": "required_driving_metric_count", "value": 3, "unit": "metrics", "split": "contract"},
+    {"name": "required_trace_stage_count", "value": 5, "unit": "stages", "split": "contract"}
   ],
   "artifacts": ["results/ch22/EXP-22-01-smoke.json"],
   "limitations": [
     "metadata dictionaries rather than a real project directory or artifact content audit",
-    "presence checks do not establish scientific correctness, file integrity, privacy, licensing, or safety",
+    "presence and dependency checks do not establish artifact contents, scientific correctness, file integrity, privacy, licensing, or safety",
     "the resource policy encodes this book's limits rather than universal hardware requirements",
     "no model, dataset, training, simulator, GPU, robot, vehicle, or deployment"
   ]

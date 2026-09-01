@@ -5,7 +5,7 @@
     "driving_metric_count": 3,
     "invalid_package": {
       "accepted": false,
-      "issue_count": 15,
+      "issue_count": 16,
       "issues": [
         "missing_research_question",
         "missing_claim_id",
@@ -19,12 +19,14 @@
         "missing_known_limitations",
         "resource_limit_exceeded",
         "gpu_result_unverified",
+        "traceability_incomplete",
         "evaluation_not_independent",
         "driving_metrics_incomplete",
         "missing_safety_gateway"
       ]
     },
     "required_artifact_count": 5,
+    "required_trace_stage_count": 5,
     "valid_package": {
       "accepted": true,
       "issue_count": 0,

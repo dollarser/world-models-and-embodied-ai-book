@@ -20,8 +20,10 @@ def main() -> int:
         raise AssertionError("the complete fixed package must be accepted")
     if metrics["invalid_package"]["accepted"]:
         raise AssertionError("the incomplete fixed package must be rejected")
-    if metrics["invalid_package"]["issue_count"] != 15:
+    if metrics["invalid_package"]["issue_count"] != 16:
         raise AssertionError("the fixed audit issue set changed")
+    if metrics["required_trace_stage_count"] != 5:
+        raise AssertionError("the complete package must expose the five-stage evidence trace")
     report = {
         "experiment_id": "EXP-22-01",
         "status": "smoke",

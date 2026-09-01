@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-08-31
 > 关联实验：`EXP-22-01`
-> 关联声明：`CLAIM-22-01`～`CLAIM-22-06`
-> 关联图表：`FIG-22-01` / `TAB-22-01` / `TAB-22-02` / `TAB-22-03`
+> 关联声明：`CLAIM-22-01`～`CLAIM-22-07`
+> 关联图表：`FIG-22-01` / `TAB-22-01` / `TAB-22-02` / `TAB-22-03` / `TAB-22-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：不需要（S 档）/ 待验证（M/L1/L2）
 
@@ -107,7 +107,7 @@ flowchart LR
 
 ## 22.5 EXP-22-01：先审项目包，再审模型
 
-S 档审计器检查两个手工 driving project metadata 包。完整包包含问题、claim、许可、互斥 route split、五类 artifact、失败注入、局限、S 档资源、独立评测、驾驶指标和 safety gateway；故意不完整包违反这些合同。
+S 档审计器检查两个手工 driving project metadata 包。完整包包含问题、claim、许可、互斥 route split、五类 artifact、失败注入、局限、S 档资源、独立评测、驾驶指标、safety gateway，以及五段跨章证据 trace；故意不完整包违反这些合同。
 
 ```bash
 make ch22-test-local
@@ -118,11 +118,11 @@ make ch22-smoke
 | 包 | issue 数 | 是否接受 | 关键结果 |
 | --- | ---: | --- | --- |
 | 完整固定包 | 0 | 是 | 字段合同通过 |
-| 故意无效包 | 15 | 否 | 问题/claim/许可/隔离/artifact/失败/资源/评测/驾驶安全均有具名 issue |
+| 故意无效包 | 16 | 否 | 问题/claim/许可/隔离/artifact/失败/资源/trace/评测/驾驶安全均有具名 issue |
 
 *TAB-22-03：`EXP-22-01` 固定审计结果。存在性检查不读取 artifact 内容，也不证明研究正确或安全。*
 
-`CLAIM-22-02`（result）：完整手工包得到 0 issue；无效包得到 15 个具名 issue，包括 route split 重叠、结果/失败/复现命令缺失、3×80 GB 超限、GPU 结果未验证、评测不独立、驾驶指标与 safety gateway 缺失。该结果只验证 metadata audit 路径。
+`CLAIM-22-02`（result）：完整手工包得到 0 issue；无效包得到 16 个具名 issue，包括 route split 重叠、结果/失败/复现命令/trace 缺失、3×80 GB 超限、GPU 结果未验证、评测不独立、驾驶指标与 safety gateway 缺失。该结果只验证 metadata audit 路径。
 
 审计器把单卡大于 24 GB 和超过 2×80 GB 标为超出本书资源政策。这不是说方法在其他环境不可运行，只表示它不能被包装成本书默认/最高可选路径。
 
@@ -135,6 +135,22 @@ make ch22-smoke
 3. **代理闭环评测**：检查 learned simulator 的策略排序是否与物理 simulator 对齐，并预留新增 policy 校准集。
 
 三者不能用同一个“视频看起来真实”验收。最低驾驶指标为 route completion、collision rate、intervention rate；再按用途加入规则、舒适、稀有事件召回、model-vs-simulator return gap、P95 latency 和 deadline miss。
+
+### 22.6.1 从一条 route 问题走完五段证据
+
+继续使用“replanning 是否降低固定扰动下的 route failure”这一问题。它不是把五章结果相加，也不是声称已有一辆车完成端到端运行，而是明确每段到底消费什么合同、产生什么证据、何时必须停止：
+
+| 证据阶段 | 本书入口 | 本例要回答的决策 | 机器证据 | 失败时怎样处理 |
+| --- | --- | --- | --- | --- |
+| input contract | 第4章 `EXP-04-01` | route 分组、时间戳、mask 与 episode end 是否可用于 target/评测 | 数据审计结果与失败代码 | 泄漏、缺帧或结束语义不清时不训练 |
+| method contract | 第8章 `EXP-08-01` | timeout 是否保留 bootstrap，terminal 是否阻止 reward 泄漏 | λ-return、continuation 与截断反例 | target 不可构造时修数据，不把缺失猜成 terminal |
+| independent evaluation | 第20章 `BENCH-20-01` | 固定 route/seed、成功定义、timeout 与有效分母后，replanning 是否改善 outcome | route/collision/intervention、Wilson 区间与 episode accounting | protocol 不同或技术无效运行时不排行 |
+| deployment/safety gate | 第21章 `EXP-21-01` | action 是否新鲜、按时、有限、在界内且 uncertainty 可接受 | allow/fallback、原因计数、P95/deadline miss | 触发 profile-specific fallback，不执行旧 action suffix |
+| evidence package | 本章 `EXP-22-01` | 上述问题、artifact、依赖、失败和限制能否由第三方追踪 | 五段 trace、0/16 issue 对照 | 缺一段即缩小声明或停止交付 |
+
+*TAB-22-04：自动驾驶 capstone 的五段证据 trace。表中入口均是本书 S 档接口 fixture；它证明依赖可追踪，不证明模型、仿真或车辆已经端到端运行。*
+
+`CLAIM-22-07`（result）：`EXP-22-01` v2 的完整包包含五个具名 trace stage 并通过 0 issue 审计；删除独立评测阶段会触发 `traceability_incomplete`，把 method stage 错连到第20章或删除其上游依赖会触发 `invalid_trace_stage:method_contract`。这是证据图合同测试，不是闭环性能结果。
 
 训练、world-model validation 和最终闭环 evaluation 必须按 route/scene 分组隔离；相邻帧随机切分无效。碰撞、道路边界、动作范围、时效和最小风险停车由独立 gate 检查，不能被路线 reward 抵消。
 

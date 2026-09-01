@@ -19,11 +19,36 @@ class ProjectAuditTests(unittest.TestCase):
     def test_valid_project_is_accepted(self):
         self.assertEqual(audit_project(VALID_DRIVING_PACKAGE), [])
         self.assertTrue(evaluate()["valid_package"]["accepted"])
+        self.assertEqual(VALID_DRIVING_PACKAGE["artifacts"]["reproduction_command"], "make ch22-smoke")
 
     def test_invalid_project_exposes_all_fixed_issues(self):
         result = evaluate()["invalid_package"]
         self.assertFalse(result["accepted"])
-        self.assertEqual(result["issue_count"], 15)
+        self.assertEqual(result["issue_count"], 16)
+
+    def test_valid_project_has_five_stage_traceability(self):
+        self.assertEqual(evaluate()["required_trace_stage_count"], 5)
+        self.assertEqual(
+            set(VALID_DRIVING_PACKAGE["traceability"]),
+            {
+                "input_contract",
+                "method_contract",
+                "independent_evaluation",
+                "deployment_or_safety_gate",
+                "evidence_package",
+            },
+        )
+
+    def test_missing_traceability_is_rejected(self):
+        package = copy.deepcopy(VALID_DRIVING_PACKAGE)
+        del package["traceability"]["independent_evaluation"]
+        self.assertIn("traceability_incomplete", audit_project(package))
+
+    def test_malformed_trace_stage_or_dependency_is_rejected(self):
+        package = copy.deepcopy(VALID_DRIVING_PACKAGE)
+        package["traceability"]["method_contract"]["chapter"] = 20
+        package["traceability"]["method_contract"]["depends_on"] = []
+        self.assertIn("invalid_trace_stage:method_contract", audit_project(package))
 
     def test_group_overlap_is_rejected(self):
         self.assertIn("train_eval_group_overlap", audit_project(INVALID_DRIVING_PACKAGE))
