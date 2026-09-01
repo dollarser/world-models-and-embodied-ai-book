@@ -90,6 +90,8 @@ def make_packet(
     actions: tuple[tuple[float, ...], ...],
     timestamp_ms: int = 950,
     command_id: int = 7,
+    observation_timestep: int = 42,
+    first_action_timestep: int = 42,
     schema: ActionSchema = MOBILE_BASE_SCHEMA,
 ) -> dict[str, object]:
     return {
@@ -104,6 +106,8 @@ def make_packet(
         "execution_horizon": schema.execution_horizon,
         "timestamp_ms": timestamp_ms,
         "command_id": command_id,
+        "observation_timestep": observation_timestep,
+        "first_action_timestep": first_action_timestep,
         "actions": actions,
     }
 
@@ -113,6 +117,8 @@ def validate_packet(
     schema: ActionSchema = MOBILE_BASE_SCHEMA,
     now_ms: int = 1000,
     last_accepted_command_id: int | None = None,
+    expected_observation_timestep: int = 42,
+    expected_first_action_timestep: int = 42,
 ) -> tuple[str, ...]:
     if not isinstance(packet, dict):
         return ("invalid_packet",)
@@ -124,6 +130,12 @@ def validate_packet(
         or last_accepted_command_id < 0
     ):
         raise ValueError("last_accepted_command_id must be a non-negative integer or None")
+    for value, name in (
+        (expected_observation_timestep, "expected_observation_timestep"),
+        (expected_first_action_timestep, "expected_first_action_timestep"),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"{name} must be a non-negative integer")
     issues = []
     if packet.get("source") not in EXECUTABLE_SOURCES:
         issues.append("non_executable_source")
@@ -155,6 +167,20 @@ def validate_packet(
         issues.append("stale_or_future_timestamp")
     if packet.get("control_hz") != schema.control_hz:
         issues.append("control_rate_mismatch")
+    observation_timestep = packet.get("observation_timestep")
+    if (
+        isinstance(observation_timestep, bool)
+        or not isinstance(observation_timestep, int)
+        or observation_timestep != expected_observation_timestep
+    ):
+        issues.append("observation_timestep_mismatch")
+    first_action_timestep = packet.get("first_action_timestep")
+    if (
+        isinstance(first_action_timestep, bool)
+        or not isinstance(first_action_timestep, int)
+        or first_action_timestep != expected_first_action_timestep
+    ):
+        issues.append("action_timestep_mismatch")
 
     actions = packet.get("actions")
     if not isinstance(actions, tuple) or not actions:
@@ -223,6 +249,12 @@ def evaluate() -> dict[str, object]:
         },
         "replay": make_packet("continuous", (continuous,), command_id=7),
         "out_of_order": make_packet("continuous", (continuous,), command_id=6),
+        "fresh_but_stale_observation": make_packet(
+            "continuous", (continuous,), timestamp_ms=990, observation_timestep=40
+        ),
+        "wrong_action_timestep": make_packet(
+            "continuous", (continuous,), timestamp_ms=990, first_action_timestep=43
+        ),
     }
     valid_issues = {name: validate_packet(packet) for name, packet in valid_packets.items()}
     malformed_issues = {
@@ -259,4 +291,6 @@ def evaluate() -> dict[str, object]:
         "replay_command_rejected": bool(malformed_issues["replay"]),
         "out_of_order_command_rejected": bool(malformed_issues["out_of_order"]),
         "execution_horizon_bypass_rejected": bool(malformed_issues["execution_horizon_bypass"]),
+        "fresh_but_stale_observation_rejected": bool(malformed_issues["fresh_but_stale_observation"]),
+        "wrong_action_timestep_rejected": bool(malformed_issues["wrong_action_timestep"]),
     }

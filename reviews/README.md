@@ -65,6 +65,7 @@
 - [第14章生成动作预算与安全筛选审查](ch14-generative-budget-review-2026-09-01.md)
 - [第14章模式覆盖与频率诊断审查](ch14-mode-frequency-review-2026-09-02.md)
 - [第15章命令完整性审查](ch15-command-integrity-review-2026-09-01.md)
+- [第15章观测—动作 timestep 绑定审查](ch15-observation-action-timestep-review-2026-09-02.md)
 - [第16章 adapter 版本身份审查](ch16-adapter-version-review-2026-09-01.md)
 - [第16章留出本体迁移审查](ch16-held-out-embodiment-review-2026-09-02.md)
 - [第16章实现来源快照审查](ch16-source-snapshot-review-2026-09-02.md)

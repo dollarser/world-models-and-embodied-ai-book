@@ -13,11 +13,15 @@
     "execution_horizon_bypass_rejected": true,
     "flow_chunk_executed_prefix_steps": 1,
     "flow_chunk_predicted_steps": 3,
+    "fresh_but_stale_observation_rejected": true,
     "high_level_text_directly_executable": false,
-    "malformed_packet_count": 10,
+    "malformed_packet_count": 12,
     "malformed_packet_issues": {
       "execution_horizon_bypass": [
         "execution_horizon_exceeded"
+      ],
+      "fresh_but_stale_observation": [
+        "observation_timestep_mismatch"
       ],
       "high_level_text": [
         "non_executable_source",
@@ -34,6 +38,9 @@
       ],
       "stale": [
         "stale_or_future_timestamp"
+      ],
+      "wrong_action_timestep": [
+        "action_timestep_mismatch"
       ],
       "wrong_clock": [
         "clock_mismatch"
@@ -58,7 +65,8 @@
       "continuous": [],
       "discrete_tokens": [],
       "flow_chunk": []
-    }
+    },
+    "wrong_action_timestep_rejected": true
   },
   "scope": "action-schema decoding and gateway fixture; not VLA inference or policy quality",
   "status": "smoke"

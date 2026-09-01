@@ -28,6 +28,10 @@ def main() -> int:
         raise AssertionError("replayed and out-of-order commands must be rejected")
     if not metrics["execution_horizon_bypass_rejected"]:
         raise AssertionError("packet metadata must not expand the schema execution horizon")
+    if not metrics["fresh_but_stale_observation_rejected"]:
+        raise AssertionError("a fresh packet timestamp must not hide a stale observation timestep")
+    if not metrics["wrong_action_timestep_rejected"]:
+        raise AssertionError("the first action timestep must match the execution slot")
 
     report = {
         "experiment_id": "EXP-15-01",

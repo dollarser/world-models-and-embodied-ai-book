@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-15-01`
-> 关联声明：`CLAIM-15-01`～`CLAIM-15-09`
-> 关联图表：`FIG-15-01` / `TAB-15-01`～`TAB-15-04`
+> 关联声明：`CLAIM-15-01`～`CLAIM-15-10`
+> 关联图表：`FIG-15-01` / `TAB-15-01`～`TAB-15-05`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -144,7 +144,7 @@ VLA 可能在内部表示物体、因果或未来，但 probe 读得出状态不
 
 ## 15.6 EXP-15-01：统一动作合同与执行网关
 
-S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测最多 3 步但每次最多执行 1 步、命令最大年龄 100 ms，并要求单调 `command_id` 与共同的 `control_monotonic_ms` clock。
+S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测最多 3 步但每次最多执行 1 步、命令最大年龄 100 ms，并要求单调 `command_id`、共同的 `control_monotonic_ms` clock，以及与当前调度槽一致的 `observation_timestep` 和 `first_action_timestep`。
 
 同一归一化动作 `(0.6,-0.4)` 经过：
 
@@ -162,7 +162,7 @@ make ch15-smoke
 | --- | ---: | --- |
 | 三种可执行头通过 schema | 3/3 | 手工 packet，不是模型输出 |
 | 五档 token 平均归一化误差 | 0.1 | 不是 OpenVLA/FAST tokenizer |
-| malformed 拒绝率 | 10/10（100%） | 只覆盖十种程序化合同错误 |
+| malformed 拒绝率 | 12/12（100%） | 只覆盖十二种程序化合同错误 |
 | 高层文本可直接执行 | false | 必须先 grounding |
 | flow chunk 预测/执行 | 3 / 1 步 | 验证 receding horizon 字段 |
 
@@ -170,14 +170,25 @@ make ch15-smoke
 
 `CLAIM-15-03`（result）：五档逐维 tokenizer 将 `(0.6,-0.4)` 量化为 `(0.5,-0.5)`，平均归一化绝对误差为 `0.1`。该值只属于教学词表，不能外推 FAST 或真实 VLA。
 
-`CLAIM-15-04`（result）：高层文本、过期命令、错误 frame、错误单位与越界动作等十类 packet 全部被网关拒绝。范围检查不是碰撞检查或功能安全证明。
+`CLAIM-15-04`（result）：高层文本、过期命令、错误 frame、错误单位、越界动作与 step 错位等十二类 packet 全部被网关拒绝。范围和时间身份检查不是碰撞检查、时钟同步或功能安全证明。
 
-新增错误包括 clock/字段顺序错配、packet 擅自把执行前缀从 1 扩为 3，以及重复/乱序命令。新命令 `command_id=8` 在已接受 7 后通过；重复 7 与旧命令 6 都被拒绝。布尔值、非有限动作和伪造 prediction horizon 另由单元测试覆盖。
+错误集合包括 clock/字段顺序错配、packet 擅自把执行前缀从 1 扩为 3、重复/乱序命令，以及墙钟时间戳仍新鲜但观测或首动作 timestep 错位。新命令 `command_id=8` 在已接受 7 后通过；重复 7 与旧命令 6 都被拒绝。布尔值、非有限动作和伪造 prediction horizon 另由单元测试覆盖。
+
+| packet | 生成时间年龄 | observation timestep | first action timestep | 结果 |
+| --- | ---: | ---: | ---: | --- |
+| 对齐命令 | 50 ms | 42 | 42 | 通过 |
+| 新生成、旧观测 | 10 ms | 40 | 42 | `observation_timestep_mismatch` |
+| 新生成、动作槽错位 | 10 ms | 42 | 43 | `action_timestep_mismatch` |
+
+*TAB-15-05：`EXP-15-01` 的墙钟新鲜度—逻辑 timestep 负对照。fixture 预登记当前观测与首动作槽均为42；它不表示所有系统都必须采用同号 timestep。*
+
+`CLAIM-15-10`（result）：`EXP-15-01` v3 中，两个错误 packet 的生成时间年龄均只有10 ms、低于100 ms上限，但因观测 timestep 为40或首动作 timestep 为43而被拒绝；对齐 packet 的年龄为50 ms且 `42→42`，能够通过。该结果只证明本 fixture 的双重时间身份会拒绝两类错位，不证明跨机时钟同步、真实队列时序、deadline 或控制安全。
 
 | 动作包字段 | 作用 | 仍未提供的保证 |
 | --- | --- | --- |
 | `schema_id`、`field_names`、`units`、`frame_id` | 固定维度语义和坐标合同 | 不验证真实标定或控制器 |
-| `clock_id`、`timestamp_ms`、`control_hz` | 在共同单调时钟上检查新鲜度 | 不完成跨机时钟同步 |
+| `clock_id`、`timestamp_ms`、`control_hz` | 在共同单调时钟上检查生成时间新鲜度 | 不完成跨机时钟同步 |
+| `observation_timestep`、`first_action_timestep` | 绑定生成依据与预期首动作槽 | 不证明观测内容正确或动作按时到达 |
 | `command_id` | 拒绝当前会话内 replay/乱序 | 不提供认证、防篡改或跨重启持久性 |
 | prediction / execution horizon | 限制 chunk 长度和执行前缀 | 不检查连续碰撞或动力学 |
 
@@ -249,7 +260,7 @@ OpenVLA 官方 README 的传统 LoRA 示例称至少约 27 GB，超出默认 24 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 本书结果 | 三类动作头统一进入动作合同 | `EXP-15-01` | CPU smoke | 手工移动底盘 packet |
-| 本书结果 | 十类错误包、执行时域越权与 replay/乱序被拒绝 | `EXP-15-01` | CPU smoke | 不是认证或功能安全验证 |
+| 本书结果 | 十二类错误包、执行时域越权、step 错位与 replay/乱序被拒绝 | `EXP-15-01` | CPU smoke | 不是时钟同步、认证或功能安全验证 |
 | 论文案例 | RT-1/RT-2 与 FAST action token | 论文/项目 | `[A,R0/R1]` | 本书未运行 |
 | 开源案例 | OpenVLA、SmolVLA、openpi | 官方仓库/论文 | `[A/O,R1]` | checkpoint/训练未运行 |
 | 最新案例 | GR00T N1.7 双系统与 flow head | 官方仓库 | `[O,R1]` | 官方声明，版本会漂移 |
@@ -266,6 +277,7 @@ VLA 把视觉语言知识连接到动作，但真正可执行的系统还需要�
 3. **本体适配**：为 7-DoF 机械臂列出 absolute joint 与 delta EEF 两份互不兼容 schema。
 4. **双系统时序**：慢层 2 Hz、快层 20 Hz 时，设计指令变化和急停的缓存失效协议。
 5. **自动驾驶迁移**：定义 VLM 输出的低频意图 JSON，以及它进入规划器前必须通过的字段检查。
+6. **异步时序**：构造一个生成时间仍新鲜、但基于旧观测的 action chunk；说明 wall-clock timestamp、observation timestep 和 first-action timestep 各自回答什么问题。
 
 ## 自检要点
 
@@ -306,6 +318,13 @@ Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-15-06：新生成不等于基于新观测</summary>
+
+`timestamp_ms` 回答 packet 何时生成以及相对共同 clock 是否过期；它不能说明模型用了哪一帧。`observation_timestep` 绑定推理依据，能拒绝“刚生成但输入已落后”的响应；`first_action_timestep` 则声明 chunk 第一个动作预期占用哪个执行槽，防止晚到响应整体错位。三者都必须与同一 session、控制频率和队列规则解释。真实系统还要处理允许的观测 lag、跳帧、网络重排、跨机 clock offset、动作已消费进度和原子队列失效；本章 `42→42` 只是预登记的教学约定，不是通用编号规则。
+
+</details>
+
 ## 延伸阅读
 
 - Brohan et al., [RT-1](https://arxiv.org/abs/2212.06817)，`[A,R0]`；
@@ -333,6 +352,6 @@ Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺
 - 代码审查：通过；
 - 一致性审查：通过（已与第10/12/13/14/16/17章及第20/21章合同对齐）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch15-command-integrity-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch15-command-integrity-review-2026-09-01.md`、`reviews/ch15-observation-action-timestep-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载或运行任何 VLA、VLM API、机器人、仿真或 GPU；
 - 下一步：可沿第17章核对世界模型与 VLA 的组合边界，再用第20、21章完成评测与部署证据检查。

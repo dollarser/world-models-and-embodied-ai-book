@@ -88,6 +88,26 @@ class ActionContractTests(unittest.TestCase):
         self.assertEqual(packet["clock_id"], "control_monotonic_ms")
         self.assertEqual(packet["field_names"], ("linear_velocity", "yaw_rate"))
 
+    def test_packet_factory_binds_observation_and_action_timesteps(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("continuous", (action,), observation_timestep=42, first_action_timestep=42)
+        self.assertEqual(packet["observation_timestep"], 42)
+        self.assertEqual(packet["first_action_timestep"], 42)
+
+    def test_fresh_timestamp_does_not_hide_stale_observation_timestep(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("continuous", (action,), timestamp_ms=990, observation_timestep=40)
+        issues = validate_packet(packet, now_ms=1000, expected_observation_timestep=42)
+        self.assertNotIn("stale_or_future_timestamp", issues)
+        self.assertIn("observation_timestep_mismatch", issues)
+
+    def test_gateway_rejects_wrong_first_action_timestep(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("continuous", (action,), timestamp_ms=990, first_action_timestep=43)
+        issues = validate_packet(packet, now_ms=1000, expected_first_action_timestep=42)
+        self.assertNotIn("stale_or_future_timestamp", issues)
+        self.assertIn("action_timestep_mismatch", issues)
+
     def test_gateway_prevents_execution_horizon_bypass(self):
         action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
         packet = make_packet("flow_chunk", (action, action, action))
@@ -119,6 +139,10 @@ class ActionContractTests(unittest.TestCase):
             validate_packet(packet, now_ms=True)
         with self.assertRaises(ValueError):
             validate_packet(packet, last_accepted_command_id=-1)
+        with self.assertRaises(ValueError):
+            validate_packet(packet, expected_observation_timestep=True)
+        with self.assertRaises(ValueError):
+            validate_packet(packet, expected_first_action_timestep=-1)
 
 
 if __name__ == "__main__":

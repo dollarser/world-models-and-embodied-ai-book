@@ -3,21 +3,22 @@
   "id": "EXP-15-01",
   "chapter": 15,
   "status": "smoke",
-  "claim_ids": ["CLAIM-15-02", "CLAIM-15-03", "CLAIM-15-04", "CLAIM-15-07"],
+  "claim_ids": ["CLAIM-15-02", "CLAIM-15-03", "CLAIM-15-04", "CLAIM-15-07", "CLAIM-15-10"],
   "claim_scope": [
     "continuous, discrete-token, and flow-chunk outputs can share one explicit executable action schema",
     "coarse per-dimension tokenization introduces measurable action quantization error",
-    "a contract gateway rejects ten hand-authored malformed packet classes",
-    "schema execution horizon, shared clock, field order, and monotonic command identity prevent specific metadata-bypass, replay, and out-of-order cases"
+    "a contract gateway rejects twelve hand-authored malformed packet classes",
+    "schema execution horizon, shared clock, field order, and monotonic command identity prevent specific metadata-bypass, replay, and out-of-order cases",
+    "a fresh generation timestamp does not replace explicit observation and first-action timestep binding"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library mobile-base action schema and stateful command-order gateway"
+    "config": "standard-library v3 mobile-base action schema and timestep-bound command gateway"
   },
   "data": {
     "name": "procedural VLA action packets",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -42,11 +43,13 @@
     {"name": "token_mean_absolute_normalized_error", "value": 0.1, "unit": "normalized-action", "split": "five-bin-tokenizer"},
     {"name": "flow_chunk_predicted_steps", "value": 3, "unit": "step", "split": "receding-horizon"},
     {"name": "flow_chunk_executed_prefix_steps", "value": 1, "unit": "step", "split": "receding-horizon"},
-    {"name": "malformed_packet_count", "value": 10, "unit": "packet", "split": "gateway-errors"},
+    {"name": "malformed_packet_count", "value": 12, "unit": "packet", "split": "gateway-errors"},
     {"name": "execution_horizon_bypass_rejected", "value": 1.0, "unit": "boolean", "split": "command-integrity"},
     {"name": "replay_command_rejected", "value": 1.0, "unit": "boolean", "split": "command-integrity"},
     {"name": "out_of_order_command_rejected", "value": 1.0, "unit": "boolean", "split": "command-integrity"},
-    {"name": "next_ordered_command_accepted", "value": 1.0, "unit": "boolean", "split": "command-integrity"}
+    {"name": "next_ordered_command_accepted", "value": 1.0, "unit": "boolean", "split": "command-integrity"},
+    {"name": "fresh_but_stale_observation_rejected", "value": 1.0, "unit": "boolean", "split": "timestep-binding"},
+    {"name": "wrong_action_timestep_rejected", "value": 1.0, "unit": "boolean", "split": "timestep-binding"}
   ],
   "artifacts": ["results/ch15/EXP-15-01-smoke.json"],
   "limitations": [
@@ -54,6 +57,7 @@
     "five-bin tokenization is a teaching example and not FAST or OpenVLA vocabulary",
     "packets are hand-authored and no VLA or VLM API is executed",
     "range/schema checks are not collision avoidance or functional safety",
+    "observation/action timestep equality covers one authored scheduling slot and does not establish clock synchronization or real queue timing",
     "monotonic command IDs cover one process session and do not provide authentication, integrity, or reboot persistence"
   ]
 }
