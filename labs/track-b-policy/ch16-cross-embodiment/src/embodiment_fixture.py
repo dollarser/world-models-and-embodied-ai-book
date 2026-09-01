@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import hashlib
 import json
 from math import isfinite
+from typing import Mapping, Sequence
 
 
 CanonicalAction = tuple[float, float]  # (delta_x_m, gripper_open_fraction)
@@ -166,6 +167,45 @@ def maximum_round_trip_error() -> float:
     return max(errors)
 
 
+def mixture_exposure_report(dataset_episode_lengths: Mapping[str, Sequence[int]]) -> dict[str, object]:
+    """Compare dataset-, episode-, and transition-uniform sampling denominators."""
+    if not isinstance(dataset_episode_lengths, Mapping) or not dataset_episode_lengths:
+        raise ValueError("dataset episode lengths must be a non-empty mapping")
+    episode_counts: dict[str, int] = {}
+    transition_counts: dict[str, int] = {}
+    for dataset, lengths in dataset_episode_lengths.items():
+        if not isinstance(dataset, str) or not dataset:
+            raise ValueError("dataset names must be non-empty strings")
+        if isinstance(lengths, (str, bytes)) or not isinstance(lengths, Sequence) or not lengths:
+            raise ValueError("each dataset must contain at least one episode length")
+        validated_lengths = []
+        for length in lengths:
+            if isinstance(length, bool) or not isinstance(length, int) or length <= 0:
+                raise ValueError("episode lengths must be positive integers")
+            validated_lengths.append(length)
+        episode_counts[dataset] = len(validated_lengths)
+        transition_counts[dataset] = sum(validated_lengths)
+
+    labels = tuple(sorted(episode_counts))
+    dataset_count = len(labels)
+    episode_count = sum(episode_counts.values())
+    transition_count = sum(transition_counts.values())
+    return {
+        "dataset_count": dataset_count,
+        "episode_count": episode_count,
+        "transition_count": transition_count,
+        "episode_counts_by_dataset": {label: episode_counts[label] for label in labels},
+        "transition_counts_by_dataset": {label: transition_counts[label] for label in labels},
+        "dataset_uniform_exposure": {label: round(1.0 / dataset_count, 12) for label in labels},
+        "episode_uniform_exposure": {
+            label: round(episode_counts[label] / episode_count, 12) for label in labels
+        },
+        "transition_uniform_exposure": {
+            label: round(transition_counts[label] / transition_count, 12) for label in labels
+        },
+    }
+
+
 def evaluate() -> dict[str, object]:
     malformed_records = {
         "missing_embodiment": {
@@ -216,5 +256,11 @@ def evaluate() -> dict[str, object]:
         "contract_rejection_rate": len(rejected_contract_records) / len(malformed_records),
         "semantic_change_changes_fingerprint": (
             altered_arm_a.schema_fingerprint != ADAPTERS["arm_a"].schema_fingerprint
+        ),
+        "mixture_exposure": mixture_exposure_report(
+            {
+                "short_dataset": (2,),
+                "long_dataset": (4, 4, 4),
+            }
         ),
     }

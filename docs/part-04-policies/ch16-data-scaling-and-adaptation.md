@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-16-01`
-> 关联声明：`CLAIM-16-01`～`CLAIM-16-08`
-> 关联图表：`FIG-16-01` / `TAB-16-01` / `TAB-16-02` / `TAB-16-03` / `TAB-16-04`
+> 关联声明：`CLAIM-16-01`～`CLAIM-16-09`
+> 关联图表：`FIG-16-01` / `TAB-16-01` / `TAB-16-02` / `TAB-16-03` / `TAB-16-04` / `TAB-16-05`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -54,6 +54,10 @@
 \]
 
 `w_d` 可以按数据集、任务、本体或温度采样设定。它不是“数据越多权重越大”的同义词，必须记录在配置和实验卡中。
+
+还必须登记 sampler 实际在哪一层抽样。dataset-uniform 先选来源、episode-uniform 从全部轨迹等概率选一条、transition-uniform 从全部有效步等概率选一个窗口；当 episode 数与长度不等时，三者实现的是三个不同目标分布。action chunk、padding、过滤、缺失相机和 `ignore_errors` 还可能让“原始 transition 数”不同于真正进入 loss 的有效 token/window 数，因此既要保存目标 `w_d`，也要按训练日志审计 realized exposure。
+
+[Octo 数据管线快照 `241fb35`](https://github.com/octo-models/octo/blob/241fb3514b7c40957a86d869fecb7c7fc353f540/octo/data/dataset.py)的 `make_interleaved_dataset` 接受 per-dataset `sample_weights`；开启 `balance_weights` 时再乘每个数据集的 `num_transitions`，归一化后在 frame level interleave `[O,R1]`。这说明权重语义依赖实现开关和采样层，不表示 Octo 的任一方案对所有训练目标都最优，也不表示本书运行过该管线。
 
 ## 16.2 三类开放数据入口，各自解决不同问题
 
@@ -168,6 +172,20 @@ make ch16-smoke
 
 `CLAIM-16-07`（result）：fixture 中缩放或字段合同改变会产生不同 schema fingerprint；该结果只证明确定性身份绑定，不提供防篡改、数据真实性、跨语言序列化兼容或 controller 安全保证。
 
+### 16.5.1 同一来源清单，三种实际暴露
+
+`EXP-16-01` v3 再固定两个来源：`short_dataset` 有1条、长度2的 episode；`long_dataset` 有3条、每条长度4的 episode。来源身份、episode 与 transition 总数分别是2、4和14，不引入真实数据。
+
+| 均匀抽样单位 | short 暴露 | long 暴露 | long:short |
+| --- | ---: | ---: | ---: |
+| dataset | 50% | 50% | 1:1 |
+| episode | 25% | 75% | 3:1 |
+| transition | 14.2857% | 85.7143% | 6:1 |
+
+*TAB-16-05：`EXP-16-01` v3 的采样单位负对照。比例是对固定计数的解析期望，不含有限 batch 随机波动、窗口重叠、过滤、token mask 或质量权重。*
+
+`CLAIM-16-09`（result）：在该 fixture 中，仅把“均匀”的单位从 dataset 改为 episode 或 transition，就会把 long 来源的期望暴露从50%改为75%或约85.71%。该结果只证明采样单位会改变这两个手工来源的 mixture，不判断哪一种权重更优，也不估计真实训练 batch、梯度贡献、数据质量或迁移性能。
+
 ## 16.6 正迁移与负迁移必须用矩阵判断
 
 要判断跨本体数据是否有用，至少比较：
@@ -266,7 +284,7 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | raw pooling、schema-aware pooling 与 adapter 身份反例 | `EXP-16-01` | CPU smoke | 两维手工动作，不训练策略 |
+| 本书结果 | raw/schema-aware pooling、adapter 身份与三类 mixture 暴露反例 | `EXP-16-01` | CPU smoke | 两维手工动作与解析来源计数，不训练策略 |
 | 开放生态 | Open X-Embodiment RLDS mixture | 论文/官方仓库 | `[P/O,R1]` | 本书未下载或运行 |
 | 开放数据 | DROID 分布式操作数据 | 论文/官方项目 | `[P/O,R1]` | 本书未下载或审计 |
 | 数据格式 | LeRobot Dataset v3 | 官方文档 | `[O,R1]` | 版本会漂移 |
@@ -285,6 +303,7 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 3. **迁移矩阵**：为三个本体写出单独、两两、全量与 leave-one-out 的最小实验表。
 4. **适配选择**：分别为“新夹爪”“新相机”“新语言域”选择 action head、LoRA 或部分解冻，并说明证据。
 5. **自动驾驶迁移**：把方向盘角、曲率和轨迹三种日志映射到统一合同，列出不可逆信息。
+6. **mixture 暴露**：给两个 episode 数与长度都不同的数据集，分别计算 dataset/episode/transition-uniform 的来源占比，并列出会让 realized exposure 再次偏离配置的过滤步骤。
 
 ## 自检要点
 
@@ -325,6 +344,13 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-16-06：配置权重不等于实际 loss 暴露</summary>
+
+对短来源1条×2步、长来源3条×4步：dataset-uniform 先等概率选来源，比例为 `1/2,1/2`；episode-uniform 在4条轨迹中等概率选，比例为 `1/4,3/4`；transition-uniform 在14步中等概率选，比例为 `2/14,12/14≈0.1429,0.8571`。实现审计还要记录 action/window horizon、尾部 padding/drop、无语言/缺相机过滤、异常样本 `ignore_errors`、mask 后有效 token、重复采样和分布式 shard，因为这些步骤会让 realized batch/loss 暴露偏离配置期望。哪一种 sampler 合理取决于目标量；不能用“大数据集占比更高”或“来源等权”替代预注册目标和分层评测。
+
+</details>
+
 ## 延伸阅读
 
 - Open X-Embodiment Collaboration, [论文](https://arxiv.org/abs/2310.08864)与[官方仓库快照 `9eeb68b`](https://github.com/google-deepmind/open_x_embodiment/tree/9eeb68b989efbcf474e8fb9019e01d02b962a604)，`[P/O,R1]`；
@@ -354,6 +380,6 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`、`reviews/ch16-held-out-embodiment-review-2026-09-02.md`、`reviews/ch16-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`、`reviews/ch16-mixture-exposure-review-2026-09-02.md`、`reviews/ch16-held-out-embodiment-review-2026-09-02.md`、`reviews/ch16-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载真实数据、训练 adapter/VLA、运行仿真或 GPU；
 - 下一步：只在 XEWorld 或等价测试床公开版本化代码、资产、split 与指标实现后，先做无下载预检，再经用户确认执行迁移矩阵；当前证据保持 S 档 reviewed。

@@ -13,6 +13,7 @@ from embodiment_fixture import (  # noqa: E402
     canonicalize,
     mean_action,
     maximum_round_trip_error,
+    mixture_exposure_report,
     naive_raw_pooling_error,
     schema_aware_pooling_error,
 )
@@ -94,6 +95,29 @@ class EmbodimentAdapterTests(unittest.TestCase):
         for config in invalid_configs:
             with self.subTest(config=config), self.assertRaises(ValueError):
                 EmbodimentAdapter(**config)  # type: ignore[arg-type]
+
+    def test_sampling_unit_changes_dataset_exposure(self):
+        report = mixture_exposure_report({"short_dataset": (2,), "long_dataset": (4, 4, 4)})
+        self.assertEqual(report["dataset_uniform_exposure"], {"long_dataset": 0.5, "short_dataset": 0.5})
+        self.assertEqual(report["episode_uniform_exposure"], {"long_dataset": 0.75, "short_dataset": 0.25})
+        self.assertEqual(
+            report["transition_uniform_exposure"],
+            {"long_dataset": 0.857142857143, "short_dataset": 0.142857142857},
+        )
+
+    def test_mixture_report_keeps_all_three_denominators_explicit(self):
+        report = mixture_exposure_report({"short_dataset": (2,), "long_dataset": (4, 4, 4)})
+        self.assertEqual(report["dataset_count"], 2)
+        self.assertEqual(report["episode_count"], 4)
+        self.assertEqual(report["transition_count"], 14)
+        self.assertEqual(report["episode_counts_by_dataset"], {"long_dataset": 3, "short_dataset": 1})
+        self.assertEqual(report["transition_counts_by_dataset"], {"long_dataset": 12, "short_dataset": 2})
+
+    def test_invalid_mixture_lengths_are_rejected(self):
+        invalid_mixtures = ({}, {"": (1,)}, {"a": ()}, {"a": (True,)}, {"a": (0,)})
+        for mixture in invalid_mixtures:
+            with self.subTest(mixture=mixture), self.assertRaises(ValueError):
+                mixture_exposure_report(mixture)
 
 
 if __name__ == "__main__":

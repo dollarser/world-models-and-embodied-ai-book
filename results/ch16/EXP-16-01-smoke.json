@@ -27,6 +27,31 @@
     "canonical_schema_version": "ee-delta-v1",
     "contract_rejection_rate": 1.0,
     "maximum_adapter_round_trip_error": 0.0,
+    "mixture_exposure": {
+      "dataset_count": 2,
+      "dataset_uniform_exposure": {
+        "long_dataset": 0.5,
+        "short_dataset": 0.5
+      },
+      "episode_count": 4,
+      "episode_counts_by_dataset": {
+        "long_dataset": 3,
+        "short_dataset": 1
+      },
+      "episode_uniform_exposure": {
+        "long_dataset": 0.75,
+        "short_dataset": 0.25
+      },
+      "transition_count": 14,
+      "transition_counts_by_dataset": {
+        "long_dataset": 12,
+        "short_dataset": 2
+      },
+      "transition_uniform_exposure": {
+        "long_dataset": 0.857142857143,
+        "short_dataset": 0.142857142857
+      }
+    },
     "naive_raw_pooling_semantic_mae": 0.28375,
     "raw_action_dimension": 2,
     "record_count": 4,

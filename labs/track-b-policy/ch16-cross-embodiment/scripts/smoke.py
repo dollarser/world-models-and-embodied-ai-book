@@ -24,6 +24,11 @@ def main() -> int:
         raise AssertionError("missing or stale adapter contracts must be rejected")
     if not metrics["semantic_change_changes_fingerprint"]:
         raise AssertionError("action semantic changes must change the adapter fingerprint")
+    mixture = metrics["mixture_exposure"]
+    if mixture["dataset_uniform_exposure"] == mixture["transition_uniform_exposure"]:
+        raise AssertionError("dataset- and transition-uniform sampling must expose different source mixtures")
+    if mixture["transition_uniform_exposure"]["long_dataset"] != 0.857142857143:
+        raise AssertionError("transition exposure must preserve the fixed 12-of-14 denominator")
 
     report = {
         "experiment_id": "EXP-16-01",
