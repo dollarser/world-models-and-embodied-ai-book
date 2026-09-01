@@ -1,10 +1,10 @@
 # 第5章 预测模型的生成式基础
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-05-01`
-> 关联声明：`CLAIM-05-01`～`CLAIM-05-07`
-> 关联图表：`FIG-05-01` / `TAB-05-01` / `TAB-05-02` / `TAB-05-03`
+> 关联声明：`CLAIM-05-01`～`CLAIM-05-08`
+> 关联图表：`FIG-05-01` / `TAB-05-01` / `TAB-05-02` / `TAB-05-03` / `TAB-05-04`
 > 资源档位：S / M
 > GPU 状态：待验证
 
@@ -184,6 +184,28 @@ D_{TV}(p,q)=\frac{1}{2}\sum_x |p(x)-q(x)|.
 
 同一完整状态下仍存在多种合理结果，属于 aleatoric 不确定性；训练覆盖不足、参数不确定或 OOD 输入导致的“模型不知道”，通常归为 epistemic 不确定性。单个生成模型多采样几次主要展示其学到的条件分布，不会自动暴露它没有学到的世界。实践中还需要数据密度/OOD 测试、模型或 checkpoint 集成、扰动一致性与保留场景验证。
 
+[Deep Ensembles](https://proceedings.neurips.cc/paper_files/paper/2017/hash/9ef2ed4b7fd2c810847ffa5fa85bce38-Abstract.html)把独立初始化成员的预测聚合作为可扩展不确定性基线；[Ovadia et al.](https://proceedings.neurips.cc/paper/2019/hash/8558cb408c1d76621371888657d2eb1d-Abstract.html)则在多种 dataset shift 严重度上比较准确率与校准退化 `[P,R1]`。这些工作支持“必须在 shift 下评估估计器”，不支持把任意成员分歧直接解释成 epistemic 概率，也不保证 ensemble 成员会学到不同错误。
+
+`EXP-05-01` v3 用三个手写标量成员演示这个边界。为便于初学者直接计算，定义 range score
+
+\[
+u(x)=\max_m \hat y_m(x)-\min_m \hat y_m(x),
+\]
+
+并固定 `u>0.25` 才 defer。这里的 range 不是方差、置信区间或校准概率；阈值也不是从数据估计的。
+
+| case | 三个成员预测 | target | ensemble mean 的 absolute error | range | 是否 defer |
+| --- | --- | ---: | ---: | ---: | --- |
+| `in_distribution` | `-0.1, 0, 0.1` | 0 | 0 | 0.2 | 否 |
+| `diverse_ood` | `1, 2, 3` | -2 | 4 | 2 | 是 |
+| `shared_error_ood` | `2, 2, 2` | -2 | 4 | 0 | 否 |
+
+*TAB-05-04：ensemble range 的有用拒绝与共同错误假阴性。所有值均为手写教学 fixture。*
+
+`CLAIM-05-08`（result）：固定 range gate 拒绝了成员分歧为 2 的 `diverse_ood`，却接受了三个成员完全一致、ensemble mean 绝对误差仍为 4 的 `shared_error_ood`。该结果只证明低 disagreement 不蕴含正确，也不测量 learned ensemble、OOD 检出率、校准、真实错误相关性或安全性。
+
+因此，成员训练数据、初始化、架构和 checkpoint 数量必须登记，且要在冻结的 ID/shift/OOD/stress split 上把 score 与真实错误配对。若所有成员共享数据捷径、标签错误、架构盲点或 simulator bias，它们可能一致地自信犯错；此时仍需覆盖测试、外部 detector、约束检查与真实/高保真后果验证。
+
 自动驾驶里，前车可能左/右避让是多未来；从未见过的施工车辆、传感器故障或新道路规则是覆盖问题。两者都可能产生多样样本，但风险处理不同：前者进入概率化规划，后者应触发保守拒绝、降级或额外感知，而不是从生成样本里挑一个最乐观未来。
 
 第9章进一步用 risk–coverage 评估“不知道”的排序是否真的集中失败；第21章把冻结阈值、估计器版本和 fallback 后果接入执行网关。概念上的 epistemic uncertainty 只有经过这两级协议，才成为可审计的拒绝机制。
@@ -211,6 +233,7 @@ S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数�
 3. 比较 diffusion 采样步数和 action chunk deadline 的冲突。
 4. 为车辆切入写出 ego action 与他车 behavior 的条件 schema，并设计 context-shuffle 对照。
 5. 构造一个 TV 很高但条件响应方向错误的模型，说明为什么敏感性不等于正确性。
+6. 把 `shared_error_ood` 的一个成员改为 `-2`，计算 range、mean error 和 defer 结果；解释为何“更分歧”与“平均预测更正确”是两个问题。
 
 ## 延伸阅读
 
@@ -218,6 +241,8 @@ S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数�
 - [Neural Discrete Representation Learning](https://arxiv.org/abs/1711.00937)；
 - [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239)；
 - [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747)；
+- [Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles](https://proceedings.neurips.cc/paper_files/paper/2017/hash/9ef2ed4b7fd2c810847ffa5fa85bce38-Abstract.html)；
+- [Can You Trust Your Model's Uncertainty?](https://proceedings.neurips.cc/paper/2019/hash/8558cb408c1d76621371888657d2eb1d-Abstract.html)；
 - [Hugging Face Diffusers](https://github.com/huggingface/diffusers)，实现参考，未在本章运行。
 
 ## 下一章接口
@@ -230,5 +255,5 @@ S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch05-diagnostic-review-2026-09-01.md`；
-- 已知限制：只有解析标量 fixture；mode recall 与 support 外质量只相对手工观察集合定义，没有训练神经网络、图像/视频或 GPU。
+- 审查记录路径：`reviews/ch05-diagnostic-review-2026-09-01.md`、`reviews/ch05-ch09-ch21-epistemic-gate-review-2026-09-02.md`；
+- 已知限制：只有解析标量 fixture；mode recall 与 support 外质量只相对手工观察集合定义，ensemble 成员和 OOD 标签也是手写的，没有训练神经网络、估计校准、图像/视频或 GPU。

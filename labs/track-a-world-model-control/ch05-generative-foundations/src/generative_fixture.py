@@ -141,6 +141,57 @@ def flow_path(noise: float, data: float, time: float) -> tuple[float, float]:
     return ((1.0 - time) * noise + time * data, data - noise)
 
 
+def ensemble_disagreement_diagnostic(
+    predictions: tuple[float, ...],
+    target: float,
+    disagreement_threshold: float,
+) -> dict[str, float | int | bool]:
+    """Audit a range-based ensemble gate; this is not a calibrated uncertainty model."""
+
+    if (
+        not isinstance(predictions, tuple)
+        or len(predictions) < 2
+        or any(not _finite_number(value) for value in predictions)
+    ):
+        raise ValueError("predictions must contain at least two finite numbers")
+    if not _finite_number(target):
+        raise ValueError("target must be a finite number")
+    if not _finite_number(disagreement_threshold) or disagreement_threshold < 0.0:
+        raise ValueError("disagreement_threshold must be a finite non-negative number")
+
+    mean_prediction = sum(predictions) / len(predictions)
+    prediction_range = max(predictions) - min(predictions)
+    return {
+        "member_count": len(predictions),
+        "mean_prediction": round(mean_prediction, 12),
+        "ensemble_mean_absolute_error": round(abs(mean_prediction - target), 12),
+        "prediction_range": round(prediction_range, 12),
+        "deferred_by_range": prediction_range > disagreement_threshold,
+    }
+
+
+def ensemble_disagreement_audit() -> dict[str, object]:
+    """Compare useful disagreement with a correlated-error false negative."""
+
+    threshold = 0.25
+    return {
+        "disagreement_threshold": threshold,
+        "in_distribution": ensemble_disagreement_diagnostic(
+            (-0.1, 0.0, 0.1), target=0.0, disagreement_threshold=threshold
+        ),
+        "diverse_ood": ensemble_disagreement_diagnostic(
+            (1.0, 2.0, 3.0), target=-2.0, disagreement_threshold=threshold
+        ),
+        "shared_error_ood": ensemble_disagreement_diagnostic(
+            (2.0, 2.0, 2.0), target=-2.0, disagreement_threshold=threshold
+        ),
+        "scope": (
+            "three hand-authored scalar members and a fixed range threshold; "
+            "not learned epistemic uncertainty, OOD detection, calibration, or safety evidence"
+        ),
+    }
+
+
 def evaluate() -> dict[str, object]:
     fork = conditional_distribution("fork")
     fork_targets = tuple(value for context, value in DATA if context == "fork")
@@ -181,4 +232,5 @@ def evaluate() -> dict[str, object]:
             "start": flow_path(-2.0, 1.0, 0.0),
             "end": flow_path(-2.0, 1.0, 1.0),
         },
+        "ensemble_disagreement_audit": ensemble_disagreement_audit(),
     }

@@ -187,6 +187,8 @@ OOD AUROC 回答分数能否把两个冻结总体排序，却没有直接回答�
 
 阈值必须在 calibration split 上选择，再在未参与调参的 ID、shift、OOD/stress 和不同严重度分桶上冻结评估。若没有接受样本，selective risk 未定义；若分数只在合成 OOD 上有效，也不能宣称覆盖真实未知。一个 estimator 还可能把常见失败排在低不确定性端，因此“coverage 降低”不保证 risk 单调改善。
 
+第5章 `EXP-05-01` 的 correlated-error 负对照给出最小实例：三个成员对 OOD target 同时错 4，却因预测完全相同而得到 range 0。评测不能只统计“高分歧 OOD 被拒绝多少”，还要报告低分歧高损失 false negative、按 shift 类型/严重度分桶，并检查成员是否共享训练数据捷径、架构盲点或 simulator bias。
+
 `CLAIM-09-06`（recommendation）：用于动作拒绝的 uncertainty/OOD score 应报告完整 risk–coverage 关系、预注册工作点、分桶失败捕获率与 fallback 后果，并保存分数方向、估计器版本和校准数据；单一 AUROC 或拒绝率不能替代部署用途证据。
 
 ## 9.8 自动驾驶：开环分数不能替代闭环安全证据

@@ -14,6 +14,31 @@
       "faithful": {"observed_mode_recall": 1.0, "out_of_support_probability_mass": 0},
       "hallucinated": {"observed_mode_recall": 1.0, "out_of_support_probability_mass": 0.1}
     },
+    "ensemble_disagreement_audit": {
+      "disagreement_threshold": 0.25,
+      "diverse_ood": {
+        "ensemble_mean_absolute_error": 4.0,
+        "deferred_by_range": true,
+        "mean_prediction": 2.0,
+        "member_count": 3,
+        "prediction_range": 2.0
+      },
+      "in_distribution": {
+        "ensemble_mean_absolute_error": 0.0,
+        "deferred_by_range": false,
+        "mean_prediction": 0.0,
+        "member_count": 3,
+        "prediction_range": 0.2
+      },
+      "scope": "three hand-authored scalar members and a fixed range threshold; not learned epistemic uncertainty, OOD detection, calibration, or safety evidence",
+      "shared_error_ood": {
+        "ensemble_mean_absolute_error": 4.0,
+        "deferred_by_range": false,
+        "mean_prediction": 2.0,
+        "member_count": 3,
+        "prediction_range": 0.0
+      }
+    },
     "flow_endpoints_and_velocity": {
       "end": [
         1.0,

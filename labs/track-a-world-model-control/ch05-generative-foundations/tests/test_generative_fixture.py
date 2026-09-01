@@ -10,6 +10,8 @@ from generative_fixture import (  # noqa: E402
     conditional_distribution,
     diffusion_forward,
     empirical_distribution,
+    ensemble_disagreement_audit,
+    ensemble_disagreement_diagnostic,
     evaluate,
     expected_squared_error,
     flow_path,
@@ -93,6 +95,34 @@ class GenerativeFoundationTests(unittest.TestCase):
             flow_path(0.0, 1.0, 1.1)
         with self.assertRaises(ValueError):
             diffusion_forward(float("inf"), 0.0, 0.5)
+
+    def test_ensemble_range_accepts_the_low_error_id_fixture(self):
+        case = ensemble_disagreement_audit()["in_distribution"]
+        self.assertEqual(case["ensemble_mean_absolute_error"], 0.0)
+        self.assertEqual(case["prediction_range"], 0.2)
+        self.assertFalse(case["deferred_by_range"])
+
+    def test_ensemble_range_defers_the_diverse_ood_fixture(self):
+        case = ensemble_disagreement_audit()["diverse_ood"]
+        self.assertEqual(case["ensemble_mean_absolute_error"], 4.0)
+        self.assertEqual(case["prediction_range"], 2.0)
+        self.assertTrue(case["deferred_by_range"])
+
+    def test_correlated_ensemble_error_can_evade_disagreement_gate(self):
+        case = ensemble_disagreement_audit()["shared_error_ood"]
+        self.assertEqual(case["ensemble_mean_absolute_error"], 4.0)
+        self.assertEqual(case["prediction_range"], 0.0)
+        self.assertFalse(case["deferred_by_range"])
+
+    def test_invalid_ensemble_diagnostic_inputs_are_rejected(self):
+        with self.assertRaises(ValueError):
+            ensemble_disagreement_diagnostic([1.0, 2.0], 0.0, 0.25)  # type: ignore[arg-type]
+        with self.assertRaises(ValueError):
+            ensemble_disagreement_diagnostic((1.0,), 0.0, 0.25)
+        with self.assertRaises(ValueError):
+            ensemble_disagreement_diagnostic((1.0, float("nan")), 0.0, 0.25)
+        with self.assertRaises(ValueError):
+            ensemble_disagreement_diagnostic((1.0, 2.0), 0.0, False)
 
 
 if __name__ == "__main__":

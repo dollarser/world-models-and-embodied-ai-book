@@ -9,6 +9,7 @@
 - [全书终审：第1、5、7、22章与发布候选](final-book-review.md)
 - [内容增强审查：评测统计、动作分块、最新研究与读者术语表](content-enrichment-review-2026-09-01.md)
 - [第5章诊断增强审查：条件、覆盖与越界生成](ch05-diagnostic-review-2026-09-01.md)
+- [第5/9/21章 epistemic disagreement 门禁交叉审查](ch05-ch09-ch21-epistemic-gate-review-2026-09-02.md)
 - [跨章不确定性门禁审查：第5、9、21章](uncertainty-gate-review-2026-09-01.md)
 - [Benchmark Card 机器契约与第6/9章交叉审查](benchmark-card-review-2026-09-01.md)
 - [第4章时序数据合同增强审查](ch04-temporal-data-review-2026-09-01.md)

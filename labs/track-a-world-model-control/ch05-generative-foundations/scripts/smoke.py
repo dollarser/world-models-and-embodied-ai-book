@@ -29,6 +29,13 @@ def main() -> int:
         raise AssertionError("the collapsed fixture must lose an observed mode")
     if diagnostics["hallucinated"]["out_of_support_probability_mass"] <= 0.0:
         raise AssertionError("the hallucinated fixture must assign mass outside observed support")
+    ensemble = metrics["ensemble_disagreement_audit"]
+    if not ensemble["diverse_ood"]["deferred_by_range"]:
+        raise AssertionError("the diverse OOD fixture must cross the authored range threshold")
+    if ensemble["shared_error_ood"]["deferred_by_range"]:
+        raise AssertionError("the correlated-error fixture must expose a disagreement false negative")
+    if ensemble["shared_error_ood"]["ensemble_mean_absolute_error"] != 4.0:
+        raise AssertionError("the correlated-error fixture must remain jointly wrong")
     report = {
         "experiment_id": "EXP-05-01",
         "status": "smoke",

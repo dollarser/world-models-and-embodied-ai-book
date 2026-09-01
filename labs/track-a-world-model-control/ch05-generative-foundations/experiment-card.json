@@ -3,12 +3,13 @@
   "id": "EXP-05-01",
   "chapter": 5,
   "status": "smoke",
-  "claim_ids": ["CLAIM-05-02", "CLAIM-05-03", "CLAIM-05-04", "CLAIM-05-07"],
+  "claim_ids": ["CLAIM-05-02", "CLAIM-05-03", "CLAIM-05-04", "CLAIM-05-07", "CLAIM-05-08"],
   "claim_scope": [
     "the squared-error optimal point can lie outside the support of a fixed multimodal future",
     "an explicit conditional distribution can preserve both fixture futures",
     "diffusion and straight flow paths have distinct parameterizations with checkable endpoints",
-    "condition sensitivity, observed-mode recall, and out-of-observed-support mass expose different distribution failures"
+    "condition sensitivity, observed-mode recall, and out-of-observed-support mass expose different distribution failures",
+    "a hand-authored ensemble can be jointly wrong with zero member range, so low disagreement does not imply correctness"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -17,7 +18,7 @@
   },
   "data": {
     "name": "procedural fork and deterministic-context outcomes",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -45,7 +46,12 @@
     {"name": "conditional_context_tv", "value": 0.5, "unit": "ratio", "split": "context-pair"},
     {"name": "context_ignored_tv", "value": 0.0, "unit": "ratio", "split": "context-pair"},
     {"name": "collapsed_observed_mode_recall", "value": 0.5, "unit": "ratio", "split": "fork"},
-    {"name": "hallucinated_out_of_support_mass", "value": 0.1, "unit": "ratio", "split": "fork"}
+    {"name": "hallucinated_out_of_support_mass", "value": 0.1, "unit": "ratio", "split": "fork"},
+    {"name": "diverse_ood_prediction_range", "value": 2.0, "unit": "state", "split": "ensemble-audit"},
+    {"name": "diverse_ood_deferred", "value": 1.0, "unit": "boolean", "split": "ensemble-audit"},
+    {"name": "shared_error_ood_prediction_range", "value": 0.0, "unit": "state", "split": "ensemble-audit"},
+    {"name": "shared_error_ood_ensemble_mean_absolute_error", "value": 4.0, "unit": "state", "split": "ensemble-audit"},
+    {"name": "shared_error_ood_deferred", "value": 0.0, "unit": "boolean", "split": "ensemble-audit"}
   ],
   "artifacts": ["results/ch05/EXP-05-01-smoke.json"],
   "limitations": [
@@ -53,6 +59,7 @@
     "empirical categorical probabilities rather than a learned model",
     "diffusion and flow checks are analytic endpoints, not training or sampling benchmarks",
     "support diagnostics are relative to eight observed fixture samples, not the full support of real continuous data",
+    "ensemble predictions, targets, OOD labels, and the range threshold are hand-authored; range is not variance, calibrated uncertainty, a confidence interval, or an OOD guarantee",
     "no neural network, optimization, data download, GPU, or closed-loop task"
   ]
 }

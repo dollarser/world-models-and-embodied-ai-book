@@ -146,6 +146,8 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 
 严格阈值在这个刻意排序的 fixture 中降低风险，但这不是一般保证。真实分数可能排序错误、在 OOD 下失准或共同漏掉危险样本。应在 calibration split 选阈值，在锁定的 test/shift/stress split 报告整条 risk–coverage 曲线、关键工作点、拒绝原因和 fallback 后果；不能在测试集上挑最好阈值后回报同一数字。
 
+尤其不能把 ensemble agreement 当成“安全通过”。第5章的手写负对照中，三个成员共同错 4 时 range 恰为 0；如果第21章只消费这个 score，就会把相关错误排在低不确定性端。部署日志因此还应绑定成员清单、训练/数据谱系与 estimator revision，并用独立约束、coverage/OOD 测试和实际 fallback 后果寻找 score 的共同盲区。
+
 `CLAIM-21-07`（result）：固定选择性执行 fixture 中，把阈值从 `0.5` 放宽到 `0.7`，coverage 从 `0.5` 增至 `0.666667`，接受样本 failure rate 从 `0` 增至 `0.25`，拒绝捕获的 failure 比例从 `1.0` 降至 `0.666667`。它只验证指标语义，不是 estimator 性能。
 
 `CLAIM-21-08`（recommendation）：任何 uncertainty/OOD 执行门都应锁定分数定义、方向、估计器与校准版本，在独立 split 上报告 risk–coverage 和 fallback 后果；单个阈值、AUROC 或“高置信”标签不能单独授权动作。
