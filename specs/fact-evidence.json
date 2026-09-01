@@ -198,6 +198,17 @@
       "scope_note": "The five-use taxonomy is a book organization device whose completion criteria are intentionally non-interchangeable."
     },
     {
+      "claim_id": "CLAIM-17-09",
+      "basis": "primary_source",
+      "maturity": ["P", "O"],
+      "anchors": [
+        "https://eccv.ecva.net/virtual/2026/poster/3656",
+        "https://arxiv.org/abs/2606.29501v1",
+        "https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834"
+      ],
+      "scope_note": "The paper defines simulator and policy adaptations from one pretrained prior, while the pinned repository scopes its current code release to the world-model/A2World-sim side; neither source proves book reproduction or equal asset availability."
+    },
+    {
       "claim_id": "CLAIM-19-01",
       "basis": "official_asset",
       "maturity": ["O"],

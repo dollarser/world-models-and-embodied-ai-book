@@ -3,7 +3,7 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-17-01`
-> 关联声明：`CLAIM-17-01`～`CLAIM-17-08`
+> 关联声明：`CLAIM-17-01`～`CLAIM-17-09`
 > 关联图表：`FIG-17-01` / `TAB-17-01` / `TAB-17-02`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
@@ -97,6 +97,21 @@ flowchart LR
 危险在于训练策略不是被动测试集：它会主动寻找预测模型最乐观的区域。模型最初在行为策略分布上准确，优化后的新策略可能把状态推到 OOD。缓解方式包括短 rollout、真实数据混合、ensemble/不确定性惩罚、support/coverage gate、保守目标、周期性真实性回查和发现盲区后重采样；没有任何一种能把 learned simulator 变成无条件真值。[MOPO](https://proceedings.neurips.cc/paper_files/paper/2020/hash/a322852ce0df73e204b7e67cbbef0d0a-Abstract.html) 是用模型不确定性惩罚缓解离线分布偏移的代表性一手论文 `[P,R1]`，但本书没有复现其算法或 benchmark，也不把“处于数据 support 内”写成模型一定准确。
 
 终止语义也会改变 imagined target。[TD-MPC2](https://github.com/nicklashansen/tdmpc2) 当前官方实现虽然已经支持 episodic task，但 `episodic=true` 仍需显式开启且默认关闭以保持旧结果可复现 `[O,R1]`。因此比较 checkpoint 或复现实验时要同时登记 termination 开关、horizon 和 bootstrap 规则，不能只写算法名。
+
+### 17.4.1 同一动力学先验仍需双重验收
+
+[A2World](https://arxiv.org/abs/2606.29501v1)提供了一个双用途案例：先用真实动作标注预训练多视角 action-to-video diffusion world model，再从同一预训练权重分别适配为 history-aware、可自回归 rollout 的 `A2World-sim`，以及联合预测视频与动作的 `A2World-policy`。ECCV 2026 的[官方收录页](https://eccv.ecva.net/virtual/2026/poster/3656)确认该论文已接收 `[P]`；论文中的规模、性能和真实机器人结果仍是作者报告，不是本书测量。
+
+“同一先验服务两条分支”只说明参数初始化和训练知识可能共享，不让两种完成标准合并。至少需要四组互不替代的证据：
+
+1. **先验本身**：冻结数据与预算，对比随机初始化、普通视频预训练和 action-to-video 预训练，分别在 simulator 与 policy 分支上做消融；
+2. **simulator 分支**：在未参与训练或选择的 policy/task 上报告 action-conditioned rollout、return gap、策略排序、失败事件和 scorer 误差；
+3. **policy 分支**：在独立闭环环境报告成功、碰撞/约束、干预、延迟和分布外退化，不能用生成视频质量替代；
+4. **共享是否真的有益**：两条分支都要用相同下游数据、更新数和模型容量对比；一条分支获益不证明另一条也获益。
+
+[官方仓库快照 `077e10a`](https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834)明确说明当前 code release 聚焦 world-model component，包含多视角 A2World inference、history-aware A2World-sim、LIBERO 转换/全量微调和 rollout；它没有把 A2World-policy 列入当前代码发布。仓库源码是 Apache-2.0，但 A2World checkpoint 是 NVIDIA Cosmos 衍生模型，按仓库内 NVIDIA Open Model License 管理；`world_model/README.md` 的全量微调示例还使用 `GPUS=8`。本书只完成零下载源码审计，既没有得到 24 GB 单卡/2×80 GB 可行证据，也没有运行模型。
+
+`CLAIM-17-09`（fact）：A2World 论文把同一个 action-to-video 预训练先验分别适配为 A2World-sim 与 A2World-policy，而官方仓库快照 `077e10a` 明确把当前代码发布限定在 world-model/A2World-sim 侧；这一事实只描述论文架构和已发布资产范围，不证明两种能力已由本书复现、同等开放或可用同一指标验收。
 
 ## 17.5 用途四：规划、奖励或 critic
 
@@ -213,6 +228,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 | 本书结果 | 8/9 转移一致但策略错排；gate 阻断 support 外捷径、却不能阻断同一 support 内错误 | `EXP-17-01` | CPU smoke | 手工 corridor 与两套 authored support 声明 |
 | 论文/代码 | 表征预训练后训练 action-conditioned planner | V-JEPA 2/2.1 | `[A/O,R1]` | 本书未运行 |
 | 论文/代码 | imagined actor-critic 与 latent MPC | DreamerV3、TD-MPC2 | `[P/O,R1]` | 本书未运行 |
+| 论文/部分代码 | 同一 action-to-video 先验分化为 simulator 与 policy | A2World | `[P/O,R1]` | 当前仓库聚焦 world-model/A2World-sim；policy 与论文结果未复现 |
 | 开源平台 | 生成/动作条件 world foundation model | Cosmos | `[O,R1]` | 版本和许可会漂移 |
 | 论文/代码 | 世界模型代理策略评测 | WorldEval、WorldGym | `[A/O,R1]` | 相关/排序不等于真实绝对值 |
 | 未验证 | 24 GB 内 learned simulator 对照 | 后续 M/L1 | planned | GPU、仿真、数据待验证 |
@@ -277,6 +293,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - Quevedo et al., [WorldGym](https://arxiv.org/abs/2506.00613) 与[官方代码](https://github.com/world-model-eval/world-model-eval)，`[A/O,R1]`；
 - NVIDIA, [Cosmos-Predict2.5 快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/tree/a2c298b0a3df3778b973fe65e9e58877b292d8a7)，`[O,R1]`。
 - NVIDIA, [Cosmos 3 action modes 快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/blob/9aa98e5a0773a5558f07d2699e640858f7ca8827/cookbooks/cosmos3/generator/action/README.md)，`[O,R1]`。
+- Huang et al., [A2World](https://arxiv.org/abs/2606.29501v1)、[ECCV 2026 官方收录页](https://eccv.ecva.net/virtual/2026/poster/3656)与[官方仓库快照 `077e10a`](https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834)，`[P/O,R1]`；
 - Yu et al., [MOPO: Model-based Offline Policy Optimization](https://proceedings.neurips.cc/paper_files/paper/2020/hash/a322852ce0df73e204b7e67cbbef0d0a-Abstract.html)，`[P,R1]`。
 
 ## 下一章接口
@@ -296,6 +313,6 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
+- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/ch17-dual-use-world-model-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
 - 已知限制：两套 support 都是手工声明，只验证 coverage gate 的逻辑边界；未训练 learned world model，未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
-- 下一步：在第22章综合项目中复用 return gap、策略错排和真实性锚点。
+- 下一步：在第22章综合项目中复用 return gap、策略错排、双用途独立验收和真实性锚点；A2World 模型执行等待满足资源/许可预检的可选路径。

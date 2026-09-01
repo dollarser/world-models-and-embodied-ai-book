@@ -93,9 +93,9 @@ Riemann-1.0把多视角观测、机器人state和本体特定action放进因果�
 
 ### A2World：开源的是哪一段，要逐项回答
 
-A2World从action-to-video预训练出发，再分成history-aware的A2World-sim和联合video-action的A2World-policy。官方仓库快照[`077e10a`](https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834)提供Apache-2.0代码、world-model入口和部分checkpoint元数据；这让“同一动力学先验能否服务simulator与policy”有了可审计接口，而不只是摘要措辞。
+A2World从action-to-video预训练出发，再分成history-aware的A2World-sim和联合video-action的A2World-policy。[ECCV 2026官方收录页](https://eccv.ecva.net/virtual/2026/poster/3656)确认论文已接收；官方仓库快照[`077e10a`](https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834)提供Apache-2.0代码、world-model入口和部分checkpoint元数据。这让“同一动力学先验能否服务simulator与policy”有了可审计接口，而不只是摘要措辞。
 
-当前发布仍以world-model组件为重点，外部base weights、数据集、policy路径和论文结果不是一个自动闭合的复现包。本书只完成README、许可、HEAD和入口的零下载预检，没有拉取checkpoint、安装环境、运行GPU或验证24 GB适配。因此该卡是 `R1` 的资产审计，不是policy/simulator能力复现。
+当前发布仍以world-model组件为重点，外部base weights、数据集、policy路径和论文结果不是一个自动闭合的复现包。本书只完成README、许可、锁定源码和入口的零下载预检，没有拉取checkpoint、安装环境、运行GPU或验证24 GB适配。因此该卡保持 `R1` 的资产审计；第17章已经吸收“共享先验、两条分支独立验收”的证据设计，但这不构成policy或simulator能力复现。
 
 ## 怎样决定是否更新正文
 

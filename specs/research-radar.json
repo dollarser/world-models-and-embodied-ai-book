@@ -305,7 +305,13 @@
       "why_it_matters": "Its official repository exposes a concrete dual-use interface and partial assets, allowing the book to distinguish an open world-model path from still-separate policy and evaluation evidence.",
       "sources": [
         {
-          "url": "https://arxiv.org/abs/2606.29501",
+          "url": "https://eccv.ecva.net/virtual/2026/poster/3656",
+          "kind": "paper",
+          "maturity": "P",
+          "revision": "ECCV 2026 accepted poster 3656"
+        },
+        {
+          "url": "https://arxiv.org/abs/2606.29501v1",
           "kind": "paper",
           "maturity": "A",
           "revision": "arXiv:2606.29501v1"
@@ -319,7 +325,7 @@
       ],
       "assets": {"code": "partial", "weights": "partial", "data": "partial"},
       "reproduction": "R1",
-      "resource_path": "S tier audits the pinned Apache-2.0 repository, released world-model entrypoints and checkpoint metadata without downloading assets. Training, policy execution, datasets and any 24 GB fit remain optional and unverified.",
+      "resource_path": "S tier audits the pinned repository and integrates a dual-use, independently gated simulator/policy evidence design into Chapter 17 without downloading assets. Model execution, policy code, datasets and any 24 GB fit remain optional and unverified; the upstream full-finetuning example uses eight GPUs.",
       "scope_boundary": "The pinned repository currently documents a world-model-focused release; released code and checkpoints do not independently reproduce paper metrics, complete the policy path or prove simulator validity on new policies.",
       "review_triggers": [
         "The official repository changes the released policy path, checkpoints, licenses or data conversion contract.",
