@@ -27,9 +27,15 @@ def main() -> int:
         raise AssertionError("burst length must expose information hidden by miss rate")
     if metrics["async_schedule"]["reason_counts"] != {"queue_underflow": 1, "stale_chunk": 1}:
         raise AssertionError("async fixture must expose one underflow and one stale chunk")
-    modes = [item["mode"] for item in metrics["fallback_state_machine"]["trace"]]
-    if modes[-2:] != ["request_operator", "policy_action"]:
-        raise AssertionError("escalated fallback must require sustained recovery")
+    fallback_audit = metrics["fallback_reactivation_audit"]
+    health_only = fallback_audit["health_only_negative_control"]["trace"]
+    authorization_aware = fallback_audit["authorization_aware"]["trace"]
+    if health_only[5]["mode"] != "policy_action":
+        raise AssertionError("health-only negative control must reactivate after two healthy packets")
+    if authorization_aware[5]["mode"] != "request_operator":
+        raise AssertionError("healthy packets must not bypass explicit reactivation authorization")
+    if authorization_aware[6]["mode"] != "policy_action":
+        raise AssertionError("authorized recovery must reactivate after the healthy window")
     if metrics["allowed_count"] != 1 or metrics["fallback_count"] != 6:
         raise AssertionError("the deployment gate fixture changed")
     selective = metrics["selective_evaluation"]

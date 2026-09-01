@@ -183,6 +183,7 @@ def fallback_state_machine(
     escalated_mode: str,
     failures_to_escalate: int = 3,
     successes_to_recover: int = 2,
+    reactivation_authorized_sequence: tuple[bool, ...] | None = None,
 ) -> dict[str, object]:
     """Exercise a generic escalation/recovery contract, not an actuator controller."""
     if not allowed_sequence or any(not isinstance(value, bool) for value in allowed_sequence):
@@ -195,19 +196,34 @@ def fallback_state_machine(
     ):
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
             raise ValueError(f"{name} must be a positive integer")
+    authorization_required = reactivation_authorized_sequence is not None
+    if authorization_required and (
+        len(reactivation_authorized_sequence) != len(allowed_sequence)
+        or any(not isinstance(value, bool) for value in reactivation_authorized_sequence)
+    ):
+        raise ValueError("reactivation authorization must be a same-length boolean tuple")
 
     failure_streak = 0
     recovery_streak = 0
     escalated = False
     trace = []
     for step, allowed in enumerate(allowed_sequence):
+        reactivation_authorized = (
+            reactivation_authorized_sequence[step]
+            if reactivation_authorized_sequence is not None
+            else None
+        )
+        recovery_blocked_reason = None
         if allowed:
             failure_streak = 0
             if escalated:
                 recovery_streak += 1
                 if recovery_streak >= successes_to_recover:
-                    escalated = False
-                    recovery_streak = 0
+                    if not authorization_required or reactivation_authorized:
+                        escalated = False
+                        recovery_streak = 0
+                    else:
+                        recovery_blocked_reason = "reactivation_not_authorized"
             mode = escalated_mode if escalated else "policy_action"
         else:
             recovery_streak = 0
@@ -221,12 +237,35 @@ def fallback_state_machine(
                 "mode": mode,
                 "failure_streak": failure_streak,
                 "recovery_streak": recovery_streak,
+                "reactivation_authorized": reactivation_authorized,
+                "recovery_blocked_reason": recovery_blocked_reason,
             }
         )
     return {
         "failures_to_escalate": failures_to_escalate,
         "successes_to_recover": successes_to_recover,
+        "reactivation_authorization_required": authorization_required,
         "trace": trace,
+    }
+
+
+def fallback_reactivation_audit() -> dict[str, object]:
+    """Separate healthy input hysteresis from explicit policy reactivation."""
+
+    allowed = (True, False, False, False, True, True, True)
+    authorization = (False, False, False, False, False, False, True)
+    common = {
+        "initial_mode": "controlled_stop",
+        "escalated_mode": "request_operator",
+    }
+    return {
+        "health_only_negative_control": fallback_state_machine(allowed, **common),
+        "authorization_aware": fallback_state_machine(
+            allowed,
+            reactivation_authorized_sequence=authorization,
+            **common,
+        ),
+        "scope": "hand-authored gate-health and reactivation-authorization sequences; not fallback completion",
     }
 
 
@@ -347,11 +386,7 @@ def evaluate() -> dict[str, object]:
             "scattered": latency_summary(SCATTERED_LATENCIES_MS, config.deadline_ms),
         },
         "async_schedule": audit_async_schedule(async_schedule, 8, 2),
-        "fallback_state_machine": fallback_state_machine(
-            (True, False, False, False, True, True),
-            initial_mode="controlled_stop",
-            escalated_mode="request_operator",
-        ),
+        "fallback_reactivation_audit": fallback_reactivation_audit(),
         "decisions": decisions,
         "allowed_count": sum(decision["allowed"] for decision in decisions.values()),
         "fallback_count": sum(not decision["allowed"] for decision in decisions.values()),

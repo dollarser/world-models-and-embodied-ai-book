@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-21-01`
-> 关联声明：`CLAIM-21-01`～`CLAIM-21-10`
-> 关联图表：`FIG-21-01` / `TAB-21-01` / `TAB-21-02`
+> 关联声明：`CLAIM-21-01`～`CLAIM-21-11`
+> 关联图表：`FIG-21-01` / `TAB-21-01` / `TAB-21-02` / `TAB-21-03`
 > 资源档位：S / M / L1
 > GPU 状态：待验证
 
@@ -126,7 +126,7 @@ make ch21-smoke
 
 `CLAIM-21-03`（result）：七个 packet 中只有健康包通过，六种注入分别产生唯一原因码并进入 fallback。该结果验证网关实现，不估计真实系统故障率或安全性。
 
-结果保存在 `results/ch21/EXP-21-01-smoke.json`；14 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系和含糊状态机配置。
+结果保存在 `results/ch21/EXP-21-01-smoke.json`；15 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系、授权序列长度/类型错误和含糊状态机配置。
 
 ### 21.4.1 不要只发布一个拒绝阈值
 
@@ -172,9 +172,19 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 
 进入 fallback 不等于安全状态已经达成。状态机要区分 `requested/operating/succeeded/failed`，并监控降级控制器自身的 heartbeat、deadline 和完成条件。恢复也不能只凭下一包健康就立刻重新授权高层策略；需要规定连续健康窗口、状态重同步、队列清空、人工确认或其他 profile-specific 条件。
 
-`EXP-21-01` 的通用状态机先正常执行，随后三次连续拒绝：前两次选择 `controlled_stop`，第三次升级为 `request_operator`。升级后第一次健康仍保持请求人工，第二次连续健康才恢复 `policy_action`。阈值和模式只是教学配置，不是任何本体的推荐安全参数。
+`EXP-21-01` 的七步序列先正常执行，随后三次连续拒绝：前两次选择 `controlled_stop`，第三次升级为 `request_operator`。之后三包都是健康输入，但显式 `reactivation_authorized` 仅在最后一步为真。这个布尔值只是手工构造的“已授权”输入；它没有实现 operator 协议，也不能代表 fallback 已完成。
 
-`CLAIM-21-10`（result）：固定六步状态序列验证了“连续三次失败升级、连续两次健康恢复”的迟滞合同，避免一次瞬时健康造成 mode flapping。它不证明 controlled stop 已完成、operator 可用或恢复动作安全。
+| 审计时刻 | 仅健康迟滞对照 | 健康 + 重新激活授权 | 能够说明什么 |
+| --- | --- | --- | --- |
+| 第 4 步：升级后第 1 个健康包 | `request_operator` | `request_operator` | 一次健康不会造成 mode flapping |
+| 第 5 步：第 2 个健康包，未授权 | `policy_action` | `request_operator`; `reactivation_not_authorized` | 健康窗口与重新激活授权是两个不同的谓词 |
+| 第 6 步：第 3 个健康包，已授权 | `policy_action` | `policy_action` | 授权感知分支只在两个条件同时成立时重新激活 |
+
+*TAB-21-03：同一健康序列的重新激活负对照。状态和授权信号均为手工 fixture，不是 MRM 完成证据。*
+
+`CLAIM-21-10`（result）：仅健康迟滞分支验证了“连续三次失败升级、连续两次健康恢复”的计数合同，一次瞬时健康不会造成 mode flapping；但它会在第二个健康包后自动重新激活，因而不是充分的恢复合同。
+
+`CLAIM-21-11`（result）：在相同七步健康序列上，仅健康对照在第 5 步恢复 `policy_action`；授权感知分支同步保持 `request_operator` 并记录 `reactivation_not_authorized`，到第 6 步授权为真才恢复。该结果只验证两个信号在确定性状态机中被分离，不证明 fallback 完成、operator 可用、授权真实有效或重新激活安全。
 
 ## 21.6 ROS 2 与通信合同：QoS 不是安全证明
 
@@ -201,7 +211,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 驾驶系统要分别监控传感器 age、定位健康、规划轨迹 age、控制命令 age、车辆反馈、计算 deadline 和通信 liveliness。高层 world model/VLA 的轨迹不得绕过车辆动力学、道路边界、碰撞检查和 command gate。
 
-[Autoware Universe](https://github.com/autowarefoundation/autoware_universe)包含 operation mode、command gate、diagnostics 和 minimum-risk maneuver 相关组件 `[O,R1]`。当前官方 operation-mode 文档明确区分 Autonomous、Local、Remote、Stop 与 `In Transition`，并在完成切换前保留原控制责任；command-mode 文档又区分 emergency stop、comfortable stop 与尚未支持的 pull over。这个结构支持本章的核心边界：模式请求、过渡责任、可用性和完成确认是不同状态，不能把一个 `fallback` 字符串当作 MRM 已成功。
+[Autoware Universe](https://github.com/autowarefoundation/autoware_universe)包含 operation mode、command gate、diagnostics 和 minimum-risk maneuver 相关组件 `[O,R1]`。其当前 [operation mode transition manager 文档](https://github.com/autowarefoundation/autoware_universe/blob/main/control/autoware_operation_mode_transition_manager/README.md)明确区分 `IN TRANSITION` 与 `COMPLETED`：切换完成前仍由原 operator 负责控制，组件还要检查 transition completion `[O,R1]`。command-mode 文档又区分 emergency stop、comfortable stop 与尚未支持的 pull over。这个结构支持本章的核心边界：模式请求、过渡责任、可用性和完成确认是不同状态，不能把一个 `fallback` 字符串当作 MRM 已成功。
 
 `CLAIM-21-06`（recommendation）：自动驾驶降级应按故障可用性选择减速、保持车道、受控停车、靠边、远程/人工接管或其他 MRM，并在直道、弯道、低附着、密集交通和传感器组合故障中闭环验证；不得用单一零控制向量代表安全。
 
@@ -218,7 +228,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 | 证据 | 当前状态 | 不能外推 |
 | --- | --- | --- |
 | packet gate、固定 latency/burst 与离散异步 schedule | CPU smoke | 实时调度、网络、安全或可靠性 |
-| fallback 升级/恢复状态机 | CPU 布尔序列 | 降级控制器可达性、完成性或安全性 |
+| fallback 升级、健康恢复与重新激活授权状态机 | CPU 手工布尔序列 | 降级控制器可达性/完成性、operator 可用性、真实授权或安全性 |
 | uncertainty gate 与 risk–coverage | CPU 手工分数/标签 | 校准质量、OOD 检出或安全性 |
 | LeRobot/OpenVLA/ROS 2/Autoware 能力 | 官方资料 | 本书已运行或满足 deadline |
 | 目标设备 latency/故障注入 | planned | 未执行前不得写数字 |

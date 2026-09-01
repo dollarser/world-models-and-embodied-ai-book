@@ -2,7 +2,7 @@
 
 | 资产 | 状态 | 已验证 | 待验证 |
 | --- | --- | --- | --- |
-| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、52 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；173 条声明及全部 `FIG/TAB` 双向登记，26 条 `fact` 与 8 条 `inference` 均有证据合同，84 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
+| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、52 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；174 条声明及全部 `FIG/TAB` 双向登记，26 条 `fact` 与 8 条 `inference` 均有证据合同，85 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
 | 批次 B：第13、14、15、20章 | `reviewed` | 第13–15章在批次 B 通过；第20章由批次 D 关闭第17/19章一致性门 | 上游策略、仿真、真实数据和 GPU 未运行 |
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
@@ -13,7 +13,7 @@
 | 编辑结构与图表无障碍审查 | `reviewed` | 22 章单一 H1、标题不越级；23 张 Mermaid 图加入 `accTitle/accDescr` 并在编译产物保留；未发现 100 字以上整段跨章重复 | 深浅色、窄屏、缩放、键盘与屏幕阅读器仍需人工巡检 |
 | 术语与章节接口审查 | `reviewed` | 15 个读者关键缩写/指标同时进入作者基线与读者术语表；6 章合并标题拆为独立教学/接口区段；22 章结构契约自动检查 | 自动覆盖只保证关键项存在，不能替代逐段术语语义、译名偏好和跨学科读者测试 |
 | 事实声明来源审查 | `reviewed` | 26 条 `fact` 与机器证据登记双向相等；GitHub `official_asset` 全部使用 40 位 commit URL；区分论文、官方资产、供应商声明、本书定义、仓库合同和数学恒等式 | 不可变 URL 只固定被审查内容，不证明来源蕴含、独立复现或当前上游默认行为；仍需周期性人工复核 |
-| 推断链与结果解释审查 | `reviewed` | 8 条 `inference` 登记双前提、锚点、反例和范围；1 条采样偏好改为 `recommendation`；84 条 `result` 定义句均有不可外推边界 | 结构化前提不能自动证明推理有效；机制解释与外部效度仍需领域审稿和更强实验 |
+| 推断链与结果解释审查 | `reviewed` | 8 条 `inference` 登记双前提、锚点、反例和范围；1 条采样偏好改为 `recommendation`；85 条 `result` 定义句均有不可外推边界 | 结构化前提不能自动证明推理有效；机制解释与外部效度仍需领域审稿和更强实验 |
 | 关键建议适用性审查 | `reviewed` | 24 条资源升级、数据纳入、评测发布、运行激活或安全执行建议登记 trigger、动作、fallback/stop 与未授权事项；8 条正文补齐失败路径 | 自动规则不能保证高后果建议选择已穷尽，也不构成硬件、数据、机器人或车辆授权 |
 | PRD 实验档位一致性审查 | `reviewed` | 22 章逐一绑定当前 S 档 `EXP-NN-01`，并把训练、真实数据、checkpoint 与仿真拆为可选待验证 M/L 路径；当前仓库树与脚本名已同步 | 只证明设计—交付映射正确，不表示任何 M/L 路径已经运行或资源可复现 |
 | 实验资产最小合同审查 | `reviewed` | 22 个 manifest 实验与实验卡双向一致，并具有 README、可测试 `src`、smoke、测试和存在的结果 artifact；解析 fixture 不再被要求伪造训练/config 步骤 | 资产完整和 S 档通过不证明训练、外部数据、仿真或目标硬件可复现 |
@@ -57,10 +57,10 @@
 | EXP-19-01 | `smoke` | 10 个单元测试；observation-only 有 2 个零误差解；等价解隐藏 state MAE 0.1625；state anchor 后唯一 | 标量无噪网格，不是物理仿真、真实参数辨识或 Sim2Real 性能 |
 | 第20章 具身评测 | `reviewed` | 四类审查通过；证据层级、协议交互、泄漏/盲法、cluster/paired/macro-micro 统计、CARLA 2.1 与机器 benchmark card 已接入 | 真实 clustered interval、真机/仿真与外部评测网络 |
 | EXP-20-01 | `smoke` | 17 个单元测试；四格协议 interaction -25pp；8 attempted/8 valid/7 terminated/1 truncated；10 对结果的 episode-micro 差 +0.3、等 route macro 差 0、四 cluster 枚举区间 [-0.75,0.75] | 手工 8 episode + 10 对/4 route；简单 percentile bootstrap 只演示机制，不是策略或 population inference |
-| 第21章 部署、实时性与安全边界 | `reviewed` | deadline burst、异步 chunk 新鲜度/underflow、watchdog、版本化 uncertainty gate、迟滞 fallback、Autoware MRM 状态与四类审查 | 真实墙钟、校准 estimator、调度器、网络、模型、ROS、执行器、硬件和 GPU 未运行 |
-| EXP-21-01 | `smoke` | 14 个单元测试；mean 45 ms 掩盖尾部；同 miss rate 的 burst 长度 2/1；8 步 schedule 有 1 stale/1 underflow；3-failure/2-health 状态机 | 手工 latency/packet/score/chunk/状态，不是实时、OOD、MRM 可达性或安全证明 |
+| 第21章 部署、实时性与安全边界 | `reviewed` | deadline burst、异步 chunk 新鲜度/underflow、watchdog、版本化 uncertainty gate、迟滞 fallback、健康恢复/重新激活授权分离、Autoware 过渡完成语义与四类审查 | 真实墙钟、校准 estimator、调度器、网络、模型、ROS、执行器、实际授权链、降级完成、硬件和 GPU 未运行 |
+| EXP-21-01 | `smoke` | 15 个单元测试；mean 45 ms 掩盖尾部；同 miss rate 的 burst 长度 2/1；8 步 schedule 有 1 stale/1 underflow；第 5/6 步的健康仅对照/授权感知重新激活 | 手工 latency/packet/score/chunk/状态/授权序列，不是实时、OOD、MRM 完成、真实授权或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 20 个单元测试；完整包 5 段 trace/5 个 artifact binding/2 个 failure injection/0 issue，无效包 20 个具名 issue，缺段、错误依赖、数据重叠、评测未冻结与缺失安全网关均被拒绝 | metadata 图检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、研究雷达、22 张实验卡、3 张 benchmark card、284 个章节单元测试、22 组结果精确比对、28 个 HTML/23 张可访问 Mermaid 图/1073 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸、深浅色、键盘与屏幕阅读器巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、研究雷达、22 张实验卡、3 张 benchmark card、285 个章节单元测试、22 组结果精确比对、28 个 HTML/23 张可访问 Mermaid 图/1073 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸、深浅色、键盘与屏幕阅读器巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

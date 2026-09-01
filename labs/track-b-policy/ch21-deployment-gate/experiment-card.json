@@ -3,13 +3,14 @@
   "id": "EXP-21-01",
   "chapter": 21,
   "status": "smoke",
-  "claim_ids": ["CLAIM-21-02", "CLAIM-21-03", "CLAIM-21-07", "CLAIM-21-09", "CLAIM-21-10"],
+  "claim_ids": ["CLAIM-21-02", "CLAIM-21-03", "CLAIM-21-07", "CLAIM-21-09", "CLAIM-21-10", "CLAIM-21-11"],
   "claim_scope": [
     "a mean latency below the deadline can hide a deadline miss in a fixed tail sample",
     "stale observations, deadline misses, invalid actions, bounds violations, expired chunks, and excessive uncertainty need distinct gate reasons",
     "uncertainty thresholds trade accepted coverage against failure risk and failure capture in a fixed labeled fixture",
     "equal mean, percentile, maximum, and miss-rate summaries can hide different consecutive deadline-miss bursts",
-    "an asynchronous schedule must distinguish stale queued actions from queue underflow, and fallback recovery needs explicit hysteresis"
+    "an asynchronous schedule must distinguish stale queued actions from queue underflow, and fallback recovery needs explicit hysteresis",
+    "a fixed negative control separates healthy-input hysteresis from explicit policy-reactivation authorization"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -18,7 +19,7 @@
   },
   "data": {
     "name": "procedural latency bursts, action packets, async chunks, and fallback transitions",
-    "version": "v3",
+    "version": "v4",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -51,12 +52,15 @@
     {"name": "strict_threshold_coverage", "value": 0.5, "unit": "ratio", "split": "six-selective-cases"},
     {"name": "strict_threshold_accepted_failure_rate", "value": 0.0, "unit": "ratio", "split": "six-selective-cases"},
     {"name": "permissive_threshold_coverage", "value": 0.666667, "unit": "ratio", "split": "six-selective-cases"},
-    {"name": "permissive_threshold_accepted_failure_rate", "value": 0.25, "unit": "ratio", "split": "six-selective-cases"}
+    {"name": "permissive_threshold_accepted_failure_rate", "value": 0.25, "unit": "ratio", "split": "six-selective-cases"},
+    {"name": "health_only_reactivation_step", "value": 5.0, "unit": "step", "split": "seven-step-reactivation-audit"},
+    {"name": "authorization_aware_reactivation_step", "value": 6.0, "unit": "step", "split": "seven-step-reactivation-audit"},
+    {"name": "authorization_blocked_count", "value": 1.0, "unit": "step", "split": "seven-step-reactivation-audit"}
   ],
   "artifacts": ["results/ch21/EXP-21-01-smoke.json"],
   "limitations": [
     "six hand-authored latency values rather than measured wall-clock timings",
-    "fallback labels and state transitions are not actuator commands, reachability checks, completion evidence, or safety proofs",
+    "fallback labels, state transitions, and the hand-authored reactivation signal are not actuator commands, reachability checks, completion evidence, operator availability, authorization-system validation, or safety proofs",
     "the discrete async schedule does not measure a scheduler, clock, network, queue implementation, or chunk fusion",
     "uncertainty scores and failure labels are hand-authored and do not validate an estimator or calibrated probability",
     "no scheduler, network, ROS, model, accelerator, hardware, fault tree, or certification"

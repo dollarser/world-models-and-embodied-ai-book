@@ -15,6 +15,7 @@ from deployment_gate import (  # noqa: E402
     SCATTERED_LATENCIES_MS,
     audit_async_schedule,
     evaluate,
+    fallback_reactivation_audit,
     fallback_state_machine,
     gate,
     latency_summary,
@@ -76,6 +77,32 @@ class DeploymentGateTests(unittest.TestCase):
                 initial_mode="stop",
                 escalated_mode="stop",
             )
+        with self.assertRaises(ValueError):
+            fallback_state_machine(
+                (False, True),
+                initial_mode="stop",
+                escalated_mode="operator",
+                reactivation_authorized_sequence=(True,),
+            )
+        with self.assertRaises(ValueError):
+            fallback_state_machine(
+                (False,),
+                initial_mode="stop",
+                escalated_mode="operator",
+                reactivation_authorized_sequence=(1,),  # type: ignore[arg-type]
+            )
+
+    def test_gate_health_does_not_authorize_policy_reactivation(self):
+        audit = fallback_reactivation_audit()
+        health_only = audit["health_only_negative_control"]["trace"]
+        authorization_aware = audit["authorization_aware"]["trace"]
+        self.assertEqual(health_only[5]["mode"], "policy_action")
+        self.assertEqual(authorization_aware[5]["mode"], "request_operator")
+        self.assertEqual(
+            authorization_aware[5]["recovery_blocked_reason"],
+            "reactivation_not_authorized",
+        )
+        self.assertEqual(authorization_aware[6]["mode"], "policy_action")
 
     def test_healthy_packet_is_allowed(self):
         packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")

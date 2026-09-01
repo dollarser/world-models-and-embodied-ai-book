@@ -82,17 +82,36 @@
       "mobile_robot": "controlled_stop",
       "vehicle": "request_minimum_risk_maneuver"
     },
-    "fallback_state_machine": {
-      "failures_to_escalate": 3,
-      "successes_to_recover": 2,
-      "trace": [
-        {"allowed": true, "failure_streak": 0, "mode": "policy_action", "recovery_streak": 0, "step": 0},
-        {"allowed": false, "failure_streak": 1, "mode": "controlled_stop", "recovery_streak": 0, "step": 1},
-        {"allowed": false, "failure_streak": 2, "mode": "controlled_stop", "recovery_streak": 0, "step": 2},
-        {"allowed": false, "failure_streak": 3, "mode": "request_operator", "recovery_streak": 0, "step": 3},
-        {"allowed": true, "failure_streak": 0, "mode": "request_operator", "recovery_streak": 1, "step": 4},
-        {"allowed": true, "failure_streak": 0, "mode": "policy_action", "recovery_streak": 0, "step": 5}
-      ]
+    "fallback_reactivation_audit": {
+      "authorization_aware": {
+        "failures_to_escalate": 3,
+        "reactivation_authorization_required": true,
+        "successes_to_recover": 2,
+        "trace": [
+          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 0},
+          {"allowed": false, "failure_streak": 1, "mode": "controlled_stop", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 1},
+          {"allowed": false, "failure_streak": 2, "mode": "controlled_stop", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 2},
+          {"allowed": false, "failure_streak": 3, "mode": "request_operator", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 3},
+          {"allowed": true, "failure_streak": 0, "mode": "request_operator", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 1, "step": 4},
+          {"allowed": true, "failure_streak": 0, "mode": "request_operator", "reactivation_authorized": false, "recovery_blocked_reason": "reactivation_not_authorized", "recovery_streak": 2, "step": 5},
+          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": true, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 6}
+        ]
+      },
+      "health_only_negative_control": {
+        "failures_to_escalate": 3,
+        "reactivation_authorization_required": false,
+        "successes_to_recover": 2,
+        "trace": [
+          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 0},
+          {"allowed": false, "failure_streak": 1, "mode": "controlled_stop", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 1},
+          {"allowed": false, "failure_streak": 2, "mode": "controlled_stop", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 2},
+          {"allowed": false, "failure_streak": 3, "mode": "request_operator", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 3},
+          {"allowed": true, "failure_streak": 0, "mode": "request_operator", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 1, "step": 4},
+          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 5},
+          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 6}
+        ]
+      },
+      "scope": "hand-authored gate-health and reactivation-authorization sequences; not fallback completion"
     },
     "latency": {
       "all_cycles_meet_deadline": false,
