@@ -44,7 +44,15 @@
 | 术语 | 本书中的含义 | 容易混淆之处 | 首读章节 |
 | --- | --- | --- | --- |
 | frame / 坐标系 | 规定原点、轴向、手系与单位的参考框架 | 相同 shape 不代表相同几何语义 | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
+| image/video frame | 图像或视频序列中的一帧采样 | 不等于 coordinate frame；应结合时间戳理解 | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
+| 相机内参（intrinsics） | 把相机坐标与像素连接的焦距、主点及相机模型参数 | 不描述相机相对机器人放在哪里 | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
+| 外参（extrinsics） | 两个坐标系之间的刚体变换 | 必须声明变换方向和时刻，不只是一个 `4×4` 数组 | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
+| proper rotation | 满足 `RᵀR=I` 且 `det(R)=+1` 的旋转矩阵 | 缩放、剪切和镜像不能当作刚体旋转 | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
+| optical frame | 常见相机光学轴约定：x 右、y 下、z 前；实际接口仍需查文档 | 不能默认等同机器人 body frame | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
+| z-depth / ray range | z-depth 是光轴坐标，range 是沿成像射线的欧氏距离 | 二者只在主点射线上相同 | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
 | 位姿（pose） | 刚体相对指定 frame 的位置与朝向 | 不只是位置坐标 | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
+| 点云（point cloud） | 一组带 frame 与单位的三维采样点，通常表示已观测表面 | 没有点不等于空间已知为空 | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
+| 体素（voxel） | 三维网格中的一个体积单元 | 必须同时给范围、原点和分辨率 | [第12章](part-03-representations/ch12-actionable-space.md) |
 | BEV | 把空间投影或聚合到鸟瞰平面的表示 | 不自动保留完整高度、遮挡与碰撞关系 | [第12章](part-03-representations/ch12-actionable-space.md) |
 | occupancy | 空间位置被占用的概率或状态 | 不只用于 3D 重建 | [第12章](part-03-representations/ch12-actionable-space.md) |
 | 三态 occupancy | 把证据分为 `free`、`occupied`、`unknown` | 未检测或视野外不能默认是 free | [第12章](part-03-representations/ch12-actionable-space.md) |

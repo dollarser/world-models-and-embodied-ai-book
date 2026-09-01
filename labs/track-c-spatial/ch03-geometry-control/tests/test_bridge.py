@@ -11,6 +11,7 @@ from bridge_fixture import (  # noqa: E402
     T_BODY_CAMERA_M,
     backproject,
     backproject_range,
+    compose_transform,
     control_audit,
     geometry_audit,
     inverse_transform,
@@ -45,6 +46,34 @@ class GeometryControlBridgeTests(unittest.TestCase):
         for actual, expected in zip(recovered, point, strict=True):
             self.assertAlmostEqual(actual, expected)
 
+    def test_transform_composition_matches_sequential_application(self):
+        rotation_world_body = ((0.0, -1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 1.0))
+        translation_world_body = (10.0, -2.0, 0.0)
+        rotation_world_camera, translation_world_camera = compose_transform(
+            rotation_world_body,
+            translation_world_body,
+            R_BODY_CAMERA,
+            T_BODY_CAMERA_M,
+        )
+        point_camera = (-0.02, -0.01, 2.0)
+        sequential = transform_point(
+            transform_point(point_camera, R_BODY_CAMERA, T_BODY_CAMERA_M),
+            rotation_world_body,
+            translation_world_body,
+        )
+        composed = transform_point(point_camera, rotation_world_camera, translation_world_camera)
+        self.assertEqual(sequential, composed)
+
+    def test_scaling_reflection_and_shear_are_not_rotations(self):
+        invalid_rotations = (
+            ((2.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+            ((-1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+            ((1.0, 0.2, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+        )
+        for rotation in invalid_rotations:
+            with self.subTest(rotation=rotation), self.assertRaises(ValueError):
+                transform_point((0.0, 0.0, 1.0), rotation, (0.0, 0.0, 0.0))
+
     def test_z_depth_and_ray_range_are_not_interchangeable_off_axis(self):
         z_depth_point = backproject(101.0, 0.5, 1.0)
         range_point = backproject_range(101.0, 0.5, 1.0)
@@ -56,6 +85,10 @@ class GeometryControlBridgeTests(unittest.TestCase):
             backproject(0.0, 0.0, 0.0)
         with self.assertRaises(ValueError):
             occupancy_cells([(0.0, 0.0, 1.0)], 0.0)
+        with self.assertRaises(ValueError):
+            occupancy_cells([(float("inf"), 0.0, 1.0)])
+        with self.assertRaises(ValueError):
+            occupancy_cells([(0.0, 0.0, 1.0)], True)
 
     def test_faults_are_measured_in_physical_units(self):
         result = geometry_audit()

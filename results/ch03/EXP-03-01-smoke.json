@@ -15,6 +15,7 @@
       "extrinsic_fault_mean_shift_m": 0.10000000000000009,
       "identity_axis_mapping_mean_error_m": 2.3571816972636253,
       "max_reprojection_error_px": 0.0,
+      "max_transform_chain_gap_m": 0.0,
       "max_transform_roundtrip_error_m": 8.673617379884035e-18,
       "occupied_bev_cells": [[6, 0], [10, -1], [10, 0]],
       "off_axis_z_depth_to_range_ratio": 1.4142135623730951,

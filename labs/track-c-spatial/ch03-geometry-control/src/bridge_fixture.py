@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from math import cos, floor, hypot, isfinite, sin, sqrt
+from math import cos, floor, hypot, isclose, isfinite, sin, sqrt
 
 
 INTRINSICS = {"fx": 100.0, "fy": 100.0, "cx": 1.0, "cy": 0.5}
@@ -11,6 +11,8 @@ IDENTITY_ROTATION = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
 # camera optical (right, down, forward) -> body (forward, left, up)
 R_BODY_CAMERA = ((0.0, 0.0, 1.0), (-1.0, 0.0, 0.0), (0.0, -1.0, 0.0))
 T_BODY_CAMERA_M = (0.5, 0.0, 0.2)
+R_WORLD_BODY = ((0.0, -1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 1.0))
+T_WORLD_BODY_M = (10.0, -2.0, 0.0)
 
 
 def _finite_vector(values: tuple[float, ...], name: str, length: int) -> tuple[float, ...]:
@@ -28,6 +30,28 @@ def _checked_intrinsics(intrinsics: dict[str, float]) -> dict[str, float]:
     if checked["fx"] <= 0.0 or checked["fy"] <= 0.0:
         raise ValueError("focal lengths must be positive")
     return checked
+
+
+def _checked_rotation(
+    rotation: tuple[tuple[float, float, float], ...],
+) -> tuple[tuple[float, float, float], ...]:
+    if not isinstance(rotation, tuple) or len(rotation) != 3:
+        raise ValueError("rotation must be a 3-by-3 tuple")
+    rows = tuple(_finite_vector(row, "rotation row", 3) for row in rotation)
+    for row_index in range(3):
+        for other_index in range(3):
+            dot = sum(rows[row_index][column] * rows[other_index][column] for column in range(3))
+            expected = 1.0 if row_index == other_index else 0.0
+            if not isclose(dot, expected, rel_tol=0.0, abs_tol=1e-9):
+                raise ValueError("rotation must be orthonormal")
+    determinant = (
+        rows[0][0] * (rows[1][1] * rows[2][2] - rows[1][2] * rows[2][1])
+        - rows[0][1] * (rows[1][0] * rows[2][2] - rows[1][2] * rows[2][0])
+        + rows[0][2] * (rows[1][0] * rows[2][1] - rows[1][1] * rows[2][0])
+    )
+    if not isclose(determinant, 1.0, rel_tol=0.0, abs_tol=1e-9):
+        raise ValueError("rotation must have determinant +1")
+    return rows
 
 
 def backproject(u: float, v: float, depth_m: float, intrinsics: dict[str, float] = INTRINSICS) -> tuple[float, float, float]:
@@ -70,10 +94,36 @@ def transform_point(
     """Apply p_target = R_target_source p_source + t_target_source."""
     point = _finite_vector(point, "point", 3)
     translation = _finite_vector(translation, "translation", 3)
-    if not isinstance(rotation, tuple) or len(rotation) != 3:
-        raise ValueError("rotation must be a 3-by-3 tuple")
-    rows = tuple(_finite_vector(row, "rotation row", 3) for row in rotation)
+    rows = _checked_rotation(rotation)
     return tuple(sum(row[index] * point[index] for index in range(3)) + translation[row_index] for row_index, row in enumerate(rows))
+
+
+def compose_transform(
+    rotation_target_middle: tuple[tuple[float, float, float], ...],
+    translation_target_middle: tuple[float, float, float],
+    rotation_middle_source: tuple[tuple[float, float, float], ...],
+    translation_middle_source: tuple[float, float, float],
+) -> tuple[tuple[tuple[float, float, float], ...], tuple[float, float, float]]:
+    """Compose T_target_middle with T_middle_source in that order."""
+    target_middle = _checked_rotation(rotation_target_middle)
+    middle_source = _checked_rotation(rotation_middle_source)
+    translation_target_middle = _finite_vector(
+        translation_target_middle, "target-middle translation", 3
+    )
+    translation_middle_source = _finite_vector(
+        translation_middle_source, "middle-source translation", 3
+    )
+    rotation_target_source = tuple(
+        tuple(
+            sum(target_middle[row][index] * middle_source[index][column] for index in range(3))
+            for column in range(3)
+        )
+        for row in range(3)
+    )
+    translation_target_source = transform_point(
+        translation_middle_source, target_middle, translation_target_middle
+    )
+    return _checked_rotation(rotation_target_source), translation_target_source
 
 
 def inverse_transform(
@@ -81,7 +131,8 @@ def inverse_transform(
     translation: tuple[float, float, float],
 ) -> tuple[tuple[tuple[float, float, float], ...], tuple[float, float, float]]:
     """Invert a rigid transform whose rotation is assumed orthonormal."""
-    _ = transform_point((0.0, 0.0, 0.0), rotation, translation)
+    rotation = _checked_rotation(rotation)
+    translation = _finite_vector(translation, "translation", 3)
     transpose = tuple(tuple(rotation[column][row] for column in range(3)) for row in range(3))
     inverse_translation = tuple(-sum(transpose[row][column] * translation[column] for column in range(3)) for row in range(3))
     return transpose, inverse_translation
@@ -103,9 +154,17 @@ def transform_yaw_translation(
 
 def occupancy_cells(points: list[tuple[float, float, float]], cell_size_m: float = 0.25) -> list[tuple[int, int]]:
     """Rasterize horizontal x-y positions into occupied BEV cells."""
-    if cell_size_m <= 0:
-        raise ValueError("cell size must be positive")
-    return sorted({(floor(x / cell_size_m), floor(y / cell_size_m)) for x, y, _ in points})
+    if (
+        isinstance(cell_size_m, bool)
+        or not isinstance(cell_size_m, (int, float))
+        or not isfinite(cell_size_m)
+        or cell_size_m <= 0
+    ):
+        raise ValueError("cell size must be a positive finite number")
+    if not isinstance(points, (list, tuple)):
+        raise ValueError("points must be a list or tuple of 3D tuples")
+    checked_points = tuple(_finite_vector(point, "point", 3) for point in points)
+    return sorted({(floor(x / cell_size_m), floor(y / cell_size_m)) for x, y, _ in checked_points})
 
 
 def geometry_audit() -> dict[str, object]:
@@ -131,6 +190,23 @@ def geometry_audit() -> dict[str, object]:
         for bad, good in zip(identity_axis_points, body_points, strict=True)
     ) / len(body_points)
     off_axis_z_depth = backproject(101.0, 0.5, 1.0)
+    rotation_world_camera, translation_world_camera = compose_transform(
+        R_WORLD_BODY,
+        T_WORLD_BODY_M,
+        R_BODY_CAMERA,
+        T_BODY_CAMERA_M,
+    )
+    sequential_world_points = [
+        transform_point(point, R_WORLD_BODY, T_WORLD_BODY_M) for point in body_points
+    ]
+    composed_world_points = [
+        transform_point(point, rotation_world_camera, translation_world_camera)
+        for point in camera_points
+    ]
+    transform_chain_errors = [
+        sqrt(sum((sequential[index] - composed[index]) ** 2 for index in range(3)))
+        for sequential, composed in zip(sequential_world_points, composed_world_points, strict=True)
+    ]
     return {
         "point_count": len(camera_points),
         "max_reprojection_error_px": max(reprojection_errors),
@@ -139,6 +215,7 @@ def geometry_audit() -> dict[str, object]:
         "max_transform_roundtrip_error_m": max(transform_roundtrip_errors),
         "identity_axis_mapping_mean_error_m": identity_axis_error,
         "off_axis_z_depth_to_range_ratio": sqrt(sum(value * value for value in off_axis_z_depth)),
+        "max_transform_chain_gap_m": max(transform_chain_errors),
         "optical_forward_axis_in_body": transform_point((0.0, 0.0, 1.0), R_BODY_CAMERA, (0.0, 0.0, 0.0)),
         "occupied_bev_cells": occupancy_cells(body_points),
         "camera_points_m": camera_points,
