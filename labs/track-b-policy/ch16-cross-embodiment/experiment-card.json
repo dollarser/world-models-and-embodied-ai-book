@@ -3,22 +3,23 @@
   "id": "EXP-16-01",
   "chapter": 16,
   "status": "smoke",
-  "claim_ids": ["CLAIM-16-02", "CLAIM-16-03", "CLAIM-16-04", "CLAIM-16-07", "CLAIM-16-09"],
+  "claim_ids": ["CLAIM-16-02", "CLAIM-16-03", "CLAIM-16-04", "CLAIM-16-07", "CLAIM-16-09", "CLAIM-16-10"],
   "claim_scope": [
     "two equal-shape raw action tensors can encode different units and gripper polarity",
     "schema-aware adapters align the procedural actions while naive raw pooling changes semantics",
     "records with missing embodiment metadata or missing/stale adapter fingerprints are rejected before mixture construction",
     "changes to action conversion semantics change the deterministic adapter schema fingerprint",
-    "dataset-, episode-, and transition-uniform sampling produce different source exposure on the same authored episode lengths"
+    "dataset-, episode-, and transition-uniform sampling produce different source exposure on the same authored episode lengths",
+    "dropping incomplete three-step action windows removes the short source from eligible loss windows despite its nonzero raw-transition share"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library v3 canonical action adapter and mixture-exposure fixture"
+    "config": "standard-library v4 canonical action adapter, mixture-denominator, and action-window exposure fixture"
   },
   "data": {
     "name": "procedural arm_a and arm_b action records",
-    "version": "v3",
+    "version": "v4",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -45,7 +46,9 @@
     {"name": "semantic_change_fingerprint_detection_rate", "value": 1.0, "unit": "ratio", "split": "altered-arm-a-schema"},
     {"name": "dataset_uniform_long_source_fraction", "value": 0.5, "unit": "ratio", "split": "two-authored-datasets"},
     {"name": "episode_uniform_long_source_fraction", "value": 0.75, "unit": "ratio", "split": "four-authored-episodes"},
-    {"name": "transition_uniform_long_source_fraction", "value": 0.857142857143, "unit": "ratio", "split": "fourteen-authored-transitions"}
+    {"name": "transition_uniform_long_source_fraction", "value": 0.857142857143, "unit": "ratio", "split": "fourteen-authored-transitions"},
+    {"name": "eligible_three_step_window_count", "value": 6, "unit": "windows", "split": "four-authored-episodes"},
+    {"name": "window_uniform_long_source_fraction", "value": 1.0, "unit": "ratio", "split": "six-eligible-three-step-windows"}
   ],
   "artifacts": ["results/ch16/EXP-16-01-smoke.json"],
   "limitations": [
@@ -54,6 +57,7 @@
     "naive pooling error is an interface counterexample, not measured negative transfer",
     "no images, language, robot dynamics, policy training, or closed-loop evaluation",
     "schema fingerprint is deterministic cache identity, not authentication, data integrity, or controller validation",
-    "mixture exposure uses two hand-authored datasets, four episodes, and fourteen transitions rather than a real training pipeline"
+    "mixture exposure uses two hand-authored datasets, four episodes, fourteen transitions, and six eligible windows rather than a real training pipeline",
+    "contiguous L-H+1 window counting assumes stride one and drop-tail with no padding, masks, sampling replacement, distributed sharding, or gradient weighting"
   ]
 }

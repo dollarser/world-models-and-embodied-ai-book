@@ -2,6 +2,21 @@
   "experiment_id": "EXP-16-01",
   "gpu_verified": false,
   "metrics": {
+    "action_window_exposure": {
+      "action_horizon": 3,
+      "datasets_without_eligible_windows": [
+        "short_dataset"
+      ],
+      "eligible_window_count": 6,
+      "eligible_window_counts_by_dataset": {
+        "long_dataset": 6,
+        "short_dataset": 0
+      },
+      "window_uniform_exposure": {
+        "long_dataset": 1.0,
+        "short_dataset": 0.0
+      }
+    },
     "adapter_schema_fingerprints": {
       "arm_a": "sha256:f76e26149027a7284f4e4486a6b4db65dc8c448ef8b4de20be30764da8796e26",
       "arm_b": "sha256:c274c08e11e723a60aaaf9f7891ffa825c3b2c36fc3e6f3093db9e17b36f19ec"

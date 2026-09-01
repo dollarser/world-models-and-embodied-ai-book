@@ -11,11 +11,13 @@ from embodiment_fixture import (  # noqa: E402
     ADAPTERS,
     EmbodimentAdapter,
     canonicalize,
+    evaluate,
     mean_action,
     maximum_round_trip_error,
     mixture_exposure_report,
     naive_raw_pooling_error,
     schema_aware_pooling_error,
+    window_exposure_report,
 )
 
 
@@ -118,6 +120,39 @@ class EmbodimentAdapterTests(unittest.TestCase):
         for mixture in invalid_mixtures:
             with self.subTest(mixture=mixture), self.assertRaises(ValueError):
                 mixture_exposure_report(mixture)
+
+    def test_action_horizon_changes_realized_source_exposure(self):
+        report = window_exposure_report(
+            {"short_dataset": (2,), "long_dataset": (4, 4, 4)}, action_horizon=3
+        )
+        self.assertEqual(report["eligible_window_count"], 6)
+        self.assertEqual(
+            report["eligible_window_counts_by_dataset"],
+            {"long_dataset": 6, "short_dataset": 0},
+        )
+        self.assertEqual(
+            report["window_uniform_exposure"],
+            {"long_dataset": 1.0, "short_dataset": 0.0},
+        )
+
+    def test_too_short_dataset_remains_visible_in_window_audit(self):
+        report = window_exposure_report(
+            {"short_dataset": (2,), "long_dataset": (4, 4, 4)}, action_horizon=3
+        )
+        self.assertEqual(report["datasets_without_eligible_windows"], ("short_dataset",))
+
+    def test_invalid_or_unusable_action_horizons_are_rejected(self):
+        for horizon in (True, 0, -1):
+            with self.subTest(horizon=horizon), self.assertRaises(ValueError):
+                window_exposure_report({"dataset": (2,)}, action_horizon=horizon)  # type: ignore[arg-type]
+        with self.assertRaises(ValueError):
+            window_exposure_report({"dataset": (2,)}, action_horizon=3)
+
+    def test_evaluate_registers_action_window_exposure_shift(self):
+        metrics = evaluate()
+        report = metrics["action_window_exposure"]
+        self.assertEqual(report["action_horizon"], 3)
+        self.assertEqual(report["window_uniform_exposure"]["long_dataset"], 1.0)
 
 
 if __name__ == "__main__":

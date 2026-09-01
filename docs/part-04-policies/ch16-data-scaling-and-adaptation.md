@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-16-01`
-> 关联声明：`CLAIM-16-01`～`CLAIM-16-09`
-> 关联图表：`FIG-16-01` / `TAB-16-01` / `TAB-16-02` / `TAB-16-03` / `TAB-16-04` / `TAB-16-05`
+> 关联声明：`CLAIM-16-01`～`CLAIM-16-10`
+> 关联图表：`FIG-16-01` / `TAB-16-01`～`TAB-16-06`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -174,7 +174,7 @@ make ch16-smoke
 
 ### 16.5.1 同一来源清单，三种实际暴露
 
-`EXP-16-01` v3 再固定两个来源：`short_dataset` 有1条、长度2的 episode；`long_dataset` 有3条、每条长度4的 episode。来源身份、episode 与 transition 总数分别是2、4和14，不引入真实数据。
+`EXP-16-01` v4 固定两个来源：`short_dataset` 有1条、长度2的 episode；`long_dataset` 有3条、每条长度4的 episode。来源身份、episode 与 transition 总数分别是2、4和14，不引入真实数据。
 
 | 均匀抽样单位 | short 暴露 | long 暴露 | long:short |
 | --- | ---: | ---: | ---: |
@@ -182,9 +182,30 @@ make ch16-smoke
 | episode | 25% | 75% | 3:1 |
 | transition | 14.2857% | 85.7143% | 6:1 |
 
-*TAB-16-05：`EXP-16-01` v3 的采样单位负对照。比例是对固定计数的解析期望，不含有限 batch 随机波动、窗口重叠、过滤、token mask 或质量权重。*
+*TAB-16-05：`EXP-16-01` v4 的采样单位负对照。比例是对固定计数的解析期望，不含有限 batch 随机波动、窗口重叠、过滤、token mask 或质量权重。*
 
 `CLAIM-16-09`（result）：在该 fixture 中，仅把“均匀”的单位从 dataset 改为 episode 或 transition，就会把 long 来源的期望暴露从50%改为75%或约85.71%。该结果只证明采样单位会改变这两个手工来源的 mixture，不判断哪一种权重更优，也不估计真实训练 batch、梯度贡献、数据质量或迁移性能。
+
+### 16.5.2 raw transition 占比仍不是 loss window 占比
+
+action chunk 训练通常需要长度为 `H` 的连续窗口。如果使用 stride one 且丢弃 episode 尾部不完整窗口，一条长度为 `L` 的 episode 贡献
+
+\[
+N_{\text{window}}=\max(L-H+1,0)
+\]
+
+个候选窗口。这个变换不是按 transition 占比做等比例缩放：短于 horizon 的 episode 会整体消失，刚刚超过 horizon 的 episode 也会有较高的边界损耗。
+
+`EXP-16-01` v4 在同一组 episode 长度上固定 `action_horizon=3`，不改变任何来源身份：
+
+| 来源 | episode 长度 | raw transitions | 合格三步窗口 | transition-uniform 暴露 | window-uniform 暴露 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| short | `(2,)` | 2 | 0 | 14.2857% | 0% |
+| long | `(4,4,4)` | 12 | 6 | 85.7143% | 100% |
+
+*TAB-16-06：`EXP-16-01` v4 的 raw-transition—合格 action-window 负对照。这里固定 stride one、drop-tail、无 padding；比例是解析计数，不是随机采样或梯度实测。*
+
+`CLAIM-16-10`（result）：在该固定 fixture 中，long 来源占12/14个 raw transition，但三步 drop-tail 窗口的6个合格样本全部来自 long，short 来源从14.2857%降为0。该结果只证明 horizon 与尾部策略会改变可训练窗口分母，不估计 padding/mask、过滤、重复采样、分布式 shard、有效 token、梯度贡献、数据质量或模型迁移性能。
 
 ## 16.6 正迁移与负迁移必须用矩阵判断
 
@@ -260,6 +281,8 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 
 数据权重还需按车队、路线、天气、地域、驾驶员和稀有事件审计；公里数多不等于危险事件覆盖好。按连续帧随机切分会泄漏同一路段和相邻时刻，应该按 route/log/vehicle 划分。
 
+动作 horizon 与窗口策略还会改变驾驶场景的实际训练分布：短促急刹、接管前片段或被传感器故障截断的稀有事件，可能因不足一个完整 chunk 被 drop-tail 全部删除；若改用 padding，又必须让 loss mask、终止原因和 padding 值不可混淆。训练日志应同时报告每类场景的 raw steps、候选窗口、过滤后窗口和有效 action token，不能只用总里程或 transition 数证明稀有事件进入了 loss。
+
 `CLAIM-16-06`（recommendation）：自动驾驶跨车队训练不得直接混合同名 raw control；应转换到版本化轨迹/动力学合同或使用 fleet-specific adapter，并以按车辆/路线拆分的闭环迁移矩阵验证。
 
 驾驶数据还包含人脸、车牌、地理位置和行为记录，必须处理授权、脱敏、保留期限和跨地域治理。格式转换、裁剪和衍生 embedding 不会消除源数据许可与隐私责任。
@@ -304,6 +327,7 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 4. **适配选择**：分别为“新夹爪”“新相机”“新语言域”选择 action head、LoRA 或部分解冻，并说明证据。
 5. **自动驾驶迁移**：把方向盘角、曲率和轨迹三种日志映射到统一合同，列出不可逆信息。
 6. **mixture 暴露**：给两个 episode 数与长度都不同的数据集，分别计算 dataset/episode/transition-uniform 的来源占比，并列出会让 realized exposure 再次偏离配置的过滤步骤。
+7. **窗口分母**：保持来源权重不变，为 horizon `H=3` 比较 drop-tail 与 padding 两种窗口策略；说明短 episode 为什么可能从训练中消失，以及 padding 时必须记录哪些 mask。
 
 ## 自检要点
 
@@ -348,6 +372,13 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 <summary>SELF-CHECK-16-06：配置权重不等于实际 loss 暴露</summary>
 
 对短来源1条×2步、长来源3条×4步：dataset-uniform 先等概率选来源，比例为 `1/2,1/2`；episode-uniform 在4条轨迹中等概率选，比例为 `1/4,3/4`；transition-uniform 在14步中等概率选，比例为 `2/14,12/14≈0.1429,0.8571`。实现审计还要记录 action/window horizon、尾部 padding/drop、无语言/缺相机过滤、异常样本 `ignore_errors`、mask 后有效 token、重复采样和分布式 shard，因为这些步骤会让 realized batch/loss 暴露偏离配置期望。哪一种 sampler 合理取决于目标量；不能用“大数据集占比更高”或“来源等权”替代预注册目标和分层评测。
+
+</details>
+
+<details markdown="1">
+<summary>SELF-CHECK-16-07：transition 多不代表合格 action window 多</summary>
+
+stride one、drop-tail 时，长度 `L` 的 episode 只有 `max(L-H+1,0)` 个连续窗口。固定 `H=3` 后，短来源 `(2,)` 贡献0个窗口，长来源三条长度4的 episode 各贡献2个、共6个；所以 long 的 raw-transition 暴露是 `12/14≈85.71%`，window-uniform 暴露却是 `6/6=100%`。若 padding 保留短 episode，必须把真实动作与 padding 的 mask、终止/截断原因、有效 horizon 和 loss denominator 一起记录；否则零填充值可能被当作监督动作。实际训练还需审计过滤、窗口 stride/重叠、重复采样、分布式 shard 与每来源有效 token/梯度，不能把这个解析端点当作真实数据质量或迁移结果。
 
 </details>
 

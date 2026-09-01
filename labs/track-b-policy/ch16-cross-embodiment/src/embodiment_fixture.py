@@ -206,6 +206,39 @@ def mixture_exposure_report(dataset_episode_lengths: Mapping[str, Sequence[int]]
     }
 
 
+def window_exposure_report(
+    dataset_episode_lengths: Mapping[str, Sequence[int]], action_horizon: int
+) -> dict[str, object]:
+    """Report source exposure after dropping incomplete contiguous action windows."""
+    mixture_exposure_report(dataset_episode_lengths)
+    if (
+        isinstance(action_horizon, bool)
+        or not isinstance(action_horizon, int)
+        or action_horizon <= 0
+    ):
+        raise ValueError("action horizon must be a positive integer")
+
+    labels = tuple(sorted(dataset_episode_lengths))
+    window_counts = {
+        label: sum(max(length - action_horizon + 1, 0) for length in dataset_episode_lengths[label])
+        for label in labels
+    }
+    window_count = sum(window_counts.values())
+    if window_count == 0:
+        raise ValueError("action horizon leaves no eligible training windows")
+    return {
+        "action_horizon": action_horizon,
+        "eligible_window_count": window_count,
+        "eligible_window_counts_by_dataset": window_counts,
+        "window_uniform_exposure": {
+            label: round(window_counts[label] / window_count, 12) for label in labels
+        },
+        "datasets_without_eligible_windows": tuple(
+            label for label in labels if window_counts[label] == 0
+        ),
+    }
+
+
 def evaluate() -> dict[str, object]:
     malformed_records = {
         "missing_embodiment": {
@@ -258,9 +291,9 @@ def evaluate() -> dict[str, object]:
             altered_arm_a.schema_fingerprint != ADAPTERS["arm_a"].schema_fingerprint
         ),
         "mixture_exposure": mixture_exposure_report(
-            {
-                "short_dataset": (2,),
-                "long_dataset": (4, 4, 4),
-            }
+            {"short_dataset": (2,), "long_dataset": (4, 4, 4)}
+        ),
+        "action_window_exposure": window_exposure_report(
+            {"short_dataset": (2,), "long_dataset": (4, 4, 4)}, action_horizon=3
         ),
     }

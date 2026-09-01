@@ -29,6 +29,14 @@ def main() -> int:
         raise AssertionError("dataset- and transition-uniform sampling must expose different source mixtures")
     if mixture["transition_uniform_exposure"]["long_dataset"] != 0.857142857143:
         raise AssertionError("transition exposure must preserve the fixed 12-of-14 denominator")
+    windows = metrics["action_window_exposure"]
+    if windows["eligible_window_counts_by_dataset"] != {
+        "long_dataset": 6,
+        "short_dataset": 0,
+    }:
+        raise AssertionError("three-step horizon must preserve the fixed 6-to-0 window count")
+    if windows["window_uniform_exposure"]["long_dataset"] != 1.0:
+        raise AssertionError("dropping incomplete windows must expose only the long source")
 
     report = {
         "experiment_id": "EXP-16-01",
