@@ -4,7 +4,7 @@
   "title": "CV2Embodied Book Manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "book", "chapters"],
+  "required": ["schema_version", "book", "exercise_self_check_chapters", "chapters"],
   "properties": {
     "schema_version": {"const": 1},
     "book": {
@@ -16,6 +16,11 @@
         "prd": {"type": "string", "minLength": 1},
         "chapter_count": {"const": 22}
       }
+    },
+    "exercise_self_check_chapters": {
+      "type": "array",
+      "items": {"type": "integer", "minimum": 1, "maximum": 22},
+      "uniqueItems": true
     },
     "chapters": {
       "type": "array",

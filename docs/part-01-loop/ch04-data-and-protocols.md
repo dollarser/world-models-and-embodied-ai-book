@@ -343,6 +343,45 @@ M 档选做路径才会在用户确认后审计一个锁定版本的真实数据
 4. **自动驾驶迁移**：同一路线在晴天和雨天分别采集。若目标是天气泛化，应如何避免路线记忆混入结果？
 5. **资源审查**：将一个需要完整视频数据的实验改写为 S/M 两档，S 档只检查 schema 与指标链路。
 
+## 自检要点
+
+数据题没有脱离目标声明的“万能切分”。展开答案前先写清评测要证明什么、独立单位是什么、哪些身份必须隔离，以及技术无效样本如何进入分母。
+
+<details>
+<summary>SELF-CHECK-04-01：概念判断</summary>
+
+奇偶帧来自同一原始视频、同一路径/场景和相邻时间，外观与运动高度相关；模型可以依赖背景、对象身份或近重复内容，而无需泛化到新时间段。合格答案应至少在 `source_asset_id` 和时间 block/episode 级切分，同一视频的派生帧不得跨 train/test；不同文件名或不同 `group_id` 也不能替代精确内容与近重复审计。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-04-02：时间审计</summary>
+
+协议一：若动作戳是实际开始执行时刻且 80 ms 是已标定固定感知到执行延迟，可把 `o(t)` 与 `a(t+0.08)` 配成因果样本，并用随后状态验证作用区间。协议二：若动作戳来自独立 logger 的固定 clock offset，可先校正时钟，再按 10 Hz 的保持区间 `[t,t+0.1)` 配对，而不是直接最近邻。两者都必须声明 timestamp 语义、clock、保持方式和容差；不知道 80 ms 来源时不能任选一种当真值。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-04-03：切分设计</summary>
+
+“新物体”可按物理 object/instance ID 或原始资产家族分组；“新任务”按 task template/goal family 分组，避免仅换自然语言措辞；“新机器人”按 robot serial 或 embodiment/schema family 分组，并隔离同一示范的重定向副本。每种切分只能支持对应泛化声明，最好另报交叉矩阵；一个总 `group_id` 不能替代 source、content fingerprint 和 similarity cluster 三个身份维度。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-04-04：自动驾驶迁移</summary>
+
+先按 route/source identity 把路线分为 train、selection 和独立 test；每条 test route 同时保留晴/雨配对运行，模型从未在训练阶段见过这些路线，再在 route 内计算雨—晴差并按 route 聚合。这样天气比较不会由训练时路线记忆解释，也不会把“雨天 + 新路线”的混合差异误称纯天气效应。应同时报告路线总体和配对天气效应，而不是只汇总 episode micro 平均。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-04-05：资源审查</summary>
+
+S 档使用几条程序化 metadata：验证 schema、frame/unit/timestamp、split identity、缺帧 mask、`terminated/truncated` 和指标分母，并注入一个可命名失败；零下载、CPU、结果只证明链路。M 档在明确许可和下载体积后读取一个小型真实视频子集，冻结预处理与 checksum，运行轻量 baseline 并记录资源峰值。S 档不能写成视频模型性能，M 档也不能自动升级为完整数据集或目标域复现。
+
+</details>
+
 ## 延伸阅读
 
 - [LeRobot Dataset v3 官方文档](https://huggingface.co/docs/lerobot/lerobot-dataset-v3)，`[O,R1]`，多模态 episode、metadata 与时间窗口；
@@ -369,6 +408,6 @@ M 档选做路径才会在用户确认后审计一个锁定版本的真实数据
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch04-content-identity-leakage-review-2026-09-02.md`；
+- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch04-content-identity-leakage-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：真实 LeRobot/驾驶数据审计尚未执行；
 - 下一步：episode 截断、缺帧 mask、多传感器 skew 和已登记身份交集已进入 S 档；仍需在真实数据上冻结并验证近重复检索方法，同时审计 clock domain/漂移、视频解码、标定、隐私和许可。

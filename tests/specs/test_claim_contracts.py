@@ -9,6 +9,7 @@ from scripts.check_book import (
     check_claim_contract,
     check_critical_recommendation_contract,
     check_documented_asset_version_contract,
+    check_exercise_self_check_contract,
     check_fact_evidence_contract,
     check_experiment_asset_contract,
     check_figure_contract,
@@ -165,6 +166,56 @@ class ChapterSectionContractTest(unittest.TestCase):
         self.assertTrue(any("小结" in item for item in errors))
         self.assertTrue(any("练习" in item for item in errors))
         self.assertTrue(any("验收与审查记录" in item for item in errors))
+
+
+class ExerciseSelfCheckContractTest(unittest.TestCase):
+    def test_accepts_bidirectional_numbered_self_checks(self) -> None:
+        text = (
+            "# Chapter\n\n## 练习\n\n"
+            "1. **概念判断**：first\n"
+            "2. **代码实验**：second\n\n"
+            "## 自检要点\n\n"
+            "<details>\n<summary>SELF-CHECK-03-01：概念判断</summary>\n\n"
+            "合格答案应指出接口、前提和不能推出的结论，并给出一个可以复查的反例或命令；还要说明证据来自正文、结果文件还是外部来源。\n\n</details>\n\n"
+            "<details>\n<summary>SELF-CHECK-03-02：代码实验</summary>\n\n"
+            "合格答案应给出预期变化、固定分母、验证命令和失败边界，不能只写运行成功；若结果不同，还应先检查输入、版本和随机性。\n\n</details>\n"
+        )
+        self.assertEqual([], check_exercise_self_check_contract(3, text, True))
+
+    def test_rejects_missing_foreign_and_unmatched_self_checks(self) -> None:
+        text = (
+            "# Chapter\n\n## 练习\n\n1. **概念判断**：first\n2. **实验**：second\n\n"
+            "## 自检要点\n\n<details>\n"
+            "<summary>SELF-CHECK-04-01：wrong owner</summary>\n\n"
+            "这是一段足够长的错误归属答案，用来确认门禁会同时报告外章编号、缺项和未匹配项。\n\n</details>\n"
+        )
+        errors = check_exercise_self_check_contract(3, text, True)
+        self.assertTrue(any("foreign self-check" in item for item in errors))
+        self.assertTrue(any("exercise 1 has no self-check" in item for item in errors))
+        self.assertTrue(any("exercise 2 has no self-check" in item for item in errors))
+
+    def test_rejects_duplicate_short_and_unclosed_blocks(self) -> None:
+        text = (
+            "# Chapter\n\n## 练习\n\n1. **概念判断**：first\n\n## 自检要点\n\n"
+            "<details>\n<summary>SELF-CHECK-03-01：first</summary>\nshort\n</details>\n"
+            "<details>\n<summary>SELF-CHECK-03-01：duplicate</summary>\nshort\n"
+        )
+        errors = check_exercise_self_check_contract(3, text, True)
+        self.assertTrue(any("more than once" in item for item in errors))
+        self.assertTrue(any("unbalanced" in item for item in errors))
+        self.assertTrue(any("too short" in item for item in errors))
+
+    def test_ignores_non_enrolled_chapter_without_self_checks(self) -> None:
+        text = "# Chapter\n\n## 练习\n\n1. **概念判断**：first\n"
+        self.assertEqual([], check_exercise_self_check_contract(5, text, False))
+        undeclared = (
+            text
+            + "\n## 自检要点\n\n<details>\n"
+            + "<summary>SELF-CHECK-05-01：first</summary>\n\n"
+            + "这段答案足够长，但章节没有登记覆盖，因此仍应被拒绝，避免源码与 manifest 的覆盖状态漂移。\n\n</details>\n"
+        )
+        errors = check_exercise_self_check_contract(5, undeclared, False)
+        self.assertTrue(any("not enrolled" in item for item in errors))
 
 
 class GlossaryContractTest(unittest.TestCase):

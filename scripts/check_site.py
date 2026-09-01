@@ -6,11 +6,13 @@ from __future__ import annotations
 from html.parser import HTMLParser
 import json
 from pathlib import Path
+import re
 from urllib.parse import unquote, urlsplit
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
+SELF_CHECK_ID_PATTERN = re.compile(r"SELF-CHECK-\d{2}-\d{2}")
 
 
 class TargetParser(HTMLParser):
@@ -63,6 +65,7 @@ def main() -> int:
     errors: list[str] = []
     html_pages = sorted(SITE.rglob("*.html"))
     accessible_mermaid = 0
+    compiled_self_checks = 0
     for expected in expected_chapter_pages():
         if not expected.is_file():
             errors.append(f"missing compiled chapter: {expected.relative_to(ROOT)}")
@@ -83,6 +86,13 @@ def main() -> int:
         if compiled_text.count("accDescr:") != expected_descriptions:
             errors.append(f"compiled chapter lost Mermaid accDescr metadata: {compiled.relative_to(ROOT)}")
         accessible_mermaid += expected_titles
+        source_self_check_ids = SELF_CHECK_ID_PATTERN.findall(source_text)
+        compiled_self_check_ids = SELF_CHECK_ID_PATTERN.findall(compiled_text)
+        if compiled_self_check_ids != source_self_check_ids:
+            errors.append(f"compiled chapter lost or reordered exercise self-checks: {compiled.relative_to(ROOT)}")
+        if compiled_text.count("<details>") < len(source_self_check_ids):
+            errors.append(f"compiled chapter lost foldable self-check containers: {compiled.relative_to(ROOT)}")
+        compiled_self_checks += len(source_self_check_ids)
 
     checked_targets = 0
     for source in html_pages:
@@ -112,6 +122,7 @@ def main() -> int:
     print(
         f"site checks passed: {len(html_pages)} HTML page(s), "
         f"22 compiled chapter(s), {accessible_mermaid} accessible Mermaid diagram(s), "
+        f"{compiled_self_checks} foldable exercise self-check(s), "
         f"{checked_targets} internal target(s)"
     )
     return 0

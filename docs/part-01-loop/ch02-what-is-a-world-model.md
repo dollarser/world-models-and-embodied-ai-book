@@ -324,6 +324,52 @@ make ch02-smoke
 5. **自动驾驶迁移**：分别为驾驶视频生成器、轨迹预测器、规划器和 CARLA 填写四轴模型卡。
 6. **状态充分性**：修改 `TAB-02-03`，让两个 context 的最优动作相同；说明此时 history gap 为什么消失，以及这仍不能证明表示对其他任务充分。
 
+## 自检要点
+
+先独立完成模型卡或反例，再展开自检。系统能力必须锁定具体组件和版本；项目名称、作者演示和策略输出都不能代替接口证据。
+
+<details>
+<summary>SELF-CHECK-02-01：概念判断</summary>
+
+它学习了固定行为策略所诱导分布上的观测转移，因此可以是一个范围受限的预测世界模型。它未必看过替代动作，也没有证明动作条件、support 外反事实、长期 rollout 或规划 outcome 正确，所以不足以单独比较候选动作。合格答案要同时给出“成立的范围”和“规划缺少的证据”，不能因只有下一帧预测就全盘否定或全盘接受。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-02-02：分类练习</summary>
+
+应记录仓库/论文的精确版本，寻找独立可调用的 `next state / future feature / observation / reward` 接口及其训练目标，再测试或查证改变候选动作是否改变相应未来。VLA 直接输出 action chunk、内部具有 temporal token，均不自动等于环境转移接口。若只能找到策略推理 API，四轴卡应把“策略输出”记为 supported，把“独立转移/未来预测”记为 unsupported 或 scope-dependent，并留下证据链接。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-02-03：组件拆分</summary>
+
+V-JEPA 2 encoder 提供观测/视频表征，可支持当前或历史特征，但仅凭 encoder 不能登记候选动作干预或独立动作条件转移。V-JEPA 2-AC predictor 在锁定组件范围内增加动作条件的未来 feature prediction，因此“时间/转移证据”和“候选动作干预”状态会改变；是否能规划仍取决于动作覆盖、预测准确性和下游评测。合格答案必须分别填两张卡，而不是把整个项目族写成一个布尔标签。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-02-04：反例设计</summary>
+
+一种合格构造是：当前画面都显示被遮挡走廊，历史 A 看见走廊为空，历史 B 看见障碍进入；A 的最优动作是前进，B 是保持。信念至少要保留能区分 `clear/blocked` 的历史证据及其不确定性，并随新观测和动作更新。只给两个不同当前图像不构成 state aliasing，因为题目要求当前观测相同；只给不同标签而没有不同最优动作，也没有证明任务相关信息缺失。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-02-05：自动驾驶迁移</summary>
+
+驾驶视频生成器通常表示像素/latent、按历史生成未来，动作条件需逐版本核验，主要用于生成；轨迹预测器推进其他参与者状态，未必接受 ego 候选动作；规划器输出轨迹/控制，未必有独立环境模型；CARLA 用显式规则接受控制并推进可观测状态，但不是学习动态。四张卡都要写用途与不能推出的能力，例如“CARLA 闭环可交互”不能推出目标车辆域有效，“视频逼真”不能推出规划反事实正确。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-02-06：状态充分性</summary>
+
+只要两个 context 的唯一最优动作相同，current-only policy 就能选择与逐 context oracle 相同的动作，按该冻结 action/return 集合计算的 history decision gap 可以为 0。它只说明历史对这一次决策没有额外价值；表示仍可能遗漏速度、未来分布、其他 reward、长时任务或安全变量。合格答案必须把“对当前函数集合价值等价”与“对所有任务状态充分”分开。
+
+</details>
+
 ## 延伸阅读
 
 - Ha & Schmidhuber, [World Models](https://arxiv.org/abs/1803.10122)，`[A]`，经典视觉编码—动力学—控制分解；
@@ -352,6 +398,6 @@ make ch02-smoke
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch02-state-aliasing-review-2026-09-01.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch02-state-aliasing-review-2026-09-01.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：系统卡基于论文与官方文档元数据，没有运行八个上游系统；
 - 下一步：与第6章 belief state、第9章 E2/E4 评测和第15章 policy memory 继续执行跨章语义审查。

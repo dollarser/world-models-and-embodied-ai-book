@@ -51,6 +51,14 @@ MERMAID_ACC_TITLE_PATTERN = re.compile(r"^\s*accTitle:\s*(FIG-(\d{2})-(\d{2}))\s
 MERMAID_ACC_DESCR_PATTERN = re.compile(r"^\s*accDescr:\s*(.+)$", re.MULTILINE)
 FENCED_BLOCK_PATTERN = re.compile(r"^```[^\n]*\n.*?^```\s*$", re.MULTILINE | re.DOTALL)
 HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
+EXERCISE_ITEM_PATTERN = re.compile(r"^(\d+)\.\s+\*\*[^*\n]+\*\*：", re.MULTILINE)
+SELF_CHECK_SUMMARY_PATTERN = re.compile(
+    r"<summary>SELF-CHECK-(\d{2})-(\d{2})：[^<\n]+</summary>"
+)
+SELF_CHECK_BLOCK_PATTERN = re.compile(
+    r"<details>\s*<summary>SELF-CHECK-(\d{2})-(\d{2})：[^<\n]+</summary>(.*?)</details>",
+    re.DOTALL,
+)
 PRD_CHAPTER_HEADING_PATTERN = re.compile(r"^#### 第(\d+)章[^\n]*$", re.MULTILINE)
 EXPERIMENT_ID_PATTERN = re.compile(r"\bEXP-\d{2}-\d{2}\b")
 DOCUMENTED_ASSET_VERSION_PATTERN = re.compile(
@@ -343,6 +351,75 @@ def check_chapter_sections(chapter_number: int, document_text: str) -> list[str]
     handoff = "全书出口" if chapter_number == 22 else "下一章接口"
     if handoff not in canonical_titles:
         errors.append(f"chapter {chapter_number} is missing required H2 section: {handoff}")
+    return errors
+
+
+def _h2_section(text: str, title: str) -> str | None:
+    match = re.search(rf"^## {re.escape(title)}\s*$", text, re.MULTILINE)
+    if match is None:
+        return None
+    next_heading = re.search(r"^##\s+", text[match.end() :], re.MULTILINE)
+    end = match.end() + next_heading.start() if next_heading else len(text)
+    return text[match.end() : end]
+
+
+def check_exercise_self_check_contract(
+    chapter_number: int, text: str, required: bool
+) -> list[str]:
+    """Keep numbered exercises and opt-in self-check blocks bidirectionally aligned."""
+
+    errors: list[str] = []
+    exercise_section = _h2_section(text, "练习")
+    exercise_numbers = (
+        [int(number) for number in EXERCISE_ITEM_PATTERN.findall(exercise_section)]
+        if exercise_section is not None
+        else []
+    )
+    self_check_section = _h2_section(text, "自检要点")
+    if not required and self_check_section is None:
+        return []
+    if not required and self_check_section is not None:
+        errors.append(
+            f"chapter {chapter_number} has exercise self-checks but is not enrolled in the manifest"
+        )
+    if required and self_check_section is None:
+        return [f"chapter {chapter_number} is enrolled for exercise self-checks but has no 自检要点 H2"]
+    if not exercise_numbers:
+        errors.append(f"chapter {chapter_number} self-check contract has no numbered exercises")
+    elif exercise_numbers != list(range(1, len(exercise_numbers) + 1)):
+        errors.append(f"chapter {chapter_number} exercises must be numbered consecutively from 1")
+
+    assert self_check_section is not None
+    summaries = [
+        (int(owner), int(number))
+        for owner, number in SELF_CHECK_SUMMARY_PATTERN.findall(self_check_section)
+    ]
+    blocks = SELF_CHECK_BLOCK_PATTERN.findall(self_check_section)
+    if self_check_section.count("<details>") != self_check_section.count("</details>"):
+        errors.append(f"chapter {chapter_number} self-check details tags are unbalanced")
+    if len(blocks) != len(summaries):
+        errors.append(f"chapter {chapter_number} has a malformed or unclosed self-check block")
+
+    duplicate_numbers = sorted(
+        {number for owner, number in summaries if summaries.count((owner, number)) > 1}
+    )
+    for number in duplicate_numbers:
+        errors.append(f"chapter {chapter_number} defines self-check {number} more than once")
+    for owner, number in summaries:
+        if owner != chapter_number:
+            errors.append(
+                f"chapter {chapter_number} contains foreign self-check ID SELF-CHECK-{owner:02d}-{number:02d}"
+            )
+
+    expected = set(exercise_numbers)
+    actual = {number for owner, number in summaries if owner == chapter_number}
+    for number in sorted(expected - actual):
+        errors.append(f"chapter {chapter_number} exercise {number} has no self-check block")
+    for number in sorted(actual - expected):
+        errors.append(f"chapter {chapter_number} self-check {number} has no matching exercise")
+    for owner, number, body in blocks:
+        if int(owner) == chapter_number and len(re.sub(r"\s+", " ", body).strip()) < 40:
+            errors.append(f"chapter {chapter_number} self-check {int(number)} is too short to be useful")
     return errors
 
 
@@ -683,8 +760,19 @@ def check_manifest() -> list[str]:
     except (OSError, json.JSONDecodeError):
         return []
     chapters = manifest.get("chapters", [])
+    self_check_chapters = manifest.get("exercise_self_check_chapters", [])
     numbers = [chapter.get("number") for chapter in chapters if isinstance(chapter, dict)]
     errors: list[str] = []
+    if not isinstance(self_check_chapters, list) or any(
+        not isinstance(number, int) or isinstance(number, bool) or number < 1 or number > 22
+        for number in self_check_chapters
+    ):
+        errors.append("manifest exercise_self_check_chapters must be chapter numbers 1..22")
+        self_check_chapter_set: set[int] = set()
+    else:
+        self_check_chapter_set = set(self_check_chapters)
+        if len(self_check_chapter_set) != len(self_check_chapters):
+            errors.append("manifest exercise_self_check_chapters must not contain duplicates")
     if numbers != list(range(1, 23)):
         errors.append(f"manifest chapters must be ordered 1..22, found {numbers}")
     experiment_ids: list[str] = []
@@ -732,6 +820,13 @@ def check_manifest() -> list[str]:
                 errors.extend(check_mermaid_accessibility(number, chapter.get("figures", []), document_text))
                 errors.extend(check_heading_hierarchy(number, document_text))
                 errors.extend(check_chapter_sections(number, document_text))
+                errors.extend(
+                    check_exercise_self_check_contract(
+                        number,
+                        document_text,
+                        number in self_check_chapter_set,
+                    )
+                )
             if manifest_phase in {"reviewed", "reproducible", "published"}:
                 for review_name in ("内容审查", "代码审查", "一致性审查", "教学审查"):
                     if f"- {review_name}：通过" not in document_text:
@@ -946,7 +1041,7 @@ def main() -> int:
         return 1
     print(
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
-        "experiment asset packages, explicit asset versions, heading hierarchy, chapter teaching sections, reader terminology, "
+        "experiment asset packages, explicit asset versions, heading hierarchy, chapter teaching sections, exercise self-checks, reader terminology, "
         "fact/inference evidence, critical "
         "recommendation policy, research radar, manifest, "
         "local links, 22-chapter PRD tier mapping"
