@@ -1,10 +1,10 @@
 # 第2章 世界模型到底是什么
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-02-01`（smoke）
-> 关联声明：`CLAIM-02-01`～`CLAIM-02-04`
-> 关联图表：`FIG-02-01` / `TAB-02-01`
+> 关联声明：`CLAIM-02-01`～`CLAIM-02-05`
+> 关联图表：`FIG-02-01` / `TAB-02-01` / `TAB-02-02`
 > 资源档位：S
 > GPU 状态：不需要
 
@@ -155,6 +155,31 @@ flowchart LR
 | 物理仿真器 | 显式规则推进状态 | 是 | 状态与传感器渲染 | 是环境模型，但通常不是“可学习世界模型” |
 | 数字孪生 | 对特定资产保持同步表示 | 通常是 | 监控、预测、维护信息 | 范围由同步对象和用途定义，不等于通用世界模型 |
 
+### 能力声明不是标签的同义词
+
+四轴填完以后，还要逐项回答“现有证据是否支持这条能力”。本书使用三态而不是布尔标签：
+
+- `supported`：锁定来源明确支持该接口或用途；
+- `unsupported`：当前卡片证据不足以发布该声明，不等于已经证明能力不存在；
+- `scope_dependent`：系统族包含多种实现，必须锁定具体版本后再判断。
+
+下面的矩阵来自 `EXP-02-01` v2 的八张固定卡。它刻意拆开四个经常被错误合并的命题：有时间/转移预测、能输入候选动作、动态是学习得到的、以及直接输出策略却没有独立转移接口。
+
+| 固定卡片 | 时间/转移证据 | 候选动作干预 | 学习且动作条件的转移 | 策略输出但无独立转移 |
+| --- | --- | --- | --- | --- |
+| VideoGPT | supported | unsupported | unsupported | unsupported |
+| Genie | supported | supported | supported | unsupported |
+| DreamerV3 | supported | supported | supported | unsupported |
+| MuZero | supported | supported | supported | unsupported |
+| π₀ VLA | unsupported | unsupported | unsupported | supported |
+| MuJoCo | supported | supported | unsupported | unsupported |
+| 数字孪生 archetype | scope-dependent | scope-dependent | scope-dependent | unsupported |
+| CARLA | supported | supported | unsupported | unsupported |
+
+*TAB-02-02：`EXP-02-01` v2 的能力证据矩阵。状态描述锁定卡片，而不是对同名系统未来版本或整个研究方向作永久判断。*
+
+矩阵展示的是逻辑蕴含边界。VideoGPT 有时间预测，不代表可做动作反事实；π₀ 直接生成动作，不代表存在可单独调用的环境转移；MuJoCo 和 CARLA 接受控制并推进状态，但动态不是从数据学习得到；数字孪生若不锁定实例则不能强行二值化。2026-09-01 核查时，[V-JEPA 2 官方仓库](https://github.com/facebookresearch/vjepa2)同时提供无动作预训练表征与 V-JEPA 2-AC 动作条件 predictor，正说明同一项目族内部也必须按具体组件分类。[OpenPI 官方仓库](https://github.com/Physical-Intelligence/openpi)则明确把 π₀、π₀-FAST 和 π₀.₅列为 VLA 模型；能输出 action chunk 仍不自动提供独立环境 transition。
+
 ## 2.5 容易混淆的边界
 
 ### 视频生成器
@@ -224,7 +249,7 @@ CV 工程师可以沿四步迁移已有经验：
 
 至少包含：无动作视频预测器、动作条件预测器、latent 世界模型、价值等价模型、VLA、物理仿真器、数字孪生和自动驾驶案例。评分不看“是否归入世界模型”这一列是否统一，而看理由、边界和证据是否自洽。
 
-本书已把八类对象写成结构化 JSON fixture，并用标准库校验器强制检查：类别覆盖、四轴字段、来源快照、VLA/仿真器边界以及每张卡的不可外推声明。运行命令：
+本书已把八类对象写成结构化 JSON fixture，并用标准库校验器强制检查：类别覆盖、四轴字段、来源快照、VLA/仿真器边界、四项三态能力和每张卡的不可外推声明。运行命令：
 
 ```bash
 make ch02-test-local
@@ -232,9 +257,11 @@ make ch02-smoke-local
 make ch02-smoke
 ```
 
-固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。3 个单元测试还会故意把 VLA 改写为世界模型、移除证据限制，确认校验器能够拒绝这些变化。
+固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有 HTTPS 证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。能力矩阵中，6 张有时间/转移证据、5 张支持候选动作干预、3 张同时满足学习动态与动作条件、1 张保持 scope-dependent、1 张是无独立转移的策略。10 个单元测试还会故意把 VLA 动作输出改写成转移证据、伪造 learned-action conjunction、破坏三态集合、证据 URL、四轴字段和身份唯一性，确认校验器能够拒绝这些变化。
 
 `CLAIM-02-04`（result）：`EXP-02-01` 在固定 fixture 上完成了 8/8 类别、8/8 来源和 8/8 证据限制检查。它证明分类契约可执行，不证明被列系统的性能、可复现性或完整能力。
+
+`CLAIM-02-05`（result）：`EXP-02-01` v2 中，只有 3/8 固定卡片同时满足“学习动态 + 候选动作条件”，而转移证据、动作干预和直接策略输出分别属于不同集合。该计数只描述本书选定的八个教学 archetype，不估计现实项目比例。
 
 ## 2.9 失效模式与安全边界
 
@@ -253,7 +280,7 @@ make ch02-smoke
 | --- | --- | --- | --- | --- |
 | 工作定义 | 世界模型表示任务相关状态及动作相关演化 | 本书术语契约 | recommendation | 非唯一学术定义 |
 | 分类结论 | VLA、视频模型和仿真器不能只凭名称互相替代 | 四轴模型卡 | drafted | 具体系统需逐版本核验 |
-| 本书结果 | 八类系统均具有四轴、来源和证据限制记录 | `EXP-02-01` | CPU smoke | 元数据分类，不是性能 benchmark |
+| 本书结果 | 八类系统具有四轴、三态能力、来源和证据限制记录 | `EXP-02-01` | CPU smoke | 教学元数据分类，不是项目比例或性能 benchmark |
 | 未验证 | 某一现有系统满足完整闭环世界模型要求 | 无 | unverified | 需第9章协议评测 |
 
 ### 资源、数据与许可
@@ -268,15 +295,16 @@ make ch02-smoke
 
 1. **概念判断**：一个模型只预测下一帧，但训练数据来自固定策略。它在什么意义上是世界模型，在什么意义上不足以支持规划？
 2. **分类练习**：任选一个 VLA，找到它是否具有独立的状态转移或未来预测接口，不要从模型名称推断。
-3. **反例设计**：构造两个当前观测相同但最优动作不同的历史，说明需要怎样的信念状态。
-4. **自动驾驶迁移**：分别为驾驶视频生成器、轨迹预测器、规划器和 CARLA 填写四轴模型卡。
+3. **组件拆分**：分别为 V-JEPA 2 encoder 与 V-JEPA 2-AC predictor 填写矩阵，指出哪些状态因组件变化而改变。
+4. **反例设计**：构造两个当前观测相同但最优动作不同的历史，说明需要怎样的信念状态。
+5. **自动驾驶迁移**：分别为驾驶视频生成器、轨迹预测器、规划器和 CARLA 填写四轴模型卡。
 
 ## 延伸阅读
 
 - Ha & Schmidhuber, [World Models](https://arxiv.org/abs/1803.10122)，`[A]`，经典视觉编码—动力学—控制分解；
 - Hafner et al., [Learning Latent Dynamics for Planning from Pixels](https://arxiv.org/abs/1811.04551)，`[A]`，动作条件 latent planning；
 - Schrittwieser et al., [Mastering Atari, Go, Chess and Shogi by Planning with a Learned Model](https://www.nature.com/articles/s41586-020-03051-4)，`[P]`，价值等价路线；
-- [V-JEPA 2 官方仓库](https://github.com/facebookresearch/vjepa2)，`[O]`，预测表征与动作条件扩展案例；
+- [V-JEPA 2/2.1 官方仓库](https://github.com/facebookresearch/vjepa2)，`[O]`，预测表征与 V-JEPA 2-AC 动作条件组件案例；
 - [OpenPI 官方仓库](https://github.com/Physical-Intelligence/openpi)，`[O]`，VLA 策略实现案例；
 - [MuJoCo 官方文档](https://mujoco.readthedocs.io/)，`[O]`，显式物理仿真器案例。
 

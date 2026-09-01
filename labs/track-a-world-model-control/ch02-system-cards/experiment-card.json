@@ -3,20 +3,21 @@
   "id": "EXP-02-01",
   "chapter": 2,
   "status": "smoke",
-  "claim_ids": ["CLAIM-02-01", "CLAIM-02-02", "CLAIM-02-03", "CLAIM-02-04"],
+  "claim_ids": ["CLAIM-02-01", "CLAIM-02-02", "CLAIM-02-03", "CLAIM-02-04", "CLAIM-02-05"],
   "claim_scope": [
     "classify candidate systems by representation dynamics conditioning and use",
     "separate VLA policies video predictors simulators and learned world models",
-    "record unsupported capabilities instead of inferring them from names"
+    "record unsupported capabilities instead of inferring them from names",
+    "keep transition evidence action intervention learned dynamics and direct policy output as separate tri-state claims"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library validation of fixtures/system-cards.json"
+    "config": "standard-library validation of fixtures/system-cards.json fixture-v2"
   },
   "data": {
     "name": "official paper and repository metadata worksheet",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT for original worksheet; upstream sources retain their licenses",
     "classification": "fixture",
     "fixture": true,
@@ -36,14 +37,21 @@
     "report": "python3 labs/track-a-world-model-control/ch02-system-cards/scripts/smoke.py"
   },
   "metrics": [
-    {"name": "system_card_count", "value": 8, "unit": "cards", "split": "fixture-v1"},
-    {"name": "category_count", "value": 8, "unit": "categories", "split": "fixture-v1"},
-    {"name": "cards_with_evidence", "value": 8, "unit": "cards", "split": "fixture-v1"},
-    {"name": "cards_with_unsupported_claims", "value": 8, "unit": "cards", "split": "fixture-v1"}
+    {"name": "system_card_count", "value": 8, "unit": "cards", "split": "fixture-v2"},
+    {"name": "category_count", "value": 8, "unit": "categories", "split": "fixture-v2"},
+    {"name": "cards_with_evidence", "value": 8, "unit": "cards", "split": "fixture-v2"},
+    {"name": "cards_with_unsupported_claims", "value": 8, "unit": "cards", "split": "fixture-v2"},
+    {"name": "cards_with_transition_evidence", "value": 6, "unit": "cards", "split": "fixture-v2"},
+    {"name": "cards_with_action_intervention", "value": 5, "unit": "cards", "split": "fixture-v2"},
+    {"name": "learned_action_conditioned_candidates", "value": 3, "unit": "cards", "split": "fixture-v2"},
+    {"name": "scope_dependent_transition_cards", "value": 1, "unit": "cards", "split": "fixture-v2"},
+    {"name": "policy_without_transition_cards", "value": 1, "unit": "cards", "split": "fixture-v2"}
   ],
   "artifacts": ["results/ch02/EXP-02-01-smoke.json"],
   "limitations": [
     "classification is use-dependent rather than a universal ontology",
+    "supported means supported by the locked card evidence and unsupported does not prove global absence",
+    "counts describe eight authored archetypes and do not estimate prevalence in the research ecosystem",
     "individual projects must be checked at a pinned version before runtime claims",
     "paper and documentation metadata were summarized rather than runtime-tested"
   ]

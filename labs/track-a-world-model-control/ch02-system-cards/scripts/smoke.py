@@ -19,11 +19,16 @@ def main() -> int:
     errors = validate_fixture(fixture)
     if errors:
         raise AssertionError("; ".join(errors))
+    metrics = summarize(fixture)
+    if metrics["learned_action_conditioned_candidates"] != 3:
+        raise AssertionError("fixture must keep learned dynamics and action intervention as a conjunction")
+    if metrics["policy_without_transition_cards"] != 1:
+        raise AssertionError("direct policy output must not imply an independent transition model")
     report = {
         "experiment_id": "EXP-02-01",
         "status": "smoke",
         "scope": fixture["scope"],
-        "metrics": summarize(fixture),
+        "metrics": metrics,
         "gpu_verified": False,
     }
     print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))

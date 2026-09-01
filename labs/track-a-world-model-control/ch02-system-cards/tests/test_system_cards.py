@@ -37,6 +37,62 @@ class SystemCardTest(unittest.TestCase):
         self.assertIsNone(digital_twin["learned_dynamics"])
         self.assertIsNone(digital_twin["action_conditioning"])
 
+    def test_capability_summary_exposes_conjunctions_instead_of_names(self) -> None:
+        summary = summarize(self.fixture)
+        self.assertEqual(summary["cards_with_transition_evidence"], 6)
+        self.assertEqual(summary["cards_with_action_intervention"], 5)
+        self.assertEqual(summary["learned_action_conditioned_candidates"], 3)
+        self.assertEqual(summary["scope_dependent_transition_cards"], 1)
+        self.assertEqual(summary["policy_without_transition_cards"], 1)
+
+    def test_action_output_cannot_be_relabelled_as_transition_evidence(self) -> None:
+        changed = deepcopy(self.fixture)
+        vla = next(card for card in changed["cards"] if card["category"] == "vla_policy")
+        vla["claim_status"]["temporal_or_transition_model"] = "supported"
+        self.assertIn(
+            "VLA card must not infer an independent transition from action output",
+            validate_fixture(changed),
+        )
+
+    def test_learned_action_conditioned_claim_requires_both_inputs(self) -> None:
+        changed = deepcopy(self.fixture)
+        video = next(card for card in changed["cards"] if card["category"] == "no_action_video_predictor")
+        video["claim_status"]["learned_action_conditioned_transition"] = "supported"
+        self.assertTrue(any("requires both" in error for error in validate_fixture(changed)))
+
+    def test_claim_status_contract_is_closed_and_tri_state(self) -> None:
+        for mutation in ("remove", "invalid", "wrong_type"):
+            changed = deepcopy(self.fixture)
+            statuses = changed["cards"][0]["claim_status"]
+            if mutation == "remove":
+                statuses.pop("candidate_action_intervention")
+            elif mutation == "invalid":
+                statuses["candidate_action_intervention"] = "maybe"
+            else:
+                statuses["candidate_action_intervention"] = []
+            with self.subTest(mutation=mutation):
+                self.assertTrue(any("claim_status" in error for error in validate_fixture(changed)))
+
+    def test_duplicate_identity_and_weak_evidence_are_rejected(self) -> None:
+        changed = deepcopy(self.fixture)
+        changed["cards"][1]["id"] = changed["cards"][0]["id"]
+        changed["cards"][2]["evidence"]["url"] = "http://example.invalid"
+        changed["cards"][3]["axes"]["dynamics"] = ""
+        errors = validate_fixture(changed)
+        self.assertTrue(any("duplicate card id" in error for error in errors))
+        self.assertTrue(any("must use https" in error for error in errors))
+        self.assertTrue(any("axis values" in error for error in errors))
+
+    def test_fixture_metadata_and_card_types_are_rejected_cleanly(self) -> None:
+        for changed in (
+            [],
+            {"fixture_version": 1, "audit_date": "2026-08-31", "scope": "", "cards": []},
+            {"fixture_version": 2, "audit_date": "2026-09-01", "scope": "test", "cards": "bad"},
+            {"fixture_version": 2, "audit_date": "2026-09-01", "scope": "test", "cards": [{"category": []}] * 8},
+        ):
+            with self.subTest(changed=changed):
+                self.assertTrue(validate_fixture(changed))
+
 
 if __name__ == "__main__":
     unittest.main()

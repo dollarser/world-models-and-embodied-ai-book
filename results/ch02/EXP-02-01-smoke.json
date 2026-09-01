@@ -2,9 +2,14 @@
   "experiment_id": "EXP-02-01",
   "gpu_verified": false,
   "metrics": {
+    "cards_with_action_intervention": 5,
     "cards_with_evidence": 8,
+    "cards_with_transition_evidence": 6,
     "cards_with_unsupported_claims": 8,
     "category_count": 8,
+    "learned_action_conditioned_candidates": 3,
+    "policy_without_transition_cards": 1,
+    "scope_dependent_transition_cards": 1,
     "system_card_count": 8
   },
   "scope": "classification worksheet; not a performance benchmark",

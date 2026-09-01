@@ -1,6 +1,6 @@
 {
-  "fixture_version": 1,
-  "audit_date": "2026-08-31",
+  "fixture_version": 2,
+  "audit_date": "2026-09-01",
   "scope": "classification worksheet; not a performance benchmark",
   "cards": [
     {
@@ -12,6 +12,7 @@
       "action_conditioning": false,
       "learned_dynamics": true,
       "relation": "predictive_model_not_counterfactual_planner",
+      "claim_status": {"temporal_or_transition_model": "supported", "candidate_action_intervention": "unsupported", "learned_action_conditioned_transition": "unsupported", "policy_without_independent_transition": "unsupported"},
       "unsupported_claims": ["reliable action counterfactuals", "closed-loop planning utility"]
     },
     {
@@ -23,6 +24,7 @@
       "action_conditioning": true,
       "learned_dynamics": true,
       "relation": "action_conditioned_world_model_candidate",
+      "claim_status": {"temporal_or_transition_model": "supported", "candidate_action_intervention": "supported", "learned_action_conditioned_transition": "supported", "policy_without_independent_transition": "unsupported"},
       "unsupported_claims": ["robot control without action grounding", "real-world safety"]
     },
     {
@@ -34,6 +36,7 @@
       "action_conditioning": true,
       "learned_dynamics": true,
       "relation": "learned_latent_world_model",
+      "claim_status": {"temporal_or_transition_model": "supported", "candidate_action_intervention": "supported", "learned_action_conditioned_transition": "supported", "policy_without_independent_transition": "unsupported"},
       "unsupported_claims": ["all physical domains solved", "24 GB training reproducibility in this book"]
     },
     {
@@ -45,6 +48,7 @@
       "action_conditioning": true,
       "learned_dynamics": true,
       "relation": "value_equivalent_world_model",
+      "claim_status": {"temporal_or_transition_model": "supported", "candidate_action_intervention": "supported", "learned_action_conditioned_transition": "supported", "policy_without_independent_transition": "unsupported"},
       "unsupported_claims": ["pixel-level reconstruction", "general physical simulation"]
     },
     {
@@ -56,6 +60,7 @@
       "action_conditioning": false,
       "learned_dynamics": false,
       "relation": "policy_not_automatically_world_model",
+      "claim_status": {"temporal_or_transition_model": "unsupported", "candidate_action_intervention": "unsupported", "learned_action_conditioned_transition": "unsupported", "policy_without_independent_transition": "supported"},
       "unsupported_claims": ["callable counterfactual environment model", "independent long-horizon rollout"]
     },
     {
@@ -67,6 +72,7 @@
       "action_conditioning": true,
       "learned_dynamics": false,
       "relation": "explicit_environment_model",
+      "claim_status": {"temporal_or_transition_model": "supported", "candidate_action_intervention": "supported", "learned_action_conditioned_transition": "unsupported", "policy_without_independent_transition": "unsupported"},
       "unsupported_claims": ["learned world representation", "automatic real-world fidelity"]
     },
     {
@@ -78,6 +84,7 @@
       "action_conditioning": null,
       "learned_dynamics": null,
       "relation": "scope_dependent_environment_replica",
+      "claim_status": {"temporal_or_transition_model": "scope_dependent", "candidate_action_intervention": "scope_dependent", "learned_action_conditioned_transition": "scope_dependent", "policy_without_independent_transition": "unsupported"},
       "unsupported_claims": ["general-purpose learned world model", "transfer beyond the synchronized asset"]
     },
     {
@@ -89,6 +96,7 @@
       "action_conditioning": true,
       "learned_dynamics": false,
       "relation": "driving_simulator_not_learned_world_model",
+      "claim_status": {"temporal_or_transition_model": "supported", "candidate_action_intervention": "supported", "learned_action_conditioned_transition": "unsupported", "policy_without_independent_transition": "unsupported"},
       "unsupported_claims": ["real-world deployment safety", "learned counterfactual fidelity"]
     }
   ]
