@@ -49,6 +49,46 @@
         }
       ]
     },
+    "operating_condition_calibration": {
+      "candidate_count": 9,
+      "repeated_same_load": {
+        "condition_count": 2,
+        "identifiable": false,
+        "minimizer_count": 3,
+        "unique_condition_count": 1
+      },
+      "single_load": {
+        "condition_count": 1,
+        "identifiable": false,
+        "minimizer_count": 3,
+        "minimizers": [
+          {
+            "base_load": 0.5,
+            "force_gain": 0.5
+          },
+          {
+            "base_load": 1.0,
+            "force_gain": 1.0
+          },
+          {
+            "base_load": 1.5,
+            "force_gain": 1.5
+          }
+        ],
+        "unique_condition_count": 1
+      },
+      "single_load_alternative_payload_one_mae": 0.197916666667,
+      "two_distinct_loads": {
+        "condition_count": 2,
+        "identifiable": true,
+        "minimizer_count": 1,
+        "recovered_parameters": {
+          "base_load": 1.0,
+          "force_gain": 1.0
+        },
+        "unique_condition_count": 2
+      }
+    },
     "state_observation_calibration": {
       "fit_error": 0.0,
       "identifiable": true,

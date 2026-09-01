@@ -34,6 +34,17 @@ def main() -> int:
         raise AssertionError("the narrow range must miss the target")
     if not metrics["broad_randomization_covers_target"]:
         raise AssertionError("the broad range must cover the target")
+    condition_metrics = metrics["operating_condition_calibration"]
+    if condition_metrics["single_load"]["minimizer_count"] != 3:
+        raise AssertionError("one load must expose three force/load-equivalent grid points")
+    if condition_metrics["repeated_same_load"]["minimizer_count"] != 3:
+        raise AssertionError("repeating one load must not resolve the structural ambiguity")
+    if condition_metrics["repeated_same_load"]["unique_condition_count"] != 1:
+        raise AssertionError("duplicate measurements must remain one unique condition")
+    if condition_metrics["two_distinct_loads"]["minimizer_count"] != 1:
+        raise AssertionError("two distinct known loads must identify one fixed-grid candidate")
+    if condition_metrics["single_load_alternative_payload_one_mae"] <= 0.0:
+        raise AssertionError("the single-load alternative must fail at the second load")
 
     report = {
         "experiment_id": "EXP-19-01",

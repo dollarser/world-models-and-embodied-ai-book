@@ -40,8 +40,35 @@ class CalibrationResult:
         return len(self.minimizers) == 1
 
 
+@dataclass(frozen=True)
+class LoadParams:
+    force_gain: float
+    base_load: float
+
+    def __post_init__(self) -> None:
+        if not _is_finite_number(self.force_gain) or self.force_gain <= 0.0:
+            raise ValueError("force gain must be a finite positive number")
+        if not _is_finite_number(self.base_load) or self.base_load <= 0.0:
+            raise ValueError("base load must be a finite positive number")
+
+
+@dataclass(frozen=True)
+class LoadCalibrationResult:
+    selected: LoadParams
+    fit_error: float
+    candidate_count: int
+    condition_count: int
+    unique_condition_count: int
+    minimizers: tuple[LoadParams, ...]
+
+    @property
+    def identifiable(self) -> bool:
+        return len(self.minimizers) == 1
+
+
 NOMINAL = SystemParams(actuator_gain=1.0, action_delay_steps=0, observation_scale=1.0)
 TARGET = SystemParams(actuator_gain=0.8, action_delay_steps=1, observation_scale=1.25)
+TARGET_LOAD = LoadParams(force_gain=1.0, base_load=1.0)
 CALIBRATION_ACTIONS = (1.0, 0.5, -0.5, 0.25)
 HELD_OUT_ACTIONS = (0.5, 1.0, -0.25, 0.75)
 
@@ -134,6 +161,75 @@ def calibrate(
     return CalibrationResult(best, best_error, len(candidates), minimizers)
 
 
+def rollout_load_condition(
+    params: LoadParams,
+    payload: float,
+    actions: tuple[float, ...],
+) -> tuple[float, ...]:
+    """Roll out a scalar response under a known, non-negative payload."""
+    if not _is_finite_number(payload) or payload < 0.0:
+        raise ValueError("payload must be a finite non-negative number")
+    if not actions or any(not _is_finite_number(action) for action in actions):
+        raise ValueError("actions must contain finite numbers")
+    effective_gain = params.force_gain / (params.base_load + payload)
+    position = 0.0
+    states = []
+    for action in actions:
+        position += effective_gain * float(action)
+        states.append(position)
+    return tuple(states)
+
+
+def calibrate_load_conditions(
+    measured_conditions: tuple[tuple[float, tuple[float, ...]], ...],
+    actions: tuple[float, ...],
+) -> LoadCalibrationResult:
+    """Fit force and base load jointly across declared payload conditions."""
+    if not measured_conditions:
+        raise ValueError("at least one operating condition is required")
+    for payload, measured in measured_conditions:
+        if not _is_finite_number(payload) or payload < 0.0:
+            raise ValueError("payload must be a finite non-negative number")
+        if len(measured) != len(actions):
+            raise ValueError("each measured trajectory must match the action length")
+        mean_absolute_error(measured, measured)
+    candidates = tuple(
+        LoadParams(force_gain, base_load)
+        for force_gain, base_load in product((0.5, 1.0, 1.5), repeat=2)
+    )
+    scored = []
+    for candidate in candidates:
+        error = sum(
+            mean_absolute_error(
+                rollout_load_condition(candidate, payload, actions),
+                measured,
+            )
+            for payload, measured in measured_conditions
+        )
+        scored.append((error, candidate))
+    best_error, best = min(
+        scored,
+        key=lambda item: (item[0], item[1].force_gain, item[1].base_load),
+    )
+    minimizers = tuple(
+        candidate
+        for error, candidate in scored
+        if isclose(error, best_error, rel_tol=1e-12, abs_tol=1e-12)
+    )
+    return LoadCalibrationResult(
+        selected=best,
+        fit_error=best_error,
+        candidate_count=len(candidates),
+        condition_count=len(measured_conditions),
+        unique_condition_count=len({payload for payload, _ in measured_conditions}),
+        minimizers=minimizers,
+    )
+
+
+def load_params_dict(params: LoadParams) -> dict[str, float]:
+    return {"force_gain": params.force_gain, "base_load": params.base_load}
+
+
 def covers(
     params: SystemParams,
     gain_range: tuple[float, float],
@@ -182,6 +278,18 @@ def evaluate() -> dict[str, object]:
         action_delay_steps=TARGET.action_delay_steps,
         observation_scale=NOMINAL.observation_scale,
     )
+    payload_zero = rollout_load_condition(TARGET_LOAD, 0.0, CALIBRATION_ACTIONS)
+    payload_one = rollout_load_condition(TARGET_LOAD, 1.0, CALIBRATION_ACTIONS)
+    single_load = calibrate_load_conditions(((0.0, payload_zero),), CALIBRATION_ACTIONS)
+    repeated_load = calibrate_load_conditions(
+        ((0.0, payload_zero), (0.0, payload_zero)), CALIBRATION_ACTIONS
+    )
+    multi_load = calibrate_load_conditions(
+        ((0.0, payload_zero), (1.0, payload_one)), CALIBRATION_ACTIONS
+    )
+    single_load_alternative = next(
+        params for params in single_load.minimizers if params != TARGET_LOAD
+    )
     return {
         "calibration_candidate_count": observation_only.candidate_count,
         "observation_only_calibration": {
@@ -207,5 +315,37 @@ def evaluate() -> dict[str, object]:
         "calibrated_held_out_gap": rounded_comparison(calibrated_gap),
         "narrow_randomization_covers_target": covers(TARGET, (0.9, 1.1), (0,), (0.95, 1.05)),
         "broad_randomization_covers_target": covers(TARGET, (0.7, 1.1), (0, 1), (0.9, 1.3)),
+        "operating_condition_calibration": {
+            "candidate_count": single_load.candidate_count,
+            "single_load": {
+                "condition_count": single_load.condition_count,
+                "unique_condition_count": single_load.unique_condition_count,
+                "minimizer_count": len(single_load.minimizers),
+                "identifiable": single_load.identifiable,
+                "minimizers": tuple(load_params_dict(params) for params in single_load.minimizers),
+            },
+            "repeated_same_load": {
+                "condition_count": repeated_load.condition_count,
+                "unique_condition_count": repeated_load.unique_condition_count,
+                "minimizer_count": len(repeated_load.minimizers),
+                "identifiable": repeated_load.identifiable,
+            },
+            "two_distinct_loads": {
+                "condition_count": multi_load.condition_count,
+                "unique_condition_count": multi_load.unique_condition_count,
+                "minimizer_count": len(multi_load.minimizers),
+                "identifiable": multi_load.identifiable,
+                "recovered_parameters": load_params_dict(multi_load.selected),
+            },
+            "single_load_alternative_payload_one_mae": round(
+                mean_absolute_error(
+                    rollout_load_condition(
+                        single_load_alternative, 1.0, CALIBRATION_ACTIONS
+                    ),
+                    payload_one,
+                ),
+                12,
+            ),
+        },
         "target_held_out_rollout": rollout(TARGET, HELD_OUT_ACTIONS),
     }

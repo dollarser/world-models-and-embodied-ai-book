@@ -12,13 +12,17 @@ from sim_gap import (  # noqa: E402
     HELD_OUT_ACTIONS,
     NOMINAL,
     TARGET,
+    TARGET_LOAD,
     CalibrationResult,
+    LoadParams,
     SystemParams,
     calibrate,
+    calibrate_load_conditions,
     compare,
     covers,
     mean_absolute_error,
     rollout,
+    rollout_load_condition,
 )
 
 
@@ -104,6 +108,57 @@ class SimGapTests(unittest.TestCase):
             covers(TARGET, (1.0, 0.5), (0,), (0.9, 1.3))
         with self.assertRaises(ValueError):
             covers(TARGET, (0.7, 1.1), (True,), (0.9, 1.3))
+
+    def test_single_load_exposes_force_load_confounding(self):
+        measured = rollout_load_condition(TARGET_LOAD, 0.0, CALIBRATION_ACTIONS)
+        result = calibrate_load_conditions(((0.0, measured),), CALIBRATION_ACTIONS)
+        self.assertEqual(result.candidate_count, 9)
+        self.assertEqual(result.condition_count, 1)
+        self.assertEqual(result.unique_condition_count, 1)
+        self.assertFalse(result.identifiable)
+        self.assertEqual(len(result.minimizers), 3)
+        self.assertEqual(
+            result.minimizers,
+            (LoadParams(0.5, 0.5), TARGET_LOAD, LoadParams(1.5, 1.5)),
+        )
+
+    def test_repeating_same_load_does_not_add_identifying_information(self):
+        measured = rollout_load_condition(TARGET_LOAD, 0.0, CALIBRATION_ACTIONS)
+        result = calibrate_load_conditions(
+            ((0.0, measured), (0.0, measured)), CALIBRATION_ACTIONS
+        )
+        self.assertEqual(result.condition_count, 2)
+        self.assertEqual(result.unique_condition_count, 1)
+        self.assertEqual(len(result.minimizers), 3)
+        self.assertFalse(result.identifiable)
+
+    def test_second_known_load_identifies_force_and_base_load_on_grid(self):
+        conditions = tuple(
+            (payload, rollout_load_condition(TARGET_LOAD, payload, CALIBRATION_ACTIONS))
+            for payload in (0.0, 1.0)
+        )
+        result = calibrate_load_conditions(conditions, CALIBRATION_ACTIONS)
+        self.assertEqual(result.unique_condition_count, 2)
+        self.assertTrue(result.identifiable)
+        self.assertEqual(result.minimizers, (TARGET_LOAD,))
+
+    def test_single_load_alternative_fails_at_second_load(self):
+        alternative = LoadParams(0.5, 0.5)
+        target = rollout_load_condition(TARGET_LOAD, 1.0, CALIBRATION_ACTIONS)
+        candidate = rollout_load_condition(alternative, 1.0, CALIBRATION_ACTIONS)
+        self.assertAlmostEqual(mean_absolute_error(candidate, target), 0.19791666666666669)
+
+    def test_load_condition_inputs_are_validated(self):
+        with self.assertRaises(ValueError):
+            LoadParams(0.0, 1.0)
+        with self.assertRaises(ValueError):
+            LoadParams(1.0, float("nan"))
+        with self.assertRaises(ValueError):
+            rollout_load_condition(TARGET_LOAD, -1.0, CALIBRATION_ACTIONS)
+        with self.assertRaises(ValueError):
+            calibrate_load_conditions((), CALIBRATION_ACTIONS)
+        with self.assertRaises(ValueError):
+            calibrate_load_conditions(((0.0, (1.0,)),), CALIBRATION_ACTIONS)
 
 
 if __name__ == "__main__":

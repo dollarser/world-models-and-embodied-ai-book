@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-19-01`
-> 关联声明：`CLAIM-19-01`～`CLAIM-19-07`
-> 关联图表：`FIG-19-01` / `TAB-19-01` / `TAB-19-02`
+> 关联声明：`CLAIM-19-01`～`CLAIM-19-08`
+> 关联图表：`FIG-19-01` / `TAB-19-01` / `TAB-19-02` / `TAB-19-03`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -118,6 +118,8 @@ w_t\,d\!\left(y_t,\hat y_t(\phi,a_{0:t})\right).
 
 因此校准报告至少包含最优值之外的：等价/近等价解数量、Jacobian/rank 或 profile、参数相关性/置信区间、不同初值结果、residual 分桶，以及新增传感器或激励后的变化。窄置信区间也依赖模型和噪声假设，不能自动证明真实参数唯一。
 
+多工况也不是简单地把更多 trajectory 拼在一起。MuJoCo sysid 的 `ModelSequences` 支持把多个测量序列联合优化；[多实验参数可辨识性研究](https://arxiv.org/abs/2011.10868v2)进一步说明，某些模型的多实验可辨识函数确实多于单实验，但这不是对所有模型的保证。应登记每条序列改变了什么已知条件、哪些参数在序列间共享，以及新增 residual 对参数的敏感度是否提供独立方向。重复同一工况只会增加同一方程的权重；若不同载荷、初态或传感器仍只暴露相同参数组合，结构对称性不会消失。反过来，工况值若本身未知，把它与被辨识参数一起自由拟合，还可能引入新的混淆。
+
 Real2Sim 不一定从手机扫描重建完整 3D。最小路径可以从已有日志、标定板、里程计、关节状态或台架响应估计少量参数。[RialTo](https://github.com/real-to-sim-to-real/RialToPolicyLearning) 展示了 real-to-sim-to-real 机器人学习工作流，但它是研究案例，不是对任意设备的通用配方。
 
 ## 19.5 域随机化：覆盖假设，而不是“随机越多越好”
@@ -131,7 +133,7 @@ Real2Sim 不一定从手机扫描重建完整 3D。最小路径可以从已有�
 
 经典“纹理、光照全随机”只覆盖视觉域的一部分。对控制任务，延迟、执行器、摩擦、负载和行为参与者往往同样关键。应先由系统辨识和测量建立中心与范围，再逐项扩展；不确定的参数可以更宽，但必须记录假设。fixture 的 `covers` 只检查独立区间与离散 delay：即使目标每一维都在边界内，若真实随机化使用相关分布、约束流形或零概率组合，也不能据此声称 joint support 已覆盖。
 
-## 19.6 EXP-19-01：零校准误差也可能不可辨识
+## 19.6 EXP-19-01：零校准误差与“更多数据”都可能不可辨识
 
 S 档 fixture 用一个标量状态演示执行器增益、动作延迟和观测尺度。目标系统固定为 `gain=0.8`、`delay=1`、`scale=1.25`；12 个候选组合在校准动作上网格搜索。关键是 observation 只依赖 `gain×scale`：目标的 `0.8×1.25` 与候选 `1.0×1.0` 相同，因此 observation-only 本来就无法分离二者。
 
@@ -158,7 +160,19 @@ make ch19-smoke
 
 `CLAIM-19-04`（result）：手工窄随机化范围没有覆盖目标参数，手工宽范围覆盖了目标。它说明 support 应被显式检查，不比较随机化策略性能。
 
-结果文件为 `results/ch19/EXP-19-01-smoke.json`。测试还检查非法参数、一步延迟、等价 minimizer、state anchor、校准/留出分离和观测—状态误差归因。
+fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量响应只由 `force_gain/(base_load+known_payload)` 决定。在 9 个候选点中，零载荷只能识别这个比值；把同一条零载荷序列重复两次不会增加参数方向。第二条序列将已知载荷改为 `1.0`，才为当前离散网格提供另一条独立约束。
+
+| 校准数据 | 序列数 | 独立载荷数 | 零误差解数 | 结论 |
+| --- | ---: | ---: | ---: | --- |
+| 零载荷 | 1 | 1 | 3 | 只识别 force/load 比值 |
+| 零载荷重复 | 2 | 1 | 3 | 样本数增加，参数信息方向未增加 |
+| 已知载荷 `0.0` 与 `1.0` | 2 | 2 | 1 | 当前无噪离散网格中恢复目标点 |
+
+*TAB-19-03：多工况校准反例。独立载荷数按 fixture 中不同的已知 payload 值计数，不代表统计独立性或真实实验的有效样本量。*
+
+`CLAIM-19-08`（result）：零载荷校准存在 3 个等价解，重复同一载荷后仍为 3 个；加入第二个不同的已知载荷后，当前 9 点网格只剩目标 `(force_gain=1.0, base_load=1.0)`，而单载荷替代解 `(0.5,0.5)` 在载荷 `1.0` 上的 MAE 为 `0.197916666667`。这是解析标量 fixture 的实验设计反例，不证明两个工况足以辨识一般连续、带噪、接触或时变系统。
+
+结果文件为 `results/ch19/EXP-19-01-smoke.json`。测试还检查非法参数、一步延迟、等价 minimizer、state anchor、校准/留出分离、观测—状态误差归因，以及重复/不同载荷工况的可辨识性。
 
 ## 19.7 MJX 与其他后端：速度不能抹掉语义差异
 
@@ -212,6 +226,7 @@ CARLA 用于高保真多相机、天气、城市资产和传感器管线扩展�
 2. **代码实验**：给 `EXP-19-01` 加入观测噪声，解释为什么不能再期待精确参数恢复。
 3. **辨识设计**：分别说明“激励不足导致 gain/delay 难分”与“gain×scale 结构混淆”的区别；前者设计新动作，后者设计新测量。
 4. **驾驶迁移**：列出 MetaDrive 到 CARLA 迁移时必须重新验证的五类语义，不比较无法对齐的成功率。
+5. **多工况设计**：解释为什么重复十次同一载荷不等于十个独立辨识条件，并为车辆质量—驱动力或机械臂负载—电机增益设计一个安全的第二工况。
 
 ## 自检要点
 
@@ -245,6 +260,13 @@ gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-19-05：重复样本与独立参数方向</summary>
+
+重复十次同一载荷可以在噪声独立且模型正确时降低该工况 residual 的方差，却仍只约束 `force_gain/base_load` 这个组合；它没有新增一条能把分子和分母分开的方程。本章 fixture 把 payload 作为已知量从 `0.0` 改为 `1.0`，于是两个响应分别约束 `g/m` 与 `g/(m+1)`，当前离散网格中才剩唯一候选。真实设计还要确认附加载荷准确、结构模型仍适用、动作足够激励且不越过安全范围，并把载荷测量误差纳入不确定性；不能先把“工况独立”等同于“样本统计独立”，也不能由两工况 fixture 推导一般系统必然可辨识。
+
+</details>
+
 ## 延伸阅读
 
 - [MuJoCo 官方仓库](https://github.com/google-deepmind/mujoco) 与 [MJX 文档](https://mujoco.readthedocs.io/en/stable/mjx.html)，`[O,R1]`；
@@ -254,6 +276,7 @@ gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限�
 - [Isaac Lab 官方仓库](https://github.com/isaac-sim/IsaacLab)，`[O,R1]`；
 - [RoboCasa 官方仓库](https://github.com/robocasa/robocasa)，`[O,R1]`；
 - [RialTo 官方仓库](https://github.com/real-to-sim-to-real/RialToPolicyLearning)，`[O,R1]`；
+- [Multi-experiment parameter identifiability of ODEs and model theory](https://arxiv.org/abs/2011.10868v2)，`[A,R1]`；
 - [Domain Randomization for Sim2Real Transfer 学术综述](https://arxiv.org/abs/2111.00956)，`[A,R1]`。
 
 ## 下一章接口
@@ -273,5 +296,5 @@ gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`、`reviews/ch19-multi-condition-identifiability-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：只运行标准库标量 fixture；没有安装仿真器、下载资产、运行 GPU 或真实硬件。
