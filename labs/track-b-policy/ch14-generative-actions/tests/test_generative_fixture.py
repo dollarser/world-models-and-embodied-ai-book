@@ -8,6 +8,7 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from generative_fixture import (  # noqa: E402
     conditional_mean,
+    mode_frequency_report,
     mode_refinement,
     nearest_mode_distance,
     oracle_straight_flow,
@@ -46,6 +47,32 @@ class GenerativeActionFixtureTests(unittest.TestCase):
         self.assertEqual(summary["sample_mean"], 0.0)
         self.assertEqual(summary["invalid_action_rate"], 1.0)
         self.assertEqual(summary["covered_mode_count"], 0)
+
+    def test_mode_coverage_does_not_measure_frequency_calibration(self):
+        balanced = mode_frequency_report((-1.0,) * 5 + (1.0,) * 5)
+        imbalanced = mode_frequency_report((-1.0,) * 9 + (1.0,))
+        self.assertEqual(balanced["valid_action_rate"], imbalanced["valid_action_rate"])
+        self.assertEqual(balanced["covered_mode_count"], imbalanced["covered_mode_count"])
+        self.assertEqual(balanced["empirical_total_variation_to_target"], 0.0)
+        self.assertEqual(imbalanced["empirical_total_variation_to_target"], 0.4)
+
+    def test_mode_frequency_report_preserves_mode_counts(self):
+        report = mode_frequency_report((-1.0,) * 9 + (1.0,))
+        self.assertEqual(report["negative_mode_count"], 9)
+        self.assertEqual(report["positive_mode_count"], 1)
+        self.assertEqual(report["negative_mode_empirical_probability"], 0.9)
+
+    def test_mode_frequency_report_rejects_invalid_contracts(self):
+        invalid_cases = (
+            ((), (0.5, 0.5)),
+            ((0.0,), (0.5, 0.5)),
+            ((-1.0, 1.0), (0.7, 0.4)),
+            ((-1.0, 1.0), (-0.1, 1.1)),
+            ((-1.0, 1.0), (True, 0.0)),
+        )
+        for samples, probabilities in invalid_cases:
+            with self.subTest(samples=samples, probabilities=probabilities), self.assertRaises(ValueError):
+                mode_frequency_report(samples, probabilities)
 
     def test_sampling_budget_is_per_replan(self):
         sequential = sampling_budget_report(4, 10, 1, 8)

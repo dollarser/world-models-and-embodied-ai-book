@@ -88,6 +88,41 @@ def summarize(samples: tuple[float, ...]) -> dict[str, float | int]:
     }
 
 
+def mode_frequency_report(
+    samples: tuple[float, ...],
+    target_mode_probabilities: tuple[float, float] = (0.5, 0.5),
+) -> dict[str, float | int]:
+    """Audit mode frequencies after holding every generated sample valid."""
+    if not samples:
+        raise ValueError("samples must not be empty")
+    samples = tuple(_finite_number(value, name="sample") for value in samples)
+    if any(nearest_mode_distance(value) > VALID_TOLERANCE for value in samples):
+        raise ValueError("mode-frequency audit requires every sample to be mode-valid")
+    if not isinstance(target_mode_probabilities, tuple) or len(target_mode_probabilities) != len(VALID_MODES):
+        raise ValueError("target_mode_probabilities must provide one probability per mode")
+    targets = tuple(
+        _finite_number(value, name="target mode probability") for value in target_mode_probabilities
+    )
+    if any(value < 0.0 for value in targets) or not math.isclose(sum(targets), 1.0, abs_tol=1e-12):
+        raise ValueError("target mode probabilities must be non-negative and sum to one")
+
+    counts = tuple(sum(nearest_mode(value) == mode for value in samples) for mode in VALID_MODES)
+    empirical = tuple(count / len(samples) for count in counts)
+    total_variation = 0.5 * sum(abs(observed - target) for observed, target in zip(empirical, targets))
+    return {
+        "sample_count": len(samples),
+        "valid_action_rate": 1.0,
+        "covered_mode_count": sum(count > 0 for count in counts),
+        "negative_mode_count": counts[0],
+        "positive_mode_count": counts[1],
+        "negative_mode_empirical_probability": empirical[0],
+        "positive_mode_empirical_probability": empirical[1],
+        "target_negative_mode_probability": targets[0],
+        "target_positive_mode_probability": targets[1],
+        "empirical_total_variation_to_target": round(total_variation, 12),
+    }
+
+
 def sampling_budget_report(
     solver_steps: int,
     candidate_count: int,
@@ -172,6 +207,10 @@ def evaluate() -> dict[str, object]:
         "oracle_straight_flow_1_step": {
             **summarize(flow_one),
             "sample_model_evaluations": len(INITIAL_NOISE),
+        },
+        "mode_frequency_calibration": {
+            "balanced_5_to_5": mode_frequency_report((-1.0,) * 5 + (1.0,) * 5),
+            "imbalanced_9_to_1": mode_frequency_report((-1.0,) * 9 + (1.0,)),
         },
         "control_budget": {
             "sequential_10_candidates_4_steps": sampling_budget_report(4, 10, 1, 8),

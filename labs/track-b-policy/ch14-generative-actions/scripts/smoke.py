@@ -22,6 +22,13 @@ def main() -> int:
         raise AssertionError("refinement fixture must retain both modes")
     if metrics["oracle_straight_flow_1_step"]["mean_nearest_mode_distance"] > 1e-12:
         raise AssertionError("oracle straight paths must end at assigned modes")
+    frequency = metrics["mode_frequency_calibration"]
+    if frequency["balanced_5_to_5"]["covered_mode_count"] != frequency["imbalanced_9_to_1"]["covered_mode_count"]:
+        raise AssertionError("the frequency negative control must hold mode coverage fixed")
+    if frequency["balanced_5_to_5"]["empirical_total_variation_to_target"] != 0.0:
+        raise AssertionError("the balanced sample must match the equal target frequencies")
+    if frequency["imbalanced_9_to_1"]["empirical_total_variation_to_target"] != 0.4:
+        raise AssertionError("the imbalanced sample must expose frequency miscalibration")
     budget = metrics["control_budget"]
     if budget["sequential_10_candidates_4_steps"]["fits_abstract_forward_budget"]:
         raise AssertionError("sequential candidates must include candidate count in the forward budget")

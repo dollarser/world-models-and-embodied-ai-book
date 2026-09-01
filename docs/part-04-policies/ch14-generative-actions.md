@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-14-01`
-> 关联声明：`CLAIM-14-01`～`CLAIM-14-08`
-> 关联图表：`FIG-14-01` / `TAB-14-01`～`TAB-14-04`
+> 关联声明：`CLAIM-14-01`～`CLAIM-14-09`
+> 关联图表：`FIG-14-01` / `TAB-14-01`～`TAB-14-05`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -93,7 +93,7 @@ Flow Matching 学习条件向量场 `v_θ(A,t,o)`，使 base action 沿常微分
 
 训练可直接回归所选概率路径的目标速度；推理用 Euler、Heun 或其他 ODE solver 积分。直线路径/rectified flow 可能允许较少求解步，但实际质量取决于配对、路径、向量场误差、solver、维度和条件分布。不能从“一步 oracle 直线可到达”推出“一步 learned flow 足够”。
 
-[Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747) 给出通用连续归一化流训练框架 `[P,R0]`。机器人领域的公开桥接案例是 [openpi](https://github.com/Physical-Intelligence/openpi)：截至核查日期，其 README 将 π0 描述为 flow-based VLA，并说明公开 π0.5 训练/推理当前只支持 flow matching head `[O,R1]`。这些大模型属于第15章；本章只借它说明 flow 已成为动作生成接口，不引用其性能作为本书结果。
+[Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747) 给出通用连续归一化流训练框架 `[P,R0]`。机器人领域的公开桥接案例是 [openpi README 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/README.md)：截至核查日期，其 README 将 π0 描述为 flow-based VLA，并说明公开 π0.5 训练/推理当前只支持 flow matching head `[O,R1]`。这些大模型属于第15章；本章只借它说明 flow 已成为动作生成接口，不引用其性能作为本书结果。
 
 Diffusion 与 flow 不应按营销标签做速度结论。公平比较至少固定：观测编码器、训练数据与划分、动作表示、chunk/horizon、参数量、训练更新、采样 solver、模型调用数、硬件、batch、随机种子与闭环协议。
 
@@ -163,15 +163,30 @@ fixture 还把“接近演示模式”和“当前场景允许执行”分开。
 
 `CLAIM-14-08`（result）：fixture 中 10 个候选全部靠近数据模式，但独立门禁只接受 5 个；当两个模式有效候选都落入阻塞区时，系统不继续随机重采样，而是使用确定性 fallback。模式有效率不能替代场景安全接受率。
 
+fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全模式有效的10个样本。对经验模式频率 `p_hat` 与已知目标频率 `p`，这里只计算描述性距离
+
+\[
+\operatorname{TV}(\hat p,p)=\frac{1}{2}\sum_m\left|\hat p(m)-p(m)\right|.
+\]
+
+| 样本模式计数 `-1:+1` | 有效率 | 覆盖模式数 | 经验频率 `-1:+1` | 对等权目标的经验 TV |
+| ---: | ---: | ---: | ---: | ---: |
+| 5:5 | 100% | 2 | 0.5:0.5 | 0.0 |
+| 9:1 | 100% | 2 | 0.9:0.1 | 0.4 |
+
+*TAB-14-05：`EXP-14-01` 的模式覆盖—频率负对照。两组样本都覆盖全部模式且每个动作都有效，但对已知等权目标的经验频率距离不同；10个手工样本不估计总体校准。*
+
+`CLAIM-14-09`（result）：`EXP-14-01` v3 中，`5:5` 与 `9:1` 两组样本的动作有效率均为100%、模式覆盖均为2，但相对已知等权目标的经验 total variation 为 `0/0.4`。该反例只证明 support coverage 丢失模式频率信息，不证明真实策略失配程度、训练 mode collapse、总体 calibration 或统计显著性。
+
 ## 14.6 怎么评测多峰动作
 
-只报动作 MSE 会奖励均值，单次成功率又可能掩盖模式坍塌。至少组合：
+只报动作 MSE 会奖励均值，单次成功率又可能掩盖模式坍塌；只报“两个模式都采到”也看不出生成频率是否接近目标条件分布。至少组合：
 
 | 维度 | 指标或检查 | 要避免的误读 |
 | --- | --- | --- |
 | 单样本有效性 | 最近有效轨迹距离、约束违反、碰撞 | oracle 必须独立于模型 |
 | 多样性 | 模式覆盖、条件熵、轨迹聚类 | 多样不等于正确 |
-| 校准 | 样本频率与真实条件频率 | 少量 seed 不能估概率 |
+| 频率与校准 | 样本频率与独立估计的目标条件频率、proper score | 覆盖不等于频率正确；少量 seed 不能估概率 |
 | 闭环 | 成功率、恢复、碰撞、干预 | 开环似然不能代替 |
 | 效率 | 调用数、P50/P95、deadline miss | 平均 FPS 不代表控制时延 |
 | 稳定性 | seed/solver/步数敏感性 | 只挑最佳随机样本 |
@@ -209,7 +224,7 @@ S 档 `EXP-14-01` 使用 Python 标准库、CPU、零下载与 MIT fixture，只
 
 M 档优先使用 [LeRobot](https://github.com/huggingface/lerobot) 中的 Diffusion Policy 接口，在同一 Push-T 或小型许可数据划分上比较 MSE chunk policy 与 diffusion policy。[官方配置快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/diffusion/configuration_diffusion.py)明确区分 `n_obs_steps`、`horizon`、`n_action_steps`、`num_train_timesteps` 与 `num_inference_steps`；未指定推理步数时会回落到训练 timestep 数，sample clipping 还要求动作归一化范围与之匹配，padding loss mask 则需显式选择 `[O,R1]`。这些是必须冻结的配置，不是通用推荐值。默认目标为 24 GB 单卡以内；先跑状态输入或低分辨率视觉、小 batch、少量 episode 和 2–3 seeds。当前未下载、未训练、未验证显存。
 
-L1 可加入 flow-matching action head，并在固定 backbone/数据下按模型调用数和墙钟时延比较。openpi README 的上游估算是推理需大于 8 GB、LoRA 微调大于 22.5 GB、全量微调大于 70 GB；这是官方当前配置说明 `[O,R1]`，不是本书实测。仓库同时提供 JAX 与 PyTorch 路线，但当前 PyTorch 说明仍列出不支持 π0-FAST、mixed precision、FSDP、LoRA 与 EMA 等差异，不能跨后端照搬显存结论。LoRA 已贴近 24 GB 边界，必须先做显存预检；full fine-tune 属于可选 L2，最多 2×80 GB，不是必做，也不要求购置硬件。
+L1 可加入 flow-matching action head，并在固定 backbone/数据下按模型调用数和墙钟时延比较。[openpi README 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/README.md)的上游估算是推理需大于 8 GB、LoRA 微调大于 22.5 GB、全量微调大于 70 GB；这是该版本官方配置说明 `[O,R1]`，不是本书实测。仓库同时提供 JAX 与 PyTorch 路线，但该快照的 PyTorch 说明仍列出不支持 π0-FAST、mixed precision、FSDP、LoRA 与 EMA 等差异，不能跨后端照搬显存结论。LoRA 已贴近 24 GB 边界，必须先做显存预检；full fine-tune 属于可选 L2，最多 2×80 GB，不是必做，也不要求购置硬件。
 
 Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分别核验许可和体积。Docker 镜像只负责环境锁定，不应在默认 smoke 中自动下载大数据或权重。
 
@@ -226,6 +241,7 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 | 本书结果 | 条件均值落在双峰无效区 | `EXP-14-01` | CPU smoke | 一维对称解析 fixture |
 | 本书结果 | refinement 求值—模式距离权衡 | `EXP-14-01` | CPU smoke | 不是 DDPM/learned denoiser |
 | 本书结果 | oracle straight flow 一步到目标 | `EXP-14-01` | CPU smoke | 已知配对，不能比较方法 |
+| 本书结果 | 相同有效率/模式覆盖可隐藏频率失真 | `EXP-14-01` | CPU smoke | 已知等权目标与10个手工样本 |
 | 本书结果 | 候选—batch forward 预算与安全筛选 | `EXP-14-01` | CPU smoke | 抽象计数与手工阻塞区 |
 | 论文/开源 | Diffusion Policy 方法与官方资产 | 论文/官方仓库 | `[P/O,R1]` | 本书未运行 |
 | 论文 | Flow Matching 通用训练框架 | 原论文 | `[P,R0]` | 非机器人 benchmark 复现 |
@@ -243,6 +259,7 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 3. **公平对照**：为 Push-T 的 MSE、diffusion、flow 三个策略列出必须固定的 10 个变量。
 4. **选择偏差**：解释为什么从 32 个样本中用真实终点挑最好不是合法在线评测。
 5. **自动驾驶迁移**：设计保持/变道/减速三模式轨迹评测，并定义无有效候选时的降级动作。
+6. **频率诊断**：目标模式概率为 `0.7/0.3` 时，比较 `7:3` 与 `5:5` 两组10样本的覆盖率和经验 total variation；说明为什么这仍不是总体校准结论。
 
 ## 自检要点
 
@@ -283,12 +300,19 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-14-06：覆盖相同，频率不同</summary>
+
+两组都包含两个模式，因此覆盖模式数都是2；若每个样本都落在有效模式内，有效率也都是100%。`7:3` 的经验分布与目标 `0.7/0.3` 相同，TV为0；`5:5` 的 TV 为 `0.5(|0.5-0.7|+|0.5-0.3|)=0.2`。这只是已知目标和固定10样本上的描述性诊断：真实任务的目标条件分布通常要从独立数据估计，还受有限样本、条件混合、标注歧义、模式发现误差和闭环选择器影响。应报告置信区间或重复采样，并配合 log score/Brier 等 proper score；不能把一次经验频率相等称为总体校准。
+
+</details>
+
 ## 延伸阅读
 
 - Chi et al., [Diffusion Policy](https://diffusion-policy.cs.columbia.edu/) 与[官方代码](https://github.com/real-stanford/diffusion_policy)，`[P/O,R1]`；
 - Lipman et al., [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747)，`[P,R0]`；
 - Hugging Face, [LeRobot 官方仓库](https://github.com/huggingface/lerobot)，`[O,R1]`，包含 Diffusion Policy 配置；
-- Physical Intelligence, [openpi 官方仓库](https://github.com/Physical-Intelligence/openpi)，`[O,R1]`，flow-based VLA/action head 案例。
+- Physical Intelligence, [openpi README 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/README.md)，`[O,R1]`，flow-based VLA/action head 案例。
 
 ## 下一章接口
 
@@ -307,6 +331,6 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 - 代码审查：通过；
 - 一致性审查：通过（第5章生成基础、第13章执行时域与第15章动作 schema 接口已核对）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch14-generative-budget-review-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch14-generative-budget-review-2026-09-01.md`、`reviews/ch14-mode-frequency-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有训练 Diffusion Policy/flow policy、下载数据或 checkpoint，也未验证 GPU 与真实时延；
 - 下一步：后续 M 档实验在具备 GPU 时验证显存、墙钟时延与闭环指标，不用解析 fixture 替代模型结果。
