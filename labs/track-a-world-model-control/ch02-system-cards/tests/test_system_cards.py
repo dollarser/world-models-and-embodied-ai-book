@@ -9,7 +9,7 @@ import unittest
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from system_cards import load_fixture, summarize, validate_fixture  # noqa: E402
+from system_cards import analyze_state_aliasing, load_fixture, summarize, validate_fixture  # noqa: E402
 
 
 class SystemCardTest(unittest.TestCase):
@@ -92,6 +92,43 @@ class SystemCardTest(unittest.TestCase):
         ):
             with self.subTest(changed=changed):
                 self.assertTrue(validate_fixture(changed))
+
+    def test_current_observation_aliases_contexts_with_different_optimal_actions(self) -> None:
+        aliasing = summarize(self.fixture)["state_aliasing"]
+        self.assertEqual(aliasing["current_observation"], "occluded-corridor")
+        self.assertEqual(aliasing["context_optimal_actions"], {"clear": "advance", "blocked": "hold"})
+        self.assertTrue(aliasing["context_optimal_actions_differ"])
+
+    def test_history_disambiguation_closes_fixed_decision_regret(self) -> None:
+        aliasing = summarize(self.fixture)["state_aliasing"]
+        self.assertEqual(aliasing["mean_return_by_shared_action"], {"advance": 0.0, "hold": 0.1})
+        self.assertEqual(aliasing["aliased_selected_action"], "hold")
+        self.assertEqual(aliasing["aliased_mean_return"], 0.1)
+        self.assertEqual(aliasing["aliased_mean_regret"], 0.5)
+        self.assertEqual(aliasing["history_aware_mean_return"], 0.6)
+        self.assertEqual(aliasing["history_aware_mean_regret"], 0.0)
+
+    def test_aliasing_case_requires_unique_history_and_consistent_actions(self) -> None:
+        for mutation in ("history", "actions", "context_tie", "aliased_tie"):
+            changed = deepcopy(self.fixture["state_aliasing_case"])
+            if mutation == "history":
+                changed["contexts"][1]["history_cue"] = changed["contexts"][0]["history_cue"]
+            elif mutation == "actions":
+                changed["contexts"][1]["action_returns"] = {"advance": -1.0, "wait": 0.2}
+            elif mutation == "context_tie":
+                changed["contexts"][0]["action_returns"] = {"advance": 1.0, "hold": 1.0}
+            else:
+                changed["contexts"][0]["action_returns"] = {"advance": 1.0, "hold": 0.0}
+                changed["contexts"][1]["action_returns"] = {"advance": 0.0, "hold": 1.0}
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                analyze_state_aliasing(changed)
+
+    def test_aliasing_case_rejects_non_finite_and_non_numeric_returns(self) -> None:
+        for invalid in (True, "bad", float("nan"), float("inf")):
+            changed = deepcopy(self.fixture["state_aliasing_case"])
+            changed["contexts"][0]["action_returns"]["advance"] = invalid
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                analyze_state_aliasing(changed)
 
 
 if __name__ == "__main__":

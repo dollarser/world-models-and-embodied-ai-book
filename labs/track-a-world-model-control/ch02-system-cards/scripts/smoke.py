@@ -24,6 +24,10 @@ def main() -> int:
         raise AssertionError("fixture must keep learned dynamics and action intervention as a conjunction")
     if metrics["policy_without_transition_cards"] != 1:
         raise AssertionError("direct policy output must not imply an independent transition model")
+    if metrics["state_aliasing"]["aliased_mean_regret"] != 0.5:
+        raise AssertionError("current-observation aliasing must retain the fixed decision regret")
+    if metrics["state_aliasing"]["history_aware_mean_regret"] != 0.0:
+        raise AssertionError("the fixed history cue must disambiguate both contexts")
     report = {
         "experiment_id": "EXP-02-01",
         "status": "smoke",

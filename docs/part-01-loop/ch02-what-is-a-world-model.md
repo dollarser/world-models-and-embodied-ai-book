@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-02-01`（smoke）
-> 关联声明：`CLAIM-02-01`～`CLAIM-02-05`
-> 关联图表：`FIG-02-01` / `TAB-02-01` / `TAB-02-02`
+> 关联声明：`CLAIM-02-01`～`CLAIM-02-06`
+> 关联图表：`FIG-02-01` / `TAB-02-01` / `TAB-02-02` / `TAB-02-03`
 > 资源档位：S
 > GPU 状态：不需要
 
@@ -35,6 +35,7 @@
 2. 区分世界模型、观测模型、转移模型、策略与仿真器；
 3. 判断一个视频预测器或 VLA 在什么条件下包含世界模型成分；
 4. 为新系统填写四轴模型卡，并写出证据尚未覆盖的能力。
+5. 用 state-aliasing 反例检查一个表示是否错误合并需要不同动作的历史。
 
 ## 2.1 一个为工程服务的工作定义
 
@@ -76,6 +77,25 @@ z_t=f_\theta(z_{t-1},o_t,a_{t-1})
 > 是否存在两个历史，它们得到相同的模型状态，但最优动作不同？
 
 如果答案是“有”，模型需要更多历史、额外传感器、更好的不确定性表示，或者承认任务范围受限。
+
+### 2.2.1 低维不等于充分：state aliasing 的最小反例
+
+压缩观测不是问题本身；问题是压缩后是否仍能区分任务所需的未来与动作。考虑一条被遮挡的走廊：当前相机画面在两种 context 中都编码成 `occluded-corridor`，但此前历史分别看见走廊畅通或障碍物进入。fixture 给两个 context 等权，并冻结下面的一步 return：
+
+| hidden context | 当前观测 | 历史线索 | `advance` return | `hold` return | context 最优动作 |
+| --- | --- | --- | ---: | ---: | --- |
+| clear | `occluded-corridor` | `corridor-seen-clear` | 1.0 | 0.0 | `advance` |
+| blocked | `occluded-corridor` | `obstacle-seen-before-occlusion` | -1.0 | 0.2 | `hold` |
+
+*TAB-02-03：`EXP-02-01` v3 的等权 state-aliasing fixture。return 是无单位教学效用，不是碰撞代价、驾驶 reward 或概率估计。*
+
+若 policy 只能看到当前编码，它必须在两个 context 中执行同一个动作。`advance` 的等权 mean return 为 0，`hold` 为 0.1，因此最优的 current-only 决策是 `hold`；相对逐 context oracle，它的 mean regret 是 0.5。若 state 保留唯一历史线索，则 clear 选 `advance`、blocked 选 `hold`，mean return 从 0.1 提高到 0.6，regret 变为 0。
+
+`CLAIM-02-06`（result）：在 `EXP-02-01` 的两个等权手工 context 中，current-only 表示把不同最优动作的历史合并，最优共享动作仍有 0.5 mean regret；保留历史线索后固定 regret 为 0。该差值只证明这组一次决策 fixture 是 memory-improvable，不证明某种 sequence model 必然能学会记忆，也不估计真实 POMDP、机器人或驾驶性能。
+
+这里有三条需要分开的理论直觉。[DeepMDP](https://proceedings.mlr.press/v97/gelada19a.html) 用 reward prediction 与 next-latent distribution prediction 把表示质量连接到 MDP/bisimulation 条件；这说明只重建外观不是唯一目标，也不表示任意低预测 loss 都足够。[Value Equivalence](https://arxiv.org/abs/2011.03506) 则把模型等价定义在选定的 functions 与 policies 的 Bellman updates 上；它允许忽略无关细节，但“相关”随用途和函数集合变化。MuZero 的 reward/value/policy 预测是价值相关路线的代表，不是所有任务上的充分状态证明。
+
+较新的 [POBAX 论文](https://arxiv.org/abs/2508.00046) 与[锁定源码快照 `a5e1d62`](https://github.com/taodav/pobax/tree/a5e1d62d14e4efe783885b9d4f19cffa2a568eec)把“更多 state 信息或 memory 能否形成清晰 performance gap”作为部分可观测 benchmark 的设计信号，并覆盖多种 state aliasing。它是后续 M 档候选，不是当前零下载 S 档依赖；本书没有运行 JAX、训练 memory policy 或复现其论文结果。
 
 ## 2.3 世界模型的五个常见组件
 
@@ -251,7 +271,7 @@ CV 工程师可以沿四步迁移已有经验：
 
 至少包含：无动作视频预测器、动作条件预测器、latent 世界模型、价值等价模型、VLA、物理仿真器、数字孪生和自动驾驶案例。评分不看“是否归入世界模型”这一列是否统一，而看理由、边界和证据是否自洽。
 
-本书已把八类对象写成结构化 JSON fixture，并用标准库校验器强制检查：类别覆盖、四轴字段、来源快照、VLA/仿真器边界、四项三态能力和每张卡的不可外推声明。运行命令：
+本书已把八类对象和一个 state-aliasing case 写成结构化 JSON fixture，并用标准库校验器强制检查：类别覆盖、四轴字段、来源快照、VLA/仿真器边界、四项三态能力、每张卡的不可外推声明，以及历史线索、动作集合和唯一最优动作合同。运行命令：
 
 ```bash
 make ch02-test-local
@@ -259,7 +279,7 @@ make ch02-smoke-local
 make ch02-smoke
 ```
 
-固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有 HTTPS 证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。能力矩阵中，6 张有时间/转移证据、5 张支持候选动作干预、3 张同时满足学习动态与动作条件、1 张保持 scope-dependent、1 张是无独立转移的策略。10 个单元测试还会故意把 VLA 动作输出改写成转移证据、伪造 learned-action conjunction、破坏三态集合、证据 URL、四轴字段和身份唯一性，确认校验器能够拒绝这些变化。
+固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有 HTTPS 证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。能力矩阵中，6 张有时间/转移证据、5 张支持候选动作干预、3 张同时满足学习动态与动作条件、1 张保持 scope-dependent、1 张是无独立转移的策略。state-aliasing 对照则得到 current-only mean return 0.1、history-aware 0.6 和 0.5 history value gap。14 个单元测试还会故意把 VLA 动作输出改写成转移证据、伪造 learned-action conjunction、破坏三态集合、证据 URL、四轴字段和身份唯一性，以及重复历史线索、改变动作集合、制造 context/共享策略最优动作 tie 和非有限 return，确认校验器能够拒绝这些变化。
 
 `CLAIM-02-04`（result）：`EXP-02-01` 在固定 fixture 上完成了 8/8 类别、8/8 来源和 8/8 证据限制检查。它证明分类契约可执行，不证明被列系统的性能、可复现性或完整能力。
 
@@ -270,6 +290,7 @@ make ch02-smoke
 - **名称替代证据**：项目自称 world model，正文便默认它支持规划；
 - **动作伪条件化**：输入包含动作，但模型输出几乎不随动作变化；
 - **状态不足**：表示丢失速度、接触、终止或安全相关变量；
+- **state aliasing**：两个需要不同动作的历史被压成同一个内部 state；
 - **观测等于状态**：把单帧像素当作完整环境状态；
 - **用途漂移**：用视频展示证据宣传策略优化能力；
 - **边界消失**：把仿真成功外推到真实机器人或车辆。
@@ -283,6 +304,7 @@ make ch02-smoke
 | 工作定义 | 世界模型表示任务相关状态及动作相关演化 | 本书术语契约 | recommendation | 非唯一学术定义 |
 | 分类结论 | VLA、视频模型和仿真器不能只凭名称互相替代 | 四轴模型卡 | drafted | 具体系统需逐版本核验 |
 | 本书结果 | 八类系统具有四轴、三态能力、来源和证据限制记录 | `EXP-02-01` | CPU smoke | 教学元数据分类，不是项目比例或性能 benchmark |
+| 本书结果 | current-only 与 history-aware state 在固定等权 context 上有 0.5 decision gap | `EXP-02-01` | CPU smoke | 一步手工 return，不是 learned memory 或真实 POMDP 性能 |
 | 未验证 | 某一现有系统满足完整闭环世界模型要求 | 无 | unverified | 需第9章协议评测 |
 
 ### 资源、数据与许可
@@ -300,6 +322,7 @@ make ch02-smoke
 3. **组件拆分**：分别为 V-JEPA 2 encoder 与 V-JEPA 2-AC predictor 填写矩阵，指出哪些状态因组件变化而改变。
 4. **反例设计**：构造两个当前观测相同但最优动作不同的历史，说明需要怎样的信念状态。
 5. **自动驾驶迁移**：分别为驾驶视频生成器、轨迹预测器、规划器和 CARLA 填写四轴模型卡。
+6. **状态充分性**：修改 `TAB-02-03`，让两个 context 的最优动作相同；说明此时 history gap 为什么消失，以及这仍不能证明表示对其他任务充分。
 
 ## 延伸阅读
 
@@ -309,6 +332,9 @@ make ch02-smoke
 - [V-JEPA 2/2.1 官方仓库](https://github.com/facebookresearch/vjepa2)，`[O]`，预测表征与 V-JEPA 2-AC 动作条件组件案例；
 - [OpenPI 官方仓库](https://github.com/Physical-Intelligence/openpi)，`[O]`，VLA 策略实现案例；
 - [MuJoCo 官方文档](https://mujoco.readthedocs.io/)，`[O]`，显式物理仿真器案例。
+- Gelada et al., [DeepMDP](https://proceedings.mlr.press/v97/gelada19a.html)，`[P]`，reward/transition 与任务相关 latent state；
+- Grimm et al., [The Value Equivalence Principle](https://arxiv.org/abs/2011.03506)，`[P]`，相对于 policy/function 集合的模型等价；
+- Tao et al., [POBAX](https://arxiv.org/abs/2508.00046)，`[P,O,R0]`，memory-improvable partial-observability benchmark；当前未运行。
 
 ## 下一章接口
 
@@ -326,6 +352,6 @@ make ch02-smoke
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`；
+- 审查记录路径：`reviews/ch02-state-aliasing-review-2026-09-01.md`；
 - 已知限制：系统卡基于论文与官方文档元数据，没有运行八个上游系统；
-- 下一步：与第6、9章执行术语与声明交叉审查，并将系统卡 Schema 独立化。
+- 下一步：与第6章 belief state、第9章 E2/E4 评测和第15章 policy memory 继续执行跨章语义审查。

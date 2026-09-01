@@ -29,6 +29,37 @@
       "last_verified": "2026-09-01"
     },
     {
+      "id": "RADAR-2025-02",
+      "title": "POBAX: Memory-Improvable Partial-Observability Benchmarks",
+      "chapters": [2, 3, 6, 9],
+      "book_action": "case_card",
+      "problem": "Measure whether memory or additional state information closes a controlled performance gap across distinct forms of partial observability.",
+      "why_it_matters": "It turns Chapter 2 state aliasing into an explicit evaluation design and prevents a single masking task from standing in for all observation and memory failures.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2508.00046",
+          "kind": "paper",
+          "maturity": "P",
+          "revision": "arXiv:2508.00046v1; Reinforcement Learning Journal 2025"
+        },
+        {
+          "url": "https://github.com/taodav/pobax/tree/a5e1d62d14e4efe783885b9d4f19cffa2a568eec",
+          "kind": "official_repository",
+          "maturity": "O",
+          "revision": "commit a5e1d62d14e4efe783885b9d4f19cffa2a568eec"
+        }
+      ],
+      "assets": {"code": "open", "weights": "not_applicable", "data": "not_applicable"},
+      "reproduction": "R0",
+      "resource_path": "S tier uses the authored two-context aliasing fixture; optional M work may run small diagnostic environments, while GPU visual control remains non-required.",
+      "scope_boundary": "A memory-improvable gap identifies useful state information in a frozen protocol; it does not prove that a sequence model learns the right memory or generalizes across aliasing types.",
+      "review_triggers": [
+        "The paper or official repository changes the environment set, protocol, license or reference implementations.",
+        "A CPU-sized subset can be packaged with measured downloads, runtime and multi-seed comparison without making it a reading prerequisite."
+      ],
+      "last_verified": "2026-09-01"
+    },
+    {
       "id": "RADAR-2026-01",
       "title": "V-JEPA 2.1: Dense Video Predictive Representations",
       "chapters": [10, 12, 17],

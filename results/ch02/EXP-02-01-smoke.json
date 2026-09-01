@@ -10,8 +10,29 @@
     "learned_action_conditioned_candidates": 3,
     "policy_without_transition_cards": 1,
     "scope_dependent_transition_cards": 1,
+    "state_aliasing": {
+      "action_count": 2,
+      "aliased_mean_regret": 0.5,
+      "aliased_mean_return": 0.1,
+      "aliased_selected_action": "hold",
+      "context_count": 2,
+      "context_optimal_actions": {
+        "blocked": "hold",
+        "clear": "advance"
+      },
+      "context_optimal_actions_differ": true,
+      "context_weighting": "uniform",
+      "current_observation": "occluded-corridor",
+      "history_aware_mean_regret": 0.0,
+      "history_aware_mean_return": 0.6,
+      "history_value_gap": 0.5,
+      "mean_return_by_shared_action": {
+        "advance": 0.0,
+        "hold": 0.1
+      }
+    },
     "system_card_count": 8
   },
-  "scope": "classification worksheet; not a performance benchmark",
+  "scope": "classification and state-sufficiency worksheet; not a performance benchmark",
   "status": "smoke"
 }

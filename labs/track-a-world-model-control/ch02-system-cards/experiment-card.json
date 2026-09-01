@@ -3,21 +3,22 @@
   "id": "EXP-02-01",
   "chapter": 2,
   "status": "smoke",
-  "claim_ids": ["CLAIM-02-01", "CLAIM-02-02", "CLAIM-02-03", "CLAIM-02-04", "CLAIM-02-05"],
+  "claim_ids": ["CLAIM-02-01", "CLAIM-02-02", "CLAIM-02-03", "CLAIM-02-04", "CLAIM-02-05", "CLAIM-02-06"],
   "claim_scope": [
     "classify candidate systems by representation dynamics conditioning and use",
     "separate VLA policies video predictors simulators and learned world models",
     "record unsupported capabilities instead of inferring them from names",
-    "keep transition evidence action intervention learned dynamics and direct policy output as separate tri-state claims"
+    "keep transition evidence action intervention learned dynamics and direct policy output as separate tri-state claims",
+    "show that one current observation can alias histories with different optimal actions and retain decision regret"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library validation of fixtures/system-cards.json fixture-v2"
+    "config": "standard-library validation of fixtures/system-cards.json fixture-v3"
   },
   "data": {
-    "name": "official paper and repository metadata worksheet",
-    "version": "v2",
+    "name": "official-source metadata worksheet and authored two-context state-aliasing case",
+    "version": "v3",
     "license": "MIT for original worksheet; upstream sources retain their licenses",
     "classification": "fixture",
     "fixture": true,
@@ -37,15 +38,19 @@
     "report": "python3 labs/track-a-world-model-control/ch02-system-cards/scripts/smoke.py"
   },
   "metrics": [
-    {"name": "system_card_count", "value": 8, "unit": "cards", "split": "fixture-v2"},
-    {"name": "category_count", "value": 8, "unit": "categories", "split": "fixture-v2"},
-    {"name": "cards_with_evidence", "value": 8, "unit": "cards", "split": "fixture-v2"},
-    {"name": "cards_with_unsupported_claims", "value": 8, "unit": "cards", "split": "fixture-v2"},
-    {"name": "cards_with_transition_evidence", "value": 6, "unit": "cards", "split": "fixture-v2"},
-    {"name": "cards_with_action_intervention", "value": 5, "unit": "cards", "split": "fixture-v2"},
-    {"name": "learned_action_conditioned_candidates", "value": 3, "unit": "cards", "split": "fixture-v2"},
-    {"name": "scope_dependent_transition_cards", "value": 1, "unit": "cards", "split": "fixture-v2"},
-    {"name": "policy_without_transition_cards", "value": 1, "unit": "cards", "split": "fixture-v2"}
+    {"name": "system_card_count", "value": 8, "unit": "cards", "split": "fixture-v3"},
+    {"name": "category_count", "value": 8, "unit": "categories", "split": "fixture-v3"},
+    {"name": "cards_with_evidence", "value": 8, "unit": "cards", "split": "fixture-v3"},
+    {"name": "cards_with_unsupported_claims", "value": 8, "unit": "cards", "split": "fixture-v3"},
+    {"name": "cards_with_transition_evidence", "value": 6, "unit": "cards", "split": "fixture-v3"},
+    {"name": "cards_with_action_intervention", "value": 5, "unit": "cards", "split": "fixture-v3"},
+    {"name": "learned_action_conditioned_candidates", "value": 3, "unit": "cards", "split": "fixture-v3"},
+    {"name": "scope_dependent_transition_cards", "value": 1, "unit": "cards", "split": "fixture-v3"},
+    {"name": "policy_without_transition_cards", "value": 1, "unit": "cards", "split": "fixture-v3"},
+    {"name": "aliased_mean_return", "value": 0.1, "unit": "return", "split": "state-aliasing"},
+    {"name": "aliased_mean_regret", "value": 0.5, "unit": "return", "split": "state-aliasing"},
+    {"name": "history_aware_mean_return", "value": 0.6, "unit": "return", "split": "state-aliasing"},
+    {"name": "history_aware_mean_regret", "value": 0.0, "unit": "return", "split": "state-aliasing"}
   ],
   "artifacts": ["results/ch02/EXP-02-01-smoke.json"],
   "limitations": [
@@ -53,6 +58,8 @@
     "supported means supported by the locked card evidence and unsupported does not prove global absence",
     "counts describe eight authored archetypes and do not estimate prevalence in the research ecosystem",
     "individual projects must be checked at a pinned version before runtime claims",
-    "paper and documentation metadata were summarized rather than runtime-tested"
+    "paper and documentation metadata were summarized rather than runtime-tested",
+    "the state-aliasing result uses two equally weighted authored contexts and one-step returns",
+    "the history-aware oracle does not demonstrate that a sequence model can learn or generalize the required memory"
   ]
 }

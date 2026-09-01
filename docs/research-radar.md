@@ -14,16 +14,23 @@
 | 表征与生成接口扩展 | [V-JEPA 2.1](https://arxiv.org/abs/2603.14482)、[Cosmos 3 快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827) | dense representation 和统一 action 接口怎样服务状态估计、预测与控制 | feature 可读不等于动作转移正确；接口含 action 不等于 simulator fidelity |
 | 世界模型进入策略训练与评测 | [GE-Sim 2.0](https://arxiv.org/abs/2605.27491)、[OSCAR](https://arxiv.org/abs/2606.04463) | learned rollout、state decoder、reward/judge 和 policy update 如何组成闭环 | 每个学习组件都带来独立误差；上游真实结果不是本书复现 |
 | “评测器也会错”成为显式研究对象 | [WorldArena 2.0](https://arxiv.org/abs/2605.17912)、[KineBench](https://arxiv.org/abs/2607.19876) | 模态、用途、平台与动作落地层怎样分别归因 | 更完整的 benchmark 仍有作用域；去掉 IDM 不会消除 pose extractor 和 simulator 误差 |
+| 部分可观测性从单一 mask 转向 memory-improvable 诊断 | [POBAX](https://arxiv.org/abs/2508.00046) | 更多 state 信息或 memory 是否在其他条件近似不变时关闭清晰 performance gap | 一个任务有 gap 不代表模型学会正确记忆，也不覆盖所有 state aliasing 类型 |
 
 这四行共同强化了全书主线：模型输出必须经过“表征—动作条件转移—用途—独立 outcome”逐级取证。它们没有推翻第2章的定义、第9章的评测阶梯或第17章的用途边界。
 
-## 八张活页卡
+## 九张活页卡
 
 ### Dreamer 4：规模化想象训练
 
 论文报告用 shortcut forcing 与高效 transformer 让世界模型在单 GPU 上进行实时交互推理，并在 Minecraft 离线数据中训练行为。它最适合接回第6章的 latent state、第8章的 imagined learning 和第17章的 simulator utility。
 
 阅读时要分开三个量：完整训练资源、交互推理资源、最终任务证据。论文中的“单 GPU 实时”描述的是其指定推理路径，不能推成“24 GB 单卡可完整训练”，也不能从 Minecraft 直接推到机器人操作或自动驾驶。
+
+### POBAX：先证明任务真的需要 memory
+
+POBAX 把部分可观测性拆成多种 state aliasing 类型，并要求任务在更多或更少 state 信息之间具有可解释的 performance gap。这个设计接回第2章的新反例：若 current-only 与 history-aware oracle 没有差距，训练更大的 recurrent policy 也很难说明改进来自记忆。
+
+但 memory-improvable 是 benchmark 属性，不是算法能力证书。固定任务上存在 gap，只说明有信息可由历史恢复；还要分别验证模型是否学到正确 cue、能保持多久、是否依赖泄漏，以及能否迁移到遮挡、未知意图、定位等其他 aliasing。官方仓库已锁到[快照 `a5e1d62`](https://github.com/taodav/pobax/tree/a5e1d62d14e4efe783885b9d4f19cffa2a568eec)，当前没有安装 JAX、下载可选渲染依赖或运行其训练。
 
 ### V-JEPA 2.1：dense feature 不是完整 world state
 

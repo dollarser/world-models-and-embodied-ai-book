@@ -1,7 +1,22 @@
 {
-  "fixture_version": 2,
+  "fixture_version": 3,
   "audit_date": "2026-09-01",
-  "scope": "classification worksheet; not a performance benchmark",
+  "scope": "classification and state-sufficiency worksheet; not a performance benchmark",
+  "state_aliasing_case": {
+    "current_observation": "occluded-corridor",
+    "contexts": [
+      {
+        "id": "clear",
+        "history_cue": "corridor-seen-clear",
+        "action_returns": {"advance": 1.0, "hold": 0.0}
+      },
+      {
+        "id": "blocked",
+        "history_cue": "obstacle-seen-before-occlusion",
+        "action_returns": {"advance": -1.0, "hold": 0.2}
+      }
+    ]
+  },
   "cards": [
     {
       "id": "video-predictor-videogpt",

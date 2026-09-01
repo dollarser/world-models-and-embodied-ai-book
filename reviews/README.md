@@ -36,5 +36,6 @@
 - [快速演进研究雷达审查](research-radar-review-2026-09-01.md)
 - [快速演进源码不可变快照审查](immutable-source-snapshot-review-2026-09-01.md)
 - [第1章反馈、时延与动作权限边界审查](ch01-feedback-boundary-review-2026-09-01.md)
+- [第2章 state aliasing 与任务相关状态审查](ch02-state-aliasing-review-2026-09-01.md)
 
 `reviewed` 只表示正文和当前可执行路径通过内容、代码、一致性与教学审查，不自动表示 GPU、大数据或上游完整复现已经完成。
