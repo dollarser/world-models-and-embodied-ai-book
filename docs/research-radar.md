@@ -12,13 +12,14 @@
 | --- | --- | --- | --- |
 | 更大、更快的 learned simulator | [Dreamer 4](https://arxiv.org/abs/2509.24527)、[Interactive World Simulator](https://arxiv.org/abs/2603.08546) | 能否在足够长、足够快的动作条件 rollout 中训练或比较策略 | 推理实时不等于训练便宜；长视频不等于物理正确；相关性不等于绝对校准 |
 | 表征与生成接口扩展 | [V-JEPA 2.1](https://arxiv.org/abs/2603.14482)、[Cosmos 3 快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827) | dense representation 和统一 action 接口怎样服务状态估计、预测与控制 | feature 可读不等于动作转移正确；接口含 action 不等于 simulator fidelity |
-| 世界模型进入策略训练与评测 | [GE-Sim 2.0](https://arxiv.org/abs/2605.27491)、[OSCAR](https://arxiv.org/abs/2606.04463) | learned rollout、state decoder、reward/judge 和 policy update 如何组成闭环 | 每个学习组件都带来独立误差；上游真实结果不是本书复现 |
+| 世界模型进入策略训练与评测 | [GE-Sim 2.0](https://arxiv.org/abs/2605.27491)、[A2World](https://arxiv.org/abs/2606.29501)、[Riemann-1.0](https://arxiv.org/abs/2608.27033) | learned rollout、state decoder、reward/judge、policy head 和共享预训练怎样组成闭环 | 共用权重或接口不等于policy与simulator两种能力都已独立校准；上游真实结果不是本书复现 |
+| 跨本体从表示假设进入受控反例 | [OSCAR](https://arxiv.org/abs/2606.04463)、[XEWorld](https://arxiv.org/abs/2608.05799) | skeleton、pixel action或向量动作是在迁移动力学，还是只在匹配外观 | 受控失败只约束被测模型；视觉对齐不替代可执行动作、接触与动力学证据 |
 | “评测器也会错”成为显式研究对象 | [WorldArena 2.0](https://arxiv.org/abs/2605.17912)、[KineBench](https://arxiv.org/abs/2607.19876) | 模态、用途、平台与动作落地层怎样分别归因 | 更完整的 benchmark 仍有作用域；去掉 IDM 不会消除 pose extractor 和 simulator 误差 |
 | 部分可观测性从单一 mask 转向 memory-improvable 诊断 | [POBAX](https://arxiv.org/abs/2508.00046) | 更多 state 信息或 memory 是否在其他条件近似不变时关闭清晰 performance gap | 一个任务有 gap 不代表模型学会正确记忆，也不覆盖所有 state aliasing 类型 |
 
-这四行共同强化了全书主线：模型输出必须经过“表征—动作条件转移—用途—独立 outcome”逐级取证。它们没有推翻第2章的定义、第9章的评测阶梯或第17章的用途边界。
+这六行共同强化了全书主线：模型输出必须经过“表征—动作条件转移—用途—独立 outcome”逐级取证。它们没有推翻第2章的定义、第9章的评测阶梯或第17章的用途边界。
 
-## 九张活页卡
+## 十二张活页卡
 
 ### Dreamer 4：规模化想象训练
 
@@ -77,6 +78,24 @@ KineBench 针对“生成视频先经 IDM 反推动作，再进 simulator”产�
 OSCAR 用 2D kinematic skeleton 作为跨机器人/人手的动作条件，并在 Cosmos-Predict2.5 基础上训练。它为第16章提供了一个很好的假设：先把不同本体的可见运动投影到共享表示，再学习视频转移。
 
 但 skeleton 没有自动携带力、接触、关节/速度限制、控制时延和可逆 action mapping。它可以作为视觉条件对齐层，不能替代第3章动作 schema、第16章 adapter identity 或第21章执行网关。论文使用的 GH200 路径也不属于默认 24 GB 单卡实验。
+
+### XEWorld：把“未见本体”从口号变成隔离变量
+
+XEWorld在物理场景保持一致时留出整台机器人，分别检查视觉质量、机器人形态、运动学轨迹和动作—时间对齐。论文在其被测模型上报告：泛化更受视觉相似度而非运动学相似度支配；零样本渲染需要pixel-space动作与显式时空对齐；少样本恢复新外观又可能遗忘已见本体。这组设计为第16章提供了比“换个机器人测一下”更严格的反例结构。
+
+边界同样重要：这些是 `arXiv:2608.05799v1` 在指定模型和测试床上的作者结果，不是所有latent/vector action都必然失败的定理。本书没有取得版本化代码/数据或运行模型，因此当前只把协议列为正文候选，保持 `R0`。
+
+### Riemann-1.0：一个模型、两种角色仍需两套证据
+
+Riemann-1.0把多视角观测、机器人state和本体特定action放进因果自回归序列，并同时声明在线policy与action-conditioned simulator两种角色。它把第15章的可执行动作和第17章的代理仿真放到同一个接口里，因而特别适合追问：训练目标、推理路径、时延和校准是否对两种用途分别成立。
+
+截至2026-09-02，本书只核对 `arXiv:2608.27033v1`；代码、权重和数据都登记为unknown。论文中的数据规模、benchmark和真实机器人数字全部是上游报告，既不是本书结果，也不能推出24 GB路径。没有版本化资产前，该卡保持 `monitor/R0`，不进入稳定章节。
+
+### A2World：开源的是哪一段，要逐项回答
+
+A2World从action-to-video预训练出发，再分成history-aware的A2World-sim和联合video-action的A2World-policy。官方仓库快照[`077e10a`](https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834)提供Apache-2.0代码、world-model入口和部分checkpoint元数据；这让“同一动力学先验能否服务simulator与policy”有了可审计接口，而不只是摘要措辞。
+
+当前发布仍以world-model组件为重点，外部base weights、数据集、policy路径和论文结果不是一个自动闭合的复现包。本书只完成README、许可、HEAD和入口的零下载预检，没有拉取checkpoint、安装环境、运行GPU或验证24 GB适配。因此该卡是 `R1` 的资产审计，不是policy/simulator能力复现。
 
 ## 怎样决定是否更新正文
 

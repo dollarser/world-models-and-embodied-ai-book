@@ -245,6 +245,87 @@
         "Independent cross-embodiment tests separate visual alignment from executable control transfer."
       ],
       "last_verified": "2026-09-01"
+    },
+    {
+      "id": "RADAR-2026-08",
+      "title": "XEWorld Held-Out-Embodiment World-Model Testbed",
+      "chapters": [11, 16, 17, 20],
+      "book_action": "body_candidate",
+      "problem": "Test whether an action-conditioned world model transfers physical dynamics to a visually unseen robot rather than matching familiar appearance patterns.",
+      "why_it_matters": "It turns the book's cross-embodiment warning into a controlled held-out-robot protocol with separate visual, morphology, kinematic and temporal evidence.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2608.05799",
+          "kind": "paper",
+          "maturity": "A",
+          "revision": "arXiv:2608.05799v1"
+        }
+      ],
+      "assets": {"code": "unknown", "weights": "unknown", "data": "unknown"},
+      "reproduction": "R0",
+      "resource_path": "S tier audits the held-out-embodiment design and failure taxonomy. Running its reference models or few-shot adaptation remains optional and has no measured 24 GB path in this book.",
+      "scope_boundary": "The paper's reported visual-similarity bias, need for grounded cues and adaptation forgetting apply to its tested models and protocol; they are not an impossibility theorem for every representation or robot.",
+      "review_triggers": [
+        "Official code, data splits and metric implementations become publicly versioned.",
+        "Independent tests reproduce or refute the appearance-versus-kinematics diagnosis on new world models."
+      ],
+      "last_verified": "2026-09-02"
+    },
+    {
+      "id": "RADAR-2026-09",
+      "title": "Riemann-1.0 Unified Embodied World Action Model",
+      "chapters": [15, 17, 18, 20],
+      "book_action": "monitor",
+      "problem": "Unify online action generation and action-conditioned visual simulation inside one causal model trained across heterogeneous embodied data sources.",
+      "why_it_matters": "It is a recent stress test for whether a shared policy-simulator architecture actually supplies two separately calibrated capabilities or only one joint interface.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2608.27033",
+          "kind": "paper",
+          "maturity": "A",
+          "revision": "arXiv:2608.27033v1"
+        }
+      ],
+      "assets": {"code": "unknown", "weights": "unknown", "data": "unknown"},
+      "reproduction": "R0",
+      "resource_path": "S tier records the causal token interface and the separate policy and simulator claims. All reported scale, benchmark, real-robot and resource results remain upstream-only until versioned assets appear.",
+      "scope_boundary": "Jointly predicting observations, robot state and actions does not by itself prove counterfactual simulator fidelity, calibrated policy ranking, executable transfer or a 24 GB training or inference route.",
+      "review_triggers": [
+        "The authors publish versioned code, weights, data mixtures, action schemas or evaluation protocols.",
+        "Independent evaluation separates policy quality from simulator fidelity under held-out policies and tasks."
+      ],
+      "last_verified": "2026-09-02"
+    },
+    {
+      "id": "RADAR-2026-10",
+      "title": "A2World Transferable Action-to-Dynamics Prior",
+      "chapters": [11, 16, 17, 18, 20],
+      "book_action": "case_card",
+      "problem": "Reuse one action-conditioned robot-video pretraining prior as both a history-aware simulator initialization and a video-action policy initialization.",
+      "why_it_matters": "Its official repository exposes a concrete dual-use interface and partial assets, allowing the book to distinguish an open world-model path from still-separate policy and evaluation evidence.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2606.29501",
+          "kind": "paper",
+          "maturity": "A",
+          "revision": "arXiv:2606.29501v1"
+        },
+        {
+          "url": "https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834",
+          "kind": "official_repository",
+          "maturity": "O",
+          "revision": "commit 077e10ad6cee07342b5e779f11fea78247584834"
+        }
+      ],
+      "assets": {"code": "partial", "weights": "partial", "data": "partial"},
+      "reproduction": "R1",
+      "resource_path": "S tier audits the pinned Apache-2.0 repository, released world-model entrypoints and checkpoint metadata without downloading assets. Training, policy execution, datasets and any 24 GB fit remain optional and unverified.",
+      "scope_boundary": "The pinned repository currently documents a world-model-focused release; released code and checkpoints do not independently reproduce paper metrics, complete the policy path or prove simulator validity on new policies.",
+      "review_triggers": [
+        "The official repository changes the released policy path, checkpoints, licenses or data conversion contract.",
+        "A measured small configuration establishes cold-start disk, memory, wall-clock and policy-ranking evidence."
+      ],
+      "last_verified": "2026-09-02"
     }
   ]
 }
