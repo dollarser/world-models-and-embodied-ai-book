@@ -2,10 +2,38 @@
   "experiment_id": "EXP-06-01",
   "gpu_verified": false,
   "metrics": {
-    "filtering_rmse": 0.060841746232133065,
-    "open_loop_rmse": 0.33316748072297736,
-    "persistence_rmse": 0.7043701827101412,
-    "steps": 32
+    "kl_balance": {
+      "large_mismatch": {
+        "dynamics_gradient_target": "prior",
+        "dynamics_loss_nats": 1.614463080360851,
+        "dynamics_scale": 1.0,
+        "forward_values_equal": true,
+        "free_nats": 1.0,
+        "raw_kl_nats": 1.614463080360851,
+        "representation_gradient_target": "posterior",
+        "representation_loss_nats": 1.614463080360851,
+        "representation_scale": 0.1,
+        "scaled_total_loss": 1.7759093883969361
+      },
+      "small_mismatch": {
+        "dynamics_gradient_target": "prior",
+        "dynamics_loss_nats": 1.0,
+        "dynamics_scale": 1.0,
+        "forward_values_equal": true,
+        "free_nats": 1.0,
+        "raw_kl_nats": 0.005025167926750729,
+        "representation_gradient_target": "posterior",
+        "representation_loss_nats": 1.0,
+        "representation_scale": 0.1,
+        "scaled_total_loss": 1.1
+      }
+    },
+    "rollout": {
+      "filtering_rmse": 0.060841746232133065,
+      "open_loop_rmse": 0.33316748072297736,
+      "persistence_rmse": 0.7043701827101412,
+      "steps": 32
+    }
   },
   "scope": "data-flow and metric smoke; not neural training",
   "status": "smoke"

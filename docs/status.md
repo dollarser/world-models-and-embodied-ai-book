@@ -19,8 +19,8 @@
 | 第5章 预测模型的生成式基础 | `reviewed` | VAE/token/自回归/masked/diffusion/flow、五步错误诊断树、aleatoric/epistemic 边界、自动驾驶多未来与解析 fixture；四类审查通过 | 神经生成模型、图像/视频、采样性能和 GPU 未运行 |
 | EXP-05-01 | `smoke` | 10 个单元测试；点均值落在 support 外、条件 NLL 优于无条件，并区分条件忽略、mode collapse 与虚构 mode | 八个标量样本；观察 support 不等于真实连续分布 support |
 | 第9章 世界模型如何评测与失败 | `reviewed` | 正文、指标排序反转 CPU smoke、自动驾驶评测矩阵、risk–coverage/OOD 拒绝协议；机器 benchmark card 与第6/20章交叉审查 | WorldArena/KineBench 等上游未运行，机器结构不证明外部效度 |
-| 第6章正文 | `reviewed` | prior/posterior、自动驾驶正文、资源边界、CPU smoke 与冻结的 filtering/open-loop benchmark card | PyTorch mini-RSSM 与 GPU 验证 |
-| EXP-06-01 | `smoke` | 宿主与 Docker CPU 数据流、3 个单元测试、固定指标 | PyTorch 训练、24GB GPU 资源 |
+| 第6章正文 | `reviewed` | prior/posterior、DreamerV3 dyn/rep stop-gradient 路由、free-nats 日志边界、自动驾驶正文、资源边界与冻结 benchmark card | PyTorch mini-RSSM 与 GPU 验证 |
+| EXP-06-01 | `smoke` | 9 个单元测试；固定 filtering/open-loop 指标，以及 raw KL 在 free-nats 阈值两侧的解析诊断 | 不运行自动微分或神经训练，24GB GPU 资源未验证 |
 | 第7章 用模型做规划 | `reviewed` | MPC/CEM/tree search/value equivalence、自动驾驶候选轨迹与延迟回报 fixture；四类审查通过 | learned model、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
 | EXP-07-01 | `smoke` | 7 个单元测试；H=1/3、terminal value、扰动重规划和受限 Bellman gap | 三状态已知规则，不是 learned planning 性能 |
 | 第8章 在想象中学习 | `reviewed` | Dreamer V1–V4 谱系、λ-return、continuation、terminated/truncated bootstrap、误差传播、自动驾驶正文与四类审查 | world model、actor/critic 训练、上游 checkpoint、仿真和 GPU 未运行 |
@@ -51,6 +51,6 @@
 | EXP-21-01 | `smoke` | 9 个单元测试；mean 45 ms 掩盖 150 ms 尾部，六类异常分别拒绝；两个阈值展示 coverage—failure 取舍 | 手工 latency/packet/score/label，不是实时、OOD 或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 12 个单元测试；完整包 5 段 trace/0 issue，无效包 16 个具名 issue，缺段与错误依赖被拒绝 | metadata 图检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、172 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、178 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

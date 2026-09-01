@@ -18,8 +18,14 @@ def main() -> int:
     trajectory = generate_trajectory(steps=32, seed=7)
     metrics = evaluate(ToyRSSM(), trajectory)
 
-    if not metrics["open_loop_rmse"] > metrics["filtering_rmse"]:
+    if not metrics["rollout"]["open_loop_rmse"] > metrics["rollout"]["filtering_rmse"]:
         raise AssertionError("open-loop RMSE should exceed filtering RMSE in the fixture")
+    small = metrics["kl_balance"]["small_mismatch"]
+    large = metrics["kl_balance"]["large_mismatch"]
+    if not small["raw_kl_nats"] < small["free_nats"]:
+        raise AssertionError("small KL mismatch should fall below the free-nats threshold")
+    if not large["raw_kl_nats"] > large["free_nats"]:
+        raise AssertionError("large KL mismatch should exceed the free-nats threshold")
 
     report = {
         "experiment_id": "EXP-06-01",

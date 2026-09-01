@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 import random
-from typing import Iterable
+from typing import Iterable, Sequence
 
 
 @dataclass(frozen=True)
@@ -35,6 +35,12 @@ class ToyRSSM:
     """A tiny action-conditioned predict/correct state-space model."""
 
     def __init__(self, observation_gain: float = 0.65, velocity_gain: float = 0.18):
+        if isinstance(observation_gain, bool) or not isinstance(observation_gain, (int, float)):
+            raise ValueError("observation_gain must be a finite real number")
+        if isinstance(velocity_gain, bool) or not isinstance(velocity_gain, (int, float)):
+            raise ValueError("velocity_gain must be a finite real number")
+        if not math.isfinite(observation_gain) or not math.isfinite(velocity_gain):
+            raise ValueError("gains must be finite")
         if not 0.0 <= observation_gain <= 1.0:
             raise ValueError("observation_gain must be in [0, 1]")
         if not 0.0 <= velocity_gain <= 1.0:
@@ -62,8 +68,12 @@ class ToyRSSM:
 def generate_trajectory(steps: int = 32, seed: int = 7) -> Trajectory:
     """Generate a tiny partially observed, action-conditioned trajectory."""
 
+    if isinstance(steps, bool) or not isinstance(steps, int):
+        raise ValueError("steps must be an integer")
     if steps < 4:
         raise ValueError("steps must be at least 4")
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("seed must be an integer")
 
     rng = random.Random(seed)
     position = 0.0
@@ -91,10 +101,85 @@ def rmse(errors: Iterable[float]) -> float:
     values = tuple(errors)
     if not values:
         raise ValueError("rmse requires at least one value")
+    if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in values):
+        raise ValueError("rmse values must be real numbers")
+    if not all(math.isfinite(value) for value in values):
+        raise ValueError("rmse values must be finite")
     return math.sqrt(sum(value * value for value in values) / len(values))
 
 
-def evaluate(model: ToyRSSM, trajectory: Trajectory) -> dict[str, float | int]:
+def _probability_vector(values: Sequence[float], name: str) -> tuple[float, ...]:
+    if isinstance(values, (str, bytes)):
+        raise ValueError(f"{name} must be a probability vector")
+    try:
+        vector = tuple(values)
+    except TypeError as error:
+        raise ValueError(f"{name} must be a probability vector") from error
+    if len(vector) < 2:
+        raise ValueError(f"{name} must contain at least two categories")
+    if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in vector):
+        raise ValueError(f"{name} values must be real numbers")
+    if not all(math.isfinite(value) and value > 0.0 for value in vector):
+        raise ValueError(f"{name} values must be finite and strictly positive")
+    if not math.isclose(sum(vector), 1.0, rel_tol=0.0, abs_tol=1e-9):
+        raise ValueError(f"{name} must sum to one")
+    return tuple(float(value) for value in vector)
+
+
+def categorical_kl(posterior: Sequence[float], prior: Sequence[float]) -> float:
+    """Return KL(posterior || prior) in nats for a finite categorical state."""
+
+    posterior_vector = _probability_vector(posterior, "posterior")
+    prior_vector = _probability_vector(prior, "prior")
+    if len(posterior_vector) != len(prior_vector):
+        raise ValueError("posterior and prior must have the same number of categories")
+    return sum(
+        posterior_probability * math.log(posterior_probability / prior_probability)
+        for posterior_probability, prior_probability in zip(posterior_vector, prior_vector)
+    )
+
+
+def kl_balance_diagnostic(
+    prior: Sequence[float],
+    posterior: Sequence[float],
+    *,
+    free_nats: float = 1.0,
+    dynamics_scale: float = 1.0,
+    representation_scale: float = 0.1,
+) -> dict[str, float | str | bool]:
+    """Expose Dreamer-style KL routing without pretending to compute gradients.
+
+    Stop-gradient changes which parameters receive gradients, not the forward KL
+    value. This fixture therefore reports the two gradient targets explicitly.
+    """
+
+    for name, value in (
+        ("free_nats", free_nats),
+        ("dynamics_scale", dynamics_scale),
+        ("representation_scale", representation_scale),
+    ):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"{name} must be a finite non-negative real number")
+        if not math.isfinite(value) or value < 0.0:
+            raise ValueError(f"{name} must be a finite non-negative real number")
+
+    raw_kl = categorical_kl(posterior, prior)
+    clamped_kl = max(raw_kl, float(free_nats))
+    return {
+        "raw_kl_nats": raw_kl,
+        "free_nats": float(free_nats),
+        "dynamics_loss_nats": clamped_kl,
+        "representation_loss_nats": clamped_kl,
+        "dynamics_scale": float(dynamics_scale),
+        "representation_scale": float(representation_scale),
+        "scaled_total_loss": dynamics_scale * clamped_kl + representation_scale * clamped_kl,
+        "forward_values_equal": True,
+        "dynamics_gradient_target": "prior",
+        "representation_gradient_target": "posterior",
+    }
+
+
+def evaluate(model: ToyRSSM, trajectory: Trajectory) -> dict[str, object]:
     """Compare observation-corrected filtering and open-loop priors."""
 
     initial = LatentState(position=trajectory.observations[0], velocity=0.0)
@@ -116,8 +201,14 @@ def evaluate(model: ToyRSSM, trajectory: Trajectory) -> dict[str, float | int]:
         persistence_errors.append(trajectory.observations[index - 1] - truth)
 
     return {
-        "steps": len(trajectory.positions),
-        "filtering_rmse": rmse(filtering_errors),
-        "open_loop_rmse": rmse(open_loop_errors),
-        "persistence_rmse": rmse(persistence_errors),
+        "rollout": {
+            "steps": len(trajectory.positions),
+            "filtering_rmse": rmse(filtering_errors),
+            "open_loop_rmse": rmse(open_loop_errors),
+            "persistence_rmse": rmse(persistence_errors),
+        },
+        "kl_balance": {
+            "small_mismatch": kl_balance_diagnostic((0.55, 0.45), (0.5, 0.5)),
+            "large_mismatch": kl_balance_diagnostic((0.99, 0.01), (0.5, 0.5)),
+        },
     }

@@ -3,21 +3,23 @@
   "id": "EXP-06-01",
   "chapter": 6,
   "status": "smoke",
-  "claim_ids": ["CLAIM-06-01", "CLAIM-06-02", "CLAIM-06-03", "CLAIM-06-04"],
+  "claim_ids": ["CLAIM-06-01", "CLAIM-06-02", "CLAIM-06-03", "CLAIM-06-04", "CLAIM-06-05", "CLAIM-06-06"],
   "benchmark_ids": ["BENCH-06-01"],
   "claim_scope": [
     "prior uses history and action",
     "posterior uses observations for correction",
-    "open-loop and filtering metrics are evaluated separately"
+    "open-loop and filtering metrics are evaluated separately",
+    "Dreamer-style stop-gradient routes share a forward KL value but name different gradient targets",
+    "free-nats arithmetic is checked on both sides of the threshold"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library fixture embedded in scripts/smoke.py"
+    "config": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py fixture-v2 defaults"
   },
   "data": {
     "name": "procedural 1D partially observed trajectory",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -39,13 +41,19 @@
   "metrics": [
     {"name": "filtering_rmse", "value": 0.060841746232133065, "unit": "position", "split": "procedural-fixture"},
     {"name": "open_loop_rmse", "value": 0.33316748072297736, "unit": "position", "split": "procedural-fixture"},
-    {"name": "persistence_rmse", "value": 0.7043701827101412, "unit": "position", "split": "procedural-fixture"}
+    {"name": "persistence_rmse", "value": 0.7043701827101412, "unit": "position", "split": "procedural-fixture"},
+    {"name": "small_raw_kl", "value": 0.005025167926750729, "unit": "nat", "split": "analytic-fixture"},
+    {"name": "small_free_nats_loss", "value": 1.0, "unit": "nat", "split": "analytic-fixture"},
+    {"name": "large_raw_kl", "value": 1.614463080360851, "unit": "nat", "split": "analytic-fixture"},
+    {"name": "large_weighted_loss", "value": 1.7759093883969361, "unit": "weighted-nat", "split": "analytic-fixture"}
   ],
   "artifacts": [
     "results/ch06/EXP-06-01-smoke.json"
   ],
   "limitations": [
     "not a neural RSSM",
+    "gradient targets are contract labels; the standard-library fixture does not run automatic differentiation",
+    "the KL examples are authored binary distributions rather than learned latents",
     "does not validate training convergence or paper scores",
     "does not validate GPU memory or runtime"
   ]

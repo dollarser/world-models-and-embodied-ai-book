@@ -1,10 +1,10 @@
 # 第6章 World Models 与循环状态空间模型
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-06-01`
-> 关联声明：`CLAIM-06-01`～`CLAIM-06-04`
-> 关联图表：`FIG-06-01` / `TAB-06-01`
+> 关联声明：`CLAIM-06-01`～`CLAIM-06-06`
+> 关联图表：`FIG-06-01` / `TAB-06-01` / `TAB-06-02`
 > 资源档位：S / M / L1
 > 当前验证：标准库 CPU smoke；完整训练与 GPU 资源待验证
 
@@ -109,6 +109,26 @@ flowchart LR
 
 这个式子不是说所有实现都必须重建像素。`L_obs` 也可以是特征预测或其他表征目标。真正要问的是：状态丢掉的信息是否会改变后续动作选择？如果模型生成的杯子纹理不够逼真但仍能正确预测可抓取区域，它可能对控制足够有用；反过来，画面很漂亮却漏掉速度或接触状态，规划就会失败。
 
+### KL 数值相同，不代表梯度流向相同
+
+上面的单项 KL 适合建立直觉，却隐藏了现代实现中的梯度路由。以 2026-09-01 核查的 [DreamerV3 官方 `rssm.py`](https://github.com/danijar/dreamerv3/blob/main/dreamerv3/rssm.py) 为例，代码把同一个前向 KL 拆为两项：
+
+\[
+\mathcal{L}_{dyn}=\max\!\left(\tau,
+D_{KL}\!\left(\operatorname{sg}(q)\,\|\,p\right)\right)
+\]
+
+\[
+\mathcal{L}_{rep}=\max\!\left(\tau,
+D_{KL}\!\left(q\,\|\,\operatorname{sg}(p)\right)\right)
+\]
+
+其中 `sg` 是 stop-gradient，`τ` 是 `free_nats`。两项的前向数值相同，但 `L_dyn` 让 prior/dynamics 追随冻结的 posterior，`L_rep` 让 posterior/encoder 追随冻结的 prior。当前官方默认配置把 `free_nats` 设为 1.0，并在总损失中给 dynamics 与 representation 项分别乘 1.0 和 0.1；这是[当前仓库配置](https://github.com/danijar/dreamerv3/blob/main/dreamerv3/configs.yaml)的实现事实，不是 RSSM 定义，也不应外推到 PlaNet、DreamerV1/V2 或其他复现。
+
+`free_nats` 还容易被日志误读：`max(raw_KL, τ)` 会让阈值以下的报告值停在 `τ`，但该常数区的 KL 梯度为零（边界点除外）。因此“KL loss 显示为 1”不能单独证明 prior 与 posterior 仍在被该项拉近，必须同时查看 raw KL、阈值、权重和梯度路由。
+
+`CLAIM-06-05`（fact）：当前 DreamerV3 官方实现的 dynamics/representation KL 在前向计算中数值相同，但 stop-gradient 使二者更新不同参数；`free_nats` 又使阈值以下的 KL 成为常数区。该结论描述核查日期下的实现，而不是所有 RSSM 的必备形式。
+
 ## 6.5 训练数据流与想象数据流
 
 训练时，posterior 可以持续看到真实观测：
@@ -142,11 +162,13 @@ DreamerV2 进一步采用离散潜变量处理 Atari 等任务；DreamerV3 后�
 
 ## 6.7 EXP-06-01：RSSM 数据流 CPU smoke
 
-当前配套实验不是神经网络训练。它使用一个带位置、速度和观测噪声的一维程序化系统，以及一个教学版“预测—观测修正”状态更新器，验证三件事：
+当前配套实验不是神经网络训练。它使用一个带位置、速度和观测噪声的一维程序化系统、一个教学版“预测—观测修正”状态更新器，以及二分类分布的解析 KL，验证五件事：
 
 1. 动作参与 prior 更新；
 2. posterior 使用新观测修正状态；
 3. 拿走未来观测后，多步 prior 误差通常比持续观测修正更快累积。
+4. stop-gradient 不改变 dynamics/representation KL 的前向数值；
+5. `free_nats` 能区分阈值以下的常数区与阈值以上的失配。
 
 本地命令：
 
@@ -161,7 +183,7 @@ Docker 优先命令：
 make ch06-smoke
 ```
 
-该 smoke 只依赖 Python 标准库，不下载数据或模型。输出包含 filtering、open-loop 和 persistence 三类 RMSE。它验证的是接口和评测协议，不证明 RSSM 已经学会环境，也不能升级为 PlaNet/Dreamer 复现结果。
+该 smoke 只依赖 Python 标准库，不下载数据或模型。输出包含 filtering、open-loop 和 persistence 三类 RMSE，以及两组 KL 诊断。它验证的是接口、前向算术和评测协议，不计算真实梯度，不证明 RSSM 已经学会环境，也不能升级为 PlaNet/Dreamer 复现结果。
 
 本轮基线使用 seed 7 的 32 步程序化轨迹，宿主 Python 与 CPU Docker 输出一致：
 
@@ -179,6 +201,15 @@ make ch06-smoke
 
 `CLAIM-06-03`（result）：在 `EXP-06-01` 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
 
+| posterior / prior | raw KL（nat） | `free_nats` 后的 dyn/rep 值 | 权重后总值 |
+| --- | ---: | ---: | ---: |
+| `(0.5,0.5)` / `(0.55,0.45)` | 0.005025 | 1.000000 / 1.000000 | 1.100000 |
+| `(0.5,0.5)` / `(0.99,0.01)` | 1.614463 | 1.614463 / 1.614463 | 1.775909 |
+
+*TAB-06-02：`EXP-06-01` 的解析 KL 阈值反例。权重采用核查日期下官方配置的 dyn=1.0、rep=0.1；数值不包含神经网络或自动微分。*
+
+`CLAIM-06-06`（result）：`EXP-06-01` 中，小失配 raw KL 约为 0.005，在 `free_nats=1` 时进入常数区；大失配 raw KL 约为 1.614，超过阈值。该结果只验证阈值算术，梯度接收方由合同标签表达而非由本实验测量。
+
 ## 6.8 一个必须保留的反例
 
 假设模型每一步都能看到真实观测，并把 90% 的新观测直接写入状态。它的 one-step 误差可能很低，但这主要证明观测修正有效。一旦规划器要求模型独立预测未来二十步，误差仍会迅速增长。
@@ -188,6 +219,7 @@ make ch06-smoke
 ## 6.9 失效模式
 
 - **posterior collapse**：随机状态不携带有效信息，解码器主要依赖确定性路径；
+- **KL 日志误读**：只看阈值后的 loss，无法判断 raw KL 是否低于 free-nats，也无法判断哪条梯度路径主导训练；
 - **复合误差**：训练分布主要来自真实历史，想象轨迹逐步偏离该分布；
 - **遗漏任务变量**：像素损失鼓励保存纹理，却忽略速度、接触或遮挡状态；
 - **错误不确定性**：单一平均未来掩盖多种可能结果；
@@ -211,7 +243,7 @@ make ch06-smoke
 | 类型 | 声明/结果 | 来源或实验 ID | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 外部方法 | RSSM 区分历史转移与观测修正 | PlaNet/Dreamer 系列论文 | `[P/A]` | 具体实现和目标函数不同 |
-| 本书结果 | open-loop 误差高于 filtering 误差 | `EXP-06-01` | CPU smoke | 手工状态更新器，不是神经训练 |
+| 本书结果 | open-loop 误差高于 filtering；KL 阈值两侧算术 | `EXP-06-01` | CPU smoke | 手工状态更新器与解析分布，不是神经训练或梯度验证 |
 | 未验证 | mini-RSSM 在目标任务上的收敛与资源 | 无 | pending | 当前无 GPU，尚未实现训练 |
 
 S 档 smoke 使用 MIT 许可的程序化一维 fixture、Python 标准库和 CPU，下载量为 0。M 档未来实现小型 PyTorch RSSM，默认上限为 24 GB 单卡；L1 只用于经过资源审计的官方 debug 配置。当前不购置硬件，也不从 smoke 推断 GPU 显存、训练时间或收敛。
@@ -224,8 +256,10 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 
 1. **概念判断**：一个只接收过去图像、不接收动作的视频预测器是否满足本书的世界模型工作定义？给出条件化回答。
 2. **代码实验**：调整 `observation_gain`，观察 filtering RMSE 和 open-loop RMSE 是否同步变化，并解释原因。
-3. **反例设计**：构造一种画面预测误差下降但控制所需状态变差的情况。
-4. **迁移分析**：在自动驾驶中，哪些变量可能无法从单帧 RGB 唯一确定？它们分别会影响哪类动作？
+3. **梯度判断**：在不运行代码的情况下，分别说明 `KL(sg(q)‖p)` 与 `KL(q‖sg(p))` 会更新谁；为什么两个日志值可能完全相同？
+4. **阈值分析**：将 `free_nats` 改为 0、0.5 和 2，画出 raw KL 到报告 loss 的分段函数，并标出常数区。
+5. **反例设计**：构造一种画面预测误差下降但控制所需状态变差的情况。
+6. **迁移分析**：在自动驾驶中，哪些变量可能无法从单帧 RGB 唯一确定？它们分别会影响哪类动作？
 
 ## 延伸阅读
 

@@ -15,5 +15,6 @@
 - [第4/8/20章结束语义与评测分母交叉审查](episode-end-semantics-review-2026-09-01.md)
 - [第22章跨章证据 Trace 审查](capstone-traceability-review-2026-09-01.md)
 - [第13章执行时域与时间集成审查](ch13-execution-temporal-review-2026-09-01.md)
+- [第6章 KL 路由与 free-nats 审查](ch06-kl-routing-review-2026-09-01.md)
 
 `reviewed` 只表示正文和当前可执行路径通过内容、代码、一致性与教学审查，不自动表示 GPU、大数据或上游完整复现已经完成。
