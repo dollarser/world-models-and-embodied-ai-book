@@ -49,6 +49,8 @@ MERMAID_ACC_TITLE_PATTERN = re.compile(r"^\s*accTitle:\s*(FIG-(\d{2})-(\d{2}))\s
 MERMAID_ACC_DESCR_PATTERN = re.compile(r"^\s*accDescr:\s*(.+)$", re.MULTILINE)
 FENCED_BLOCK_PATTERN = re.compile(r"^```[^\n]*\n.*?^```\s*$", re.MULTILINE | re.DOTALL)
 HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
+PRD_CHAPTER_HEADING_PATTERN = re.compile(r"^#### 第(\d+)章[^\n]*$", re.MULTILINE)
+EXPERIMENT_ID_PATTERN = re.compile(r"\bEXP-\d{2}-\d{2}\b")
 REQUIRED_CHAPTER_SECTIONS = ("本章契约", "小结", "练习", "延伸阅读", "验收与审查记录")
 REQUIRED_READER_TERMS = (
     "RSSM",
@@ -530,8 +532,54 @@ def check_prd_chapters() -> list[str]:
     prd = ROOT / "specs/PRD/世界模型与具身智能_书籍设计方案-v0_6.md"
     if not prd.is_file():
         return ["missing v0.6 PRD"]
-    chapter_count = len(re.findall(r"^#### 第\d+章", prd.read_text(encoding="utf-8"), re.MULTILINE))
-    return [] if chapter_count == 22 else [f"expected 22 PRD chapters, found {chapter_count}"]
+    prd_text = prd.read_text(encoding="utf-8")
+    chapter_count = len(PRD_CHAPTER_HEADING_PATTERN.findall(prd_text))
+    errors = [] if chapter_count == 22 else [f"expected 22 PRD chapters, found {chapter_count}"]
+    manifest_path = ROOT / "specs/book-manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return errors
+    chapter_experiments = {
+        chapter["number"]: chapter.get("experiments", [])
+        for chapter in manifest.get("chapters", [])
+        if isinstance(chapter, dict) and isinstance(chapter.get("number"), int)
+    }
+    return errors + check_prd_experiment_tiers(prd_text, chapter_experiments)
+
+
+def check_prd_experiment_tiers(prd_text: str, chapter_experiments: dict[int, object]) -> list[str]:
+    """Keep PRD S-tier delivery claims aligned with manifest experiments and optional upgrades."""
+
+    errors: list[str] = []
+    headings = list(PRD_CHAPTER_HEADING_PATTERN.finditer(prd_text))
+    sections = {
+        int(match.group(1)): prd_text[match.end() : headings[index + 1].start() if index + 1 < len(headings) else len(prd_text)]
+        for index, match in enumerate(headings)
+    }
+    for chapter_number, registered_experiments in chapter_experiments.items():
+        if not isinstance(registered_experiments, list) or any(
+            not isinstance(item, str) for item in registered_experiments
+        ):
+            errors.append(f"chapter {chapter_number} manifest experiments must be a list of strings")
+            continue
+        section = sections.get(chapter_number)
+        if section is None:
+            errors.append(f"PRD has no detailed section for chapter {chapter_number}")
+            continue
+        for experiment_id in registered_experiments:
+            marker = f"- S 档（已交付，`{experiment_id}`）："
+            if marker not in section:
+                errors.append(f"PRD chapter {chapter_number} does not mark delivered S-tier experiment: {experiment_id}")
+        documented_ids = set(EXPERIMENT_ID_PATTERN.findall(section))
+        registered_ids = set(registered_experiments)
+        for experiment_id in sorted(documented_ids - registered_ids):
+            errors.append(f"PRD chapter {chapter_number} documents unregistered experiment: {experiment_id}")
+        if re.search(r"^- M(?:/L)? 档（可选待验证）：", section, re.MULTILINE) is None:
+            errors.append(f"PRD chapter {chapter_number} has no optional pending M/L upgrade path")
+        if re.search(r"^- 实验：", section, re.MULTILINE):
+            errors.append(f"PRD chapter {chapter_number} contains an un-tiered experiment description")
+    return errors
 
 
 def check_glossary_files() -> list[str]:
@@ -634,7 +682,7 @@ def main() -> int:
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
         "heading hierarchy, chapter teaching sections, reader terminology, fact/inference evidence, critical "
         "recommendation policy, manifest, "
-        "local links, 22-chapter PRD"
+        "local links, 22-chapter PRD tier mapping"
     )
     return 0
 

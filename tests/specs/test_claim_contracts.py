@@ -12,6 +12,7 @@ from scripts.check_book import (
     check_heading_hierarchy,
     check_inference_evidence_contract,
     check_mermaid_accessibility,
+    check_prd_experiment_tiers,
 )
 
 
@@ -310,6 +311,32 @@ class CriticalRecommendationContractTest(unittest.TestCase):
         errors = check_critical_recommendation_contract({"CLAIM-21-05"}, registry)
         self.assertTrue(any("non-recommendation or missing claim" in item for item in errors))
         self.assertTrue(any("fallback_or_stop" in item for item in errors))
+
+
+class PrdExperimentTierContractTest(unittest.TestCase):
+    def test_accepts_delivered_s_tier_and_optional_upgrade(self) -> None:
+        text = "\n".join(
+            [
+                "#### 第1章 Entry",
+                "- S 档（已交付，`EXP-01-01`）：fixed CPU fixture.",
+                "- M 档（可选待验证）：learned model in simulation.",
+            ]
+        )
+        self.assertEqual([], check_prd_experiment_tiers(text, {1: ["EXP-01-01"]}))
+
+    def test_rejects_unregistered_and_untiered_experiments(self) -> None:
+        text = "\n".join(
+            [
+                "#### 第1章 Entry",
+                "- 实验：run the planned model.",
+                "- S 档（已交付，`EXP-01-02`）：stale experiment.",
+            ]
+        )
+        errors = check_prd_experiment_tiers(text, {1: ["EXP-01-01"]})
+        self.assertTrue(any("does not mark delivered S-tier" in item for item in errors))
+        self.assertTrue(any("unregistered experiment" in item for item in errors))
+        self.assertTrue(any("no optional pending M/L" in item for item in errors))
+        self.assertTrue(any("un-tiered experiment" in item for item in errors))
 
 
 if __name__ == "__main__":
