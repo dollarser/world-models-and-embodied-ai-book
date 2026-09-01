@@ -3,7 +3,7 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-09-01`
-> 关联声明：`CLAIM-09-01`～`CLAIM-09-05`
+> 关联声明：`CLAIM-09-01`～`CLAIM-09-06`
 > 关联图表：`FIG-09-01`
 > 资源档位：S / M
 > GPU 状态：不需要
@@ -164,6 +164,14 @@ make ch09-smoke
 
 随机测试常常找不到规划器最容易利用的错误。更有效的方法是让规划器对模型做压力搜索，再把选出的动作序列送回真实仿真器或保留集验证。
 
+### 9.7.1 OOD 分数要用选择性风险评测
+
+OOD AUROC 回答分数能否把两个冻结总体排序，却没有直接回答“执行多少、留下多少失败”。对会拒绝或降级的系统，还应扫描阈值并报告：coverage、接受样本 risk、危险失败被拒绝的 recall、误拒绝成本，以及 fallback 后的最终任务/安全结果。第21章给出可执行定义和 `EXP-21-01` 手工反例。
+
+阈值必须在 calibration split 上选择，再在未参与调参的 ID、shift、OOD/stress 和不同严重度分桶上冻结评估。若没有接受样本，selective risk 未定义；若分数只在合成 OOD 上有效，也不能宣称覆盖真实未知。一个 estimator 还可能把常见失败排在低不确定性端，因此“coverage 降低”不保证 risk 单调改善。
+
+`CLAIM-09-06`（recommendation）：用于动作拒绝的 uncertainty/OOD score 应报告完整 risk–coverage 关系、预注册工作点、分桶失败捕获率与 fallback 后果，并保存分数方向、估计器版本和校准数据；单一 AUROC 或拒绝率不能替代部署用途证据。
+
 ## 9.8 自动驾驶：开环分数不能替代闭环安全证据
 
 自动驾驶视频预测可以用图像质量、轨迹误差和对象一致性做开环诊断，但车辆最终执行的是转向、制动和加速。相同的平均轨迹误差，可能分别发生在空旷直道和行人横穿时；安全含义完全不同。
@@ -195,6 +203,7 @@ make ch09-smoke
 硬件、时延、显存、磁盘和失败日志
 均值、离散程度、置信区间与逐任务结果
 OOD、拒绝、安全层和人工干预协议
+uncertainty/OOD score 定义、方向、估计器版本、calibration split、risk–coverage 与 fallback 后果
 ```
 
 综合分数可用于浏览排行榜，但发布时必须保留分项结果。权重会把价值判断藏进公式：一个重视视觉质量的综合分数，不适合直接选择安全关键规划器。
@@ -209,6 +218,7 @@ OOD、拒绝、安全层和人工干预协议
 | 外部案例 | KineBench 显式移除额外 IDM 的归因混淆 | arXiv:2607.19876 | `[P,R0]` | 本书未运行，仅限论文设置 |
 | 外部案例 | 幻觉与覆盖缺口可被量化关联 | arXiv:2606.27326 | `[A,R0]` | 仅限论文设置 |
 | 方法建议 | 决策用途至少需要干预与功能评测 | 本章综合 | recommendation | 尚无单一通用协议 |
+| 方法建议 | OOD 执行门报告 risk–coverage 与 fallback 后果 | 本章/第21章 | recommendation | 分数本身可能失准 |
 
 ### 资源、数据与许可
 
@@ -232,6 +242,8 @@ OOD、拒绝、安全层和人工干预协议
 - Shang et al., [WorldArena 官方仓库](https://github.com/tsinghua-fib-lab/WorldArena)，`[O,R1]`，感知与功能评测案例；
 - [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 与[官方项目页](https://v2.world-arena.ai/)，`[P/O,R0–R1]`，多模态、多用途和多平台评测案例；
 - [KineBench](https://arxiv.org/abs/2607.19876)，`[P,R0]`，避免额外 inverse dynamics model 混淆的闭环评测案例；
+- Geifman & El-Yaniv, [Selective Classification for Deep Neural Networks](https://arxiv.org/abs/1705.08500)，`[P]`，risk–coverage 基础；
+- Traub et al., [Overcoming Common Flaws in the Evaluation of Selective Classification Systems](https://arxiv.org/abs/2407.01032)，`[P]`，选择性评测常见指标缺陷；
 - Hansen & Wang, [Hallucination in World Models is Predictable and Preventable](https://arxiv.org/abs/2606.27326)，`[A,R0]`，特定设置下的幻觉量化案例；
 - Zhang et al., [The Unreasonable Effectiveness of Deep Features as a Perceptual Metric](https://arxiv.org/abs/1801.03924)，`[P]`，LPIPS；
 - Unterthiner et al., [Towards Accurate Generative Models of Video](https://arxiv.org/abs/1812.01717)，`[A]`，FVD。

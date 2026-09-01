@@ -43,9 +43,16 @@
           "stale_observation"
         ],
         "selected_mode": "hold_position"
+      },
+      "uncertain": {
+        "allowed": false,
+        "reasons": [
+          "uncertainty_exceeds_limit"
+        ],
+        "selected_mode": "hold_position"
       }
     },
-    "fallback_count": 5,
+    "fallback_count": 6,
     "fallback_is_profile_specific": {
       "manipulator": "hold_position",
       "mobile_robot": "controlled_stop",
@@ -64,7 +71,20 @@
       "action_out_of_bounds": 1,
       "deadline_miss": 1,
       "invalid_action": 1,
-      "stale_observation": 1
+      "stale_observation": 1,
+      "uncertainty_exceeds_limit": 1
+    },
+    "selective_evaluation": {
+      "threshold_0_5": {
+        "accepted_failure_rate": 0.0,
+        "coverage": 0.5,
+        "failure_recall_by_rejection": 1.0
+      },
+      "threshold_0_7": {
+        "accepted_failure_rate": 0.25,
+        "coverage": 0.666667,
+        "failure_recall_by_rejection": 0.666667
+      }
     }
   },
   "scope": "deadline and action-gate fixture; not real-time, safety, or deployment certification",

@@ -20,8 +20,13 @@ def main() -> int:
         raise AssertionError("the fixture mean must pass the deadline")
     if metrics["latency"]["all_cycles_meet_deadline"]:
         raise AssertionError("the fixture tail must include a deadline miss")
-    if metrics["allowed_count"] != 1 or metrics["fallback_count"] != 5:
+    if metrics["allowed_count"] != 1 or metrics["fallback_count"] != 6:
         raise AssertionError("the deployment gate fixture changed")
+    selective = metrics["selective_evaluation"]
+    if selective["threshold_0_5"]["coverage"] >= selective["threshold_0_7"]["coverage"]:
+        raise AssertionError("the permissive threshold must increase fixture coverage")
+    if selective["threshold_0_5"]["accepted_failure_rate"] >= selective["threshold_0_7"]["accepted_failure_rate"]:
+        raise AssertionError("the permissive threshold must expose the fixture risk tradeoff")
     report = {
         "experiment_id": "EXP-21-01",
         "status": "smoke",

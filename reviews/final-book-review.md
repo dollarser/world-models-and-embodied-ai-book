@@ -22,7 +22,7 @@
 
 ## 3. 代码审查
 
-终审当时四章共 29 个单元测试、全书 136 个。2026-09-01 两轮内容增强分别为第20章增加 3 个统计边界测试、为第5章增加 3 个生成分布诊断测试；当前第5章为 10 个，全书为 142 个，详见 `reviews/content-enrichment-review-2026-09-01.md` 与 `reviews/ch05-diagnostic-review-2026-09-01.md`。`check_results.py` 逐章执行 smoke，并与实验卡登记的 22 个结果 JSON 做结构和值精确比较；实验卡只声明解析/手工 fixture 的结果。
+终审当时四章共 29 个单元测试、全书 136 个。2026-09-01 三轮内容增强分别为第20章增加 3 个统计边界测试、为第5章增加 3 个生成分布诊断测试、为第21章增加 2 个 uncertainty gate/risk–coverage 测试；当前全书为 144 个，详见 `reviews/content-enrichment-review-2026-09-01.md`、`reviews/ch05-diagnostic-review-2026-09-01.md` 与 `reviews/uncertainty-gate-review-2026-09-01.md`。`check_results.py` 逐章执行 smoke，并与实验卡登记的 22 个结果 JSON 做结构和值精确比较；实验卡只声明解析/手工 fixture 的结果。
 
 终审修复两类输入合同，但固定指标未改变：
 

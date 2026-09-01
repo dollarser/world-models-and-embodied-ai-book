@@ -29,6 +29,8 @@
 | 模型利用（model exploitation） | 规划器主动选择模型错误预测为高回报的区域 | 不只是通常意义的训练过拟合 | [第9章](part-02-world-models/ch09-evaluation.md) |
 | aleatoric 不确定性 | 给定完整任务条件后仍存在的结果随机性或多模态性 | 不等于模型不知道 | [第5章](part-02-world-models/ch05-generative-foundations.md) |
 | epistemic 不确定性 | 数据覆盖、参数或模型知识不足造成的不确定性 | 单个模型重复采样不会自动暴露它 | [第5章](part-02-world-models/ch05-generative-foundations.md) |
+| selective coverage / risk | 拒绝阈值下被接受的样本比例 / 只在接受样本上计算的风险 | 不等于置信区间 coverage；零接受时 risk 未定义 | [第9章](part-02-world-models/ch09-evaluation.md) |
+| risk–coverage curve | 扫描冻结不确定性阈值得到的 coverage 与接受样本风险关系 | 不等于单个 AUROC 或拒绝率 | [第21章](part-06-systems/ch21-deployment-realtime-and-safety.md) |
 | JEPA | 从上下文预测目标区域表示的联合嵌入预测架构族 | 不等于所有无像素解码器的编码器 | [第10章](part-03-representations/ch10-jepa-representations.md) |
 | probe | 在冻结或受限表征上训练的诊断读出器 | probe 成功不证明策略会使用该信息 | [第10章](part-03-representations/ch10-jepa-representations.md) |
 | Sim2Real | 从仿真训练或验证迁移到真实系统的过程 | 仿真高分不是实机高分的保证 | [第19章](part-06-systems/ch19-physical-simulation-and-sim2real.md) |

@@ -41,6 +41,9 @@
 | counterfactual | 固定历史与其余条件、只改变干预变量所得的替代未来 | 任意随机生成的另一段视频 |
 | aleatoric 不确定性 | 在给定完整任务条件下仍存在的结果随机性或多模态性 | 模型因数据不足而不知道 |
 | epistemic 不确定性 | 由数据覆盖、参数或模型知识不足引起、原则上可随证据增加而降低的不确定性 | 单个模型多采样得到的多样性 |
+| selective coverage | 在给定拒绝阈值下被系统接受并继续执行/预测的样本比例 | 置信区间覆盖率或任务成功率 |
+| selective risk | 只在被接受样本上计算的预注册损失或 failure rate | 全体样本风险；零 coverage 时该值未定义 |
+| risk–coverage curve | 扫描冻结拒绝分数阈值得到的 selective risk 与 coverage 关系 | 单个阈值、AUROC 或拒绝率 |
 | Diffusion Policy | 在观测条件下通过动作去噪过程采样动作或动作块的策略族 | 任意含噪训练或图像扩散模型 |
 | Flow Matching | 通过回归条件向量场连接 base 与目标分布的生成建模方法 | 自动等于一步采样或 rectified flow |
 | prediction horizon | 策略一次预测的未来动作长度 | 实际盲执行的动作步数 |
