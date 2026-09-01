@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite, sqrt
 
 
 GOAL_POSITION = 4
@@ -14,6 +15,18 @@ class State:
     position: int = 0
     terminal: str = "running"
 
+    def __post_init__(self) -> None:
+        if isinstance(self.position, bool) or not isinstance(self.position, int):
+            raise ValueError("position must be an integer")
+        if not 0 <= self.position <= GOAL_POSITION:
+            raise ValueError("position is outside the corridor")
+        if self.terminal not in {"running", "goal", "collision"}:
+            raise ValueError("unknown terminal state")
+        if self.terminal == "goal" and self.position != GOAL_POSITION:
+            raise ValueError("goal terminal requires the goal position")
+        if self.terminal == "running" and self.position == GOAL_POSITION:
+            raise ValueError("goal position cannot remain running")
+
 
 POLICIES = {
     "safe_route": ("advance",) * GOAL_POSITION,
@@ -21,8 +34,18 @@ POLICIES = {
     "idle": ("wait",) * GOAL_POSITION,
 }
 
+# Observed state-action support for the didactic learned model. The shortcut is
+# deliberately outside support even though the model returns a confident future.
+SUPPORTED_STATE_ACTIONS = frozenset(
+    (position, action)
+    for position in range(GOAL_POSITION)
+    for action in ("advance", "wait")
+)
+
 
 def transition(state: State, action: str, learned: bool) -> tuple[State, float]:
+    if not isinstance(learned, bool):
+        raise ValueError("learned must be a boolean")
     if state.terminal != "running":
         raise ValueError("cannot transition a terminal state")
     if action == "wait":
@@ -61,9 +84,27 @@ def policy_returns(learned: bool) -> dict[str, float]:
     return {name: float(rollout(actions, learned)["return"]) for name, actions in POLICIES.items()}
 
 
-def descending_ranks(scores: dict[str, float]) -> dict[str, int]:
+def descending_ranks(scores: dict[str, float]) -> dict[str, float]:
+    """Return average descending ranks so Spearman remains valid with ties."""
+    if len(scores) < 2 or any(not isinstance(name, str) or not name for name in scores):
+        raise ValueError("scores must contain two or more named policies")
+    if any(
+        isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value)
+        for value in scores.values()
+    ):
+        raise ValueError("scores must be finite numbers")
     ordered = sorted(scores, key=lambda name: (-scores[name], name))
-    return {name: index + 1 for index, name in enumerate(ordered)}
+    ranks: dict[str, float] = {}
+    start = 0
+    while start < len(ordered):
+        end = start + 1
+        while end < len(ordered) and scores[ordered[end]] == scores[ordered[start]]:
+            end += 1
+        average_rank = ((start + 1) + end) / 2.0
+        for name in ordered[start:end]:
+            ranks[name] = average_rank
+        start = end
+    return ranks
 
 
 def spearman_rank_correlation(first: dict[str, float], second: dict[str, float]) -> float:
@@ -71,9 +112,56 @@ def spearman_rank_correlation(first: dict[str, float], second: dict[str, float])
         raise ValueError("score tables must contain the same two or more policies")
     first_ranks = descending_ranks(first)
     second_ranks = descending_ranks(second)
-    count = len(first)
-    squared_difference = sum((first_ranks[name] - second_ranks[name]) ** 2 for name in first)
-    return 1.0 - 6.0 * squared_difference / (count * (count * count - 1))
+    first_mean = sum(first_ranks.values()) / len(first_ranks)
+    second_mean = sum(second_ranks.values()) / len(second_ranks)
+    covariance = sum(
+        (first_ranks[name] - first_mean) * (second_ranks[name] - second_mean)
+        for name in first
+    )
+    first_scale = sqrt(sum((rank - first_mean) ** 2 for rank in first_ranks.values()))
+    second_scale = sqrt(sum((rank - second_mean) ** 2 for rank in second_ranks.values()))
+    if first_scale == 0.0 or second_scale == 0.0:
+        raise ValueError("Spearman correlation is undefined for a constant ranking")
+    return covariance / (first_scale * second_scale)
+
+
+def support_issues(actions: tuple[str, ...]) -> tuple[dict[str, object], ...]:
+    """Find state-action queries outside the learned model's observed support."""
+    state = State()
+    issues = []
+    for step, action in enumerate(actions):
+        if (state.position, action) not in SUPPORTED_STATE_ACTIONS:
+            issues.append({"step": step, "position": state.position, "action": action})
+            break
+        state, _ = transition(state, action, learned=True)
+        if state.terminal != "running":
+            break
+    return tuple(issues)
+
+
+def support_gated_selection() -> dict[str, object]:
+    """Select only among policies whose learned rollouts stay in observed support."""
+    accepted_returns = {}
+    rejected = {}
+    for name, actions in POLICIES.items():
+        issues = support_issues(actions)
+        if issues:
+            rejected[name] = issues
+        else:
+            accepted_returns[name] = float(rollout(actions, learned=True)["return"])
+    if not accepted_returns:
+        raise ValueError("support gate rejected every policy")
+    selected = max(accepted_returns, key=accepted_returns.get)  # type: ignore[arg-type]
+    true_returns = policy_returns(learned=False)
+    true_best = max(true_returns, key=true_returns.get)  # type: ignore[arg-type]
+    return {
+        "accepted_policy_count": len(accepted_returns),
+        "rejected_policy_count": len(rejected),
+        "rejected_policies": rejected,
+        "selected_policy": selected,
+        "selected_policy_true_terminal": rollout(POLICIES[selected], learned=False)["terminal"],
+        "model_exploitation_regret": true_returns[true_best] - true_returns[selected],
+    }
 
 
 def transition_agreement() -> dict[str, object]:
@@ -103,6 +191,7 @@ def evaluate() -> dict[str, object]:
     true_best = max(true_returns, key=true_returns.get)  # type: ignore[arg-type]
     absolute_gaps = {name: abs(model_returns[name] - true_returns[name]) for name in POLICIES}
     agreement = transition_agreement()
+    selected_action = POLICIES[model_selected][0]
     return {
         "true_returns": true_returns,
         "learned_model_returns": model_returns,
@@ -110,9 +199,14 @@ def evaluate() -> dict[str, object]:
         "learned_model_selected_policy": model_selected,
         "selected_policy_true_terminal": rollout(POLICIES[model_selected], learned=False)["terminal"],
         "policy_ranking_matches": descending_ranks(true_returns) == descending_ranks(model_returns),
-        "spearman_rank_correlation": spearman_rank_correlation(true_returns, model_returns),
+        "spearman_rank_correlation": round(spearman_rank_correlation(true_returns, model_returns), 12),
         "mean_absolute_return_gap": sum(absolute_gaps.values()) / len(absolute_gaps),
         "maximum_absolute_return_gap": max(absolute_gaps.values()),
         "model_exploitation_regret": true_returns[true_best] - true_returns[model_selected],
+        "model_selected_first_transition_matches": (
+            transition(State(), selected_action, learned=False)
+            == transition(State(), selected_action, learned=True)
+        ),
+        "support_gate": support_gated_selection(),
         "transition_agreement": agreement,
     }

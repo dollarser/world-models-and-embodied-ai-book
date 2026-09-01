@@ -1,9 +1,9 @@
 # 第17章 世界模型帮助策略的五种方式
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-17-01`
-> 关联声明：`CLAIM-17-01`～`CLAIM-17-06`
+> 关联声明：`CLAIM-17-01`～`CLAIM-17-07`
 > 关联图表：`FIG-17-01` / `TAB-17-01` / `TAB-17-02`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
@@ -32,7 +32,7 @@
 
 ### 学完后的可验证产出
 
-读者应能把一个项目归入五类用途之一，写出每类用途的输入、输出和证据，计算固定策略的 return gap 与排序相关性，并为模型规划器设计真实环境回查、OOD 拒绝和独立安全门。
+读者应能把一个项目归入五类用途中的一类或多类，分别写出每条数据流的输入、输出和证据，计算固定策略的 return gap 与排序相关性，并为模型规划器设计真实性锚点回查、coverage/OOD 拒绝和独立安全门。
 
 ## 17.1 先问世界模型在哪一条数据流上
 
@@ -66,7 +66,9 @@ flowchart LR
     T -.-> C
 ```
 
-*FIG-17-01：世界模型帮助策略的五条路径。来源：本书原创，MIT，2026-08-31。真实环境锚点用于校准和否决，不表示必须购买硬件。*
+*FIG-17-01：世界模型帮助策略的五条路径。来源：本书原创，MIT，2026-09-01。五类是数据流角色，不是互斥算法标签；一个系统可以同时跨多条路径。*
+
+这里的“真实环境锚点”是相对于 learned world model 的独立参照：S/M 档可以用锁定规则、未参与训练的物理仿真或既有合法日志，不要求购置硬件；但这些只能支撑对应层级的声明。若声称真实机器人或道路效果，最终锚点仍必须来自相应真实系统，仿真结果不能改名为 real-world result。
 
 `CLAIM-17-01`（fact）：五类用途共享预测模型，却不共享完成标准；表征 probe、生成质量、交互稳定性、规划 return 和安全漏检率不能互相替代。
 
@@ -82,7 +84,7 @@ flowchart LR
 
 世界模型可改变初态、背景、对象、天气、任务进度或动作条件未来，以扩充稀有场景和长尾组合。合成数据要保留生成条件、动作、时间、过滤器、随机种子和来源许可；只有视频而没有可信动作/状态标签时，不能直接加入控制监督。
 
-[Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5) 是会漂移的平台案例：官方仓库提供视频世界模型、action-conditioned 机器人路径和 post-training 说明 `[O,R1]`。它说明生成平台可以服务数据与仿真，但不证明任意生成片段物理正确或能改善指定策略。当前 Cosmos 3 又改变了模型规模、接口和许可，故正文只保留“生成—过滤—再训练—真实回查”模式。
+[Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5/blob/main/docs/inference_robot_action_cond.md) 是会漂移的平台案例：官方仓库提供 action-conditioned 机器人视频生成、action loader 和 post-training/distillation 路径 `[O,R1]`。其默认转换会从机器人 state 计算相对末端动作，因此 action frame、scale、gripper 语义和 fps 都是生成合同，不是附属参数。当前 [Cosmos 3](https://github.com/NVIDIA/cosmos) 又把 action modeling 分为 policy、inverse dynamics 和 forward dynamics 三种 mode；只有 forward dynamics 接收候选 action chunk 来预测未来，不能把“模型能输出动作”自动写成“模型验证了这组动作”。
 
 有效实验至少要有：只用真实数据、真实+同量复制、真实+合成，以及匹配算力/样本数的对照；报告覆盖率、重复率、标签一致性和闭环效用。合成数据增加不等于信息增加。
 
@@ -90,7 +92,9 @@ flowchart LR
 
 策略可在学习模型中产生动作，世界模型递归生成下一状态、奖励和终止，再用 imagined trajectories 更新策略。[DreamerV3](https://github.com/danijar/dreamerv3) 在学习的世界模型中训练 actor-critic；[TD-MPC2](https://github.com/nicklashansen/tdmpc2) 学习面向控制的潜在模型并结合规划 `[O/P,R1]`。这类系统追求任务相关预测，不要求像素逐点完美。
 
-危险在于训练策略不是被动测试集：它会主动寻找预测模型最乐观的区域。模型最初在行为策略分布上准确，优化后的新策略可能把状态推到 OOD。缓解方式包括短 rollout、真实数据混合、ensemble/不确定性惩罚、保守目标、周期性真实回查和发现盲区后重采样；没有任何一种能把 learned simulator 变成无条件真值。
+危险在于训练策略不是被动测试集：它会主动寻找预测模型最乐观的区域。模型最初在行为策略分布上准确，优化后的新策略可能把状态推到 OOD。缓解方式包括短 rollout、真实数据混合、ensemble/不确定性惩罚、support/coverage gate、保守目标、周期性真实性回查和发现盲区后重采样；没有任何一种能把 learned simulator 变成无条件真值。
+
+终止语义也会改变 imagined target。[TD-MPC2](https://github.com/nicklashansen/tdmpc2) 当前官方实现虽然已经支持 episodic task，但 `episodic=true` 仍需显式开启且默认关闭以保持旧结果可复现 `[O,R1]`。因此比较 checkpoint 或复现实验时要同时登记 termination 开关、horizon 和 bootstrap 规则，不能只写算法名。
 
 ## 17.5 用途四：规划、奖励或 critic
 
@@ -119,11 +123,13 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 
 `CLAIM-17-04`（inference）：世界模型中的策略排序与真实排序相关，只支持其已验证任务、策略族和协议中的筛选用途；相关性不能校准绝对成功率，也不能替代新策略、OOD 场景和最终安全评测。
 
-代理评测要预注册真实锚点：至少保留一组未用于训练世界模型的真实仿真/硬件 episode，报告 Pearson/Spearman、逐策略偏差、置信区间、错误排序、失败视频和新增策略后的校准漂移。若只公布相关性最高的子集，就无法判断筛选器何时失效。
+代理评测至少包含三段误差：策略动作是否按正确 schema 注入、世界模型 rollout 是否保持动作条件动力学、自动/VLM outcome scorer 是否正确判定成功与失败。[WorldGym 官方 runner](https://github.com/world-model-eval/world-model-eval) 同时打包 diffusion world model、多个 policy runner 和自动 VLM scoring；最终相关性是三段误差的合成，不能只归因于“world model quality” `[O,R1]`。
+
+代理评测要预注册真实性锚点：至少保留一组未用于训练世界模型或 scorer 的独立仿真/硬件 episode，报告 Pearson/Spearman、逐策略偏差、置信区间、错误排序、失败视频、scorer confusion matrix 和新增策略后的校准漂移。策略数量很少或分数并列时，Spearman 必须使用平均秩并报告区间；全体分数相同则相关系数未定义，不能记成零。若只公布相关性最高的子集，就无法判断筛选器何时失效。
 
 ## 17.8 EXP-17-01：8/9 正确仍选中碰撞策略
 
-S 档 corridor fixture 有三个固定策略：四步前进的 `safe_route`、一步 `phantom_shortcut` 和原地等待的 `idle`。学习世界模型在 9 个测试转移中与真实规则一致 8 个，只把起点 `shortcut` 错误预测为直接到达；真实规则中它会碰撞。
+S 档 corridor fixture 有三个固定策略：四步前进的 `safe_route`、一步 `phantom_shortcut` 和原地等待的 `idle`。学习世界模型在 9 个测试转移中与真实规则一致 8 个，只把起点 `shortcut` 错误预测为直接到达；真实规则中它会碰撞。训练支持集只包含各位置的 `advance/wait`，所以 `shortcut` 虽然得到高置信回报，仍是显式 support 外查询。
 
 ```bash
 make ch17-test-local
@@ -139,12 +145,17 @@ make ch17-smoke
 | 三策略 Spearman | -0.5 | 排序反转，不代表总体相关性 |
 | 最大绝对 return gap | 2.0 | fixture 的无量纲回报 |
 | model exploitation regret | 1.85 | 真实最优减模型所选策略真实回报 |
+| 模型所选首转移是否正确 | false | 平均 8/9 掩盖选择诱导分布上的首步错误 |
+| support gate 后选择/真实终点 | `safe_route` / goal | 拒绝唯一 support 外策略 |
+| support gate 后 regret | 0.0 | 本 fixture 固定支持集上的结果 |
 
 *TAB-17-01：`EXP-17-01` 的模型 gap 与策略排序。固定规则用于说明接口，不是 learned simulator benchmark。*
 
 `CLAIM-17-02`（result）：`EXP-17-01` 的学习模型单步一致率为 `8/9`，却把真实最优 `safe_route` 排在乐观捷径之后；模型所选策略在真实规则中碰撞，排序 Spearman 为 `-0.5`，exploitation regret 为 `1.85`。
 
 这个反例不是说 88.89% 必然不够，而是说明错误权重取决于策略访问频率和后果。安全关键转移应分桶、加权并做压力测试，不能被大量容易的 `wait/advance` 样本稀释。
+
+`CLAIM-17-07`（result）：fixture 的 support gate 拒绝唯一未覆盖的 `phantom_shortcut`，从剩余两个策略选中 `safe_route`，使真实 exploitation regret 从 `1.85` 降为 `0`。这是手工已知 support 的机制对照；它不证明 learned OOD estimator 校准，也无法捕获 support 内错误或 ensemble 共同偏差。
 
 ## 17.9 五类用途的验收矩阵
 
@@ -157,6 +168,8 @@ make ch17-smoke
 | 安全反事实 | 风险事件/不可恢复状态 | 独立规则/几何与故障注入 | 漏检、过度拒绝、OOD |
 
 *TAB-17-02：用途决定证据。一个系统可跨多行，但必须分别报告。*
+
+coverage gate 的分母也要明确：按单步 state-action、完整 action chunk、整条候选轨迹，还是本体/任务级 coverage。轨迹中任一步超出支持就应记录 first unsupported step；只对起始观测做 OOD 检查，无法约束 planner 后续把 rollout 推出覆盖范围。
 
 ## 17.10 自动驾驶正文：四个角色，四套证据
 
@@ -176,7 +189,7 @@ M 档在第19章锁定的轻量仿真中采集小型状态/动作 rollout：机�
 
 L1 可运行 TD-MPC2 小任务或 V-JEPA 2.1 80M encoder 的冻结 probe，但上游默认配置、数据和显存需单独实测；V-JEPA 2-AC 官方 action-conditioned checkpoint 基于更大的 ViT-g，不能用 80M encoder 规模替代其控制证据。
 
-L2 才考虑 WorldGym/WorldEval、Cosmos 或大 checkpoint 的代理评测与生成实验，最高限制为 2×80 GB，超过上限则只保留论文/官方案例。WorldGym README 当前示例世界模型 checkpoint 约 9 GB，但完整 policy runner、生成缓存和运行显存尚未由本书验证。
+L2 才考虑 WorldGym/WorldEval、Cosmos 或大 checkpoint 的代理评测与生成实验，最高限制为 2×80 GB，超过上限则只保留论文/官方案例。WorldGym README 当前示例 world-model checkpoint 约 9 GB，但它还要求具体 policy runner、转换数据和 VLM scorer；磁盘文件大小不是 VRAM 或总资源需求。完整生成缓存与运行显存尚未由本书验证。
 
 V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV3 与 TD-MPC2 仓库为 MIT。Cosmos、checkpoint、数据和下游 runner 必须分别核验代码与模型许可，不能从 GitHub badge 推导所有资产可同样使用。
 
@@ -190,7 +203,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 8/9 转移一致但策略错排并碰撞 | `EXP-17-01` | CPU smoke | 手工 corridor |
+| 本书结果 | 8/9 转移一致但策略错排；support gate 对照阻断 support 外捷径 | `EXP-17-01` | CPU smoke | 手工 corridor 与 oracle support |
 | 论文/代码 | 表征预训练后训练 action-conditioned planner | V-JEPA 2/2.1 | `[A/O,R1]` | 本书未运行 |
 | 论文/代码 | imagined actor-critic 与 latent MPC | DreamerV3、TD-MPC2 | `[P/O,R1]` | 本书未运行 |
 | 开源平台 | 生成/动作条件 world foundation model | Cosmos | `[O,R1]` | 版本和许可会漂移 |
@@ -199,7 +212,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 
 ## 小结
 
-世界模型不是一种单一增益模块。它可以提供表征、数据、交互环境、规划/价值和安全反事实，每条路径都要用对应下游指标验收。策略会主动寻找模型盲区，因此平均预测分数必须与真实环境 return gap、风险漏检和策略排序一起报告；代理评测只能筛选，不能取消最终真实验证。
+世界模型不是一种单一增益模块。它可以同时提供表征、数据、交互环境、规划/价值和安全反事实，每条路径都要用对应下游指标验收。策略会主动寻找模型盲区，因此平均预测分数必须与真实性锚点上的 return gap、风险漏检、coverage 和策略排序一起报告；support gate 是拒绝机制而非真值证明，代理评测也只能筛选，不能取消最终目标环境验证。
 
 ## 练习
 
@@ -217,6 +230,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - Li et al., [WorldEval](https://arxiv.org/abs/2505.19017)，`[A,R0]`；
 - Quevedo et al., [WorldGym](https://arxiv.org/abs/2506.00613) 与[官方代码](https://github.com/world-model-eval/world-model-eval)，`[A/O,R1]`；
 - NVIDIA, [Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5)，`[O,R1]`。
+- NVIDIA, [Cosmos 3 action modes](https://github.com/NVIDIA/cosmos)，`[O,R1]`。
 
 ## 下一章接口
 
@@ -235,6 +249,6 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-d-review.md`；
+- 审查记录路径：`reviews/ch17-support-gate-review-2026-09-01.md`；
 - 已知限制：未训练 learned world model，未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
 - 下一步：在第22章综合项目中复用 return gap、策略错排和真实性锚点。

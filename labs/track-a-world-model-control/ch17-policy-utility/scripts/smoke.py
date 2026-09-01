@@ -22,6 +22,12 @@ def main() -> int:
         raise AssertionError("the critical shortcut error must reverse policy ranking")
     if metrics["selected_policy_true_terminal"] != "collision":
         raise AssertionError("model-selected shortcut must fail in the true simulator")
+    if metrics["model_selected_first_transition_matches"]:
+        raise AssertionError("the model-selected first transition must expose the optimistic error")
+    if metrics["support_gate"]["selected_policy"] != "safe_route":
+        raise AssertionError("support gate must reject the unsupported shortcut")
+    if metrics["support_gate"]["model_exploitation_regret"] != 0.0:
+        raise AssertionError("support-gated selection must remove exploitation regret in this fixture")
 
     report = {
         "experiment_id": "EXP-17-01",

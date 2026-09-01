@@ -3,11 +3,12 @@
   "id": "EXP-17-01",
   "chapter": 17,
   "status": "smoke",
-  "claim_ids": ["CLAIM-17-02", "CLAIM-17-03"],
+  "claim_ids": ["CLAIM-17-02", "CLAIM-17-03", "CLAIM-17-07"],
   "claim_scope": [
     "high average transition agreement can coexist with a decision-critical model error",
     "a planner can exploit one optimistic model error and reverse the true policy ranking",
-    "world-model utility must be measured with downstream return gaps and held-out true-environment anchors"
+    "world-model utility must be measured with downstream return gaps and held-out true-environment anchors",
+    "an explicit observed-support gate rejects the unsupported shortcut in this fixture and changes the selected policy"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -16,7 +17,7 @@
   },
   "data": {
     "name": "procedural safe-route and phantom-shortcut transitions",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -39,13 +40,16 @@
     {"name": "transition_agreement", "value": 0.8888888888888888, "unit": "ratio", "split": "nine-held-out-transitions"},
     {"name": "spearman_rank_correlation", "value": -0.5, "unit": "correlation", "split": "three-fixed-policies"},
     {"name": "maximum_absolute_return_gap", "value": 2.0, "unit": "return", "split": "three-fixed-policies"},
-    {"name": "model_exploitation_regret", "value": 1.85, "unit": "return", "split": "model-selected-policy"}
+    {"name": "model_exploitation_regret", "value": 1.85, "unit": "return", "split": "ungated-model-selected-policy"},
+    {"name": "support_gated_exploitation_regret", "value": 0.0, "unit": "return", "split": "two-supported-policies"},
+    {"name": "unsupported_policy_rejection_rate", "value": 1.0, "unit": "ratio", "split": "one-unsupported-policy"}
   ],
   "artifacts": ["results/ch17/EXP-17-01-smoke.json"],
   "limitations": [
     "hand-authored deterministic corridor rather than a learned neural world model",
     "three fixed policies and one deliberately optimistic shortcut error",
     "return units and effect sizes do not represent any real task",
-    "no images, uncertainty estimator, policy training, simulator, robot, vehicle, or GPU"
+    "no images, learned uncertainty estimator, policy training, simulator, robot, vehicle, or GPU",
+    "support set is hand-authored and cannot detect errors inside observed support or shared model bias"
   ]
 }
