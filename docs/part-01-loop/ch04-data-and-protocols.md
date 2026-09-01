@@ -59,7 +59,7 @@ m_t^{\text{value}}=1-\mathbb{1}[\text{terminated}_t].
 
 外部截断后只有在最终观测真实存在且有效时才能据此 bootstrap；“理论上应延续”不能补出丢失的下一观测。有限时域若本来就是任务定义的一部分，则时间上限属于 termination，且剩余时间应进入状态。
 
-`CLAIM-04-06`（fact about protocol semantics，`[O]`）：自然终止与外部截断对序列边界都有效，但对 value bootstrap 的语义不同；只保存 `done` 会丢失这一区别。
+上述协议语义由官方文档与实现直接支持，来源成熟度记为 `[O]`；本书 fixture 只复核了保存与聚合合同。`CLAIM-04-06`（fact）：自然终止与外部截断对序列边界都有效，但对 value bootstrap 的语义不同；只保存 `done` 会丢失这一区别。
 
 ## 4.2 先写清楚一行数据代表什么
 
@@ -111,7 +111,7 @@ sequenceDiagram
 6. episode 边界是否重置所有历史缓存；
 7. 缺帧是丢弃、插值、重复上一帧还是显式 mask。
 
-`CLAIM-04-02`（fact about protocol semantics）：不先定义动作和观测的时间关系，就无法解释转移模型预测的是 `a_t` 之前还是之后的环境；shape 检查不能发现这一语义错误。
+`CLAIM-04-02`（fact）：不先定义动作和观测的时间关系，就无法解释转移模型预测的是 `a_t` 之前还是之后的环境；shape 检查不能发现这一语义错误。
 
 多传感器数据还要把“是否有样本”和“样本是什么时间”拆开。每个必需模态至少保存来源时间戳、clock domain、有效位和同步策略；本书 fixture 规定缺失样本写成 `valid=false, timestamp=null`，整个字段消失则视为合同错误。若采用近似同步，必须冻结最大允许 skew 并报告实际分布。[ROS 2 `ApproximateTimeSynchronizer`](https://docs.ros.org/en/ros2_packages/rolling/api/message_filters/message_filters.html)同样用消息 header timestamp 和秒级 `slop` 容差配对；容差内配对只说明协议接受，不证明硬件同时曝光，更不能替代时钟偏移、漂移、rolling shutter 或运动补偿审计。
 
@@ -236,7 +236,7 @@ prepare/smoke/train/evaluate/report 命令
 
 实验生命周期与章节生命周期分开。`smoke` 只证明接口、数据流和指标链路可以运行；`experimented` 表示目标实验已执行；`reproducible` 还要求 commit、环境、数据、结果和审查能够被冷启动复现。
 
-`CLAIM-04-05`（fact about this repository）：本书 Schema 允许 planned 实验没有指标，但从 smoke 开始强制要求 smoke/evaluate/report 命令和至少一个指标；到 reproducible 时还会拒绝 `UNCOMMITTED` 和 `license pending`。
+`CLAIM-04-05`（fact）：本书 Schema 允许 planned 实验没有指标，但从 smoke 开始强制要求 smoke/evaluate/report 命令和至少一个指标；到 reproducible 时还会拒绝 `UNCOMMITTED` 和 `license pending`。
 
 ## 4.12 EXP-04-01：数据契约审计
 

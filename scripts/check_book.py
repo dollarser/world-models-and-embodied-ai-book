@@ -34,6 +34,11 @@ REQUIRED = (
 )
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 CHAPTER_STATUS_PATTERN = re.compile(r"^> 状态：`([^`]+)`", re.MULTILINE)
+CLAIM_DEFINITION_PATTERN = re.compile(
+    r"`(CLAIM-(\d{2})-(\d{2}))`（([^）]+)）："
+)
+CLAIM_ID_PATTERN = re.compile(r"^CLAIM-(\d{2})-(\d{2})$")
+ALLOWED_CLAIM_TYPES = {"fact", "result", "inference", "recommendation", "unverified"}
 
 
 def check_required() -> list[str]:
@@ -55,6 +60,60 @@ def check_json() -> list[str]:
     return errors
 
 
+def check_claim_contract(
+    chapter_number: int,
+    registered_claims: object,
+    document_text: str,
+    experiment_claims: set[str] | None = None,
+) -> list[str]:
+    """Check bidirectional claim registration, syntax, ownership, and result evidence."""
+
+    errors: list[str] = []
+    if not isinstance(registered_claims, list) or any(not isinstance(item, str) for item in registered_claims):
+        return [f"chapter {chapter_number} manifest claims must be a list of strings"]
+
+    definitions = [
+        (match.group(1), int(match.group(2)), match.group(4))
+        for match in CLAIM_DEFINITION_PATTERN.finditer(document_text)
+    ]
+    defined_ids = [claim_id for claim_id, _, _ in definitions]
+    registered_set = set(registered_claims)
+    defined_set = set(defined_ids)
+
+    duplicates = sorted({claim_id for claim_id in defined_ids if defined_ids.count(claim_id) > 1})
+    for claim_id in duplicates:
+        errors.append(f"chapter {chapter_number} defines claim more than once: {claim_id}")
+
+    for claim_id in sorted(registered_set - defined_set):
+        errors.append(f"chapter {chapter_number} document does not define registered claim: {claim_id}")
+    for claim_id in sorted(defined_set - registered_set):
+        errors.append(f"chapter {chapter_number} document defines unregistered claim: {claim_id}")
+
+    for claim_id in registered_claims:
+        match = CLAIM_ID_PATTERN.fullmatch(claim_id)
+        if match is None or int(match.group(1)) != chapter_number:
+            errors.append(f"chapter {chapter_number} has invalid or foreign registered claim ID: {claim_id}")
+
+    seen_types: dict[str, str] = {}
+    for claim_id, owner_chapter, claim_type in definitions:
+        seen_types.setdefault(claim_id, claim_type)
+        if owner_chapter != chapter_number:
+            errors.append(f"chapter {chapter_number} defines foreign claim ID: {claim_id}")
+        if claim_type not in ALLOWED_CLAIM_TYPES:
+            errors.append(
+                f"chapter {chapter_number} claim {claim_id} has non-canonical type {claim_type!r}; "
+                f"expected one of {sorted(ALLOWED_CLAIM_TYPES)}"
+            )
+
+    if experiment_claims is not None:
+        for claim_id, claim_type in seen_types.items():
+            if claim_type == "result" and claim_id not in experiment_claims:
+                errors.append(
+                    f"chapter {chapter_number} result claim is not bound by a registered experiment card: {claim_id}"
+                )
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -67,6 +126,16 @@ def check_manifest() -> list[str]:
     if numbers != list(range(1, 23)):
         errors.append(f"manifest chapters must be ordered 1..22, found {numbers}")
     experiment_ids: list[str] = []
+    experiment_claims: dict[str, set[str]] = {}
+    for card_path in ROOT.glob("labs/**/experiment-card.json"):
+        try:
+            card = json.loads(card_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(card, dict) and isinstance(card.get("id"), str):
+            experiment_claims[card["id"]] = {
+                claim_id for claim_id in card.get("claim_ids", []) if isinstance(claim_id, str)
+            }
     for chapter in chapters:
         if not isinstance(chapter, dict):
             continue
@@ -87,9 +156,15 @@ def check_manifest() -> list[str]:
                 errors.append(
                     f"chapter {number} document status {status_match.group(1)} != manifest status {manifest_phase}"
                 )
-            for claim_id in chapter.get("claims", []):
-                if claim_id not in document_text:
-                    errors.append(f"chapter {number} document does not contain registered claim: {claim_id}")
+            bound_claims = {
+                claim_id
+                for experiment_id in chapter.get("experiments", [])
+                for claim_id in experiment_claims.get(experiment_id, set())
+            }
+            if isinstance(number, int):
+                errors.extend(
+                    check_claim_contract(number, chapter.get("claims", []), document_text, bound_claims)
+                )
             for figure_id in chapter.get("figures", []):
                 if figure_id not in document_text:
                     errors.append(f"chapter {number} document does not contain registered figure/table: {figure_id}")
@@ -136,7 +211,7 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
-    print("book checks passed: required files, JSON, manifest, local links, 22-chapter PRD")
+    print("book checks passed: required files, JSON, bidirectional claim contracts, manifest, local links, 22-chapter PRD")
     return 0
 
 
