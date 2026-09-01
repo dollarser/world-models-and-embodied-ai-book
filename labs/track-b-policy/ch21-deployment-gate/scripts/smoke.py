@@ -73,6 +73,15 @@ def main() -> int:
         raise AssertionError("severity comparison must preserve aggregate selective metrics")
     if reject_high["accepted_failure_authored_weight"] >= reject_low["accepted_failure_authored_weight"]:
         raise AssertionError("accepted authored consequence must expose the hidden severity difference")
+    transition = metrics["action_transition_audit"]
+    if not transition["smooth_transition"]["allowed"]:
+        raise AssertionError("the bounded smooth transition must pass the authored transition gate")
+    if transition["legal_endpoint_jump"]["allowed"]:
+        raise AssertionError("static endpoint bounds must not bypass the authored transition limit")
+    if transition["legal_endpoint_jump"]["reasons"] != ["action_delta_exceeded"]:
+        raise AssertionError("the legal-endpoint jump must retain its distinct reason code")
+    if transition["missing_history"]["reasons"] != ["missing_previous_applied_action"]:
+        raise AssertionError("an enabled transition limit must fail closed without applied history")
     report = {
         "experiment_id": "EXP-21-01",
         "status": "smoke",

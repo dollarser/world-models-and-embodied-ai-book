@@ -15,6 +15,7 @@ class GateConfig:
     deadline_ms: float = 50.0
     max_sensor_age_ms: float = 100.0
     max_abs_action: float = 1.0
+    max_action_delta_per_step: float | None = None
     max_uncertainty_score: float = 0.7
     uncertainty_revision: str = "fixture-v1"
     fallback: str = "hold_position"
@@ -27,6 +28,11 @@ class GateConfig:
         ):
             if not _finite_number(value) or value <= 0.0:
                 raise ValueError(f"{name} must be a finite positive number")
+        if self.max_action_delta_per_step is not None and (
+            not _finite_number(self.max_action_delta_per_step)
+            or self.max_action_delta_per_step <= 0.0
+        ):
+            raise ValueError("max_action_delta_per_step must be None or a finite positive number")
         if (
             not _finite_number(self.max_uncertainty_score)
             or not 0.0 <= self.max_uncertainty_score <= 1.0
@@ -47,6 +53,14 @@ class ActionPacket:
     valid_until_step: int
     uncertainty_score: float
     uncertainty_revision: str
+
+
+@dataclass(frozen=True)
+class AppliedAction:
+    """An authored prior-command record; a real system must bind this to actuator acknowledgement."""
+
+    action: tuple[float, ...]
+    applied_step: int
 
 
 @dataclass(frozen=True)
@@ -667,7 +681,12 @@ def severity_stratified_selective_audit() -> dict[str, object]:
     }
 
 
-def gate(packet: ActionPacket, config: GateConfig) -> dict[str, object]:
+def gate(
+    packet: ActionPacket,
+    config: GateConfig,
+    *,
+    previous_applied_action: AppliedAction | None = None,
+) -> dict[str, object]:
     reasons = []
     if not _finite_number(packet.sensor_age_ms) or packet.sensor_age_ms < 0.0:
         reasons.append("invalid_sensor_age")
@@ -683,6 +702,35 @@ def gate(packet: ActionPacket, config: GateConfig) -> dict[str, object]:
         reasons.append("invalid_action")
     elif any(abs(value) > config.max_abs_action for value in packet.action):
         reasons.append("action_out_of_bounds")
+
+    if config.max_action_delta_per_step is not None:
+        if previous_applied_action is None:
+            reasons.append("missing_previous_applied_action")
+        elif not isinstance(previous_applied_action, AppliedAction):
+            reasons.append("invalid_previous_applied_action")
+        else:
+            previous_action_valid = bool(previous_applied_action.action) and all(
+                _finite_number(value) for value in previous_applied_action.action
+            )
+            if not previous_action_valid:
+                reasons.append("invalid_previous_applied_action")
+            elif len(previous_applied_action.action) != len(packet.action):
+                reasons.append("action_shape_mismatch")
+            elif any(
+                abs(current - previous) > config.max_action_delta_per_step
+                for current, previous in zip(packet.action, previous_applied_action.action)
+            ):
+                reasons.append("action_delta_exceeded")
+
+            if (
+                isinstance(previous_applied_action.applied_step, bool)
+                or not isinstance(previous_applied_action.applied_step, int)
+                or previous_applied_action.applied_step < 0
+                or isinstance(packet.current_step, bool)
+                or not isinstance(packet.current_step, int)
+                or previous_applied_action.applied_step + 1 != packet.current_step
+            ):
+                reasons.append("previous_applied_step_mismatch")
 
     if (
         isinstance(packet.current_step, bool)
@@ -707,6 +755,51 @@ def gate(packet: ActionPacket, config: GateConfig) -> dict[str, object]:
         "allowed": not reasons,
         "reasons": reasons,
         "selected_mode": "policy_action" if not reasons else config.fallback,
+    }
+
+
+def action_transition_audit() -> dict[str, object]:
+    """Show why legal action endpoints do not establish a legal one-step transition."""
+
+    config = GateConfig(max_action_delta_per_step=0.25)
+    previous = AppliedAction((0.0, 0.0), applied_step=1)
+    common = {
+        "sensor_age_ms": 20.0,
+        "pipeline_latency_ms": 25.0,
+        "current_step": 2,
+        "valid_until_step": 5,
+        "uncertainty_score": 0.2,
+        "uncertainty_revision": "fixture-v1",
+    }
+    smooth_packet = ActionPacket(action=(0.2, -0.1), **common)
+    jump_packet = ActionPacket(action=(0.8, -0.8), **common)
+    smooth = gate(smooth_packet, config, previous_applied_action=previous)
+    jump = gate(jump_packet, config, previous_applied_action=previous)
+    missing_history = gate(jump_packet, config)
+
+    def transition_record(packet: ActionPacket, decision: dict[str, object]) -> dict[str, object]:
+        return {
+            "action": packet.action,
+            "static_endpoint_within_bounds": all(
+                abs(value) <= config.max_abs_action for value in packet.action
+            ),
+            "maximum_absolute_delta": max(
+                abs(current - prior)
+                for current, prior in zip(packet.action, previous.action)
+            ),
+            **decision,
+        }
+
+    return {
+        "max_action_delta_per_step": config.max_action_delta_per_step,
+        "previous_applied_action": previous.action,
+        "smooth_transition": transition_record(smooth_packet, smooth),
+        "legal_endpoint_jump": transition_record(jump_packet, jump),
+        "missing_history": missing_history,
+        "scope": (
+            "hand-authored consecutive normalized action vectors and step IDs; not units, actuator "
+            "acknowledgement, dynamics, acceleration, jerk, tracking, feasibility, or safety evidence"
+        ),
     }
 
 
@@ -770,6 +863,7 @@ def evaluate() -> dict[str, object]:
             "threshold_0_7": selective_metrics(selective_cases, 0.7),
         },
         "severity_stratified_selective_audit": severity_stratified_selective_audit(),
+        "action_transition_audit": action_transition_audit(),
         "fallback_is_profile_specific": {
             "manipulator": GateConfig(fallback="hold_position").fallback,
             "mobile_robot": GateConfig(fallback="controlled_stop").fallback,

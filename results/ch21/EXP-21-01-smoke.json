@@ -2,6 +2,14 @@
   "experiment_id": "EXP-21-01",
   "gpu_verified": false,
   "metrics": {
+    "action_transition_audit": {
+      "legal_endpoint_jump": {"action": [0.8, -0.8], "allowed": false, "maximum_absolute_delta": 0.8, "reasons": ["action_delta_exceeded"], "selected_mode": "hold_position", "static_endpoint_within_bounds": true},
+      "max_action_delta_per_step": 0.25,
+      "missing_history": {"allowed": false, "reasons": ["missing_previous_applied_action"], "selected_mode": "hold_position"},
+      "previous_applied_action": [0.0, 0.0],
+      "scope": "hand-authored consecutive normalized action vectors and step IDs; not units, actuator acknowledgement, dynamics, acceleration, jerk, tracking, feasibility, or safety evidence",
+      "smooth_transition": {"action": [0.2, -0.1], "allowed": true, "maximum_absolute_delta": 0.2, "reasons": [], "selected_mode": "policy_action", "static_endpoint_within_bounds": true}
+    },
     "allowed_count": 1,
     "async_schedule": {
       "fallback_count": 2,

@@ -9,12 +9,14 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 from deployment_gate import (  # noqa: E402
     ActionChunk,
     ActionPacket,
+    AppliedAction,
     BURSTED_LATENCIES_MS,
     GateConfig,
     LATENCIES_MS,
     ReactivationReceipt,
     SCATTERED_LATENCIES_MS,
     audit_async_schedule,
+    action_transition_audit,
     audit_fallback_lifecycle,
     evaluate,
     fallback_lifecycle_audit,
@@ -236,6 +238,39 @@ class DeploymentGateTests(unittest.TestCase):
         bounded = gate(ActionPacket(20.0, 25.0, (1.2,), 2, 5, 0.2, "fixture-v1"), config)
         self.assertIn("invalid_action", invalid["reasons"])
         self.assertIn("action_out_of_bounds", bounded["reasons"])
+
+    def test_legal_endpoints_can_still_violate_the_transition_limit(self):
+        audit = action_transition_audit()
+        self.assertTrue(audit["legal_endpoint_jump"]["static_endpoint_within_bounds"])
+        self.assertFalse(audit["legal_endpoint_jump"]["allowed"])
+        self.assertEqual(audit["legal_endpoint_jump"]["reasons"], ["action_delta_exceeded"])
+
+    def test_smooth_transition_is_allowed_with_bound_prior_state(self):
+        audit = action_transition_audit()
+        self.assertTrue(audit["smooth_transition"]["allowed"])
+        self.assertEqual(audit["smooth_transition"]["reasons"], [])
+
+    def test_transition_gate_fails_closed_without_adjacent_applied_history(self):
+        packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")
+        config = GateConfig(max_action_delta_per_step=0.25)
+        self.assertEqual(gate(packet, config)["reasons"], ["missing_previous_applied_action"])
+        stale = gate(
+            packet,
+            config,
+            previous_applied_action=AppliedAction((0.0, 0.0), applied_step=0),
+        )
+        self.assertIn("previous_applied_step_mismatch", stale["reasons"])
+
+    def test_transition_gate_rejects_ambiguous_config_and_history(self):
+        packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")
+        with self.assertRaises(ValueError):
+            GateConfig(max_action_delta_per_step=float("nan"))
+        decision = gate(
+            packet,
+            GateConfig(max_action_delta_per_step=0.25),
+            previous_applied_action=AppliedAction((0.0,), applied_step=1),
+        )
+        self.assertIn("action_shape_mismatch", decision["reasons"])
 
     def test_fallback_is_not_hard_coded(self):
         packet = ActionPacket(120.0, 25.0, (0.2,), 2, 5, 0.2, "fixture-v1")

@@ -348,8 +348,8 @@ VALID_DRIVING_PACKAGE = {
         "deployment_or_safety_gate": {
             "chapter": 21,
             "artifact": "EXP-21-01",
-            "revision": "fixture-v7",
-            "decision": "reject stale, late, uncertain, or out-of-bounds actions and retain severity-stratified fallback consequences",
+            "revision": "fixture-v8",
+            "decision": "reject stale, late, uncertain, out-of-bounds, or cross-step discontinuous actions and retain severity-stratified fallback consequences",
             "depends_on": ["input_contract", "method_contract"],
         },
         "evidence_package": {
