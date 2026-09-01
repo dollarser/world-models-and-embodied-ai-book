@@ -53,6 +53,9 @@ FENCED_BLOCK_PATTERN = re.compile(r"^```[^\n]*\n.*?^```\s*$", re.MULTILINE | re.
 HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
 PRD_CHAPTER_HEADING_PATTERN = re.compile(r"^#### 第(\d+)章[^\n]*$", re.MULTILINE)
 EXPERIMENT_ID_PATTERN = re.compile(r"\bEXP-\d{2}-\d{2}\b")
+DOCUMENTED_ASSET_VERSION_PATTERN = re.compile(
+    r"\b((?:EXP|BENCH)-\d{2}-\d{2})(?:\.json)?`?(?:\s+的)?\s+((?:fixture-)?v\d+)\b"
+)
 REQUIRED_CHAPTER_SECTIONS = ("本章契约", "小结", "练习", "延伸阅读", "验收与审查记录")
 REQUIRED_READER_TERMS = (
     "RSSM",
@@ -120,6 +123,72 @@ def check_json() -> list[str]:
         except (OSError, json.JSONDecodeError) as exc:
             errors.append(f"invalid JSON {path.relative_to(ROOT)}: {exc}")
     return errors
+
+
+def check_documented_asset_version_contract(
+    documents: dict[str, str], registered_versions: dict[str, str]
+) -> list[str]:
+    """Keep explicit EXP/BENCH versions in current reader documents aligned with their cards."""
+
+    errors: list[str] = []
+    normalized_versions = {
+        asset_id: version.removeprefix("fixture-")
+        for asset_id, version in registered_versions.items()
+    }
+    for document, text in documents.items():
+        for match in DOCUMENTED_ASSET_VERSION_PATTERN.finditer(text):
+            asset_id, documented_version = match.groups()
+            expected_version = normalized_versions.get(asset_id)
+            if expected_version is None:
+                errors.append(
+                    f"current document {document} names versioned asset without a registered card: {asset_id}"
+                )
+                continue
+            if documented_version.removeprefix("fixture-") != expected_version:
+                errors.append(
+                    f"current document {document} has stale {asset_id} version "
+                    f"{documented_version}; registered card is {registered_versions[asset_id]}"
+                )
+    return errors
+
+
+def check_documented_asset_versions() -> list[str]:
+    """Load current chapter documents and card versions, excluding historical review snapshots."""
+
+    try:
+        manifest = json.loads((ROOT / "specs/book-manifest.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    documents: dict[str, str] = {}
+    for chapter in manifest.get("chapters", []):
+        if not isinstance(chapter, dict) or not isinstance(chapter.get("document"), str):
+            continue
+        document = chapter["document"]
+        path = ROOT / document
+        if path.is_file():
+            documents[document] = path.read_text(encoding="utf-8")
+
+    registered_versions: dict[str, str] = {}
+    for card_path in ROOT.glob("labs/**/experiment-card.json"):
+        try:
+            card = json.loads(card_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        asset_id = card.get("id") if isinstance(card, dict) else None
+        version = card.get("data", {}).get("version") if isinstance(card, dict) else None
+        if isinstance(asset_id, str) and isinstance(version, str):
+            registered_versions[asset_id] = version
+    for card_path in ROOT.glob("benchmarks/*.json"):
+        try:
+            card = json.loads(card_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        asset_id = card.get("id") if isinstance(card, dict) else None
+        version = card.get("protocol", {}).get("version") if isinstance(card, dict) else None
+        if isinstance(asset_id, str) and isinstance(version, str):
+            registered_versions[asset_id] = version
+    return check_documented_asset_version_contract(documents, registered_versions)
 
 
 def check_claim_contract(
@@ -860,6 +929,7 @@ def main() -> int:
     errors = (
         check_required()
         + check_json()
+        + check_documented_asset_versions()
         + check_manifest()
         + check_experiment_assets()
         + check_markdown_links()
@@ -876,7 +946,7 @@ def main() -> int:
         return 1
     print(
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
-        "experiment asset packages, heading hierarchy, chapter teaching sections, reader terminology, "
+        "experiment asset packages, explicit asset versions, heading hierarchy, chapter teaching sections, reader terminology, "
         "fact/inference evidence, critical "
         "recommendation policy, research radar, manifest, "
         "local links, 22-chapter PRD tier mapping"

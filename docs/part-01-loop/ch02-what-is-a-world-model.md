@@ -185,7 +185,7 @@ flowchart LR
 - `unsupported`：当前卡片证据不足以发布该声明，不等于已经证明能力不存在；
 - `scope_dependent`：系统族包含多种实现，必须锁定具体版本后再判断。
 
-下面的矩阵来自 `EXP-02-01` v2 的八张固定卡。它刻意拆开四个经常被错误合并的命题：有时间/转移预测、能输入候选动作、动态是学习得到的、以及直接输出策略却没有独立转移接口。
+下面的矩阵来自 `EXP-02-01` v3 的八张固定卡。它刻意拆开四个经常被错误合并的命题：有时间/转移预测、能输入候选动作、动态是学习得到的、以及直接输出策略却没有独立转移接口。
 
 | 固定卡片 | 时间/转移证据 | 候选动作干预 | 学习且动作条件的转移 | 策略输出但无独立转移 |
 | --- | --- | --- | --- | --- |
@@ -198,7 +198,7 @@ flowchart LR
 | 数字孪生 archetype | scope-dependent | scope-dependent | scope-dependent | unsupported |
 | CARLA | supported | supported | unsupported | unsupported |
 
-*TAB-02-02：`EXP-02-01` v2 的能力证据矩阵。状态描述锁定卡片，而不是对同名系统未来版本或整个研究方向作永久判断。*
+*TAB-02-02：`EXP-02-01` v3 的能力证据矩阵。状态描述锁定卡片，而不是对同名系统未来版本或整个研究方向作永久判断。*
 
 矩阵展示的是逻辑蕴含边界。VideoGPT 有时间预测，不代表可做动作反事实；π₀ 直接生成动作，不代表存在可单独调用的环境转移；MuJoCo 和 CARLA 接受控制并推进状态，但动态不是从数据学习得到；数字孪生若不锁定实例则不能强行二值化。2026-09-01 核查时，[V-JEPA 2 官方仓库](https://github.com/facebookresearch/vjepa2)同时提供无动作预训练表征与 V-JEPA 2-AC 动作条件 predictor，正说明同一项目族内部也必须按具体组件分类。[OpenPI 官方仓库](https://github.com/Physical-Intelligence/openpi)则明确把 π₀、π₀-FAST 和 π₀.₅列为 VLA 模型；能输出 action chunk 仍不自动提供独立环境 transition。
 
@@ -283,7 +283,7 @@ make ch02-smoke
 
 `CLAIM-02-04`（result）：`EXP-02-01` 在固定 fixture 上完成了 8/8 类别、8/8 来源和 8/8 证据限制检查。它证明分类契约可执行，不证明被列系统的性能、可复现性或完整能力。
 
-`CLAIM-02-05`（result）：`EXP-02-01` v2 中，只有 3/8 固定卡片同时满足“学习动态 + 候选动作条件”，而转移证据、动作干预和直接策略输出分别属于不同集合。该计数只描述本书选定的八个教学 archetype，不估计现实项目比例。
+`CLAIM-02-05`（result）：`EXP-02-01` v3 中，只有 3/8 固定卡片同时满足“学习动态 + 候选动作条件”，而转移证据、动作干预和直接策略输出分别属于不同集合。该计数只描述本书选定的八个教学 archetype，不估计现实项目比例。
 
 ## 2.9 失效模式与安全边界
 
@@ -352,6 +352,6 @@ make ch02-smoke
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch02-state-aliasing-review-2026-09-01.md`；
+- 审查记录路径：`reviews/ch02-state-aliasing-review-2026-09-01.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`；
 - 已知限制：系统卡基于论文与官方文档元数据，没有运行八个上游系统；
 - 下一步：与第6章 belief state、第9章 E2/E4 评测和第15章 policy memory 继续执行跨章语义审查。

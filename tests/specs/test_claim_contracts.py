@@ -8,6 +8,7 @@ from scripts.check_book import (
     check_chapter_sections,
     check_claim_contract,
     check_critical_recommendation_contract,
+    check_documented_asset_version_contract,
     check_fact_evidence_contract,
     check_experiment_asset_contract,
     check_figure_contract,
@@ -71,6 +72,33 @@ class ClaimContractTest(unittest.TestCase):
         text = "`CLAIM-06-01`（result）：fixture output is 0.5\n"
         errors = check_claim_contract(6, ["CLAIM-06-01"], text, {"CLAIM-06-01"})
         self.assertTrue(any("must state a limitation" in item for item in errors))
+
+
+class DocumentedAssetVersionContractTest(unittest.TestCase):
+    def test_accepts_current_experiment_and_benchmark_versions(self) -> None:
+        documents = {
+            "docs/ch02.md": "`EXP-02-01` v3 current fixture",
+            "docs/ch20.md": "`benchmarks/BENCH-20-01.json` v5 frozen protocol",
+        }
+        versions = {"EXP-02-01": "v3", "BENCH-20-01": "fixture-v5"}
+        self.assertEqual([], check_documented_asset_version_contract(documents, versions))
+
+    def test_rejects_stale_and_unregistered_explicit_versions(self) -> None:
+        documents = {
+            "docs/ch21.md": "`EXP-21-01` v5 old; `EXP-99-01` v1 missing",
+        }
+        errors = check_documented_asset_version_contract(documents, {"EXP-21-01": "v6"})
+        self.assertTrue(any("stale EXP-21-01 version v5" in item for item in errors))
+        self.assertTrue(any("without a registered card: EXP-99-01" in item for item in errors))
+
+    def test_ignores_unversioned_asset_references(self) -> None:
+        self.assertEqual(
+            [],
+            check_documented_asset_version_contract(
+                {"docs/ch04.md": "Run `EXP-04-01`; version is resolved from its card."},
+                {"EXP-04-01": "v4"},
+            ),
+        )
 
 
 class FigureContractTest(unittest.TestCase):

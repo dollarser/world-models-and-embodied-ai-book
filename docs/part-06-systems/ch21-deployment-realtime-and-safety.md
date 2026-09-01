@@ -156,7 +156,7 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 
 fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80,20,20 ms`。两者 mean 都是 `40 ms`，deadline miss 都是 `2/6`，p95/p99/max 都是 `80 ms`；唯一变化是连续 miss 最大长度分别为 `2` 和 `1`。
 
-`CLAIM-21-09`（result）：`EXP-21-01` v3 的 burst/scattered 对照证明 mean、尾分位、max 和 miss rate 完全相同时，连续 deadline miss 长度仍可不同。该结果只验证日志字段必要性，不估计真实调度 burst。
+`CLAIM-21-09`（result）：`EXP-21-01` v6 的 burst/scattered 对照证明 mean、尾分位、max 和 miss rate 完全相同时，连续 deadline miss 长度仍可不同。该结果只验证日志字段必要性，不估计真实调度 burst。
 
 ### 21.4.3 异步队列：有 action 也可能不可执行
 
@@ -192,7 +192,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 
 [Autoware 1.8.0 fail-safe API](https://autowarefoundation.github.io/autoware-documentation/1.8.0/design/autoware-architecture-v1/interfaces/ad-api/features/fail-safe/) 把 MRM 运行状态分为 `NONE / OPERATING / SUCCEEDED / FAILED`：`SUCCEEDED` 表示车辆已处于安全状态，`FAILED` 则表示仍不安全，一般需要切换到其他 MRM 行为 `[O,R1]`。其 request API 又是另一个触发接口。因此本书在该 API 之外加一个本地 `requested` 控制面状态，用来检查“发出请求”不能被当成“已经开始”。这不是对 Autoware message enum 的重命名。
 
-`EXP-21-01` v5 另加三条四步生命周期。所有状态都是手工报告，`max_operating_steps=2` 也是离散教学阈值，不是真实时间或推荐参数。
+`EXP-21-01` v6 保留三条四步生命周期。所有状态都是手工报告，`max_operating_steps=2` 也是离散教学阈值，不是真实时间或推荐参数。
 
 | 对照路径 | 关键步 | 结果 | 重新激活语义 |
 | --- | ---: | --- | --- |
@@ -325,5 +325,5 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/ch21-reactivation-authorization-review-2026-09-01.md`、`reviews/ch21-fallback-lifecycle-review-2026-09-02.md`、`reviews/ch15-ch21-reactivation-receipt-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
+- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/ch21-reactivation-authorization-review-2026-09-01.md`、`reviews/ch21-fallback-lifecycle-review-2026-09-02.md`、`reviews/ch15-ch21-reactivation-receipt-review-2026-09-02.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
 - 已知限制：没有测量真实墙钟、调度器、网络、模型、uncertainty estimator、ROS、机器人、车辆或 GPU；异步 schedule、状态机和 receipt 均为离散合同，不验证执行器可达性、MRM 完成、身份认证、消息完整性或安全认证。
