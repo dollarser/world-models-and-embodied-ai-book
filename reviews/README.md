@@ -31,6 +31,7 @@
 - [全书推断链与结果解释审查](inference-result-explanation-review-2026-09-01.md)
 - [全书关键建议适用性审查](critical-recommendation-review-2026-09-01.md)
 - [第7章随机传播与风险目标审查](ch07-stochastic-risk-planning-review-2026-09-01.md)
+- [第7章重规划预算与回报口径审查](ch07-replanning-protocol-review-2026-09-01.md)
 - [PRD—正文—实验档位一致性审查](prd-experiment-tier-alignment-review-2026-09-01.md)
 - [实验资产最小合同审查](experiment-asset-contract-review-2026-09-01.md)
 - [快速演进研究雷达审查](research-radar-review-2026-09-01.md)

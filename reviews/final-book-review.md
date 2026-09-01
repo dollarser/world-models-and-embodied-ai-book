@@ -15,14 +15,14 @@
 | --- | --- | --- |
 | 第1章 | 离线 CV 指标与闭环后果边界清楚，机器人/驾驶双案例不越权 | 明确无 3D/RL 前置，提供三条阅读路线和标量反例 |
 | 第5章 | 点预测、多模态分布、VAE/token/AR/masked/diffusion/flow 的用途边界一致 | 只推导后续章节所需桥接，不要求生成模型经验或 GPU |
-| 第7章 | horizon、terminal value、MPC/CEM/tree search、价值等价与模型漏洞分开 | 已知三状态反例能区分短视、重规划和真实回查 |
+| 第7章 | horizon、terminal value、MPC/CEM/tree search、价值等价与模型漏洞分开 | 已知三状态反例能区分短视、等动作预算重规划、环境 reward 与 bootstrap objective |
 | 第22章 | 问题、对照、资产、许可、资源、失败、驾驶 gate 和停止条件组成可审计闭环 | 无 GPU 可完整完成 S 档，M/L1/L2 保持可选且不诱导购置硬件 |
 
 自动驾驶不是附录：四章分别覆盖闭环误差、多未来、候选轨迹规划与 capstone 合同，并与第19章 MetaDrive/CARLA 分层、第20章指标和第21章最小风险网关一致。
 
 ## 3. 代码审查
 
-终审当时四章共 29 个单元测试、全书 136 个。2026-09-01 后续增强分别为第20章增加 3 个统计边界测试、第5章增加 3 个生成分布诊断测试、第21章增加 2 个 uncertainty gate/risk–coverage 测试、第4章增加 8 个时序数据合同测试、第4/8/20章增加 11 个结束语义与分母测试、第22章增加 3 个跨章 trace 测试、第13章增加 6 个执行时域/时间集成测试、第6章增加 6 个 KL 路由/free-nats 诊断与输入合同测试、第9章增加 6 个 action sensitivity/长时缺失分母与输入合同测试、第2章增加 6 个三态能力蕴含与元数据合同测试、第10章增加 7 个 ID/shift probe、动作反事实与输入合同测试、第11章增加 6 个动作方向、轨迹分母与输入合同测试、第3章增加 4 个 optical/body 轴、z-depth/range 和输入合同测试、第12章增加 6 个动态证据、footprint、新鲜度与输入合同测试、第14章增加 7 个候选—batch 预算、安全筛选与输入合同测试、第15章增加 6 个执行时域、命令顺序、clock 与字段身份测试、第16章增加 3 个 adapter schema fingerprint、陈旧合同与输入类型测试、第17章增加 4 个平均秩 Spearman、support gate、状态与分数输入合同测试、第18章增加 4 个联合轨迹支持、RLOO 退化与输入阈值测试，第19章增加 2 个参数不可辨识、state anchor 与输入测量测试，第20章增加 2 个 factorial protocol interaction 测试，第21章增加 5 个 deadline burst、async schedule 与 fallback hysteresis 测试，第22章增加 8 个 artifact identity、selection split、评测冻结、安全门与资源档位测试，第3章再增加 2 个 proper rotation 与变换链组合测试，第7章增加 3 个均值/下尾/chance constraint 测试，第20章增加 3 个 paired route、micro/macro 与 cluster bootstrap 合同测试，第1章增加 4 个及时反馈、观测时延、动作权限与输入合同测试，第2章再增加 4 个 state-aliasing、history gap 与输入合同测试，第3章再增加 4 个时间错位、转动弦长与输入合同测试，第8章再增加 3 个累计 survival weight 与 post-terminal loss 输入合同测试，第12章再增加 2 个稀疏 waypoint 路径段与检查分母测试；当前全书为 279 个，详见对应的日期审查记录。`check_results.py` 逐章执行 smoke，并与实验卡登记的 22 个结果 JSON 做结构和值精确比较；实验卡只声明解析/手工 fixture 的结果。
+终审当时四章共 29 个单元测试、全书 136 个。2026-09-01 后续增强分别为第20章增加 3 个统计边界测试、第5章增加 3 个生成分布诊断测试、第21章增加 2 个 uncertainty gate/risk–coverage 测试、第4章增加 8 个时序数据合同测试、第4/8/20章增加 11 个结束语义与分母测试、第22章增加 3 个跨章 trace 测试、第13章增加 6 个执行时域/时间集成测试、第6章增加 6 个 KL 路由/free-nats 诊断与输入合同测试、第9章增加 6 个 action sensitivity/长时缺失分母与输入合同测试、第2章增加 6 个三态能力蕴含与元数据合同测试、第10章增加 7 个 ID/shift probe、动作反事实与输入合同测试、第11章增加 6 个动作方向、轨迹分母与输入合同测试、第3章增加 4 个 optical/body 轴、z-depth/range 和输入合同测试、第12章增加 6 个动态证据、footprint、新鲜度与输入合同测试、第14章增加 7 个候选—batch 预算、安全筛选与输入合同测试、第15章增加 6 个执行时域、命令顺序、clock 与字段身份测试、第16章增加 3 个 adapter schema fingerprint、陈旧合同与输入类型测试、第17章增加 4 个平均秩 Spearman、support gate、状态与分数输入合同测试、第18章增加 4 个联合轨迹支持、RLOO 退化与输入阈值测试，第19章增加 2 个参数不可辨识、state anchor 与输入测量测试，第20章增加 2 个 factorial protocol interaction 测试，第21章增加 5 个 deadline burst、async schedule 与 fallback hysteresis 测试，第22章增加 8 个 artifact identity、selection split、评测冻结、安全门与资源档位测试，第3章再增加 2 个 proper rotation 与变换链组合测试，第7章增加 3 个均值/下尾/chance constraint 测试，第20章增加 3 个 paired route、micro/macro 与 cluster bootstrap 合同测试，第1章增加 4 个及时反馈、观测时延、动作权限与输入合同测试，第2章再增加 4 个 state-aliasing、history gap 与输入合同测试，第3章再增加 4 个时间错位、转动弦长与输入合同测试，第8章再增加 3 个累计 survival weight 与 post-terminal loss 输入合同测试，第12章再增加 2 个稀疏 waypoint 路径段与检查分母测试，第7章再增加 3 个动作预算、环境回报与 terminal-value 分账测试；当前全书为 282 个，详见对应的日期审查记录。`check_results.py` 逐章执行 smoke，并与实验卡登记的 22 个结果 JSON 做结构和值精确比较；实验卡只声明解析/手工 fixture 的结果。
 
 终审修复两类输入合同，但固定指标未改变：
 

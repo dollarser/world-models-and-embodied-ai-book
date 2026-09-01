@@ -35,11 +35,42 @@ class ModelPlanningTests(unittest.TestCase):
         self.assertEqual(result["actions"], ("advance",))
         self.assertEqual(result["predicted_return"], 0.8)
 
-    def test_replanning_recovers_from_fixed_disturbance(self):
+    def test_legacy_replanning_result_exposes_unequal_budget(self):
         open_loop = execute_with_disturbance(False)
         receding = execute_with_disturbance(True)
         self.assertEqual(open_loop["return"], -0.2)
         self.assertEqual(receding["return"], 0.7)
+        self.assertEqual(open_loop["post_disturbance_action_budget"], 2)
+        self.assertEqual(receding["post_disturbance_action_budget"], 3)
+
+    def test_fixed_budget_reward_only_comparison_is_like_for_like(self):
+        open_loop = execute_with_disturbance(False, 2)
+        receding = execute_with_disturbance(True, 2)
+        self.assertEqual(open_loop["post_disturbance_action_budget"], 2)
+        self.assertEqual(receding["post_disturbance_action_budget"], 2)
+        self.assertEqual(open_loop["environment_return"], -0.2)
+        self.assertEqual(receding["environment_return"], -0.1)
+        self.assertEqual(receding["post_disturbance_executed_actions"], ("harvest",))
+
+    def test_fixed_budget_terminal_value_is_not_environment_return(self):
+        values = {0: 0.8, 1: 0.9, 2: 1.0}
+        open_loop = execute_with_disturbance(False, 2, values)
+        receding = execute_with_disturbance(True, 2, values)
+        self.assertEqual(open_loop["return"], -0.2)
+        self.assertEqual(receding["environment_return"], -0.3)
+        self.assertEqual(receding["terminal_value_contribution"], 1.0)
+        self.assertEqual(receding["return"], 0.7)
+        self.assertFalse(receding["terminated"])
+
+    def test_disturbance_protocol_rejects_ambiguous_or_invalid_budgets(self):
+        with self.assertRaises(ValueError):
+            execute_with_disturbance(1)
+        with self.assertRaises(ValueError):
+            execute_with_disturbance(True, 0)
+        with self.assertRaises(ValueError):
+            execute_with_disturbance(True, 3)
+        with self.assertRaises(ValueError):
+            execute_with_disturbance(True, terminal_values={0: 0.8, 1: 0.9, 2: 1.0})
 
     def test_value_fixture_ignores_observation_labels(self):
         result = evaluate()["value_equivalence_fixture"]

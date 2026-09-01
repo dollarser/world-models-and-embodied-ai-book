@@ -2,6 +2,119 @@
   "experiment_id": "EXP-07-01",
   "gpu_verified": false,
   "metrics": {
+    "disturbance_protocol_audit": {
+      "fixed_budget_reward_only": {
+        "comparison_scope": "one deterministic disturbance fixture",
+        "objective": "sum of observed environment rewards within two post-disturbance action slots",
+        "open_loop": {
+          "environment_return": -0.2,
+          "final_state": 1,
+          "post_disturbance_action_budget": 2,
+          "post_disturbance_actions": [
+            "advance",
+            "harvest"
+          ],
+          "post_disturbance_executed_actions": [
+            "advance",
+            "harvest"
+          ],
+          "return": -0.2,
+          "terminal_value_contribution": 0.0,
+          "terminated": true
+        },
+        "post_disturbance_action_budget_equal": true,
+        "replanning": {
+          "environment_return": -0.1,
+          "final_state": 0,
+          "post_disturbance_action_budget": 2,
+          "post_disturbance_actions": [
+            "harvest",
+            "advance"
+          ],
+          "post_disturbance_executed_actions": [
+            "harvest"
+          ],
+          "return": -0.1,
+          "terminal_value_contribution": 0.0,
+          "terminated": true
+        }
+      },
+      "fixed_budget_with_terminal_value": {
+        "comparison_scope": "one deterministic disturbance fixture with frozen terminal values",
+        "objective": "environment return plus a frozen terminal value after two post-disturbance action slots",
+        "open_loop": {
+          "environment_return": -0.2,
+          "final_state": 1,
+          "post_disturbance_action_budget": 2,
+          "post_disturbance_actions": [
+            "advance",
+            "harvest"
+          ],
+          "post_disturbance_executed_actions": [
+            "advance",
+            "harvest"
+          ],
+          "return": -0.2,
+          "terminal_value_contribution": 0.0,
+          "terminated": true
+        },
+        "post_disturbance_action_budget_equal": true,
+        "replanning": {
+          "environment_return": -0.3,
+          "final_state": 2,
+          "post_disturbance_action_budget": 2,
+          "post_disturbance_actions": [
+            "advance",
+            "advance"
+          ],
+          "post_disturbance_executed_actions": [
+            "advance",
+            "advance"
+          ],
+          "return": 0.7,
+          "terminal_value_contribution": 1.0,
+          "terminated": false
+        }
+      },
+      "legacy_unequal_budget": {
+        "open_loop": {
+          "environment_return": -0.2,
+          "final_state": 1,
+          "post_disturbance_action_budget": 2,
+          "post_disturbance_actions": [
+            "advance",
+            "harvest"
+          ],
+          "post_disturbance_executed_actions": [
+            "advance",
+            "harvest"
+          ],
+          "return": -0.2,
+          "terminal_value_contribution": 0.0,
+          "terminated": true
+        },
+        "post_disturbance_action_budget_equal": false,
+        "reason": "post-disturbance action budgets differ",
+        "replanning": {
+          "environment_return": 0.7,
+          "final_state": 2,
+          "post_disturbance_action_budget": 3,
+          "post_disturbance_actions": [
+            "advance",
+            "advance",
+            "harvest"
+          ],
+          "post_disturbance_executed_actions": [
+            "advance",
+            "advance",
+            "harvest"
+          ],
+          "return": 0.7,
+          "terminal_value_contribution": 0.0,
+          "terminated": true
+        }
+      }
+    },
     "horizon_1": {
       "actions": [
         "harvest"
@@ -24,25 +137,6 @@
       ],
       "candidate_count": 8,
       "predicted_return": 0.8
-    },
-    "open_loop_after_disturbance": {
-      "final_state": 1,
-      "post_disturbance_actions": [
-        "advance",
-        "harvest"
-      ],
-      "return": -0.2,
-      "terminated": true
-    },
-    "receding_horizon_after_disturbance": {
-      "final_state": 2,
-      "post_disturbance_actions": [
-        "advance",
-        "advance",
-        "harvest"
-      ],
-      "return": 0.7,
-      "terminated": true
     },
     "risk_objective_fixture": {
       "actions": {
@@ -73,6 +167,6 @@
       "scope": "one fixed transition/reward model and one value function"
     }
   },
-  "scope": "enumerated delayed-reward and five-scenario risk fixtures; not learned-model, probability, safety, or CEM performance",
+  "scope": "enumerated delayed-reward, controlled replanning-protocol, and five-scenario risk fixtures; not learned-model, probability, safety, or CEM performance",
   "status": "smoke"
 }

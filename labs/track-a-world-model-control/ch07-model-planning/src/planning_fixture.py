@@ -37,19 +37,21 @@ def rollout(state: int, actions: tuple[str, ...], terminal_values: dict[int, flo
     ):
         raise ValueError("terminal values must cover all states with finite numbers")
     current = state
-    total = 0.0
+    environment_return = 0.0
     executed = []
     terminated = False
     for action in actions:
         current, reward, terminated = transition(current, action)
-        total += reward
+        environment_return += reward
         executed.append(action)
         if terminated:
             break
-    if not terminated and terminal_values is not None:
-        total += terminal_values[current]
+    terminal_value_contribution = 0.0 if terminated or terminal_values is None else terminal_values[current]
+    objective_return = environment_return + terminal_value_contribution
     return {
-        "return": round(total, 12),
+        "return": round(objective_return, 12),
+        "environment_return": round(environment_return, 12),
+        "terminal_value_contribution": round(terminal_value_contribution, 12),
         "final_state": current,
         "terminated": terminated,
         "executed_actions": tuple(executed),
@@ -65,21 +67,50 @@ def plan(state: int, horizon: int, terminal_values: dict[int, float] | None = No
     return {"actions": best_actions, "predicted_return": best_return, "candidate_count": len(candidates)}
 
 
-def execute_with_disturbance(replan: bool) -> dict[str, object]:
+def execute_with_disturbance(
+    replan: bool,
+    post_disturbance_budget: int | None = None,
+    terminal_values: dict[int, float] | None = None,
+) -> dict[str, object]:
+    if not isinstance(replan, bool):
+        raise ValueError("replan must be a boolean")
+    if post_disturbance_budget is not None and (
+        isinstance(post_disturbance_budget, bool)
+        or not isinstance(post_disturbance_budget, int)
+        or post_disturbance_budget <= 0
+    ):
+        raise ValueError("post-disturbance budget must be a positive integer or None")
+    if terminal_values is not None and post_disturbance_budget is None:
+        raise ValueError("terminal values require an explicit post-disturbance budget")
     state = 0
-    total = 0.0
     initial = plan(state, 3)["actions"]
     state, reward, _ = transition(state, initial[0])
-    total += reward
     state = 0  # a fixed external disturbance after the first action
-    remaining = plan(state, 3)["actions"] if replan else initial[1:]
-    result = rollout(state, remaining)
-    total += result["return"]
+    if post_disturbance_budget is None:
+        remaining = plan(state, 3)["actions"] if replan else initial[1:]
+        available_budget = len(remaining)
+    else:
+        stale_suffix = initial[1:]
+        if post_disturbance_budget > len(stale_suffix):
+            raise ValueError("fixed budget cannot exceed the stale suffix length")
+        remaining = (
+            plan(state, post_disturbance_budget, terminal_values)["actions"]
+            if replan
+            else stale_suffix[:post_disturbance_budget]
+        )
+        available_budget = post_disturbance_budget
+    result = rollout(state, remaining, terminal_values)
+    environment_return = reward + result["environment_return"]
+    objective_return = environment_return + result["terminal_value_contribution"]
     return {
-        "return": round(total, 12),
+        "return": round(objective_return, 12),
+        "environment_return": round(environment_return, 12),
+        "terminal_value_contribution": result["terminal_value_contribution"],
         "final_state": result["final_state"],
         "terminated": result["terminated"],
         "post_disturbance_actions": remaining,
+        "post_disturbance_executed_actions": result["executed_actions"],
+        "post_disturbance_action_budget": available_budget,
     }
 
 
@@ -154,12 +185,38 @@ def evaluate() -> dict[str, object]:
     values = {0: 0.8, 1: 0.9, 2: 1.0}
     true_backups = {state: bellman_backup(state, values) for state in TRUE_OBSERVATIONS}
     surrogate_backups = {state: bellman_backup(state, values) for state in SURROGATE_OBSERVATIONS}
+    legacy_open_loop = execute_with_disturbance(False)
+    legacy_replanning = execute_with_disturbance(True)
+    fixed_reward_open_loop = execute_with_disturbance(False, 2)
+    fixed_reward_replanning = execute_with_disturbance(True, 2)
+    fixed_value_open_loop = execute_with_disturbance(False, 2, terminal_values)
+    fixed_value_replanning = execute_with_disturbance(True, 2, terminal_values)
     return {
         "horizon_1": short,
         "horizon_3": long,
         "horizon_1_with_terminal_value": value_bootstrapped,
-        "open_loop_after_disturbance": execute_with_disturbance(False),
-        "receding_horizon_after_disturbance": execute_with_disturbance(True),
+        "disturbance_protocol_audit": {
+            "legacy_unequal_budget": {
+                "open_loop": legacy_open_loop,
+                "replanning": legacy_replanning,
+                "post_disturbance_action_budget_equal": False,
+                "reason": "post-disturbance action budgets differ",
+            },
+            "fixed_budget_reward_only": {
+                "open_loop": fixed_reward_open_loop,
+                "replanning": fixed_reward_replanning,
+                "post_disturbance_action_budget_equal": True,
+                "comparison_scope": "one deterministic disturbance fixture",
+                "objective": "sum of observed environment rewards within two post-disturbance action slots",
+            },
+            "fixed_budget_with_terminal_value": {
+                "open_loop": fixed_value_open_loop,
+                "replanning": fixed_value_replanning,
+                "post_disturbance_action_budget_equal": True,
+                "comparison_scope": "one deterministic disturbance fixture with frozen terminal values",
+                "objective": "environment return plus a frozen terminal value after two post-disturbance action slots",
+            },
+        },
         "value_equivalence_fixture": {
             "observation_match_rate": sum(
                 TRUE_OBSERVATIONS[state] == SURROGATE_OBSERVATIONS[state] for state in TRUE_OBSERVATIONS

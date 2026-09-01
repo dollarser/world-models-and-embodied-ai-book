@@ -3,11 +3,12 @@
   "id": "EXP-07-01",
   "chapter": 7,
   "status": "smoke",
-  "claim_ids": ["CLAIM-07-02", "CLAIM-07-03", "CLAIM-07-04", "CLAIM-07-07"],
+  "claim_ids": ["CLAIM-07-02", "CLAIM-07-03", "CLAIM-07-04", "CLAIM-07-07", "CLAIM-07-08"],
   "claim_scope": [
     "finite planning horizon can change the first action in a fixed delayed-reward MDP",
     "a terminal value can extend a one-step planner in the same fixture",
-    "replanning after an observed disturbance can outperform executing the stale suffix",
+    "under a fixed two-action post-disturbance budget, replanning can outperform a stale suffix on observed environment reward in one deterministic fixture",
+    "a frozen terminal-value contribution remains distinguishable from observed environment reward in the fixed-budget objective",
     "expected return, empirical lower-tail return, and a fixed chance constraint can rank the same hand-authored actions differently"
   ],
   "code": {
@@ -17,7 +18,7 @@
   },
   "data": {
     "name": "procedural delayed-reward MDP and observation labels",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -39,8 +40,10 @@
   "metrics": [
     {"name": "horizon_1_return", "value": 0.0, "unit": "return", "split": "nominal"},
     {"name": "horizon_3_return", "value": 0.8, "unit": "return", "split": "nominal"},
-    {"name": "open_loop_disturbed_return", "value": -0.2, "unit": "return", "split": "fixed-disturbance"},
-    {"name": "receding_horizon_disturbed_return", "value": 0.7, "unit": "return", "split": "fixed-disturbance"},
+    {"name": "fixed_budget_open_loop_environment_return", "value": -0.2, "unit": "return", "split": "fixed-disturbance-reward-only"},
+    {"name": "fixed_budget_replanning_environment_return", "value": -0.1, "unit": "return", "split": "fixed-disturbance-reward-only"},
+    {"name": "fixed_budget_replanning_bootstrapped_objective", "value": 0.7, "unit": "objective", "split": "fixed-disturbance-terminal-value"},
+    {"name": "fixed_budget_replanning_terminal_value_contribution", "value": 1.0, "unit": "value", "split": "fixed-disturbance-terminal-value"},
     {"name": "fixed_value_bellman_gap", "value": 0.0, "unit": "backup", "split": "label-surrogate"},
     {"name": "risky_mean_return", "value": 0.8, "unit": "return", "split": "five-scenario-risk"},
     {"name": "risky_worst_20_percent_return", "value": -2.0, "unit": "return", "split": "five-scenario-risk"},
@@ -51,6 +54,8 @@
     "known deterministic rules rather than a learned world model",
     "exhaustive enumeration rather than CEM, MCTS, or continuous optimization",
     "hand-authored exact terminal values",
+    "one fixed disturbance and deadline; the legacy unequal-budget result is retained only as a protocol negative control",
+    "the bootstrapped objective is not an observed environment return",
     "value-equivalence check covers one value function and does not establish universal equivalence",
     "five equally weighted hand-authored outcomes do not estimate real tail probabilities or safety",
     "no simulator, neural network, policy learning, GPU, robot, or vehicle"

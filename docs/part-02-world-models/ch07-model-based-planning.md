@@ -1,10 +1,10 @@
 # 第7章 用模型做规划：从 PlaNet 到价值等价模型
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-07-01`
-> 关联声明：`CLAIM-07-01`～`CLAIM-07-07`
-> 关联图表：`FIG-07-01` / `TAB-07-01` / `TAB-07-02` / `TAB-07-03`
+> 关联声明：`CLAIM-07-01`～`CLAIM-07-08`
+> 关联图表：`FIG-07-01` / `TAB-07-01` / `TAB-07-02` / `TAB-07-03` / `TAB-07-04`
 > 资源档位：S / M
 > GPU 状态：待验证
 
@@ -67,7 +67,7 @@ flowchart LR
 
 ## 7.2 MPC：计划一段，只走一步
 
-Open-loop planning 一次生成完整序列并全部执行；MPC/receding horizon 每次观察后重规划，通常只执行首步。后者能纠正扰动和状态估计更新，但会增加在线计算，也不能修复第一步就错误的模型。
+Open-loop planning 一次生成完整序列并全部执行；MPC/receding horizon 每次观察后重规划，通常只执行首步。MIT *Underactuated Robotics* 给出的 MPC 基本循环也是“测量当前状态—从当前状态优化—执行首个动作—演化一步后重复” `[O,R1]`。后者能纠正扰动和状态估计更新，但会增加在线计算，也不能修复第一步就错误的模型。
 
 Horizon 太短会错过延迟收益；太长则扩大候选空间、模型复合误差和耗时。terminal value 可把 horizon 外收益压缩进末端，但 value 本身可能偏置或 OOD。
 
@@ -91,7 +91,7 @@ execute(first_action(best_candidate))
 
 若所有候选越界、模型不确定性高或计算超时，规划器必须返回结构化拒绝，而不是输出未初始化均值。CEM 是近似优化器；同一模型下换 seed/预算可能换结果。
 
-[PlaNet](https://arxiv.org/abs/1811.04551)在 stochastic latent dynamics 中用在线规划选择动作，官方[开源实现](https://github.com/google-research/planet)提供 CEM 路径 `[A/O,R1]`。本书只复用其“belief—latent rollout—online planning”模式，没有运行旧版 TensorFlow 工程或论文任务。
+[PlaNet](https://proceedings.mlr.press/v97/hafner19a.html)在 stochastic latent dynamics 中用在线规划选择动作，官方[开源实现](https://github.com/google-research/planet)提供 CEM 路径 `[P/O,R1]`。本书只复用其“belief—latent rollout—online planning”模式，没有运行旧版 TensorFlow 工程或论文任务。
 
 ## 7.4 Tree search 与 MuZero：预测决策量
 
@@ -120,16 +120,29 @@ make ch07-smoke
 | H=1，无 terminal value | harvest | 0.0 |
 | H=3，穷举 8 个序列 | advance, advance, harvest | 0.8 |
 | H=1，精确 terminal value | advance | 0.8 predicted |
-| 扰动后执行旧 suffix | advance, harvest | -0.2 total |
-| 扰动后重新规划 | advance, advance, harvest | 0.7 total |
 
-*TAB-07-01：`EXP-07-01` 的 horizon 与反馈结果。回报无量纲，规则和 value 均为手工设定。*
+*TAB-07-01：`EXP-07-01` 的 horizon 结果。回报无量纲，规则和 value 均为手工设定。*
 
 `CLAIM-07-02`（result）：H=1 选择立即 harvest 得 0；H=3 找到延迟收益序列得 0.8。它证明这个 fixture 对 horizon 敏感，不表示更长永远更好。
 
 `CLAIM-07-03`（result）：加入手工精确 terminal value 后，H=1 首步变为 advance，预测 return 为 0.8；这验证 bootstrap 接口，不证明 learned value 无偏。
 
-`CLAIM-07-04`（result）：固定扰动把首步后的状态重置为 0，继续旧 suffix 得 -0.2，重规划得 0.7。两者执行步数不同，结果只说明新观测能改变此任务的有效计划。
+原 fixture 还曾把“执行两步旧 suffix 得 -0.2”与“重新规划三步并完成 harvest 得 0.7”并列。这个比较同时改变了反馈方式与扰动后的动作预算，**不能**把 0.9 的差归因于重规划。v3 保留该结果作为 protocol negative control，并增加两个固定为 2 个动作槽的受控比较：
+
+| 协议与策略 | 扰动后动作预算 | 实际执行 | 环境 reward sum | terminal value | 规划目标 |
+| --- | ---: | --- | ---: | ---: | ---: |
+| 旧协议：执行 stale suffix | 2 | advance, harvest | -0.2 | 0.0 | -0.2 |
+| 旧协议：重新规划 | 3 | advance, advance, harvest | 0.7 | 0.0 | 0.7 |
+| 固定预算、reward-only：stale suffix | 2 | advance, harvest | -0.2 | 0.0 | -0.2 |
+| 固定预算、reward-only：重新规划 | 2 | harvest | -0.1 | 0.0 | -0.1 |
+| 固定预算、冻结 terminal value：stale suffix | 2 | advance, harvest | -0.2 | 0.0 | -0.2 |
+| 固定预算、冻结 terminal value：重新规划 | 2 | advance, advance | -0.3 | 1.0 | 0.7 |
+
+*TAB-07-02：扰动重规划的 protocol audit。环境 reward 包含扰动前已经执行的 `advance=-0.1`；冻结 terminal value 只在预算耗尽且未终止时加入目标。旧协议两行预算不同，只是不可归因的负对照。*
+
+`CLAIM-07-04`（result）：固定两个扰动后动作槽且只累计观测到的环境 reward 时，stale suffix 得 -0.2，重新规划得 -0.1；该受控 fixture 只证明反馈可改变动作并在此目标下提高 0.1，不证明到达目标、普遍优于 open loop 或抵消模型误差。
+
+`CLAIM-07-08`（result）：同样固定两个动作槽并冻结手工 terminal value 时，重规划的环境 reward 为 -0.3、terminal-value contribution 为 1.0、规划目标为 0.7；因此 `0.7` 是带 bootstrap 的 objective，不是已经观测到的环境回报。
 
 ## 7.7 受限价值等价反例
 
@@ -140,7 +153,7 @@ fixture 另给同一三个状态两套完全不同的观测标签，因此观测
 | observation label match | 0% | 三个字符串 |
 | max Bellman backup gap | 0 | 一个 transition/reward 与一个 value function |
 
-*TAB-07-02：受限 value-equivalence fixture。不是视觉压缩或表示学习结果。*
+*TAB-07-03：受限 value-equivalence fixture。不是视觉压缩或表示学习结果。*
 
 这不能证明 surrogate 对新 reward、风险函数、policy、state aliasing 或 OOD 动作等价。
 
@@ -165,7 +178,7 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 | steady | 0.6, 0.6, 0.6, 0.6, 0.6 | 0.6 | 0.6 | 0.0 | 可行 |
 | risky | 1.5, 1.5, 1.5, 1.5, -2.0 | 0.8 | -2.0 | 0.2 | 不可行 |
 
-*TAB-07-03：固定五场景风险目标反例。来源：本书原创，MIT，2026-09-01。场景概率是手工设定，不代表真实机器人或驾驶事件频率。*
+*TAB-07-04：固定五场景风险目标反例。来源：本书原创，MIT，2026-09-01。场景概率是手工设定，不代表真实机器人或驾驶事件频率。*
 
 `CLAIM-07-07`（result）：在五个等权手工场景中，期望回报选择 risky（0.8 > 0.6），经验最差 20% 均值和失败概率上限 0.1 都选择 steady；该固定排序反例只证明聚合目标会改变动作选择，不估计真实尾部概率、不证明 CVaR 校准或系统安全。
 
@@ -195,7 +208,7 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 
 ## 小结
 
-模型规划是有限计算下的闭环优化。horizon、terminal value、候选预算与 replanning 共同决定动作；价值等价只在声明作用域内成立。
+模型规划是有限计算下的闭环优化。horizon、terminal value、候选预算与 replanning 共同决定动作；比较策略时必须冻结执行预算，并把环境回报与 bootstrap value 分开；价值等价只在声明作用域内成立。
 
 ## 练习
 
@@ -203,11 +216,12 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 2. 将穷举替换为固定 seed random shooting，画预算—最优值曲线。
 3. 注入 reward model 偏差，区分优化失败和模型失败。
 4. 为车辆急刹与绕行写一个含舒适/碰撞硬约束的候选表。
-5. 把 `TAB-07-03` 的 risky 失败值从 -2 改为不同数值，分别找出均值、最差 20% 均值和 chance constraint 改变选择的临界点；说明哪类改变属于偏好，哪类属于概率模型。
+5. 把 `TAB-07-04` 的 risky 失败值从 -2 改为不同数值，分别找出均值、最差 20% 均值和 chance constraint 改变选择的临界点；说明哪类改变属于偏好，哪类属于概率模型。
 
 ## 延伸阅读
 
-- [PlaNet 论文](https://arxiv.org/abs/1811.04551)与[官方代码](https://github.com/google-research/planet)；
+- [PlaNet 论文（PMLR）](https://proceedings.mlr.press/v97/hafner19a.html)与[官方代码](https://github.com/google-research/planet)；
+- MIT *Underactuated Robotics*：[Model-Predictive Control](https://underactuated.mit.edu/trajopt.html#model_predictive_control)；
 - [MuZero 官方介绍](https://deepmind.google/blog/muzero-mastering-go-chess-shogi-and-atari-without-rules/)；
 - [The Value Equivalence Principle](https://arxiv.org/abs/2011.03506)；
 - [TD-MPC2 官方仓库](https://github.com/nicklashansen/tdmpc2)。
@@ -225,4 +239,4 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 - 一致性审查：通过；
 - 教学审查：通过；
 - 审查记录路径：`reviews/final-book-review.md`；
-- 已知限制：穷举已知三状态规则和五个手工风险场景，没有 learned model、CEM/MCTS、概率校准、仿真、GPU 或真实闭环。
+- 已知限制：穷举已知三状态规则和五个手工风险场景；fixed-budget 对照只覆盖一个扰动、一个 deadline 和手工 terminal value，没有 learned model、CEM/MCTS、概率校准、仿真、GPU 或真实闭环。
