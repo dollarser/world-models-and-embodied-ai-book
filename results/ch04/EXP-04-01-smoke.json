@@ -1,24 +1,39 @@
 {
   "detected_codes": [
     "action_out_of_range",
+    "conflicting_end_flags",
     "group_split_overlap",
+    "missing_sensor_record",
     "noncontiguous_frame_index",
     "normalization_scope",
+    "sensor_sync_skew",
     "timestamp_cadence"
   ],
   "experiment_id": "EXP-04-01",
   "gpu_verified": false,
   "metrics": {
+    "bootstrap_semantics": {
+      "terminated_final_allows_bootstrap": false,
+      "truncated_final_allows_bootstrap": true
+    },
     "injected_failures": {
       "group_overlap_count": 1,
-      "issue_count": 5,
-      "issue_type_count": 5
+      "issue_count": 8,
+      "issue_type_count": 8
     },
-    "injected_issue_types_detected": 5,
+    "injected_issue_types_detected": 8,
     "valid_fixture": {
       "group_overlap_count": 0,
       "issue_count": 0,
       "issue_type_count": 0
+    },
+    "valid_fixture_coverage": {
+      "episode_count": 2,
+      "frame_count": 6,
+      "masked_sensor_sample_count": 1,
+      "maximum_valid_sensor_skew_seconds": 0.01,
+      "terminated_episode_count": 1,
+      "truncated_episode_count": 1
     }
   },
   "scope": "metadata audit smoke; not validation of a real dataset",

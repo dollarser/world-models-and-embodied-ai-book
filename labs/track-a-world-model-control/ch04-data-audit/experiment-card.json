@@ -3,20 +3,21 @@
   "id": "EXP-04-01",
   "chapter": 4,
   "status": "smoke",
-  "claim_ids": ["CLAIM-04-01", "CLAIM-04-02", "CLAIM-04-03", "CLAIM-04-04", "CLAIM-04-05"],
+  "claim_ids": ["CLAIM-04-01", "CLAIM-04-02", "CLAIM-04-03", "CLAIM-04-04", "CLAIM-04-05", "CLAIM-04-06", "CLAIM-04-07", "CLAIM-04-08"],
   "claim_scope": [
-    "audit episode boundaries timestamps action alignment and group splits",
+    "audit episode boundaries terminated/truncated semantics timestamps action alignment and group splits",
+    "require explicit validity masks and bounded timestamp skew for required sensor streams",
     "detect frame-level leakage and invalid normalization scope",
     "separate fixture smoke from real dataset validation"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library audit of valid and injected-failure metadata fixtures"
+    "config": "standard-library v2 audit of valid and injected-failure metadata fixtures"
   },
   "data": {
     "name": "procedural multimodal episode metadata fixture",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -37,14 +38,19 @@
   },
   "metrics": [
     {"name": "valid_fixture_issue_count", "value": 0, "unit": "issues", "split": "valid-fixture"},
-    {"name": "injected_issue_count", "value": 5, "unit": "issues", "split": "injected-failures"},
-    {"name": "injected_issue_types_detected", "value": 5, "unit": "issue-types", "split": "injected-failures"},
-    {"name": "group_overlap_count", "value": 1, "unit": "groups", "split": "injected-failures"}
+    {"name": "injected_issue_count", "value": 8, "unit": "issues", "split": "injected-failures"},
+    {"name": "injected_issue_types_detected", "value": 8, "unit": "issue-types", "split": "injected-failures"},
+    {"name": "group_overlap_count", "value": 1, "unit": "groups", "split": "injected-failures"},
+    {"name": "masked_sensor_sample_count", "value": 1, "unit": "samples", "split": "valid-fixture"},
+    {"name": "maximum_valid_sensor_skew_seconds", "value": 0.01, "unit": "seconds", "split": "valid-fixture"},
+    {"name": "terminated_episode_count", "value": 1, "unit": "episodes", "split": "valid-fixture"},
+    {"name": "truncated_episode_count", "value": 1, "unit": "episodes", "split": "valid-fixture"}
   ],
   "artifacts": ["results/ch04/EXP-04-01-smoke.json"],
   "limitations": [
     "synthetic fixture cannot establish the quality of any real dataset",
     "dataset-specific units calibration and licenses require separate review",
-    "does not audit media decoding privacy or real sensor calibration"
+    "does not audit media decoding privacy or real sensor calibration",
+    "single-clock scalar timestamps do not test clock drift hardware triggering rolling shutter or motion compensation"
   ]
 }

@@ -11,11 +11,11 @@
 | 第1章 从看见到行动 | `reviewed` | 零 3D/RL 入口、闭环地图、三条阅读路线、机器人/自动驾驶双案例与 S 档反例 | 真实感知、控制器、仿真和硬件未运行 |
 | EXP-01-01 | `smoke` | 6 个单元测试；相同 MAE、不同积分状态和边界结局 | 标量手工 residual，不是感知、控制或安全性能 |
 | 第2章 世界模型到底是什么 | `reviewed` | 正文、8 类四轴系统卡、4 个单元测试与 CPU smoke | 上游逐版本运行核验 |
-| 第4章 数据、基线与实验协议 | `reviewed` | 正文、5 类注入错误审计、5 个单元测试与 CPU smoke | 真实数据集审计 |
+| 第4章 数据、基线与实验协议 | `reviewed` | terminated/truncated、显式缺帧 mask、多传感器 skew、8 类注入错误、13 个单元测试与 CPU smoke | 真实 clock/视频/标定/隐私/许可与数据集审计 |
 | EXP-02-01 | `smoke` | 8/8 类别、来源和证据限制记录 | 不是性能 benchmark，未运行上游系统 |
 | 第3章 最小机器人学与决策基础 | `reviewed` | 零基础坐标/点云/BEV/运动学/MDP 桥接、动作 schema 与四类审查 | 真实标定、动力学、接触和时间同步 |
 | EXP-03-01 | `smoke` | 6 个单元测试；投影、尺度、外参与二维反馈固定结果 | 理想针孔和运动学 fixture，不是实机结果 |
-| EXP-04-01 | `smoke` | 有效 fixture 0 问题，5/5 注入问题类型检出 | 未审计真实数据、媒体、标定和隐私 |
+| EXP-04-01 | `smoke` | 有效 fixture 0 问题；8/8 注入问题类型检出；1 terminated + 1 truncated episode；1 个显式 masked sensor sample | 手工 metadata；未审计真实数据、媒体、clock、标定和隐私 |
 | 第5章 预测模型的生成式基础 | `reviewed` | VAE/token/自回归/masked/diffusion/flow、五步错误诊断树、aleatoric/epistemic 边界、自动驾驶多未来与解析 fixture；四类审查通过 | 神经生成模型、图像/视频、采样性能和 GPU 未运行 |
 | EXP-05-01 | `smoke` | 10 个单元测试；点均值落在 support 外、条件 NLL 优于无条件，并区分条件忽略、mode collapse 与虚构 mode | 八个标量样本；观察 support 不等于真实连续分布 support |
 | 第9章 世界模型如何评测与失败 | `reviewed` | 正文、指标排序反转 CPU smoke、自动驾驶评测矩阵、risk–coverage/OOD 拒绝协议；机器 benchmark card 与第6/20章交叉审查 | WorldArena/KineBench 等上游未运行，机器结构不证明外部效度 |
@@ -51,6 +51,6 @@
 | EXP-21-01 | `smoke` | 9 个单元测试；mean 45 ms 掩盖 150 ms 尾部，六类异常分别拒绝；两个阈值展示 coverage—failure 取舍 | 手工 latency/packet/score/label，不是实时、OOD 或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 9 个单元测试；完整包 0 issue，无效包 15 个具名 issue | metadata 字典存在性检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、144 个章节单元测试、22 组结果精确比对、27 个 HTML/982 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、152 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

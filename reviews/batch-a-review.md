@@ -38,6 +38,8 @@
 
 审查中修复了第4章的一个真实缺陷：非数值动作原先可能触发 Python 类型比较异常；现在返回 `invalid_action_type` 结构化问题并有回归测试。Docker 服务均使用只读仓库挂载和固定 Python 3.12 slim digest。
 
+后续增强（2026-09-01）：第4章新增 8 个测试，覆盖 terminated/truncated、显式传感器 mask、同步偏差和非有限值；批次 A 当前共 23 个章节测试。原始 15 个是本批次首次审查时的历史计数，新增边界见 `reviews/ch04-temporal-data-review-2026-09-01.md`。
+
 ## 4. 一致性审查：通过
 
 - `terminology.md` 中环境、状态、信念状态、动作、策略、世界模型、开环和闭环的定义在四章中没有冲突；

@@ -16,6 +16,10 @@
 | 开环评测（open-loop） | 模型输出不会持续改变后续输入的评测 | 离线数据不必然意味着评测逻辑是开环 | [第4章](part-01-loop/ch04-data-and-protocols.md) |
 | 闭环评测（closed-loop） | 动作改变环境，后续观测再反馈给策略 | 不等于单步动作准确率 | [第9章](part-02-world-models/ch09-evaluation.md) |
 | 反事实（counterfactual） | 固定历史及其余条件，只改变指定干预变量所得的替代未来 | 不等于任意随机生成的另一未来 | [第11章](part-03-representations/ch11-action-conditioned-video.md) |
+| terminated | episode 因任务定义内的自然终态结束；常见价值目标在此关闭 bootstrap | 不等于外部日志截断 | [第4章](part-01-loop/ch04-data-and-protocols.md) |
+| truncated | episode 因任务外部采集/时间限制结束；最终观测有效时通常仍可 bootstrap | 不等于任务成功或失败 | [第4章](part-01-loop/ch04-data-and-protocols.md) |
+| sensor validity mask | 逐样本显式说明传感器值是否存在且可用 | 缺字段、零图或复制上一帧不等于 mask | [第4章](part-01-loop/ch04-data-and-protocols.md) |
+| sensor skew | 传感器来源时间戳相对冻结参考时间的偏差 | 容差内不等于物理同时曝光 | [第4章](part-01-loop/ch04-data-and-protocols.md) |
 
 ## 模型、表示与仿真
 

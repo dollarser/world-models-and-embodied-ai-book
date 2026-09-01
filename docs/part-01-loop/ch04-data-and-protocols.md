@@ -1,9 +1,9 @@
 # 第4章 数据、基线与实验协议
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-04-01`（smoke）
-> 关联声明：`CLAIM-04-01`～`CLAIM-04-05`
+> 关联声明：`CLAIM-04-01`～`CLAIM-04-08`
 > 关联图表：`FIG-04-01` / `TAB-04-01`
 > 资源档位：S
 > GPU 状态：不需要
@@ -50,6 +50,16 @@
 如果先把所有帧打散再随机切分，相邻帧、同一场景背景甚至同一条轨迹的未来就可能同时出现在训练和测试中。模型看似泛化，实际可能只是在识别录制环境。
 
 `CLAIM-04-01`（recommendation）：时序具身数据默认按产生依赖关系的最小完整组切分，而不是按帧切分；具体组可以是 episode、轨迹、任务实例、场景、路线、主体或采集会话。
+
+`terminated` 与 `truncated` 也不能合并成一个含义不明的 `done`：前者表示任务定义内的自然终态，例如成功、失败或摔倒；后者表示 MDP 之外的采集上限、日志切断或外部超时。[Gymnasium 的 time-limit 文档](https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/)明确区分两者。两种标志都会阻止序列窗口跨到下一个 episode，但在常见价值目标中，只有自然终止关闭 bootstrap：
+
+\[
+m_t^{\text{value}}=1-\mathbb{1}[\text{terminated}_t].
+\]
+
+外部截断后只有在最终观测真实存在且有效时才能据此 bootstrap；“理论上应延续”不能补出丢失的下一观测。有限时域若本来就是任务定义的一部分，则时间上限属于 termination，且剩余时间应进入状态。
+
+`CLAIM-04-06`（fact about protocol semantics，`[O]`）：自然终止与外部截断对序列边界都有效，但对 value bootstrap 的语义不同；只保存 `done` 会丢失这一区别。
 
 ## 4.2 先写清楚一行数据代表什么
 
@@ -103,6 +113,10 @@ sequenceDiagram
 
 `CLAIM-04-02`（fact about protocol semantics）：不先定义动作和观测的时间关系，就无法解释转移模型预测的是 `a_t` 之前还是之后的环境；shape 检查不能发现这一语义错误。
 
+多传感器数据还要把“是否有样本”和“样本是什么时间”拆开。每个必需模态至少保存来源时间戳、clock domain、有效位和同步策略；本书 fixture 规定缺失样本写成 `valid=false, timestamp=null`，整个字段消失则视为合同错误。若采用近似同步，必须冻结最大允许 skew 并报告实际分布。[ROS 2 `ApproximateTimeSynchronizer`](https://docs.ros.org/en/ros2_packages/rolling/api/message_filters/message_filters.html)同样用消息 header timestamp 和秒级 `slop` 容差配对；容差内配对只说明协议接受，不证明硬件同时曝光，更不能替代时钟偏移、漂移、rolling shutter 或运动补偿审计。
+
+`CLAIM-04-07`（recommendation）：用于融合或控制的必需传感器流应逐样本保存显式有效位和来源时间戳，并预注册最大同步偏差；缺字段、arrival time 和“最近一帧”隐式填充不能自动当作同步成功。
+
 ## 4.4 归一化不能偷看测试集
 
 均值、方差、分位数、词表、类别映射和图像统计都属于从数据估计的参数。它们必须只用训练 split 拟合，再冻结应用到验证和测试 split。
@@ -155,14 +169,14 @@ sequenceDiagram
 
 ## 4.7 LeRobot Dataset v3 案例：存储结构不等于实验切分
 
-截至本章核查日期，[LeRobot Dataset v3 官方文档](https://github.com/huggingface/lerobot/blob/main/docs/source/lerobot-dataset-v3.mdx)描述了面向多模态时序数据的格式：低维状态和动作使用 Parquet，视觉数据使用按相机组织的视频分片，metadata 描述 feature schema、fps、统计量和 episode 边界。v3 将多个 episode 合并到较大的文件中，再由元数据重建 episode 视图。
+截至本章核查日期，[LeRobot Dataset v3 官方文档](https://huggingface.co/docs/lerobot/lerobot-dataset-v3)描述了面向多模态时序数据的格式：低维状态和动作使用 Parquet，视觉数据使用按相机组织的视频分片，metadata 描述 feature schema、fps、统计量和 episode 边界。v3 将多个 episode 合并到较大的文件中，再由元数据重建 episode 视图。
 
 这带来两个重要结论：
 
 1. 文件不再天然等于 episode，不能按文件名猜测任务边界；
 2. 存储格式提供 episode 索引，不替研究者决定 train/eval 应按任务、物体、场景还是机器人切分。
 
-官方实现还对时间窗口查询和 timestamp/fps 一致性提供检查接口，但具体字段和行为可能继续变化。正式实验必须锁定 LeRobot commit 或发布版本，并先审计目标数据集自己的 metadata；不能仅凭“LeRobot 格式”推断数据质量、许可或可复现性。
+官方 API 还暴露按秒定义的 `delta_timestamps` 时间窗口和 `tolerance_s` 同步容差，但具体字段和行为可能继续变化。正式实验必须锁定 LeRobot commit 或发布版本，并先审计目标数据集自己的 metadata；不能仅凭“LeRobot 格式”推断数据质量、许可、缺帧策略或可复现性。
 
 本书当前不下载公开机器人数据。`EXP-04-01` 首先使用微型本地 metadata fixture 验证审计逻辑，之后才允许在用户确认下载量和许可后指向真实数据集。
 
@@ -230,9 +244,9 @@ S 档实验将使用一个可随书分发的微型 metadata fixture，检查：
 
 1. feature 名称、dtype、shape、单位和范围；
 2. episode/frame ID 唯一性与边界；
-3. timestamp 单调性、声明 fps 和缺帧；
+3. timestamp 单调性、声明 fps、多传感器 skew 和显式缺帧 mask；
 4. `o_t`、`a_t`、`o_{t+1}` 的对齐；
-5. 动作越界、NaN 和终止后帧；
+5. 动作越界、NaN、自然终止/外部截断和终止后帧；
 6. group split 的交集与近重复风险；
 7. 训练统计是否误用了 eval 数据。
 
@@ -244,7 +258,11 @@ make ch04-test-local
 make ch04-smoke
 ```
 
-有效 fixture 的问题数为 0。注入错误的 fixture 包含 5 类问题，校验器全部检出：动作越界、跨 split 的 route 泄漏、frame index 不连续、归一化使用全部数据，以及 timestamp 与声明 10 Hz 不一致。4 个单元测试分别覆盖有效数据、group 泄漏、非终止帧缺动作和统计泄漏。
+有效 fixture 含两个三帧 episode：一个自然终止、一个外部截断；两个相机流共有一个显式 masked sample，其余有效样本相对主时间戳最大偏差为 0.01 秒，审计问题数为 0。注入 fixture 的 8 类错误全部检出：动作越界、终止/截断冲突、跨 split route 泄漏、缺少必需传感器记录、frame index 不连续、归一化使用全部数据、传感器偏差超限，以及主时间戳 cadence 错误。
+
+13 个单元测试除原有 schema/split/action 检查外，还验证：在最终观测有效的本 fixture 中，外部截断保留 value bootstrap 而自然终止关闭它；episode 最后一帧必须且只能有一种结束标志、非末帧不能结束、显式 mask 合法但缺字段非法、sensor timestamp 必须单调且满足 skew，以及 NaN/Inf 不会绕过数值检查。
+
+`CLAIM-04-08`（result）：`EXP-04-01` v2 中，有效 fixture 为 0 issue，8 类注入错误均被识别；该结果只证明已编码规则覆盖已知手工反例，不估计真实数据错误率。
 
 这仍只是已知错误注入测试。它不能证明真实 LeRobot、机器人或驾驶数据不存在其他问题，也没有检查视频解码、标定、隐私和第三方许可。
 
@@ -286,7 +304,7 @@ M 档选做路径才会在用户确认后审计一个锁定版本的真实数据
 | --- | --- | --- | --- | --- |
 | 仓库事实 | 实验卡生命周期由 JSON Schema 校验 | `specs/experiment-card.schema.json` | 已验证 | 不替代人工科学审查 |
 | 官方格式 | LeRobot v3 使用 metadata 恢复 episode 视图 | 官方文档 | `[O,R1]` | 本书未下载或执行 |
-| 本书结果 | 有效 fixture 0 问题；5 类注入问题全部检出 | `EXP-04-01` | CPU smoke | 未审计真实数据和媒体内容 |
+| 本书结果 | 有效 fixture 0 问题；8 类注入问题全部检出 | `EXP-04-01` | CPU smoke | 只覆盖手工 metadata，不估计真实错误率 |
 | 未验证 | 某个真实数据集不存在泄漏或错位 | 无 | unverified | 必须逐数据集审计 |
 
 ### 资源、数据与许可
@@ -307,8 +325,10 @@ M 档选做路径才会在用户确认后审计一个锁定版本的真实数据
 
 ## 延伸阅读
 
-- [LeRobot Dataset v3 官方文档](https://github.com/huggingface/lerobot/blob/main/docs/source/lerobot-dataset-v3.mdx)，`[O,R1]`，多模态 episode、metadata 与时间窗口；
+- [LeRobot Dataset v3 官方文档](https://huggingface.co/docs/lerobot/lerobot-dataset-v3)，`[O,R1]`，多模态 episode、metadata 与时间窗口；
 - [LeRobotDataset 当前实现](https://github.com/huggingface/lerobot/blob/main/src/lerobot/datasets/lerobot_dataset.py)，`[O]`，timestamp 与时间窗口检查入口；
+- [Gymnasium：Handling Time Limits](https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/)，`[O]`，termination、truncation 与 bootstrap 语义；
+- [ROS 2 message_filters](https://docs.ros.org/en/ros2_packages/rolling/api/message_filters/message_filters.html)，`[O]`，header timestamp、exact/approximate sync 与容差；
 - Agarwal et al., [Deep Reinforcement Learning at the Edge of the Statistical Precipice](https://arxiv.org/abs/2108.13264)，`[P]`，少量运行下的统计报告风险；
 - [ML Reproducibility Checklist](https://www.cs.mcgill.ca/~jpineau/ReproducibilityChecklist.pdf)，实验披露清单；
 - 本书仓库中的 `specs/evidence-policy.md` 与 `specs/experiment-card.schema.json`。
@@ -331,4 +351,4 @@ M 档选做路径才会在用户确认后审计一个锁定版本的真实数据
 - 教学审查：通过；
 - 审查记录路径：`reviews/batch-a-review.md`；
 - 已知限制：真实 LeRobot/驾驶数据审计尚未执行；
-- 下一步：benchmark card Schema 已接入第6/9/20章；本章仍需增加 episode 截断、缺帧 mask 和多传感器时钟测试。
+- 下一步：episode 截断、缺帧 mask 和多传感器 skew 已进入 S 档；仍需在真实数据上审计 clock domain/漂移、视频解码、标定、隐私和许可。
