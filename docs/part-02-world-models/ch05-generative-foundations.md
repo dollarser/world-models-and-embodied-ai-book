@@ -1,10 +1,10 @@
 # 第5章 预测模型的生成式基础
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-05-01`
-> 关联声明：`CLAIM-05-01`～`CLAIM-05-06`
-> 关联图表：`FIG-05-01` / `TAB-05-01` / `TAB-05-02`
+> 关联声明：`CLAIM-05-01`～`CLAIM-05-07`
+> 关联图表：`FIG-05-01` / `TAB-05-01` / `TAB-05-02` / `TAB-05-03`
 > 资源档位：S / M
 > GPU 状态：待验证
 
@@ -139,6 +139,51 @@ make ch05-smoke
 
 `CLAIM-05-05`（recommendation）：世界预测实验应至少包含 action/context shuffle、确定性点预测、分布模型、oracle/真实转移和自由 rollout 对照；只比较单帧视觉质量不能证明世界模型用途。
 
+### 5.8.1 从症状出发的错误诊断树
+
+生成模型失败时，不要先换架构。按数据合同→条件使用→分布覆盖→时间展开→下游用途的顺序检查，才能避免用后级指标掩盖前级错误。
+
+1. **先重放数据合同**：同一 target 是否使用相同单位、归一化、裁剪、tokenizer、时间戳和 mask？如果不一致，likelihood 与样本距离都没有共同语义。
+2. **再检查条件是否被使用**：固定 noise/seed，只改变 action、历史或上下文；同时做 context shuffle。输出分布几乎不变时，模型可能在忽略条件。
+3. **再分开 coverage 与 validity**：缺少已观察 mode 是 mode dropping；给未观察结果分配质量是 support 外生成。二者可能同时发生，不能用“多样性高”互相抵消。
+4. **然后检查概率与样本是否一致**：报告 NLL/校准，也报告多 seed 样本的 mode coverage、重复率和失败样本。单个最好样本既不能证明覆盖，也不能证明校准。
+5. **最后展开时间并进入用途**：teacher-forced one-step、自由 rollout、干预、规划排序和真实闭环逐级检查。前四步通过仍不保证决策有效。
+
+| 症状 | 最小对照 | 可以支持的诊断 | 仍不能断言 |
+| --- | --- | --- | --- |
+| 改 action 后输出近似不变 | 同 seed action swap、context shuffle | 条件敏感性不足 | 一定是网络容量不足 |
+| 样本只剩一种合法未来 | 分桶 mode recall、条件 NLL | mode dropping | 未出现 mode 在真实分布中不存在 |
+| 样本很多但出现非法状态 | support/约束检查、oracle transition | 越界概率质量或动力学错误 | 图像越锐利就越物理 |
+| one-step 好、自由 rollout 漂移 | teacher forcing 与相同 horizon rollout | 暴露偏差或复合误差 | 所有误差都来自生成器 |
+| 视觉指标好、规划更差 | 固定 planner 的策略排序/闭环对照 | 指标与用途错位 | 视觉质量普遍无用 |
+
+对两个离散分布 `p`、`q`，total variation distance 为：
+
+\[
+D_{TV}(p,q)=\frac{1}{2}\sum_x |p(x)-q(x)|.
+\]
+
+它可以量化“改变条件后预测分布变化多少”，但较大不自动代表变化方向正确；仍需与真实条件分布或可执行后果对照。连续模型的 density 还会随变量单位、离散化和可逆预处理改变，因此只在输出表示和评测实现一致时比较 NLL。
+
+`EXP-05-01` 增加三个故障分布：`collapsed` 给第二个已观察 mode 的概率低于 1%，`hallucinated` 给未观察的中间值 10% 概率，`context_ignored` 对不同上下文返回相同边际分布。
+
+| fixture | 条件 TV | 已观察 mode recall | 观察 support 外概率质量 |
+| --- | ---: | ---: | ---: |
+| faithful conditioned | 0.5 | 100% | 0% |
+| context ignored | 0.0 | 100% | 0% |
+| collapsed | — | 50% | 0% |
+| hallucinated | — | 100% | 10% |
+
+*TAB-05-03：离散 fixture 的互补诊断。这里的“观察 support”只指八个手工样本，不是真实连续数据分布的完整 support。*
+
+`CLAIM-05-07`（result）：在固定 fixture 中，条件模型跨 `fork/left_only` 的 TV 为 `0.5`，条件忽略模型为 `0`；mode collapse 与虚构 mode 又分别表现为 50% mode recall 和 10% 观察 support 外概率质量。任一单项指标都无法识别全部三类错误。
+
+### 5.8.2 aleatoric 与 epistemic 不确定性
+
+同一完整状态下仍存在多种合理结果，属于 aleatoric 不确定性；训练覆盖不足、参数不确定或 OOD 输入导致的“模型不知道”，通常归为 epistemic 不确定性。单个生成模型多采样几次主要展示其学到的条件分布，不会自动暴露它没有学到的世界。实践中还需要数据密度/OOD 测试、模型或 checkpoint 集成、扰动一致性与保留场景验证。
+
+自动驾驶里，前车可能左/右避让是多未来；从未见过的施工车辆、传感器故障或新道路规则是覆盖问题。两者都可能产生多样样本，但风险处理不同：前者进入概率化规划，后者应触发保守拒绝、降级或额外感知，而不是从生成样本里挑一个最乐观未来。
+
 ## 5.9 自动驾驶：多未来不等于随机驾驶
 
 遮挡车辆可能保持、减速或切入；ego 候选动作也改变未来。驾驶模型应把 ego action、他车行为、地图和信号灯分开条件化，并报告 mode coverage、碰撞/越界、时间一致性和概率校准。采样出多个未来是表达不确定性，不是让控制器随机挑一条。
@@ -155,10 +200,11 @@ S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数�
 
 生成式预测在未来不唯一时建模分布。latent、token、自回归、masked、diffusion 和 flow 提供不同接口，最终仍要由条件敏感性、自由 rollout 和下游闭环验证。
 
-1. 给 fork 增加第三个 mode，比较均值和 support 距离。
+1. 给 fork 增加第三个 mode，比较均值、mode recall 和观察 support 外质量。
 2. 解释 VAE posterior、RSSM posterior 与 learned dynamics prior 的区别。
 3. 比较 diffusion 采样步数和 action chunk deadline 的冲突。
-4. 为车辆切入写出 ego action 与他车 behavior 的条件 schema。
+4. 为车辆切入写出 ego action 与他车 behavior 的条件 schema，并设计 context-shuffle 对照。
+5. 构造一个 TV 很高但条件响应方向错误的模型，说明为什么敏感性不等于正确性。
 
 ## 延伸阅读
 
@@ -176,5 +222,5 @@ S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/final-book-review.md`；
-- 已知限制：只有解析标量 fixture，没有训练神经网络、图像/视频或 GPU。
+- 审查记录路径：`reviews/ch05-diagnostic-review-2026-09-01.md`；
+- 已知限制：只有解析标量 fixture；mode recall 与 support 外质量只相对手工观察集合定义，没有训练神经网络、图像/视频或 GPU。

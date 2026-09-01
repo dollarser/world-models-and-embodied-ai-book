@@ -22,6 +22,13 @@ def main() -> int:
         raise AssertionError("the deterministic categorical samples must cover both modes")
     if metrics["conditional_dataset_nll"] >= metrics["unconditional_dataset_nll"]:
         raise AssertionError("conditioning must improve this fixture's likelihood")
+    diagnostics = metrics["distribution_diagnostics"]
+    if diagnostics["conditional_context_tv"] <= diagnostics["context_ignored_tv"]:
+        raise AssertionError("the conditioned fixture must respond more strongly to context")
+    if diagnostics["collapsed"]["observed_mode_recall"] >= diagnostics["faithful"]["observed_mode_recall"]:
+        raise AssertionError("the collapsed fixture must lose an observed mode")
+    if diagnostics["hallucinated"]["out_of_support_probability_mass"] <= 0.0:
+        raise AssertionError("the hallucinated fixture must assign mass outside observed support")
     report = {
         "experiment_id": "EXP-05-01",
         "status": "smoke",

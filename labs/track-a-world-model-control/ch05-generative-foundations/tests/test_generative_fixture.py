@@ -16,6 +16,8 @@ from generative_fixture import (  # noqa: E402
     negative_log_likelihood,
     point_mean,
     quantile_samples,
+    support_diagnostics,
+    total_variation_distance,
 )
 
 
@@ -34,6 +36,29 @@ class GenerativeFoundationTests(unittest.TestCase):
     def test_conditioning_improves_dataset_nll(self):
         metrics = evaluate()
         self.assertLess(metrics["conditional_dataset_nll"], metrics["unconditional_dataset_nll"])
+
+    def test_context_sensitivity_distinguishes_conditioned_and_ignored_models(self):
+        fork = conditional_distribution("fork")
+        left_only = conditional_distribution("left_only")
+        self.assertEqual(total_variation_distance(fork, left_only), 0.5)
+        self.assertEqual(total_variation_distance(fork, fork), 0.0)
+
+    def test_support_diagnostics_separate_collapse_and_hallucination(self):
+        targets = (-1.0, -1.0, 1.0, 1.0)
+        collapsed = support_diagnostics({-1.0: 0.999, 1.0: 0.001}, targets)
+        hallucinated = support_diagnostics({-1.0: 0.45, 0.0: 0.1, 1.0: 0.45}, targets)
+        self.assertEqual(collapsed["observed_mode_recall"], 0.5)
+        self.assertEqual(collapsed["out_of_support_probability_mass"], 0.0)
+        self.assertEqual(hallucinated["observed_mode_recall"], 1.0)
+        self.assertEqual(hallucinated["out_of_support_probability_mass"], 0.1)
+
+    def test_invalid_diagnostic_inputs_are_rejected(self):
+        with self.assertRaises(ValueError):
+            total_variation_distance({-1.0: 1.0}, {-1.0: 0.5})
+        with self.assertRaises(ValueError):
+            support_diagnostics({-1.0: 1.0}, (), probability_threshold=0.01)
+        with self.assertRaises(ValueError):
+            support_diagnostics({-1.0: 1.0}, (-1.0,), probability_threshold=False)
 
     def test_diffusion_forward_endpoints(self):
         self.assertEqual(diffusion_forward(1.0, -2.0, 1.0), 1.0)

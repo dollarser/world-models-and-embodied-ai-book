@@ -3,11 +3,12 @@
   "id": "EXP-05-01",
   "chapter": 5,
   "status": "smoke",
-  "claim_ids": ["CLAIM-05-02", "CLAIM-05-03", "CLAIM-05-04"],
+  "claim_ids": ["CLAIM-05-02", "CLAIM-05-03", "CLAIM-05-04", "CLAIM-05-07"],
   "claim_scope": [
     "the squared-error optimal point can lie outside the support of a fixed multimodal future",
     "an explicit conditional distribution can preserve both fixture futures",
-    "diffusion and straight flow paths have distinct parameterizations with checkable endpoints"
+    "diffusion and straight flow paths have distinct parameterizations with checkable endpoints",
+    "condition sensitivity, observed-mode recall, and out-of-observed-support mass expose different distribution failures"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -16,7 +17,7 @@
   },
   "data": {
     "name": "procedural fork and deterministic-context outcomes",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -40,13 +41,18 @@
     {"name": "point_mean_expected_mse", "value": 1.0, "unit": "squared-state", "split": "fork"},
     {"name": "fork_categorical_nll", "value": 0.69314718056, "unit": "nats", "split": "fork"},
     {"name": "conditional_dataset_nll", "value": 0.34657359028, "unit": "nats", "split": "all"},
-    {"name": "unconditional_dataset_nll", "value": 0.562335144619, "unit": "nats", "split": "all"}
+    {"name": "unconditional_dataset_nll", "value": 0.562335144619, "unit": "nats", "split": "all"},
+    {"name": "conditional_context_tv", "value": 0.5, "unit": "ratio", "split": "context-pair"},
+    {"name": "context_ignored_tv", "value": 0.0, "unit": "ratio", "split": "context-pair"},
+    {"name": "collapsed_observed_mode_recall", "value": 0.5, "unit": "ratio", "split": "fork"},
+    {"name": "hallucinated_out_of_support_mass", "value": 0.1, "unit": "ratio", "split": "fork"}
   ],
   "artifacts": ["results/ch05/EXP-05-01-smoke.json"],
   "limitations": [
     "two scalar outcomes and two hand-authored contexts rather than images or video",
     "empirical categorical probabilities rather than a learned model",
     "diffusion and flow checks are analytic endpoints, not training or sampling benchmarks",
+    "support diagnostics are relative to eight observed fixture samples, not the full support of real continuous data",
     "no neural network, optimization, data download, GPU, or closed-loop task"
   ]
 }

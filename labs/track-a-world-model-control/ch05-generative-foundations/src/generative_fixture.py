@@ -74,6 +74,40 @@ def negative_log_likelihood(distribution: dict[float, float], values: tuple[floa
     return -sum(log(probability) for probability in probabilities) / len(probabilities)
 
 
+def total_variation_distance(
+    first: dict[float, float], second: dict[float, float]
+) -> float:
+    """Measure how strongly two discrete predictive distributions differ."""
+    if not _normalized_distribution(first) or not _normalized_distribution(second):
+        raise ValueError("both distributions must be finite and normalized")
+    support = set(first) | set(second)
+    return 0.5 * sum(abs(first.get(value, 0.0) - second.get(value, 0.0)) for value in support)
+
+
+def support_diagnostics(
+    distribution: dict[float, float],
+    observed_values: tuple[float, ...],
+    probability_threshold: float = 0.01,
+) -> dict[str, float]:
+    """Separate observed-mode coverage from probability assigned outside data support."""
+    if not _normalized_distribution(distribution):
+        raise ValueError("distribution must have finite numeric support and normalized probabilities")
+    if not observed_values or any(not _finite_number(value) for value in observed_values):
+        raise ValueError("observed values must be non-empty finite numbers")
+    if not _finite_number(probability_threshold) or not 0.0 < probability_threshold <= 1.0:
+        raise ValueError("probability_threshold must lie in (0, 1]")
+
+    observed_support = {float(value) for value in observed_values}
+    covered_modes = sum(distribution.get(value, 0.0) >= probability_threshold for value in observed_support)
+    invalid_probability_mass = sum(
+        probability for value, probability in distribution.items() if value not in observed_support
+    )
+    return {
+        "observed_mode_recall": covered_modes / len(observed_support),
+        "out_of_support_probability_mass": invalid_probability_mass,
+    }
+
+
 def quantile_samples(distribution: dict[float, float], quantiles: tuple[float, ...]) -> tuple[float, ...]:
     if not _normalized_distribution(distribution):
         raise ValueError("distribution must have finite numeric support and normalized probabilities")
@@ -116,6 +150,10 @@ def evaluate() -> dict[str, object]:
     ) / len(DATA)
     mean = point_mean("fork")
     samples = quantile_samples(fork, (0.125, 0.375, 0.625, 0.875))
+    left_only = conditional_distribution("left_only")
+    context_ignored = unconditional
+    collapsed = {-1.0: 0.999, 1.0: 0.001}
+    hallucinated = {-1.0: 0.45, 0.0: 0.1, 1.0: 0.45}
     return {
         "fork_distribution": {str(key): value for key, value in fork.items()},
         "point_mean": mean,
@@ -128,6 +166,13 @@ def evaluate() -> dict[str, object]:
         "unconditional_dataset_nll": round(
             negative_log_likelihood(unconditional, tuple(value for _, value in DATA)), 12
         ),
+        "distribution_diagnostics": {
+            "faithful": support_diagnostics(fork, fork_targets),
+            "collapsed": support_diagnostics(collapsed, fork_targets),
+            "hallucinated": support_diagnostics(hallucinated, fork_targets),
+            "conditional_context_tv": total_variation_distance(fork, left_only),
+            "context_ignored_tv": total_variation_distance(context_ignored, context_ignored),
+        },
         "diffusion_endpoints": {
             "clean": diffusion_forward(1.0, -2.0, 1.0),
             "noise": diffusion_forward(1.0, -2.0, 0.0),

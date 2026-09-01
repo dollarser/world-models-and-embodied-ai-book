@@ -7,6 +7,13 @@
       "clean": 1.0,
       "noise": -2.0
     },
+    "distribution_diagnostics": {
+      "collapsed": {"observed_mode_recall": 0.5, "out_of_support_probability_mass": 0},
+      "conditional_context_tv": 0.5,
+      "context_ignored_tv": 0.0,
+      "faithful": {"observed_mode_recall": 1.0, "out_of_support_probability_mass": 0},
+      "hallucinated": {"observed_mode_recall": 1.0, "out_of_support_probability_mass": 0.1}
+    },
     "flow_endpoints_and_velocity": {
       "end": [
         1.0,
