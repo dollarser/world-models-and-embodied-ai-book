@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "audit_date": "2026-09-01",
+  "scope": "All claims whose canonical type is inference",
+  "claims": [
+    {
+      "claim_id": "CLAIM-02-03",
+      "premises": [
+        "A planning use requires action-conditioned consequences or another interface that can compare candidate decisions.",
+        "A renderer can generate plausible video without exposing recursive state, reward, termination, or an action-grounding contract."
+      ],
+      "anchors": [
+        "docs/part-01-loop/ch02-what-is-a-world-model.md",
+        "docs/part-02-world-models/ch09-evaluation.md",
+        "docs/part-06-systems/ch19-physical-simulation-and-sim2real.md"
+      ],
+      "counterexample": "A video metric could become sufficient for a narrowly frozen planner only if prospective evidence showed it preserved candidate ordering and safety outcomes in that exact protocol.",
+      "scope_note": "The inference ranks evidence by planning relevance; it does not claim pixel generation is useless or that simulator evidence has no value."
+    },
+    {
+      "claim_id": "CLAIM-06-04",
+      "premises": [
+        "A single monocular RGB frame can be compatible with multiple relative velocities, hidden trajectories, and vehicle dynamic states.",
+        "Braking and lane-change consequences depend on temporal state variables and on the ego actions that change future observations."
+      ],
+      "anchors": [
+        "docs/part-01-loop/ch03-minimal-robotics-and-decision.md",
+        "docs/part-02-world-models/ch06-rssm.md",
+        "docs/part-02-world-models/ch09-evaluation.md"
+      ],
+      "counterexample": "The history requirement can weaken when the observation already contains independently measured velocity and complete state, but sufficiency would still need task-specific validation.",
+      "scope_note": "The claim concerns single RGB under partial observability and does not require every implementation to use an RSSM or the same latent variables."
+    },
+    {
+      "claim_id": "CLAIM-09-04",
+      "premises": [
+        "Driving planning changes later states, so route, collision, intervention, and rule outcomes depend on closed-loop interaction.",
+        "Video-quality metrics measure appearance or feature-distribution similarity and do not directly execute or compare driving actions."
+      ],
+      "anchors": [
+        "docs/part-02-world-models/ch09-evaluation.md",
+        "docs/part-06-systems/ch19-physical-simulation-and-sim2real.md"
+      ],
+      "counterexample": "A video metric could be a useful proxy in a frozen domain if preregistered prospective tests established stable prediction of closed-loop outcomes; that would not remove simulator-to-road validation.",
+      "scope_note": "The inference selects metrics for a planning use and preserves the distinction between lightweight MetaDrive evidence, higher-fidelity CARLA evidence, and road evidence."
+    },
+    {
+      "claim_id": "CLAIM-09-05",
+      "premises": [
+        "An inverse dynamics or grounding component can introduce action ambiguity and errors after a world model has generated a future state.",
+        "An end-to-end success or failure therefore composes errors from the world model, controller, grounding, and evaluation environment."
+      ],
+      "anchors": [
+        "https://arxiv.org/abs/2607.19876",
+        "docs/part-02-world-models/ch09-evaluation.md"
+      ],
+      "counterexample": "If the benchmark exposes executable actions directly and proves that grounding is an exact identity for the tested action space, the extra attribution term can disappear.",
+      "scope_note": "KineBench motivates the decomposition, but the book has not run its assets and does not adopt its reported task results as measurements."
+    },
+    {
+      "claim_id": "CLAIM-13-04",
+      "premises": [
+        "The fixed chapter fixture shows that increasing execution horizon increases the longest wait before a new observation can change the command.",
+        "A driving maneuver is stale when this blind-execution duration exceeds the task's allowed reaction time after perception and system latency."
+      ],
+      "anchors": [
+        "docs/part-04-policies/ch13-imitation-and-action-chunks.md",
+        "docs/part-06-systems/ch21-deployment-realtime-and-safety.md"
+      ],
+      "counterexample": "A long predicted chunk need not be unsafe when execution is interruptible, event-triggered replanning is faster than the required reaction time, and the independent controller remains valid.",
+      "scope_note": "The revised inference is conditional on a timing inequality and no longer asserts that all driving tasks are riskier than all static manipulation tasks."
+    },
+    {
+      "claim_id": "CLAIM-17-04",
+      "premises": [
+        "Rank correlation measures ordering agreement over a specified finite set and does not determine calibrated absolute success probabilities.",
+        "A new policy or OOD scenario can induce state-action trajectories outside the set on which the correlation was measured."
+      ],
+      "anchors": [
+        "docs/part-05-fusion/ch17-world-model-policy-utility.md",
+        "docs/part-02-world-models/ch09-evaluation.md"
+      ],
+      "counterexample": "Absolute prediction could be justified if a separate calibration protocol and held-out prospective evaluation succeeded over the declared policy and scenario population.",
+      "scope_note": "The claim limits what correlation alone entails; it does not reject world-model proxy evaluation when its task, policy family, and calibration scope are explicit."
+    },
+    {
+      "claim_id": "CLAIM-18-05",
+      "premises": [
+        "Planning needs candidate-dependent future consequences and an objective or comparison rule rather than only a joint training loss.",
+        "Interactive simulation additionally needs recursive state progression and termination semantics under executable actions."
+      ],
+      "anchors": [
+        "docs/part-05-fusion/ch18-vla-post-training-and-wam.md",
+        "https://github.com/H-EmbodVis/SimWAM"
+      ],
+      "counterexample": "A WAM can support planning when its deployed interface actually exposes and validates these components, even if its architecture or authors use a different taxonomy name.",
+      "scope_note": "The inference classifies capability by observable interfaces and validation, not by model name, marketing category, or the mere presence of video and action tokens."
+    },
+    {
+      "claim_id": "CLAIM-20-04",
+      "premises": [
+        "A route-completion numerator can count episodes that completed the route after a collision or safety intervention unless the success definition excludes them.",
+        "Simulation event rates depend on the simulator population, behavior models, sensors, and protocol rather than directly sampling the real-road event population."
+      ],
+      "anchors": [
+        "docs/part-06-systems/ch20-embodied-evaluation.md",
+        "docs/part-06-systems/ch19-physical-simulation-and-sim2real.md"
+      ],
+      "counterexample": "The overestimate disappears when completion is already gated by collision and intervention criteria; road-rate extrapolation would require a separately validated population model.",
+      "scope_note": "The inference concerns metric definition and external validity, not a claim that simulation collision measurements are useless for controlled comparison or stress testing."
+    }
+  ]
+}

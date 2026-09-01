@@ -166,7 +166,7 @@ make ch15-smoke
 | 高层文本可直接执行 | false | 必须先 grounding |
 | flow chunk 预测/执行 | 3 / 1 步 | 验证 receding horizon 字段 |
 
-`CLAIM-15-02`（result）：`EXP-15-01` 中，连续、离散 token 和 flow chunk 三类手工输出都通过同一带 frame、单位、时间与 horizon 的动作 schema。
+`CLAIM-15-02`（result）：`EXP-15-01` 中，连续、离散 token 和 flow chunk 三类手工输出都通过同一带 frame、单位、时间与 horizon 的动作 schema；这只验证统一解码合同，不比较三类动作头的学习或闭环性能。
 
 `CLAIM-15-03`（result）：五档逐维 tokenizer 将 `(0.6,-0.4)` 量化为 `(0.5,-0.5)`，平均归一化绝对误差为 `0.1`。该值只属于教学词表，不能外推 FAST 或真实 VLA。
 
@@ -183,7 +183,7 @@ make ch15-smoke
 
 *TAB-15-03：`EXP-15-01` 的最小执行身份。生产协议还需要 session/boot ID、认证、完整性保护、ACK 和安全控制器。*
 
-`CLAIM-15-07`（result）：`EXP-15-01` 修复了 packet 可把 schema 执行时域从 1 扩到 3 的漏洞；重复 `command_id=7` 和乱序 6 在已接受 7 后被拒绝，而新命令 8 通过。
+`CLAIM-15-07`（result）：`EXP-15-01` 修复了 packet 可把 schema 执行时域从 1 扩到 3 的漏洞；重复 `command_id=7` 和乱序 6 在已接受 7 后被拒绝，而新命令 8 通过。该结果只验证单会话手工 packet 合同，不证明网络安全、并发顺序或控制安全。
 
 `CLAIM-15-08`（recommendation）：远程或异步 VLA chunk 必须携带版本化字段顺序、共同 clock、观测/动作 timestep、单调命令身份和明确失效规则；仅有网络时间戳不能防止 replay、乱序或旧队列继续执行。
 

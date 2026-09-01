@@ -16,6 +16,7 @@
 - [写作风格](writing-style.md)
 - [证据与声明](evidence-policy.md)
 - [事实声明证据登记](fact-evidence.json)
+- [推断声明前提登记](inference-evidence.json)
 - [图表规范](figure-guidelines.md)
 
 ## 工程与治理

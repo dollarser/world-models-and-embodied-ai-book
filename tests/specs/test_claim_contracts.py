@@ -9,6 +9,7 @@ from scripts.check_book import (
     check_figure_contract,
     check_glossary_contract,
     check_heading_hierarchy,
+    check_inference_evidence_contract,
     check_mermaid_accessibility,
 )
 
@@ -17,7 +18,7 @@ class ClaimContractTest(unittest.TestCase):
     def test_accepts_canonical_bidirectional_contract(self) -> None:
         text = (
             "`CLAIM-06-01`（fact）：directly supported statement\n"
-            "`CLAIM-06-02`（result）：fixed fixture output\n"
+            "`CLAIM-06-02`（result）：fixed fixture output，不代表 model performance\n"
         )
         self.assertEqual(
             [],
@@ -56,9 +57,14 @@ class ClaimContractTest(unittest.TestCase):
         self.assertTrue(any("non-canonical type" in item for item in errors))
 
     def test_result_requires_experiment_card_binding(self) -> None:
-        text = "`CLAIM-06-01`（result）：fixture output\n"
+        text = "`CLAIM-06-01`（result）：fixture output; this does not establish model performance\n"
         errors = check_claim_contract(6, ["CLAIM-06-01"], text, set())
         self.assertTrue(any("not bound by a registered experiment card" in item for item in errors))
+
+    def test_result_requires_explicit_scope_boundary(self) -> None:
+        text = "`CLAIM-06-01`（result）：fixture output is 0.5\n"
+        errors = check_claim_contract(6, ["CLAIM-06-01"], text, {"CLAIM-06-01"})
+        self.assertTrue(any("must state a limitation" in item for item in errors))
 
 
 class FigureContractTest(unittest.TestCase):
@@ -206,6 +212,63 @@ class FactEvidenceContractTest(unittest.TestCase):
         }
         errors = check_fact_evidence_contract({"CLAIM-11-05"}, registry)
         self.assertTrue(any("must be labeled V" in item for item in errors))
+
+
+class InferenceEvidenceContractTest(unittest.TestCase):
+    def test_accepts_explicit_premises_counterexample_and_scope(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-17-04",
+                    "premises": [
+                        "Rank agreement is measured only over the declared finite policy population.",
+                        "Absolute calibration requires outcomes rather than ordering information alone.",
+                    ],
+                    "anchors": ["https://example.org/study"],
+                    "counterexample": "A separate prospective calibration study could support absolute predictions in its declared population.",
+                    "scope_note": "The inference limits correlation alone and does not reject a separately calibrated proxy evaluator.",
+                }
+            ],
+        }
+        self.assertEqual([], check_inference_evidence_contract({"CLAIM-17-04"}, registry))
+
+    def test_rejects_missing_and_stale_inference_entries(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-18-05",
+                    "premises": ["A sufficiently long first premise for this inference contract.", "A second sufficiently long premise."],
+                    "anchors": ["https://example.org/study"],
+                    "counterexample": "A sufficiently explicit counterexample that would weaken the inference in scope.",
+                    "scope_note": "A sufficiently explicit statement that bounds what this inference can support.",
+                }
+            ],
+        }
+        errors = check_inference_evidence_contract({"CLAIM-17-04"}, registry)
+        self.assertTrue(any("no evidence registry entry" in item for item in errors))
+        self.assertTrue(any("non-inference or missing claim" in item for item in errors))
+
+    def test_rejects_implicit_premises_and_missing_falsifier(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-17-04",
+                    "premises": ["too short"],
+                    "anchors": ["https://example.org/study"],
+                    "counterexample": "none",
+                    "scope_note": "A sufficiently explicit scope boundary for the inference under review.",
+                }
+            ],
+        }
+        errors = check_inference_evidence_contract({"CLAIM-17-04"}, registry)
+        self.assertTrue(any("two explicit premises" in item for item in errors))
+        self.assertTrue(any("counterexample or falsifier" in item for item in errors))
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ REQUIRED = (
     "specs/writing-style.md",
     "specs/evidence-policy.md",
     "specs/fact-evidence.json",
+    "specs/inference-evidence.json",
     "specs/experiment-card.schema.json",
     "specs/benchmark-card.schema.json",
     "specs/chapter-status.schema.json",
@@ -38,6 +39,7 @@ CHAPTER_STATUS_PATTERN = re.compile(r"^> 状态：`([^`]+)`", re.MULTILINE)
 CLAIM_DEFINITION_PATTERN = re.compile(
     r"`(CLAIM-(\d{2})-(\d{2}))`（([^）]+)）："
 )
+RESULT_DEFINITION_PATTERN = re.compile(r"`(CLAIM-\d{2}-\d{2})`（result）：([^\n]+)")
 CLAIM_ID_PATTERN = re.compile(r"^CLAIM-(\d{2})-(\d{2})$")
 ALLOWED_CLAIM_TYPES = {"fact", "result", "inference", "recommendation", "unverified"}
 FIGURE_ID_PATTERN = re.compile(r"\b((?:FIG|TAB)-(\d{2})-(\d{2}))\b")
@@ -73,6 +75,7 @@ ALLOWED_FACT_EVIDENCE_BASES = {
     "mathematical_identity",
 }
 ALLOWED_SOURCE_MATURITY = {"P", "A", "O", "V", "T", "internal"}
+RESULT_BOUNDARY_MARKERS = ("不", "不能", "只", "未", "无法", "并非", "不是", "没有")
 
 
 def check_required() -> list[str]:
@@ -145,6 +148,13 @@ def check_claim_contract(
                 errors.append(
                     f"chapter {chapter_number} result claim is not bound by a registered experiment card: {claim_id}"
                 )
+    for match in RESULT_DEFINITION_PATTERN.finditer(document_text):
+        claim_id, body = match.groups()
+        if not any(marker in body for marker in RESULT_BOUNDARY_MARKERS):
+            errors.append(
+                f"chapter {chapter_number} result claim must state a limitation or non-generalization boundary: "
+                f"{claim_id}"
+            )
     return errors
 
 
@@ -324,6 +334,62 @@ def check_fact_evidence_contract(
     return errors
 
 
+def check_inference_evidence_contract(
+    inference_claim_ids: set[str], registry: object, root: Path = ROOT
+) -> list[str]:
+    """Require each inference to expose premises, anchors, a counterexample, and scope."""
+
+    if not isinstance(registry, dict):
+        return ["inference evidence registry must be a JSON object"]
+    errors: list[str] = []
+    if registry.get("version") != 1:
+        errors.append("inference evidence registry version must be 1")
+    audit_date = registry.get("audit_date")
+    if not isinstance(audit_date, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}", audit_date) is None:
+        errors.append("inference evidence registry must have an ISO audit_date")
+    entries = registry.get("claims")
+    if not isinstance(entries, list):
+        return errors + ["inference evidence registry claims must be a list"]
+
+    entry_ids = [entry.get("claim_id") for entry in entries if isinstance(entry, dict)]
+    duplicates = sorted({claim_id for claim_id in entry_ids if entry_ids.count(claim_id) > 1})
+    for claim_id in duplicates:
+        errors.append(f"inference evidence registry contains duplicate claim: {claim_id}")
+    registered_ids = {claim_id for claim_id in entry_ids if isinstance(claim_id, str)}
+    for claim_id in sorted(inference_claim_ids - registered_ids):
+        errors.append(f"inference claim has no evidence registry entry: {claim_id}")
+    for claim_id in sorted(registered_ids - inference_claim_ids):
+        errors.append(f"inference evidence registry contains non-inference or missing claim: {claim_id}")
+
+    for entry in entries:
+        if not isinstance(entry, dict):
+            errors.append("inference evidence registry entry must be an object")
+            continue
+        claim_id = entry.get("claim_id", "<missing>")
+        premises = entry.get("premises")
+        if (
+            not isinstance(premises, list)
+            or len(premises) < 2
+            or any(not isinstance(item, str) or len(item.strip()) < 20 for item in premises)
+        ):
+            errors.append(f"inference evidence {claim_id} must contain at least two explicit premises")
+        anchors = entry.get("anchors")
+        if not isinstance(anchors, list) or not anchors or any(not isinstance(item, str) for item in anchors):
+            errors.append(f"inference evidence {claim_id} must have string anchors")
+        else:
+            for anchor in (item for item in anchors if "://" not in item):
+                local_path = anchor.split("#", 1)[0]
+                if not local_path or not (root / local_path).is_file():
+                    errors.append(f"inference evidence {claim_id} has missing local anchor: {anchor}")
+        counterexample = entry.get("counterexample")
+        if not isinstance(counterexample, str) or len(counterexample.strip()) < 40:
+            errors.append(f"inference evidence {claim_id} must state a counterexample or falsifier")
+        note = entry.get("scope_note")
+        if not isinstance(note, str) or len(note.strip()) < 40:
+            errors.append(f"inference evidence {claim_id} must explain its scope boundary")
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -451,6 +517,29 @@ def check_fact_evidence_files() -> list[str]:
     return check_fact_evidence_contract(fact_claim_ids, registry)
 
 
+def check_inference_evidence_files() -> list[str]:
+    manifest_path = ROOT / "specs/book-manifest.json"
+    registry_path = ROOT / "specs/inference-evidence.json"
+    if not manifest_path.is_file() or not registry_path.is_file():
+        return []
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    inference_claim_ids: set[str] = set()
+    for chapter in manifest.get("chapters", []):
+        if not isinstance(chapter, dict) or not isinstance(chapter.get("document"), str):
+            continue
+        document_path = ROOT / chapter["document"]
+        if not document_path.is_file():
+            continue
+        for match in CLAIM_DEFINITION_PATTERN.finditer(document_path.read_text(encoding="utf-8")):
+            if match.group(4) == "inference":
+                inference_claim_ids.add(match.group(1))
+    return check_inference_evidence_contract(inference_claim_ids, registry)
+
+
 def main() -> int:
     errors = (
         check_required()
@@ -460,6 +549,7 @@ def main() -> int:
         + check_prd_chapters()
         + check_glossary_files()
         + check_fact_evidence_files()
+        + check_inference_evidence_files()
     )
     if errors:
         for error in errors:
@@ -467,8 +557,8 @@ def main() -> int:
         return 1
     print(
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
-        "heading hierarchy, chapter teaching sections, reader terminology, fact evidence, manifest, local links, "
-        "22-chapter PRD"
+        "heading hierarchy, chapter teaching sections, reader terminology, fact/inference evidence, manifest, "
+        "local links, 22-chapter PRD"
     )
     return 0
 

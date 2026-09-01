@@ -149,7 +149,7 @@ make ch10-smoke
 
 `CLAIM-10-02`（result）：在 `EXP-10-01` 中，appearance 表征以 1.25 对 125.00 赢得重建 MSE，却在纹理相关性反转后取得 0% probe accuracy；task-predictive 表征取得 100%。这只证明两个指标可以给出相反排序。
 
-`CLAIM-10-03`（result）：同一实验的 collapsed 表征在平衡测试集上取得 50% accuracy，作为 probe 管线的负对照；若它异常高，应先查标签泄漏、样本重复或度量实现。
+`CLAIM-10-03`（result）：同一实验的 collapsed 表征在平衡测试集上取得 50% accuracy，作为 probe 管线的负对照；若它异常高，应先查标签泄漏、样本重复或度量实现。该数值只来自二分类平衡 fixture，不是通用 chance baseline。
 
 `CLAIM-10-06`（result）：appearance 与 task-predictive 在未参与拟合的 ID 集上都取得 100%，但纹理相关性反转后前者降至 0%、后者保持 100%。该固定反例表明，单独报告 ID probe 会把 nuisance shortcut 与稳定任务信息混为一谈；四样本结果不估计真实模型的 OOD 性能。
 

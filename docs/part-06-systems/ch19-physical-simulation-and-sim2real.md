@@ -150,7 +150,7 @@ make ch19-smoke
 
 *TAB-19-02：`EXP-19-01` 的留出动作结果。observation 一致不保证隐藏 state 或参数一致。*
 
-`CLAIM-19-02`（result）：名义参数在留出动作上的 state MAE 为 `0.6625`、observation MAE 为 `0.625`、终态误差为 `1.0`。
+`CLAIM-19-02`（result）：名义参数在留出动作上的 state MAE 为 `0.6625`、observation MAE 为 `0.625`、终态误差为 `1.0`；这些数值只描述固定标量动力学与留出动作，不是物理引擎或 Sim2Real 误差估计。
 
 `CLAIM-19-03`（result）：observation-only 网格搜索在 12 个候选中发现两个零误差 minimizer。非目标解 `(gain=1.0, delay=1, scale=1.0)` 在留出动作上仍有 observation MAE `0`，但 state MAE `0.1625`、终态误差 `0.25`；单靠更换动作序列没有解决乘积混淆。
 
