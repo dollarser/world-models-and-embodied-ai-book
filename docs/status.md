@@ -36,8 +36,8 @@
 | EXP-13-01 | `smoke` | 10 个单元测试；0.02 动作偏差积分为 0.40；固定预测时域的 policy query—延迟权衡；时间集成稳态误差 0.001、突变误差 0.754 | 手工标量 fixture，不是策略性能或 ACT 误差率 |
 | 第14章 生成动作 | `reviewed` | 多峰动作、diffusion/flow 桥接、候选—batch 预算、独立安全筛选、fallback 与四类审查 | Push-T/LIBERO、学习策略、GPU、真实时延和碰撞器均未运行 |
 | EXP-14-01 | `smoke` | 14 个单元测试；条件均值、候选—batch 预算、安全筛选、fallback 与输入合同 | 解析双峰、抽象 forward 和手工门禁，不是方法、时延或安全性能比较 |
-| 第15章 VLA 架构模式 | `reviewed` | action token/FAST/连续 expert/双系统、VLM 边界、自动驾驶分层及四类审查 | VLA checkpoint、VLM API、机器人、仿真和 GPU 均未运行 |
-| EXP-15-01 | `smoke` | 9 个单元测试；三类动作头统一 schema，5/5 固定错误包被拒绝，另覆盖布尔动作与 horizon 篡改 | 手工移动底盘 packet，不是 VLA 或安全性能 |
+| 第15章 VLA 架构模式 | `reviewed` | action token/FAST/连续 expert/双系统、异步命令身份、VLM 边界、自动驾驶分层及四类审查 | VLA checkpoint、VLM API、认证、机器人、仿真和 GPU 均未运行 |
+| EXP-15-01 | `smoke` | 15 个单元测试；三类动作头统一 schema，10/10 错误包被拒绝，覆盖 horizon 越权、replay、乱序、clock 与字段顺序 | 手工单会话移动底盘 packet，不是 VLA、网络安全或功能安全性能 |
 | 第16章 数据规模化与跨本体适配 | `reviewed` | mixture、canonical action、迁移矩阵、OFT/LoRA/蒸馏、跨车队正文与四类审查 | 真实数据、learned adapter、迁移实验与 GPU 均未运行 |
 | EXP-16-01 | `smoke` | 9 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0，拒绝非法 adapter/action | 两维手工动作，不是 learned transfer 性能 |
 | 第17章 世界模型帮助策略的五种方式 | `reviewed` | 五类用途、评测替身风险、model exploitation、自动驾驶四角色正文与四类审查 | learned world model、真实仿真器、上游 checkpoint 与 GPU 均未运行 |
@@ -52,6 +52,6 @@
 | EXP-21-01 | `smoke` | 9 个单元测试；mean 45 ms 掩盖 150 ms 尾部，六类异常分别拒绝；两个阈值展示 coverage—failure 取舍 | 手工 latency/packet/score/label，不是实时、OOD 或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 12 个单元测试；完整包 5 段 trace/0 issue，无效包 16 个具名 issue，缺段与错误依赖被拒绝 | metadata 图检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、220 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、226 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

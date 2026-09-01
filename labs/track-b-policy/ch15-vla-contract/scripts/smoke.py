@@ -22,6 +22,12 @@ def main() -> int:
         raise AssertionError("every malformed packet must be rejected")
     if metrics["high_level_text_directly_executable"]:
         raise AssertionError("high-level text must not bypass action grounding")
+    if not metrics["next_ordered_command_accepted"]:
+        raise AssertionError("a fresh command after the accepted sequence must pass")
+    if not metrics["replay_command_rejected"] or not metrics["out_of_order_command_rejected"]:
+        raise AssertionError("replayed and out-of-order commands must be rejected")
+    if not metrics["execution_horizon_bypass_rejected"]:
+        raise AssertionError("packet metadata must not expand the schema execution horizon")
 
     report = {
         "experiment_id": "EXP-15-01",

@@ -29,6 +29,8 @@ class ActionContractTests(unittest.TestCase):
             unnormalize_action((1.2, 0.0), MOBILE_BASE_SCHEMA)
         with self.assertRaises(ValueError):
             unnormalize_action((True, 0.0), MOBILE_BASE_SCHEMA)
+        with self.assertRaises(ValueError):
+            unnormalize_action((float("nan"), 0.0), MOBILE_BASE_SCHEMA)
 
     def test_token_round_trip_has_explicit_quantization(self):
         tokens = encode_tokens((0.6, -0.4), bins=5)
@@ -78,6 +80,45 @@ class ActionContractTests(unittest.TestCase):
         action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
         forged_horizon = {**make_packet("continuous", (action,)), "prediction_horizon": 3}
         self.assertIn("prediction_horizon_mismatch", validate_packet(forged_horizon))
+
+    def test_packet_factory_includes_execution_identity(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("continuous", (action,), command_id=11)
+        self.assertEqual(packet["command_id"], 11)
+        self.assertEqual(packet["clock_id"], "control_monotonic_ms")
+        self.assertEqual(packet["field_names"], ("linear_velocity", "yaw_rate"))
+
+    def test_gateway_prevents_execution_horizon_bypass(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("flow_chunk", (action, action, action))
+        self.assertIn("execution_horizon_exceeded", validate_packet({**packet, "execution_horizon": 3}))
+
+    def test_gateway_rejects_replay_and_out_of_order_commands(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        replay = make_packet("continuous", (action,), command_id=7)
+        old = make_packet("continuous", (action,), command_id=6)
+        new = make_packet("continuous", (action,), command_id=8)
+        self.assertIn("replay_or_out_of_order_command", validate_packet(replay, last_accepted_command_id=7))
+        self.assertIn("replay_or_out_of_order_command", validate_packet(old, last_accepted_command_id=7))
+        self.assertEqual(validate_packet(new, last_accepted_command_id=7), tuple())
+
+    def test_gateway_rejects_clock_and_field_order_mismatch(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("continuous", (action,))
+        self.assertIn("clock_mismatch", validate_packet({**packet, "clock_id": "wall_clock_ms"}))
+        swapped = {**packet, "field_names": ("yaw_rate", "linear_velocity")}
+        self.assertIn("field_order_mismatch", validate_packet(swapped))
+
+    def test_gateway_rejects_non_mapping_packet_without_crashing(self):
+        self.assertEqual(validate_packet(None), ("invalid_packet",))  # type: ignore[arg-type]
+
+    def test_gateway_context_requires_monotonic_nonnegative_integers(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("continuous", (action,))
+        with self.assertRaises(ValueError):
+            validate_packet(packet, now_ms=True)
+        with self.assertRaises(ValueError):
+            validate_packet(packet, last_accepted_command_id=-1)
 
 
 if __name__ == "__main__":

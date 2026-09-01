@@ -1,10 +1,10 @@
 # 第15章 VLA 的架构模式
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-15-01`
-> 关联声明：`CLAIM-15-01`～`CLAIM-15-06`
-> 关联图表：`FIG-15-01` / `TAB-15-01` / `TAB-15-02`
+> 关联声明：`CLAIM-15-01`～`CLAIM-15-08`
+> 关联图表：`FIG-15-01` / `TAB-15-01`～`TAB-15-03`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -93,7 +93,7 @@ flowchart LR
 
 [RT-2](https://arxiv.org/abs/2307.15818) 将机器人动作表达为文本 token，与视觉语言任务共同微调 `[A,R0]`。这种统一接口让 VLM 可以产生动作，但 token 必须解码、反归一化并映射到特定本体。每维 256 档并不等于 256 个语义动作；它只是连续值的量化。
 
-[OpenVLA](https://github.com/openvla/openvla) 是可审计的开源路线：官方仓库提供 7B 模型、训练/LoRA/评测代码，并说明基础模型使用融合的 DINOv2/SigLIP 视觉特征、Llama 2 主干与逐维 action token `[A/O,R1]`。仓库代码为 MIT，但 checkpoint 继承 Llama 2 许可限制；“代码可商用”不能自动扩展到模型。
+[OpenVLA](https://github.com/openvla/openvla) 是可审计的开源路线：官方仓库提供 7B 模型、训练/LoRA/评测代码，并说明基础模型使用融合的 DINOv2/SigLIP 视觉特征、Llama 2 主干与逐维 action token `[A/O,R1]`。其当前推理代码还要求用 `unnorm_key` 选择数据集对应的 `q01/q99` 动作统计，再把 token 解码结果反归一化；多数据集 checkpoint 若没有明确 key 就不能猜。仓库代码为 MIT，但 checkpoint 继承 Llama 2 许可限制；“代码可商用”不能自动扩展到模型。
 
 ### FAST：先压缩动作序列
 
@@ -103,15 +103,15 @@ flowchart LR
 
 另一条路线让 VLM 提供语义/视觉上下文，由专门的连续 action expert 产生 chunk。第14章解释了 diffusion/flow 接口。这样可以避免长动作 token 序列，也引入采样 solver、专家容量、缓存和异步执行问题。
 
-[SmolVLA](https://arxiv.org/abs/2506.01844) 的公开论文与 LeRobot 实现以较小 VLM 加 action expert、flow matching 和异步推理为主线 `[A/O,R1]`。当前 LeRobot 配置显式区分 `chunk_size`、`n_action_steps`、动作/状态归一化、空相机和 flow 采样步数；本书没有执行其 checkpoint。
+[SmolVLA](https://arxiv.org/abs/2506.01844) 的公开论文与 LeRobot 实现以较小 VLM 加 action expert、flow matching 和异步推理为主线 `[A/O,R1]`。当前 LeRobot 配置显式区分 `chunk_size`、`n_action_steps`、动作/状态归一化、空相机和 flow 采样步数；[异步推理实现](https://github.com/huggingface/lerobot/blob/main/src/lerobot/async_inference/policy_server.py)还为 chunk 中每个动作附加 observation 起点、环境 timestep 和逐步时间戳，再由客户端管理队列与重叠 chunk。本书没有执行其 checkpoint。
 
 ## 15.4 双系统与分层：快慢不是安全边界
 
 双系统通常让较慢的视觉语言模块解释场景和任务，让较快 action expert 生成连续控制。它可以缓存语义前缀、异步刷新动作块，也可以端到端联合训练。所谓 System 2 不保证形式化推理，System 1 也不保证硬实时。
 
-[Isaac GR00T](https://github.com/NVIDIA/Isaac-GR00T) 的当前主分支在核查日标为 N1.7，官方 README 描述 VLM 主干加 flow-matching DiT action head、相对末端动作和 LeRobot 数据接口，并公开 Apache-2.0 代码/权重说明 `[O,R1]`。版本号、backbone、动作维度和 horizon 已相对早期 N1 变化，因此正文只保留“双系统 + 连续动作头”模式；N1.7 细节属于会漂移的案例卡。本书未独立验证其 GA、性能或硬件声明。
+[Isaac GR00T](https://github.com/NVIDIA/Isaac-GR00T) 的当前主分支在核查日标为 N1.7，官方 README 描述 VLM 主干加 flow-matching DiT action head、相对末端动作和 LeRobot 数据接口，并公开 Apache-2.0 代码/权重说明 `[O,R1]`。当前主分支说明 action dimension 已扩至 132、模型 action horizon 已从 16 扩至 40，rollout 参数也从 `action-horizon` 改名为 `execution-horizon`，正好说明“预测多少”和“执行多少”不能混用。相关 checkpoint、分支和文档可能保留不同 horizon，运行时应读模型配置而不是复制本文数字。本书未独立验证其 GA、性能或硬件声明。
 
-双系统仍需要明确：慢模块多久刷新一次、快模块在指令变化时何时失效、chunk 缓存如何中断、两个模块使用哪一个时间戳，以及安全控制器是否拥有更高优先级。
+双系统仍需要明确：慢模块多久刷新一次、快模块在指令变化时何时失效、chunk 缓存如何中断、两个模块使用哪一个时间戳，以及安全控制器是否拥有更高优先级。异步并不自动更安全：旧响应可能晚到，网络可能重复传送，同一 chunk 可能被执行两次。客户端至少要比较单调 `command_id`、共同 clock、观测/动作 timestep 和有效期；新指令、急停或 schema revision 变化应原子地使旧队列失效。
 
 ## 15.5 VLA、VLM 与世界模型的边界
 
@@ -131,7 +131,7 @@ VLA 可能在内部表示物体、因果或未来，但 probe 读得出状态不
 
 ## 15.6 EXP-15-01：统一动作合同与执行网关
 
-S 档 fixture 定义移动底盘 schema：`base_link` frame、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测 3 步但每次只执行 1 步、命令最大年龄 100 ms。
+S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测最多 3 步但每次最多执行 1 步、命令最大年龄 100 ms，并要求单调 `command_id` 与共同的 `control_monotonic_ms` clock。
 
 同一归一化动作 `(0.6,-0.4)` 经过：
 
@@ -149,7 +149,7 @@ make ch15-smoke
 | --- | ---: | --- |
 | 三种可执行头通过 schema | 3/3 | 手工 packet，不是模型输出 |
 | 五档 token 平均归一化误差 | 0.1 | 不是 OpenVLA/FAST tokenizer |
-| malformed 拒绝率 | 5/5（100%） | 只覆盖五种合同错误 |
+| malformed 拒绝率 | 10/10（100%） | 只覆盖十种程序化合同错误 |
 | 高层文本可直接执行 | false | 必须先 grounding |
 | flow chunk 预测/执行 | 3 / 1 步 | 验证 receding horizon 字段 |
 
@@ -157,9 +157,22 @@ make ch15-smoke
 
 `CLAIM-15-03`（result）：五档逐维 tokenizer 将 `(0.6,-0.4)` 量化为 `(0.5,-0.5)`，平均归一化绝对误差为 `0.1`。该值只属于教学词表，不能外推 FAST 或真实 VLA。
 
-`CLAIM-15-04`（result）：高层文本、过期命令、错误 frame、错误单位与越界动作共五类 packet 全部被网关拒绝。范围检查不是碰撞检查或功能安全证明。
+`CLAIM-15-04`（result）：高层文本、过期命令、错误 frame、错误单位与越界动作等十类 packet 全部被网关拒绝。范围检查不是碰撞检查或功能安全证明。
 
-代码审查还加入两类回归门禁：布尔值不能借 Python 数值子类关系伪装为动作；packet 声明的 `prediction_horizon` 必须与实际动作长度一致。这两项由单元测试覆盖，不计入上表固定五类 smoke 指标。
+新增错误包括 clock/字段顺序错配、packet 擅自把执行前缀从 1 扩为 3，以及重复/乱序命令。新命令 `command_id=8` 在已接受 7 后通过；重复 7 与旧命令 6 都被拒绝。布尔值、非有限动作和伪造 prediction horizon 另由单元测试覆盖。
+
+| 动作包字段 | 作用 | 仍未提供的保证 |
+| --- | --- | --- |
+| `schema_id`、`field_names`、`units`、`frame_id` | 固定维度语义和坐标合同 | 不验证真实标定或控制器 |
+| `clock_id`、`timestamp_ms`、`control_hz` | 在共同单调时钟上检查新鲜度 | 不完成跨机时钟同步 |
+| `command_id` | 拒绝当前会话内 replay/乱序 | 不提供认证、防篡改或跨重启持久性 |
+| prediction / execution horizon | 限制 chunk 长度和执行前缀 | 不检查连续碰撞或动力学 |
+
+*TAB-15-03：`EXP-15-01` 的最小执行身份。生产协议还需要 session/boot ID、认证、完整性保护、ACK 和安全控制器。*
+
+`CLAIM-15-07`（result）：`EXP-15-01` 修复了 packet 可把 schema 执行时域从 1 扩到 3 的漏洞；重复 `command_id=7` 和乱序 6 在已接受 7 后被拒绝，而新命令 8 通过。
+
+`CLAIM-15-08`（recommendation）：远程或异步 VLA chunk 必须携带版本化字段顺序、共同 clock、观测/动作 timestep、单调命令身份和明确失效规则；仅有网络时间戳不能防止 replay、乱序或旧队列继续执行。
 
 ## 15.7 新本体适配：shape 相同也可能语义相反
 
@@ -168,7 +181,7 @@ make ch15-smoke
 1. 字段顺序与含义：关节、末端、夹爪还是底盘；
 2. absolute/delta、位置/速度/力矩控制；
 3. frame、单位、轴向、角度表示与手系；
-4. 控制频率、prediction/execution horizon 与保持方式；
+4. 控制频率、prediction/execution horizon、command/session identity 与保持方式；
 5. 每维上下限、归一化统计和缺失维掩码；
 6. 相机顺序、状态时间戳与动作生效延迟；
 7. 低层 controller、碰撞检查和 emergency stop。
@@ -202,7 +215,7 @@ make ch15-smoke
 
 ## 15.10 资源、开源与许可路线
 
-S 档 `EXP-15-01` 使用 Python 标准库、CPU、零下载和 MIT fixture，不运行模型。
+S 档 `EXP-15-01` 使用 Python 标准库、CPU、零下载和 MIT fixture，不运行模型；单调 command ID 只模拟单会话网关状态，不是网络安全协议。
 
 M 档首选 SmolVLA 的小规模推理或少量数据适配，目标为 24 GB 单卡以内；官方论文声称单 GPU 训练和消费级 GPU/CPU 部署 `[A,R0/R1]`，但本书尚未验证具体 checkpoint、输入和显存。运行前锁定 LeRobot commit、模型卡、数据 revision、相机/动作配置和缓存体积。
 
@@ -223,7 +236,7 @@ OpenVLA 官方 README 的传统 LoRA 示例称至少约 27 GB，超出默认 24 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 本书结果 | 三类动作头统一进入动作合同 | `EXP-15-01` | CPU smoke | 手工移动底盘 packet |
-| 本书结果 | 五类错误包被拒绝 | `EXP-15-01` | CPU smoke | 不是功能安全验证 |
+| 本书结果 | 十类错误包、执行时域越权与 replay/乱序被拒绝 | `EXP-15-01` | CPU smoke | 不是认证或功能安全验证 |
 | 论文案例 | RT-1/RT-2 与 FAST action token | 论文/项目 | `[A,R0/R1]` | 本书未运行 |
 | 开源案例 | OpenVLA、SmolVLA、openpi | 官方仓库/论文 | `[A/O,R1]` | checkpoint/训练未运行 |
 | 最新案例 | GR00T N1.7 双系统与 flow head | 官方仓库 | `[O,R1]` | 官方声明，版本会漂移 |
@@ -266,8 +279,8 @@ VLA 把视觉语言知识连接到动作，但真正可执行的系统还需要�
 
 - 内容审查：通过；
 - 代码审查：通过；
-- 一致性审查：通过（已与第10/12/13/14/16章及第20章当前评测合同对齐；第17章完成后再做全书统稿复核）；
+- 一致性审查：通过（已与第10/12/13/14/16/17章及第20/21章合同对齐）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-b-review.md`；
+- 审查记录路径：`reviews/ch15-command-integrity-review-2026-09-01.md`；
 - 已知限制：没有下载或运行任何 VLA、VLM API、机器人、仿真或 GPU；
 - 下一步：可沿第17章核对世界模型与 VLA 的组合边界，再用第20、21章完成评测与部署证据检查。

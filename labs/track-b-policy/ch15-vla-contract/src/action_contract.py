@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,7 @@ class ActionSchema:
     prediction_horizon: int
     execution_horizon: int
     max_age_ms: int
+    clock_id: str
 
 
 MOBILE_BASE_SCHEMA = ActionSchema(
@@ -35,6 +37,7 @@ MOBILE_BASE_SCHEMA = ActionSchema(
     prediction_horizon=3,
     execution_horizon=1,
     max_age_ms=100,
+    clock_id="control_monotonic_ms",
 )
 
 EXECUTABLE_SOURCES = {"continuous", "discrete_tokens", "flow_chunk"}
@@ -86,17 +89,21 @@ def make_packet(
     source: str,
     actions: tuple[tuple[float, ...], ...],
     timestamp_ms: int = 950,
+    command_id: int = 7,
     schema: ActionSchema = MOBILE_BASE_SCHEMA,
 ) -> dict[str, object]:
     return {
         "source": source,
         "schema_id": schema.schema_id,
         "frame_id": schema.frame_id,
+        "field_names": tuple(field.name for field in schema.fields),
         "units": tuple(field.unit for field in schema.fields),
+        "clock_id": schema.clock_id,
         "control_hz": schema.control_hz,
         "prediction_horizon": len(actions),
         "execution_horizon": schema.execution_horizon,
         "timestamp_ms": timestamp_ms,
+        "command_id": command_id,
         "actions": actions,
     }
 
@@ -105,7 +112,18 @@ def validate_packet(
     packet: dict[str, object],
     schema: ActionSchema = MOBILE_BASE_SCHEMA,
     now_ms: int = 1000,
+    last_accepted_command_id: int | None = None,
 ) -> tuple[str, ...]:
+    if not isinstance(packet, dict):
+        return ("invalid_packet",)
+    if isinstance(now_ms, bool) or not isinstance(now_ms, int) or now_ms < 0:
+        raise ValueError("now_ms must be a non-negative integer on the schema clock")
+    if last_accepted_command_id is not None and (
+        isinstance(last_accepted_command_id, bool)
+        or not isinstance(last_accepted_command_id, int)
+        or last_accepted_command_id < 0
+    ):
+        raise ValueError("last_accepted_command_id must be a non-negative integer or None")
     issues = []
     if packet.get("source") not in EXECUTABLE_SOURCES:
         issues.append("non_executable_source")
@@ -113,13 +131,24 @@ def validate_packet(
         issues.append("schema_mismatch")
     if packet.get("frame_id") != schema.frame_id:
         issues.append("frame_mismatch")
+    expected_field_names = tuple(field.name for field in schema.fields)
+    if packet.get("field_names") != expected_field_names:
+        issues.append("field_order_mismatch")
     expected_units = tuple(field.unit for field in schema.fields)
     if packet.get("units") != expected_units:
         issues.append("unit_mismatch")
+    if packet.get("clock_id") != schema.clock_id:
+        issues.append("clock_mismatch")
+    command_id = packet.get("command_id")
+    if isinstance(command_id, bool) or not isinstance(command_id, int) or command_id < 0:
+        issues.append("invalid_command_id")
+    elif last_accepted_command_id is not None and command_id <= last_accepted_command_id:
+        issues.append("replay_or_out_of_order_command")
     timestamp = packet.get("timestamp_ms")
     if (
         isinstance(timestamp, bool)
         or not isinstance(timestamp, int)
+        or timestamp < 0
         or timestamp > now_ms
         or now_ms - timestamp > schema.max_age_ms
     ):
@@ -147,6 +176,8 @@ def validate_packet(
         or not 1 <= execution_horizon <= len(actions)
     ):
         issues.append("invalid_execution_horizon")
+    elif execution_horizon > schema.execution_horizon:
+        issues.append("execution_horizon_exceeded")
 
     for action in actions:
         if not isinstance(action, tuple) or len(action) != len(schema.fields):
@@ -156,6 +187,7 @@ def validate_packet(
             if (
                 isinstance(value, bool)
                 or not isinstance(value, (int, float))
+                or not math.isfinite(value)
                 or not field.minimum <= value <= field.maximum
             ):
                 issues.append(f"out_of_bounds:{field.name}")
@@ -180,9 +212,30 @@ def evaluate() -> dict[str, object]:
         "wrong_frame": {**make_packet("continuous", (continuous,)), "frame_id": "camera"},
         "wrong_units": {**make_packet("continuous", (continuous,)), "units": ("km/h", "deg/s")},
         "out_of_bounds": make_packet("continuous", ((0.8, 0.0),)),
+        "wrong_clock": {**make_packet("continuous", (continuous,)), "clock_id": "wall_clock_ms"},
+        "wrong_field_order": {
+            **make_packet("continuous", (continuous,)),
+            "field_names": ("yaw_rate", "linear_velocity"),
+        },
+        "execution_horizon_bypass": {
+            **make_packet("flow_chunk", (continuous, continuous, continuous)),
+            "execution_horizon": 3,
+        },
+        "replay": make_packet("continuous", (continuous,), command_id=7),
+        "out_of_order": make_packet("continuous", (continuous,), command_id=6),
     }
     valid_issues = {name: validate_packet(packet) for name, packet in valid_packets.items()}
-    malformed_issues = {name: validate_packet(packet) for name, packet in malformed_packets.items()}
+    malformed_issues = {
+        name: validate_packet(
+            packet,
+            last_accepted_command_id=7 if name in {"replay", "out_of_order"} else None,
+        )
+        for name, packet in malformed_packets.items()
+    }
+    next_command_issues = validate_packet(
+        make_packet("continuous", (continuous,), command_id=8),
+        last_accepted_command_id=7,
+    )
     rejected = sum(bool(issues) for issues in malformed_issues.values())
     quantization_error = round(
         sum(abs(a - b) for a, b in zip(normalized, token_normalized)) / len(normalized),
@@ -202,4 +255,8 @@ def evaluate() -> dict[str, object]:
         "flow_chunk_executed_prefix_steps": len(executed_prefix),
         "valid_packet_issues": valid_issues,
         "malformed_packet_issues": malformed_issues,
+        "next_ordered_command_accepted": not bool(next_command_issues),
+        "replay_command_rejected": bool(malformed_issues["replay"]),
+        "out_of_order_command_rejected": bool(malformed_issues["out_of_order"]),
+        "execution_horizon_bypass_rejected": bool(malformed_issues["execution_horizon_bypass"]),
     }
