@@ -3,21 +3,22 @@
   "id": "EXP-18-01",
   "chapter": 18,
   "status": "smoke",
-  "claim_ids": ["CLAIM-18-02", "CLAIM-18-03", "CLAIM-18-07", "CLAIM-18-08"],
+  "claim_ids": ["CLAIM-18-02", "CLAIM-18-03", "CLAIM-18-07", "CLAIM-18-08", "CLAIM-18-10"],
   "claim_scope": [
     "fixed episode-reward weights move a two-phase scalar action target toward the successful subset mean",
     "the same weighting reduces effective sample size and the normalized weight assigned to recovery examples",
     "a per-phase marginal range gate accepts an unseen action combination that a nearest-complete-trajectory gate rejects",
-    "all-success and all-failure groups have zero unnormalized leave-one-out advantage while a mixed group retains relative signal"
+    "all-success and all-failure groups have zero unnormalized leave-one-out advantage while a mixed group retains relative signal",
+    "rejecting zero-advantage groups changes the used context distribution and requires separate attempted, rejected, and used denominators"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library four-trajectory reward-reweighting fixture"
+    "config": "standard-library v3 reward-reweighting and dynamic-rejection fixture"
   },
   "data": {
     "name": "four hand-authored two-phase trajectories",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -47,7 +48,11 @@
     {"name": "marginal_gate_unseen_hybrid_acceptance", "value": 1.0, "unit": "ratio", "split": "one-unseen-hybrid"},
     {"name": "joint_gate_unseen_hybrid_acceptance", "value": 0.0, "unit": "ratio", "split": "one-unseen-hybrid"},
     {"name": "uniform_outcome_group_signal_rate", "value": 0.0, "unit": "ratio", "split": "all-success-and-all-failure"},
-    {"name": "mixed_outcome_group_signal_rate", "value": 1.0, "unit": "ratio", "split": "one-mixed-group"}
+    {"name": "mixed_outcome_group_signal_rate", "value": 1.0, "unit": "ratio", "split": "one-mixed-group"},
+    {"name": "dynamic_rejection_group_acceptance_rate", "value": 0.5, "unit": "ratio", "split": "four-authored-context-groups"},
+    {"name": "dynamic_rejection_rejected_rollout_count", "value": 6, "unit": "rollout", "split": "four-authored-context-groups"},
+    {"name": "attempted_medium_context_fraction", "value": 0.5, "unit": "ratio", "split": "four-authored-context-groups"},
+    {"name": "used_medium_context_fraction", "value": 1.0, "unit": "ratio", "split": "two-used-context-groups"}
   ],
   "artifacts": ["results/ch18/EXP-18-01-smoke.json"],
   "limitations": [
@@ -56,6 +61,7 @@
     "weighted action means rather than an optimizer or policy update",
     "no VLA, world model, simulator, LIBERO, checkpoint, GPU, robot, or vehicle",
     "joint-support gate uses a hand-authored nearest-trajectory MAE threshold and is not a density, reachability, or safety estimator",
-    "leave-one-out fixture omits normalization, policy ratios, clipping, KL penalties, resampling cost, and optimizer dynamics"
+    "leave-one-out fixture omits normalization, policy ratios, clipping, KL penalties, repeated resampling cost, and optimizer dynamics",
+    "dynamic-rejection difficulty labels and outcome groups are hand-authored and do not estimate RIPT-VLA task prevalence or performance"
   ]
 }

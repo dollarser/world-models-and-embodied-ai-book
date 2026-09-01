@@ -9,6 +9,7 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from reweighting_fixture import (  # noqa: E402
     advantage_group_report,
+    dynamic_rejection_report,
     evaluate,
     joint_support_report,
     leave_one_out_advantages,
@@ -77,6 +78,27 @@ class ReweightingFixtureTests(unittest.TestCase):
         for rewards in ((), (1.0,), (1.0, True), (1.0, math.nan)):
             with self.subTest(rewards=rewards), self.assertRaises(ValueError):
                 leave_one_out_advantages(rewards)
+
+    def test_dynamic_rejection_reports_attempted_used_and_rejected_denominators(self):
+        report = evaluate()["dynamic_rejection"]
+        self.assertEqual(report["attempted_group_count"], 4)
+        self.assertEqual(report["used_group_count"], 2)
+        self.assertEqual(report["rejected_group_count"], 2)
+        self.assertEqual(report["attempted_rollout_count"], 12)
+        self.assertEqual(report["used_rollout_count"], 6)
+        self.assertEqual(report["rejected_rollout_count"], 6)
+
+    def test_dynamic_rejection_changes_the_used_difficulty_mix(self):
+        report = evaluate()["dynamic_rejection"]
+        self.assertEqual(report["attempted_difficulty_distribution"], {"easy": 0.25, "hard": 0.25, "medium": 0.5})
+        self.assertEqual(report["used_difficulty_distribution"], {"easy": 0.0, "hard": 0.0, "medium": 1.0})
+        self.assertEqual(report["rejection_rate_by_difficulty"], {"easy": 1.0, "hard": 1.0, "medium": 0.0})
+
+    def test_dynamic_rejection_contract_rejects_invalid_or_signal_free_batches(self):
+        invalid_batches = ((), (("", (1.0, 0.0)),), (("easy", (1.0,)),), (("easy", (1.0, 1.0)),))
+        for groups in invalid_batches:
+            with self.subTest(groups=groups), self.assertRaises(ValueError):
+                dynamic_rejection_report(groups)
 
     def test_invalid_weights_and_values_are_rejected(self):
         for weights in ((), (1, 1), (0, 0, 0, 0), (1, -1, 1, 1), (1, True, 1, 1), (1, math.inf, 1, 1)):

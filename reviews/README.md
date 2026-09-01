@@ -74,6 +74,7 @@
 - [第17章代理评测组件归因审查](ch17-component-attribution-review-2026-09-02.md)
 - [第17章 prospective policy ranking 审查](ch17-prospective-policy-ranking-review-2026-09-02.md)
 - [第18章联合支持审查](ch18-joint-support-review-2026-09-01.md)
+- [第18章 dynamic rejection 分布审查](ch18-dynamic-rejection-distribution-review-2026-09-02.md)
 - [第18章 WAM 实现快照审查](ch18-wam-implementation-snapshot-review-2026-09-02.md)
 - [第19章参数可辨识性审查](ch19-identifiability-review-2026-09-01.md)
 - [第20章零事件风险上界审查](ch20-zero-event-risk-review-2026-09-02.md)

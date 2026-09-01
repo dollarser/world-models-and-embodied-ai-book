@@ -123,6 +123,62 @@ def advantage_group_report(rewards: Sequence[float]) -> dict[str, object]:
     }
 
 
+def dynamic_rejection_report(
+    groups: Sequence[tuple[str, Sequence[float]]],
+) -> dict[str, object]:
+    """Expose how rejecting zero-advantage groups changes the used context mix."""
+    if isinstance(groups, (str, bytes)) or not isinstance(groups, Sequence) or not groups:
+        raise ValueError("dynamic-sampling groups must be a non-empty sequence")
+    attempted_counts: dict[str, int] = {}
+    used_counts: dict[str, int] = {}
+    rejected_group_ids = []
+    used_group_ids = []
+    attempted_rollout_count = 0
+    used_rollout_count = 0
+    for index, group in enumerate(groups):
+        if not isinstance(group, tuple) or len(group) != 2:
+            raise ValueError("each group must contain a difficulty label and rewards")
+        difficulty, rewards = group
+        if not isinstance(difficulty, str) or not difficulty.strip():
+            raise ValueError("difficulty labels must be non-empty strings")
+        report = advantage_group_report(rewards)
+        attempted_counts[difficulty] = attempted_counts.get(difficulty, 0) + 1
+        attempted_rollout_count += len(rewards)
+        group_id = f"{difficulty}-{index}"
+        if report["has_nonzero_learning_signal"]:
+            used_counts[difficulty] = used_counts.get(difficulty, 0) + 1
+            used_group_ids.append(group_id)
+            used_rollout_count += len(rewards)
+        else:
+            rejected_group_ids.append(group_id)
+
+    labels = tuple(sorted(attempted_counts))
+    attempted_group_count = len(groups)
+    used_group_count = len(used_group_ids)
+    if used_group_count == 0:
+        raise ValueError("at least one group must retain non-zero advantage signal")
+    return {
+        "attempted_group_count": attempted_group_count,
+        "used_group_count": used_group_count,
+        "rejected_group_count": len(rejected_group_ids),
+        "group_acceptance_rate": round(used_group_count / attempted_group_count, 12),
+        "attempted_rollout_count": attempted_rollout_count,
+        "used_rollout_count": used_rollout_count,
+        "rejected_rollout_count": attempted_rollout_count - used_rollout_count,
+        "attempted_difficulty_distribution": {
+            label: round(attempted_counts[label] / attempted_group_count, 12) for label in labels
+        },
+        "used_difficulty_distribution": {
+            label: round(used_counts.get(label, 0) / used_group_count, 12) for label in labels
+        },
+        "rejection_rate_by_difficulty": {
+            label: round(1.0 - used_counts.get(label, 0) / attempted_counts[label], 12) for label in labels
+        },
+        "used_group_ids": tuple(used_group_ids),
+        "rejected_group_ids": tuple(rejected_group_ids),
+    }
+
+
 def evaluate() -> dict[str, object]:
     uniform = summarize((1.0, 1.0, 1.0, 1.0))
     reward_weighted = summarize((3.0, 3.0, 1.0, 1.0))
@@ -148,4 +204,12 @@ def evaluate() -> dict[str, object]:
             "all_failure": advantage_group_report((0.0, 0.0, 0.0)),
             "mixed": advantage_group_report((1.0, 0.0, 0.0)),
         },
+        "dynamic_rejection": dynamic_rejection_report(
+            (
+                ("easy", (1.0, 1.0, 1.0)),
+                ("medium", (1.0, 0.0, 0.0)),
+                ("hard", (0.0, 0.0, 0.0)),
+                ("medium", (0.0, 1.0, 0.0)),
+            )
+        ),
     }

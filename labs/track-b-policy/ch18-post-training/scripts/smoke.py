@@ -30,6 +30,12 @@ def main() -> int:
         raise AssertionError("an all-failure group must have zero leave-one-out advantage")
     if not metrics["leave_one_out_advantage"]["mixed"]["has_nonzero_learning_signal"]:
         raise AssertionError("a mixed-outcome group must retain relative advantage signal")
+    if metrics["dynamic_rejection"]["attempted_difficulty_distribution"]["medium"] != 0.5:
+        raise AssertionError("the attempted fixture must contain easy, medium, and hard contexts")
+    if metrics["dynamic_rejection"]["used_difficulty_distribution"]["medium"] != 1.0:
+        raise AssertionError("zero-advantage rejection must expose the changed used-context distribution")
+    if metrics["dynamic_rejection"]["rejected_rollout_count"] != 6:
+        raise AssertionError("rejected rollout count must remain explicit rather than inferred")
     report = {
         "experiment_id": "EXP-18-01",
         "status": "smoke",

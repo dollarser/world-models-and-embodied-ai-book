@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-18-01`
-> 关联声明：`CLAIM-18-01`～`CLAIM-18-09`
-> 关联图表：`FIG-18-01` / `TAB-18-01` / `TAB-18-02` / `TAB-18-03` / `TAB-18-04`
+> 关联声明：`CLAIM-18-01`～`CLAIM-18-10`
+> 关联图表：`FIG-18-01` / `TAB-18-01` / `TAB-18-02` / `TAB-18-03` / `TAB-18-04` / `TAB-18-05`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -132,9 +132,23 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 
 ## 18.4 交互式后训练：稀疏成功信号也有代价
 
-[RIPT-VLA](https://arxiv.org/abs/2505.17016)用稀疏二元 success 做 VLA interactive post-training，并采用动态 rollout sampling 与 leave-one-out advantage estimation；作者[训练入口快照 `440990e`](https://github.com/Ariostgx/ript-vla/blob/440990e8864e12e4578b490ff6359e4f2c49ae3e/train_ript.py)显式传递 `rloo_batch_size`、dynamic sampling、PPO epoch/batch 和 clipping 配置，提供 QueST + LIBERO 路线 `[A/O,R1]`。该文件本身不能证明 OpenVLA-OFT 路线已经接入；项目级支持范围应另查配置、README 和 revision。它展示的是交互环境中的 RL，不是 learned world model 路线。
+[RIPT-VLA](https://arxiv.org/abs/2505.17016)用稀疏二元 success 做 VLA interactive post-training，并采用动态 rollout sampling 与 leave-one-out advantage estimation；作者[训练入口快照 `440990e`](https://github.com/Ariostgx/ript-vla/blob/440990e8864e12e4578b490ff6359e4f2c49ae3e/train_ript.py)显式传递 `rloo_batch_size`、dynamic sampling、PPO epoch/batch 和 clipping 配置，[同 commit 的 rollout generator](https://github.com/Ariostgx/ript-vla/blob/440990e8864e12e4578b490ff6359e4f2c49ae3e/ript/algos/rl_optimizers/rollout_generator.py)在 rollout 全0或全1时丢弃当前样本、继续收集有效组，提供 QueST + LIBERO 路线 `[A/O,R1]`。这些文件本身不能证明 OpenVLA-OFT 路线已经接入或上游结果已复现；项目级支持范围应另查配置、README 和 revision。它展示的是交互环境中的 RL，不是 learned world model 路线。
 
 二元 success 避免手工 dense reward 的部分偏置，却没有消除 credit assignment：需要同任务/初态下足够多的成功与失败 rollout 才能形成可用组内相对信号。若一组全失败或全成功，fixture 所示的 REINFORCE Leave-One-Out（RLOO）相对优势退化。dynamic sampling 丢弃并重采这类组可以恢复梯度信号，却会改变实际 task/难度分布、增加 rollout 成本，并可能长期饿死过难或过易任务；必须报告 attempted、discarded、resampled 和 used group 数。若 policy 更新太快，旧 rollout 与新 policy 不匹配；若 simulator success 使用 privileged state，真实部署未必拥有同一 verifier。
+
+`EXP-18-01` v3 把该警告变成一个固定负对照：4个手工 context group 各含3条二元 reward。easy 组全成功、hard 组全失败，两个 medium 组均混合成败；按“零 LOO signal 即拒绝”的规则，只留下两个 medium 组。
+
+| 分母/分层 | attempted | rejected | used |
+| --- | ---: | ---: | ---: |
+| group 数 | 4 | 2 | 2 |
+| rollout 数 | 12 | 6 | 6 |
+| easy context 占比 | 25% | — | 0% |
+| medium context 占比 | 50% | — | 100% |
+| hard context 占比 | 25% | — | 0% |
+
+*TAB-18-05：`EXP-18-01` v3 的 dynamic rejection 分母。难度标签、reward 和组构成都由本书手工指定；“rejected rollout 数”只是被拒组所含样本数，不含为了补满 batch 后续可能新增的重采样成本。*
+
+`CLAIM-18-10`（result）：在该四组 fixture 中，零优势拒绝使 group acceptance rate 为 `2/4=0.5`，训练使用分布中的 medium context 从 attempted 的50%变为100%，easy/hard 从各25%变为0%。这只证明选择规则能改变本 fixture 的 used 分布，不估计 RIPT-VLA 的真实 context 发生率、重采样成本、梯度偏差、收敛或策略性能。
 
 人类纠正可记录 intervention 前观察、模型原动作、纠正动作、触发原因和恢复结果。只保存纠正动作会丢失“为何接管”和 policy-induced state，无法区分动作学习与数据选择效应。高风险机器人/车辆必须先用保守 controller 和安全员协议限定探索范围。
 
@@ -228,6 +242,7 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 3. **长时状态机**：给一个五阶段操作任务定义 subgoal completion、stuck 和 recovery 状态机。
 4. **WAM 分类**：任选 WAM 项目，判断它属于 `TAB-18-04` 哪一行，并找出因果 ablation。
 5. **自动驾驶对照**：为驾驶 cut-in 后训练写出 SFT、MetaDrive RL、learned simulator RL 和 held-out CARLA 四列对照。
+6. **动态拒绝分母**：给出 easy、medium、hard 三类 context 的 attempted/used 表；说明为什么只报告训练 batch 中的 task 占比会隐藏选择过程。
 
 ## 自检要点
 
@@ -268,6 +283,13 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-18-06：used batch 不是 attempted 分布</summary>
+
+至少登记 `context_id/task_id`、每组 rollout 数、reward 向量、拒绝原因、attempt index，以及 attempted、rejected、resampled、used 四套计数。若 easy 组全成功、hard 组全失败而 medium 组混合成败，零优势拒绝会让 used batch 只剩 medium；此时“used 中 medium=100%”不能解释为环境只产生 medium，也不能用 used 分母估算部署成功率。应同时报告各 task/difficulty 的尝试率、接受率、rollout 成本和随训练迭代的变化；难度若由同一 reward 事后定义，还要避免把标签当成独立解释变量。保留零信号组用于评测/覆盖审计与是否用于梯度更新是两个不同决定。
+
+</details>
+
 ## 延伸阅读
 
 - Tan et al., [RIPT-VLA](https://arxiv.org/abs/2505.17016) 与[作者代码快照 `440990e`](https://github.com/Ariostgx/ript-vla/tree/440990e8864e12e4578b490ff6359e4f2c49ae3e)；
@@ -288,5 +310,5 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`、`reviews/ch18-wam-implementation-snapshot-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`、`reviews/ch18-dynamic-rejection-distribution-review-2026-09-02.md`、`reviews/ch18-wam-implementation-snapshot-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：只有离线标量重加权，没有 VLA/RL/world-model 训练、LIBERO、物理仿真、GPU、机器人或车辆。

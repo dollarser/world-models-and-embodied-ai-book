@@ -2,6 +2,38 @@
   "experiment_id": "EXP-18-01",
   "gpu_verified": false,
   "metrics": {
+    "dynamic_rejection": {
+      "attempted_difficulty_distribution": {
+        "easy": 0.25,
+        "hard": 0.25,
+        "medium": 0.5
+      },
+      "attempted_group_count": 4,
+      "attempted_rollout_count": 12,
+      "group_acceptance_rate": 0.5,
+      "rejected_group_count": 2,
+      "rejected_group_ids": [
+        "easy-0",
+        "hard-2"
+      ],
+      "rejected_rollout_count": 6,
+      "rejection_rate_by_difficulty": {
+        "easy": 1.0,
+        "hard": 1.0,
+        "medium": 0.0
+      },
+      "used_difficulty_distribution": {
+        "easy": 0.0,
+        "hard": 0.0,
+        "medium": 1.0
+      },
+      "used_group_count": 2,
+      "used_group_ids": [
+        "medium-1",
+        "medium-3"
+      ],
+      "used_rollout_count": 6
+    },
     "leave_one_out_advantage": {
       "all_failure": {
         "advantages": [
