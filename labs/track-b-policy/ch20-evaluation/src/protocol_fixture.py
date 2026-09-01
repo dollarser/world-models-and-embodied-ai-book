@@ -81,6 +81,45 @@ def zero_event_upper_bound(trials: int, confidence: float = 0.95) -> float:
     return round(1.0 - alpha ** (1.0 / trials), 6)
 
 
+def zero_event_pseudoreplication_audit(
+    independent_clusters: int = 10,
+    repeats_per_cluster: int = 10,
+    confidence: float = 0.95,
+) -> dict[str, object]:
+    """Audit repeated cluster members without relabeling them as population-independent draws."""
+    for name, value in (
+        ("independent_clusters", independent_clusters),
+        ("repeats_per_cluster", repeats_per_cluster),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError(f"{name} must be an integer")
+        if value <= 0:
+            raise ValueError(f"{name} must be positive")
+
+    nominal_episodes = independent_clusters * repeats_per_cluster
+    return {
+        "independent_cluster_count": independent_clusters,
+        "repeats_per_cluster": repeats_per_cluster,
+        "nominal_episode_count": nominal_episodes,
+        "episode_iid_upper_if_independent": zero_event_upper_bound(
+            nominal_episodes, confidence
+        ),
+        "cluster_incidence_upper_if_clusters_independent": zero_event_upper_bound(
+            independent_clusters, confidence
+        ),
+        "estimands_are_different": True,
+        "episode_estimand": "event probability per independently sampled episode",
+        "cluster_estimand": (
+            "probability a newly sampled cluster contains one or more events across "
+            f"{repeats_per_cluster} fixed replay(s)"
+        ),
+        "scope": (
+            "authored zero-event replication audit; repeated members do not establish "
+            "episode independence, and changing repeat count also changes the cluster outcome"
+        ),
+    }
+
+
 def _linear_quantile(values: Sequence[float], probability: float) -> float:
     ordered = sorted(values)
     position = probability * (len(ordered) - 1)
@@ -294,4 +333,5 @@ def evaluate() -> dict[str, object]:
         f"{trials}_trials": zero_event_upper_bound(trials)
         for trials in (20, 100, 1000)
     }
+    metrics["zero_event_pseudoreplication_audit"] = zero_event_pseudoreplication_audit()
     return metrics

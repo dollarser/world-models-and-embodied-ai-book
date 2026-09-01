@@ -21,6 +21,7 @@
 - [第2章三态能力蕴含审查](ch02-capability-implication-review-2026-09-01.md)
 - [第20章评测有效性与证据层级审查](ch20-evaluation-validity-review-2026-09-01.md)
 - [第20章相关 episode、配对比较与 cluster bootstrap 审查](ch20-clustered-paired-statistics-review-2026-09-01.md)
+- [第20章零事件 pseudo-replication 审查](ch20-zero-event-pseudoreplication-review-2026-09-02.md)
 - [第21章运行时队列与降级状态审查](ch21-runtime-fallback-review-2026-09-01.md)
 - [第21章重新激活授权审查](ch21-reactivation-authorization-review-2026-09-01.md)
 - [第21章 fallback 生命周期审查](ch21-fallback-lifecycle-review-2026-09-02.md)

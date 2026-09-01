@@ -4,8 +4,8 @@
   "chapter": 20,
   "title": "Episode protocol comparability audit",
   "status": "executed",
-  "purpose": "Expose how task population, success definition, denominator, pairing, cluster weighting, and zero observed events change reported policy evidence, while preserving uncertainty assumptions and separating protocol diagnostics from causal attribution.",
-  "claim_ids": ["CLAIM-20-02", "CLAIM-20-03", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09"],
+  "purpose": "Expose how task population, success definition, denominator, pairing, cluster weighting, zero observed events, and pseudoreplicated exposures change reported policy evidence, while preserving uncertainty assumptions and separating distinct estimands from protocol diagnostics.",
+  "claim_ids": ["CLAIM-20-02", "CLAIM-20-03", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10"],
   "evaluation_layers": ["E0"],
   "allowed_claims": [
     "The four authored protocols produce different success rates from the fixed episode table.",
@@ -14,20 +14,22 @@
     "The fixture keeps a valid timeout in the denominator and blocks aggregation when a technical-invalid attempt is declared.",
     "The two-by-two protocol grid exposes a population-by-success-rule interaction on the authored rows.",
     "A paired route-level fixture separates episode-micro and equal-route-macro estimands and enumerates its tiny cluster-bootstrap distribution.",
-    "Zero observed events retain a positive one-sided exact binomial upper bound under an explicit independent Bernoulli interpretation."
+    "Zero observed events retain a positive one-sided exact binomial upper bound under an explicit independent Bernoulli interpretation.",
+    "Repeating members within fixed route clusters does not create independent routes; per-episode event probability and per-new-route event incidence are distinct authored estimands."
   ],
   "forbidden_claims": [
     "The fixture estimates performance of a policy, simulator, robot, or autonomous vehicle.",
     "Wilson intervals make results from different protocols directly comparable.",
     "Zero observed collisions or interventions implies zero deployment risk.",
-    "Four authored route clusters provide a calibrated population confidence interval or prove that the candidate policy is equivalent to the baseline."
+    "Four authored route clusters provide a calibrated population confidence interval or prove that the candidate policy is equivalent to the baseline.",
+    "The cluster-incidence upper bound is a corrected estimate of the same per-episode probability, or either authored bound estimates real vehicle risk."
   ],
   "systems": [
     {
       "name": "fixed_episode_table",
       "role": "system_under_test",
       "type": "hand-authored table of eight completed episode outcomes",
-      "revision": "fixture-v6",
+      "revision": "fixture-v7",
       "inputs": ["protocol name", "episode suite", "goal", "collision", "intervention", "route completion", "terminated", "truncated", "valid", "invalid reason"],
       "outputs": ["four protocol aggregates", "attempt/valid/terminated/truncated/invalid counts", "comparability warnings", "factorial arithmetic contrasts"],
       "preprocessing": "select episodes by named suite; validate end semantics; do not delete failed, truncated, safety-violating, or declared-invalid rows"
@@ -36,7 +38,7 @@
       "name": "paired_route_table",
       "role": "baseline",
       "type": "hand-authored table of ten paired outcomes nested in four routes",
-      "revision": "fixture-v6",
+      "revision": "fixture-v7",
       "inputs": ["pair id", "route cluster", "candidate success", "baseline success"],
       "outputs": ["episode-micro paired difference", "equal-route-macro paired difference", "route-level bootstrap percentile interval"],
       "preprocessing": "validate unique pairs; compute candidate-minus-baseline within each pair; average within route before resampling routes with replacement"
@@ -45,16 +47,16 @@
       "name": "analytic_zero_event_calculator",
       "role": "oracle",
       "type": "exact standard-library one-sided binomial bound calculator",
-      "revision": "fixture-v6",
-      "inputs": ["zero observed events", "declared independent exposure count", "confidence level"],
-      "outputs": ["exact one-sided event-probability upper bound"],
-      "preprocessing": "solve (1-p_upper)^n = alpha directly; do not treat authored exposure counts as observed robot or vehicle trials"
+      "revision": "fixture-v7",
+      "inputs": ["zero observed events", "declared independent exposure or cluster count", "repeats per cluster", "confidence level"],
+      "outputs": ["exact one-sided event-probability upper bound", "episode-iid versus cluster-incidence pseudoreplication audit with explicit estimand labels"],
+      "preprocessing": "solve (1-p_upper)^n = alpha directly for the declared unit; never relabel repeated cluster members as independent routes or treat the episode and cluster bounds as one parameter"
     }
   ],
   "datasets": [
     {
       "name": "procedural eight-episode factorial evaluation table with explicit end semantics",
-      "version": "v6",
+      "version": "v7",
       "license": "MIT",
       "classification": "fixture",
       "fixture": true,
@@ -74,7 +76,7 @@
     },
     {
       "name": "procedural ten-pair route-cluster comparison table",
-      "version": "v6",
+      "version": "v7",
       "license": "MIT",
       "classification": "fixture",
       "fixture": true,
@@ -90,24 +92,44 @@
         "All four observed route clusters are enumerated with replacement for the deterministic teaching distribution.",
         "The four-cluster percentile interval is explicitly barred from population calibration claims."
       ]
+    },
+    {
+      "name": "procedural zero-event route-replay pseudoreplication table",
+      "version": "v7",
+      "license": "MIT",
+      "classification": "fixture",
+      "fixture": true,
+      "download_bytes": 0,
+      "checksum": null,
+      "role": "fixture",
+      "split_definition": "Ten authored route identities with ten zero-event repeated members per route; a one-repeat negative control preserves the same route identities.",
+      "unit_of_analysis": "declared independently sampled episode for one estimand or route cluster with any-event outcome for the other; the two parameters remain separate",
+      "grouping_keys": ["route cluster", "replay identity", "declared independent unit", "estimand"],
+      "leakage_controls": [
+        "Repeats never create new route identities.",
+        "Episode-event and new-route-incidence bounds retain distinct names and interpretations.",
+        "Changing repeats per route cannot change the independent route count.",
+        "Changing repeats per route changes the any-event cluster outcome even when the bound formula has the same numeric input count.",
+        "Neither authored count is presented as observed simulator, robot, vehicle, or population exposure."
+      ]
     }
   ],
   "protocol": {
-    "version": "fixture-v6",
-    "comparison_unit": "two authored row subfixtures (eight protocol episodes and ten paired outcomes in four routes) plus analytic zero-event bounds at three declared exposure counts",
-    "sample_count": 18,
+    "version": "fixture-v7",
+    "comparison_unit": "two authored row subfixtures (eight protocol episodes and ten paired outcomes in four routes) plus analytic zero-event bounds at three declared exposure counts and a ten-route-by-ten-replay pseudoreplication audit",
+    "sample_count": 118,
     "randomness": {
       "deterministic": true,
       "seeds": [],
-      "rationale": "Episode rows, paired route rows, suite membership, success rules, and exact cluster-resample enumeration are fixed."
+      "rationale": "Episode rows, paired route rows, suite membership, success rules, ten route identities, replay multiplicity, zero event labels, and exact cluster-resample enumeration are fixed."
     },
     "horizons": [1],
     "action_space": "not represented; the fixture begins from completed episode outcomes",
     "timing": "one completed episode is one analysis unit; no step frequency or wall-clock measurement exists",
     "termination_conditions": ["Evaluate every valid row selected by the named protocol exactly once; at least one of terminated or truncated marks episode end, and both may be true on the same final step."],
     "baselines": ["easy_goal_only protocol as an intentionally incomplete endpoint", "baseline policy column in the paired route table"],
-    "comparison_design": "Cross easy/full populations with goal-only/safety-aware rules, then separately preserve candidate-baseline pairing within routes and compare episode-micro with equal-route-macro differences. Do not interpret authored arithmetic or four-cluster percentiles as model ranking or population effects.",
-    "selection_protocol": "All four protocol definitions, eight episode outcomes, ten policy pairs, four route identities, and the macro estimand are fixed. A valid truncated timeout stays in the denominator. A declared technical-invalid attempt aborts aggregation; any future retry, replacement, exclusion, cluster, or weighting policy must be frozen before execution.",
+    "comparison_design": "Cross easy/full populations with goal-only/safety-aware rules, then separately preserve candidate-baseline pairing within routes and compare episode-micro with equal-route-macro differences. The zero-event audit holds ten route identities fixed while varying repeats per route, and labels episode-event and new-route-incidence estimands separately. Do not interpret authored arithmetic, four-cluster percentiles, or either zero-event bound as model ranking or population effects.",
+    "selection_protocol": "All four protocol definitions, eight episode outcomes, ten policy pairs, route identities, cluster membership, independent-unit declarations, and target estimands are fixed. A valid truncated timeout stays in the denominator. A declared technical-invalid attempt aborts aggregation; any future retry, replacement, exclusion, cluster, correlation, or weighting policy must be frozen before execution.",
     "failure_definition": "goal-only counts goal completion; safety-aware additionally requires no collision and no intervention. A valid timeout without goal completion is a failure. Technical-invalid attempts are reported but never silently converted into failures or removed from a completed aggregate."
   },
   "metrics": [
@@ -121,7 +143,7 @@
       "split": "reported separately for all four population-by-success-rule cells",
       "aggregation": "success count divided by the complete protocol-specific episode denominator",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:evaluate_protocol",
-      "implementation_version": "fixture-v6",
+      "implementation_version": "fixture-v7",
       "statistical_uncertainty": {
         "method": "wilson",
         "confidence_level": 0.95,
@@ -138,7 +160,7 @@
       "split": "reported separately for each protocol-selected episode set",
       "aggregation": "collision count divided by the complete protocol-specific episode denominator",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:evaluate_protocol",
-      "implementation_version": "fixture-v6",
+      "implementation_version": "fixture-v7",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The smoke emits a deterministic point value only; it must not be used as a risk estimate."
@@ -154,7 +176,7 @@
       "split": "reported separately for each protocol-selected episode set",
       "aggregation": "intervention count divided by the complete protocol-specific episode denominator",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:evaluate_protocol",
-      "implementation_version": "fixture-v6",
+      "implementation_version": "fixture-v7",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The authored fixture is not a sampled intervention-rate study."
@@ -170,7 +192,7 @@
       "split": "reported separately for each protocol-selected episode set",
       "aggregation": "arithmetic mean route completion over the complete protocol-specific denominator",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:evaluate_protocol",
-      "implementation_version": "fixture-v6",
+      "implementation_version": "fixture-v7",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "No population or repeated-seed interval is estimated by this fixture."
@@ -186,7 +208,7 @@
       "split": "protocol pair",
       "aggregation": "count distinct task-population, success-definition, and denominator mismatches",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:comparability_warnings",
-      "implementation_version": "fixture-v6",
+      "implementation_version": "fixture-v7",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "This is a deterministic contract audit count rather than a sampled metric."
@@ -202,7 +224,7 @@
       "split": "reported as attempted, valid, terminated, truncated, and invalid counts per protocol",
       "aggregation": "count rows by predeclared validity and terminated/truncated flags before outcome aggregation; a simultaneous terminal and timeout contributes to both end-reason counts but only one attempted episode",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:audit_episode_rows",
-      "implementation_version": "fixture-v6",
+      "implementation_version": "fixture-v7",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "These are deterministic provenance counts, not estimates from a sampled population."
@@ -218,7 +240,7 @@
       "split": "two-by-two task-population and success-rule grid",
       "aggregation": "difference between the safety-rule contrast on full and easy populations; also report both conditional population contrasts and both conditional safety-rule contrasts",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:factorial_protocol_effects",
-      "implementation_version": "fixture-v6",
+      "implementation_version": "fixture-v7",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "This is an exact arithmetic contrast on authored rows, not an estimated population interaction."
@@ -234,7 +256,7 @@
       "split": "ten paired outcomes in four route clusters",
       "aggregation": "candidate minus baseline is computed within each pair; episode-micro weights every pair, while the target macro estimand averages four route-level mean differences equally",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:exact_paired_cluster_bootstrap",
-      "implementation_version": "fixture-v6",
+      "implementation_version": "fixture-v7",
       "statistical_uncertainty": {
         "method": "bootstrap",
         "confidence_level": 0.95,
@@ -251,11 +273,28 @@
       "split": "zero observed events at 20, 100, and 1000 independent-trial exposures",
       "aggregation": "solve (1-p_upper)^n = 0.05 for the exact one-sided 95% binomial upper bound",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:zero_event_upper_bound",
-      "implementation_version": "fixture-v6",
+      "implementation_version": "fixture-v7",
       "statistical_uncertainty": {
         "method": "other",
         "confidence_level": 0.95,
         "rationale": "Method is the exact one-sided binomial upper bound for zero observed events. The deterministic values expose why zero observed events do not imply zero risk; independent Bernoulli assumptions do not cover clustering, unseen hazards, scorer misses, or sim-to-real shift."
+      }
+    },
+    {
+      "id": "METRIC-20-10",
+      "name": "zero_event_pseudoreplication_audit",
+      "layer": "E0",
+      "role": "diagnostic",
+      "direction": "none",
+      "unit": "ratio",
+      "split": "ten authored independent route clusters with one versus ten repeated members per cluster",
+      "aggregation": "apply the zero-event bound once to the hypothetical independent-episode count and separately to the independent-cluster count while preserving different estimand labels",
+      "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:zero_event_pseudoreplication_audit",
+      "implementation_version": "fixture-v7",
+      "statistical_uncertainty": {
+        "method": "other",
+        "confidence_level": 0.95,
+        "rationale": "Both numbers are exact zero-event binomial bounds only under their declared independent units. They target different parameters and do not estimate within-cluster correlation, effective sample size, or real policy risk."
       }
     }
   ],
@@ -266,8 +305,8 @@
   "reporting": {
     "per_system": false,
     "per_task": true,
-    "disaggregations": ["all four population-by-success-rule protocol cells", "easy versus hard suite", "goal/collision/intervention outcome", "terminated and/or truncated", "valid versus technical-invalid attempt", "paired outcome by route cluster", "episode-micro versus equal-route-macro estimand", "zero-event bound by declared exposure count"],
-    "raw_predictions": "No model predictions exist; the complete eight-row protocol table, ten-row paired route table, and three analytic exposure counts are embedded in the source fixture.",
+    "disaggregations": ["all four population-by-success-rule protocol cells", "easy versus hard suite", "goal/collision/intervention outcome", "terminated and/or truncated", "valid versus technical-invalid attempt", "paired outcome by route cluster", "episode-micro versus equal-route-macro estimand", "zero-event bound by declared exposure count", "episode-event versus new-route-incidence zero-event estimand"],
+    "raw_predictions": "No model predictions exist; the complete eight-row protocol table, ten-row paired route table, three analytic exposure counts, and ten-route-by-ten-replay authored counts are embedded in the source fixture.",
     "failure_artifacts": "Each failed, collided, or intervened episode remains as a named row in the fixture; there is no video.",
     "confounders": [
       "The compared protocols use different task populations.",
@@ -278,6 +317,7 @@
       "Unequal repeats across routes change the episode-micro estimand; the macro result instead weights each observed route equally.",
       "Only four route clusters exist, so the enumerated percentile interval is a mechanics demonstration rather than calibrated inference.",
       "The zero-event calculation treats exposures as independent Bernoulli trials and cannot cover correlated routes, unseen hazard types, scorer misses, or simulation shift.",
+      "The pseudoreplication audit contrasts different parameters; it does not estimate an intracluster correlation or convert ten routes into an effective per-episode sample size.",
       "Episode rows are authored and are not independent draws from a real deployment population.",
       "No empirical reset, logging, or timeout failure rate is estimated."
     ],
@@ -297,6 +337,7 @@
     "The Wilson intervals assume independent Bernoulli trials and do not repair protocol incomparability; they are not applied to the clustered subfixture.",
     "The factorial contrasts are exact for the authored table but are not population causal-effect estimates.",
     "The exact 256-resample route bootstrap has only four authored clusters, uses a simple percentile interval, and is not calibrated population inference.",
+    "The ten-route pseudoreplication audit does not estimate correlation, effective sample size, route diversity, or either population event probability.",
     "The fixture omits time-series logs, retries, real task sampling, video, exposure distance, and real safety events.",
     "The invalid-attempt path is a contract test and does not estimate a real technical failure rate."
   ]

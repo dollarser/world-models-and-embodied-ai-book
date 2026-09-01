@@ -46,6 +46,13 @@ def main() -> int:
         "1000_trials": 0.002991,
     }:
         raise AssertionError("zero observed events must retain a positive deterministic risk upper bound")
+    pseudoreplication = metrics["zero_event_pseudoreplication_audit"]
+    if pseudoreplication["episode_iid_upper_if_independent"] != 0.029513:
+        raise AssertionError("the nominal 100-episode iid bound must remain explicit")
+    if pseudoreplication["cluster_incidence_upper_if_clusters_independent"] != 0.258866:
+        raise AssertionError("ten independent clusters must retain their distinct cluster-incidence bound")
+    if not pseudoreplication["estimands_are_different"]:
+        raise AssertionError("episode and cluster event probabilities must not be treated as one estimand")
 
     report = {
         "experiment_id": "EXP-20-01",

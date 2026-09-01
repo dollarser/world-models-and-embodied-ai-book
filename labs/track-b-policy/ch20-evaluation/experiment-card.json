@@ -3,7 +3,7 @@
   "id": "EXP-20-01",
   "chapter": 20,
   "status": "smoke",
-  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09"],
+  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10"],
   "benchmark_ids": ["BENCH-20-01"],
   "claim_scope": [
     "success rates are not directly comparable when task populations, success definitions, or denominators differ",
@@ -12,16 +12,17 @@
     "valid truncations remain in a frozen denominator while declared technical-invalid attempts block aggregation instead of disappearing",
     "a factorial protocol audit can expose interaction and prevent warning labels from being misread as additive causal effects",
     "paired route-level analysis can separate episode-micro and equal-route-macro estimands while preserving within-pair comparisons",
-    "zero observed events retain a positive one-sided binomial risk upper bound under explicit independent-trial assumptions"
+    "zero observed events retain a positive one-sided binomial risk upper bound under explicit independent-trial assumptions",
+    "repeated members within authored route clusters do not create independent routes, and episode-event versus cluster-incidence bounds answer different estimands"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library fixed episode-table, zero-event bound, and paired route-cluster protocol audit"
+    "config": "standard-library fixed episode-table, zero-event and pseudoreplication bounds, and paired route-cluster protocol audit"
   },
   "data": {
-    "name": "procedural eight-episode factorial table plus ten paired outcomes in four route clusters",
-    "version": "v6",
+    "name": "procedural episode, paired-route, and zero-event pseudoreplication audit tables",
+    "version": "v7",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -65,12 +66,14 @@
     {"name": "paired_cluster_bootstrap_95_upper", "value": 0.75, "unit": "ratio_difference", "split": "four-route-256-exact-resamples"},
     {"name": "zero_event_20_trial_upper_95", "value": 0.139108, "unit": "ratio", "split": "zero-observed-events"},
     {"name": "zero_event_100_trial_upper_95", "value": 0.029513, "unit": "ratio", "split": "zero-observed-events"},
-    {"name": "zero_event_1000_trial_upper_95", "value": 0.002991, "unit": "ratio", "split": "zero-observed-events"}
+    {"name": "zero_event_1000_trial_upper_95", "value": 0.002991, "unit": "ratio", "split": "zero-observed-events"},
+    {"name": "pseudoreplication_episode_iid_upper_95", "value": 0.029513, "unit": "ratio", "split": "ten-routes-times-ten-replays"},
+    {"name": "pseudoreplication_cluster_incidence_upper_95", "value": 0.258866, "unit": "ratio", "split": "ten-independent-route-clusters"}
   ],
   "artifacts": ["results/ch20/EXP-20-01-smoke.json"],
   "limitations": [
     "fixed hand-authored outcomes rather than simulator rollouts",
-    "Wilson intervals and zero-event upper bounds assume independent Bernoulli trials and are not applied to the clustered paired subfixture",
+    "Wilson intervals and zero-event upper bounds apply only to their explicitly declared independent Bernoulli units; episode-event and cluster-incidence probabilities are different estimands, not alternative corrections for one parameter",
     "the factorial effects are arithmetic contrasts on authored rows, not population causal-effect estimates",
     "the four-route exact bootstrap and percentile interval demonstrate mechanics but are too small and authored for calibrated population inference",
     "does not estimate any real policy or benchmark performance",

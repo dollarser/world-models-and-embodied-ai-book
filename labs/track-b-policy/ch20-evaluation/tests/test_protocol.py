@@ -14,6 +14,7 @@ from protocol_fixture import (  # noqa: E402
     evaluate_protocol,
     factorial_protocol_effects,
     wilson_interval,
+    zero_event_pseudoreplication_audit,
     zero_event_upper_bound,
 )
 
@@ -126,6 +127,34 @@ class ProtocolFixtureTests(unittest.TestCase):
         for confidence in (0.0, 1.0, float("nan")):
             with self.assertRaises(ValueError):
                 zero_event_upper_bound(100, confidence)
+
+    def test_zero_event_repeats_do_not_create_independent_clusters(self):
+        audit = zero_event_pseudoreplication_audit()
+        self.assertEqual(audit["nominal_episode_count"], 100)
+        self.assertEqual(audit["episode_iid_upper_if_independent"], 0.029513)
+        self.assertEqual(audit["cluster_incidence_upper_if_clusters_independent"], 0.258866)
+        self.assertTrue(audit["estimands_are_different"])
+
+    def test_repetition_does_not_create_clusters_and_changes_cluster_outcome(self):
+        one_replay = zero_event_pseudoreplication_audit(repeats_per_cluster=1)
+        ten_replays = zero_event_pseudoreplication_audit(repeats_per_cluster=10)
+        self.assertEqual(
+            one_replay["cluster_incidence_upper_if_clusters_independent"],
+            ten_replays["cluster_incidence_upper_if_clusters_independent"],
+        )
+        self.assertGreater(
+            one_replay["episode_iid_upper_if_independent"],
+            ten_replays["episode_iid_upper_if_independent"],
+        )
+        self.assertNotEqual(one_replay["cluster_estimand"], ten_replays["cluster_estimand"])
+
+    def test_pseudoreplication_audit_rejects_invalid_cluster_counts(self):
+        for clusters, repeats in ((0, 10), (10, 0), (-1, 10)):
+            with self.subTest(clusters=clusters, repeats=repeats):
+                with self.assertRaises(ValueError):
+                    zero_event_pseudoreplication_audit(clusters, repeats)
+        with self.assertRaises(TypeError):
+            zero_event_pseudoreplication_audit(True, 10)
 
     def test_cluster_macro_and_episode_micro_answer_different_estimands(self):
         result = exact_paired_cluster_bootstrap()
