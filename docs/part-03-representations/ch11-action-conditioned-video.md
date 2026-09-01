@@ -1,7 +1,7 @@
 # 第11章 动作条件视频世界模型
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-11-01`
 > 关联声明：`CLAIM-11-01`～`CLAIM-11-10`
 > 关联图表：`FIG-11-01` / `TAB-11-01` / `TAB-11-02` / `TAB-11-03` / `TAB-11-04`
@@ -198,14 +198,14 @@ make ch11-smoke
 
 [DIAMOND](https://github.com/eloialonso/diamond) 是公开代码、agent 和可玩 checkpoint 的扩散世界模型案例；[GameNGen](https://gamengen.github.io/) 公开论文和演示，使用历史帧与动作生成 DOOM 后续。它们说明动作条件像素模型可以形成交互环境，但任务、数据、硬件和指标都与机器人/驾驶不同。DIAMOND 官方 README 还明确提醒 Atari ROM 下载要求使用者拥有相应许可；MIT 代码许可不会覆盖游戏资产。
 
-截至 2026-09-01，几个开源锚点承担的角色并不相同：
+截至 2026-09-02，几个开源锚点承担的角色并不相同：
 
 | 项目 | 预测/生成对象 | 动作与用途 | 当前可审计资产 | 本书边界 |
 | --- | --- | --- | --- | --- |
 | DIAMOND | 游戏像素/环境未来 | 离散游戏动作、imagination 中训练 agent | 代码、checkpoint、逐游戏/seed 结果 | ROM 另行授权；不是机器人/驾驶 |
 | V-JEPA 2-AC | latent future | 机器人动作、图像目标规划 | 代码、action-conditioned checkpoint、示例 | 不输出可观看视频；本书未运行 |
 | Cosmos-Predict2.5 | 视频 future | 2B robot/action-cond 等专用模型 | Apache-2.0 代码、Open Model License 权重、推理/后训练文档 | 仓库已转有限维护并建议迁移 Cosmos 3；资源未测 |
-| Cosmos 3 Generator | vision/sound/action 等统一序列 | 多模态生成、未来预测与 action 输出 | 当前官方仓库、模型报告、推理/后训练配方 | 统一接口不证明 action-state、3D 或物理一致性；资源未测 |
+| Cosmos 3 Generator | vision/sound/action 等统一序列 | 多模态生成、未来预测与 action 输出 | OpenMDW-1.1 仓库/模型材料、推理/后训练配方 | 默认路径需要 gated Guardrail；关闭它会改变安全处理；资源未测 |
 | Cosmos-Drive-Dreams | 多视角 RGB/LiDAR 合成数据 | HD map、3D box、LiDAR 等空间条件 | pipeline、权重、toolkit、合成数据 | 场景条件生成不自动等于 ego-action 闭环 simulator |
 
 *TAB-11-04：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*
@@ -214,11 +214,13 @@ make ch11-smoke
 
 [Cosmos 3 官方仓库快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827)把 Generator 描述为可联合处理或生成 text、vision、sound 与 action 的 omnimodal world model，并公开推理和 post-training 入口；同一 README 也明确列出长时一致性、action-state consistency、3D 结构和物理合理性等限制。这里按 `[O,R1]` 记录“该快照中公开接口与资产存在”，不把官方的能力概述升级为独立效果验证。
 
+[同一快照的 action cookbook](https://github.com/NVIDIA/cosmos/blob/9aa98e5a0773a5558f07d2699e640858f7ca8827/cookbooks/cosmos3/generator/action/README.md)把 forward dynamics、inverse dynamics 与 policy 分成三个 mode，并声明 Generator 默认需要申请 gated `Cosmos-1.0-Guardrail`；三个后端也允许显式关闭 guardrail。后者不是无影响的安装技巧：实验包必须登记 `guardrail_enabled`、guardrail revision/授权状态和拒绝/模糊化行为，关闭时不能声称运行了默认安全路径。仓库根许可证为 OpenMDW-1.1，仍需逐项核对模型、数据和依赖，不能把它写成本书 MIT 或旧 Cosmos 2.5 的 Apache-2.0/Open Model License 组合。
+
 `CLAIM-11-10`（fact）：Cosmos 3 官方快照 `9aa98e5` 已将 action 纳入统一生成输入输出，同时仍明确列出 action-state、3D 与物理一致性限制；这是该快照的接口事实，不代表后续版本或独立有效性验证。
 
 迁移代际时仍应重新登记输入输出模态、运行后端、checkpoint、许可与失败边界，不能沿用 2.5 的实验卡。
 
-本书当前不下载 checkpoint，不执行其训练或试玩。若后续作为 M/L1 实验，必须锁定 commit、模型代际、环境 ROM/数据权利、checkpoint 许可、GPU、采样步数、真实 FPS 定义和自由 rollout horizon。论文速度不能直接换算当前设备性能；2B 参数也不能直接推出 24 GB 可行。
+本书当前不下载 checkpoint，不执行其训练或试玩。若后续作为 M/L1 实验，必须锁定 commit、模型代际、环境 ROM/数据权利、checkpoint 许可、Guardrail 开关与 revision、GPU、采样步数、真实 FPS 定义和自由 rollout horizon。论文速度不能直接换算当前设备性能；模型名和参数量也不能直接推出 24 GB 可行。
 
 V-JEPA 2-AC 是非像素动作条件路线的另一个锚点；它与视频扩散模型的共同点是接收动作并预测未来，输出空间和规划接口不同。第17章会在统一用途框架下比较。
 
@@ -264,7 +266,7 @@ S 档 `EXP-11-01` 使用 Python 标准库、CPU、0 字节下载和 MIT fixture�
 
 M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，先使用程序化 rollout、低分辨率、短 horizon 和少量 seed；必须记录峰值显存、磁盘、视频预处理与自由 rollout 时间。L1 可增加扩散/flow、小规模驾驶仿真与多步不确定性。L2 最多 2×80 GB，仅用于明确选做的较大视频模型，不是后续阅读前置。
 
-第三方代码、checkpoint、游戏资产、驾驶视频和仿真资产分别核验许可。闭源产品/API 还需记录模型快照、日期、费用、请求与数据治理，不能上传未经许可的真实驾驶视频。
+第三方代码、checkpoint、游戏资产、驾驶视频和仿真资产分别核验许可。对 Cosmos 3 还要分别登记 OpenMDW-1.1 模型材料、gated Guardrail 和下游依赖；禁用可选安全组件必须进入结果配置和限制，不能默认为等价运行。闭源产品/API 还需记录模型快照、日期、费用、请求与数据治理，不能上传未经许可的真实驾驶视频。
 
 ## 11.12 失效模式与安全边界
 
@@ -279,6 +281,7 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 | 本书结果 | 动作盲、左右交换与正确查表的反事实/组合诊断 | `EXP-11-01` | CPU smoke | 确定性网格/ASCII |
 | 开源案例 | DIAMOND 提供动作条件可玩扩散模型资产 | 官方项目 | `[O,R1]` | 本书未运行 |
 | 开源案例 | Cosmos 2.5 action-cond 与 Drive-Dreams 条件生成资产 | 官方项目 | `[O,R1]` | 代际、许可、用途和资源不同 |
+| 开源案例 | Cosmos 3 forward/inverse/policy action modes | 官方快照/cookbook | `[O,R1]` | OpenMDW-1.1；Guardrail 授权/开关、资源与有效性未验证 |
 | 论文案例 | GameNGen 用帧与动作生成交互未来 | 论文/项目页 | `[A,R1]` | 本书未运行 |
 | 闭源案例 | Genie 3、Waymo WM、GAIA-4 的交互/驾驶声明 | 官方页面 | `[V,R0/R1]` | 无独立复现 |
 | 未验证 | 小型视频/latent predictor | 后续 M 档 | planned | GPU、数据与资源待测 |
@@ -361,6 +364,6 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`；
-- 已知限制：没有训练视频模型、下载 checkpoint、运行仿真或验证任何闭源案例；
-- 下一步：视频训练与仿真验证保持待办；Cosmos/DIAMOND 等上游资产只完成一手资料核验，未下载或运行。
+- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`；
+- 已知限制：没有训练视频模型、下载 checkpoint、申请 gated Guardrail、运行仿真或验证任何闭源案例；
+- 下一步：视频训练与仿真验证保持待办；Cosmos/DIAMOND 等上游资产只完成一手资料与无下载入口核验，未运行模型。

@@ -1,6 +1,6 @@
 # 研究雷达：怎样阅读快速演进的世界模型研究
 
-> 核查日期：2026-09-01  
+> 最近核查日期：2026-09-02；各卡以机器登记的 `last_verified` 为准
 > 机器登记：`specs/research-radar.json`  
 > 当前状态：只完成一手来源与公开资产审计；没有运行模型、数据、GPU、仿真、机器人或车辆
 
@@ -34,13 +34,17 @@ POBAX 把部分可观测性拆成多种 state aliasing 类型，并要求任务�
 
 ### V-JEPA 2.1：dense feature 不是完整 world state
 
-论文把 dense predictive loss、deep self-supervision 与图像/视频统一训练列为关键变化，官方仓库提供代码和模型入口。它能丰富第10章的表示学习谱系，但不会改变本书的门禁：状态 probe、时间 shift、动作反事实和闭环用途必须分开。
+论文把 dense predictive loss、deep self-supervision 与图像/视频统一训练列为关键变化，官方仓库提供代码符号和 checkpoint 链接。它能丰富第10章的表示学习谱系，但不会改变本书的门禁：状态 probe、时间 shift、动作反事实和闭环用途必须分开。
+
+2026-09-02 的源码预检同时发现，当前官方 HEAD/锁定快照 `204698b` 的 Hub loader 把下载基址设为测试用 `localhost:8300`。因此该卡仍可按 `R1` 表示“部分公开资产可审计”，却不能升级为 `R2`，也不能把 `torch.hub.load(..., pretrained=True)` 写成普通新环境已可执行命令。公开权重存在、loader 兼容和本书实测是三个状态。
 
 对没有 3D 经验的读者，正确入口仍是第3章坐标/深度合同和第10章的 CPU probe，而不是先下载大型 checkpoint。dense feature 可以帮助深度、抓取或导航 probe；这些任务成绩仍不自动证明 counterfactual dynamics。
 
 ### Cosmos 3：统一 action 接口的价值与边界
 
 官方仓库把 text、vision、sound 与 action 放进统一物理 AI 平台，并同时列出时间一致性、action-state consistency、3D 与物理合理性限制。这个“能力和限制写在同一接口”的做法很适合第11章：读者应审计动作字段、生成时域与限制，而不是只看样片。
+
+Action cookbook 还暴露一个容易被安装说明掩盖的实验变量：Generator 默认依赖 gated Guardrail，也允许显式关闭。关闭后得到的是另一条安全处理配置，必须登记并限制声明；仓库的 OpenMDW-1.1 也不能简写为 MIT。资产“可见”不等于无需授权、许可一致或默认安全路径已运行。
 
 自动驾驶中也一样：能接收转向或轨迹条件，只证明存在干预入口。还需核对其他交通参与者如何响应、道路/碰撞怎样计算、模型 return 是否与 MetaDrive/CARLA 或真实日志一致。
 
@@ -90,7 +94,7 @@ OSCAR 用 2D kinematic skeleton 作为跨机器人/人手的动作条件，并�
 
 - learned simulator 对**新增策略**的 prospective ranking，而不是对参与调参的固定策略回顾性相关；
 - transition、state decoder、reward/judge、action grounding 的组件级误差和端到端误差预算；
-- 24 GB 单卡内真实可执行的最小配方，以及 checkpoint 冷启动下载、磁盘、峰值显存和墙钟；
+- 24 GB 单卡内真实可执行的最小配方，以及 checkpoint 冷启动下载、loader/权重兼容、磁盘、峰值显存和墙钟；
 - 机器人与自动驾驶中按场景严重度分桶的 model exploitation、uncertainty gate 和 fallback 后果；
 - 代码、权重、数据、benchmark 与许可证能否作为同一版本化研究对象被第三方取得。
 

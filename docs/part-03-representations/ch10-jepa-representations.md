@@ -1,7 +1,7 @@
 # 第10章 非生成式预测表示：从 I-JEPA 到 V-JEPA 2.x
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-10-01`
 > 关联声明：`CLAIM-10-01`～`CLAIM-10-07`
 > 关联图表：`FIG-10-01` / `TAB-10-01` / `TAB-10-02` / `TAB-10-03`
@@ -92,7 +92,7 @@ V-JEPA 2 的官方论文和仓库把流程分为两部分：先用大规模图�
 
 ## 10.4 V-JEPA 2.1：dense 特征是新分支，不是简单版本号
 
-2026 年 [V-JEPA 2.1 预印本](https://arxiv.org/abs/2603.14482)与[官方代码快照 `204698b`](https://github.com/facebookresearch/vjepa2/tree/204698b45b3712590f06245fbfba32d3be539812)更新聚焦 dense、时空一致表示。论文描述四个组成：可见与 masked token 都参与的 dense predictive loss、多层 deep self-supervision、图像/视频 tokenizer，以及模型与数据扩展。该仓库快照同时提供 80M 到 2B 的多个 checkpoint 入口。
+2026 年 [V-JEPA 2.1 预印本](https://arxiv.org/abs/2603.14482)与[官方代码快照 `204698b`](https://github.com/facebookresearch/vjepa2/tree/204698b45b3712590f06245fbfba32d3be539812)更新聚焦 dense、时空一致表示。论文描述四个组成：可见与 masked token 都参与的 dense predictive loss、多层 deep self-supervision、图像/视频 tokenizer，以及模型与数据扩展。该仓库快照同时列出 80M 到 2B 的模型符号和 checkpoint 链接；“公开入口存在”与“默认加载路径可冷启动运行”需要分开验证。
 
 论文报告了动作预期、深度、分割、机器人规划等结果，但本书不抄录排行榜作为结论。它们使用不同 probe、数据、模型规模和任务，不能被一句“2.1 更好”替代。尤其是：
 
@@ -170,16 +170,18 @@ make ch10-smoke
 
 ## 10.7 官方特征路径：S1/M 档而非本次实测
 
-当前机器不下载 checkpoint。截至 2026-09-01，官方仓库列出的最小 V-JEPA 2.1 checkpoint 是 80M 参数、384 分辨率的 ViT-B/16，并提供 `vjepa2_1_vit_base_384` PyTorch Hub 入口；因此后续先把它作为 S1 **推理候选**，而不是从 1B/2B 模型开始。这是型号存在性与资源排序，不是 24 GB 可运行结论。执行前需要：
+当前机器不下载 checkpoint。截至 2026-09-02，官方仓库列出的最小 V-JEPA 2.1 checkpoint 是 80M 参数、384 分辨率的 ViT-B/16，并提供 `vjepa2_1_vit_base_384` PyTorch Hub 符号；因此后续先把它作为 S1 **预检候选**，而不是从 1B/2B 模型开始。这是型号存在性与资源排序，不是可运行结论。
 
-1. 锁定 `facebookresearch/vjepa2` commit、checkpoint URL 与校验和；
+本次源码级预检还发现一个必须先处理的上游阻塞：[锁定快照的 `src/hub/backbones.py`](https://github.com/facebookresearch/vjepa2/blob/204698b45b3712590f06245fbfba32d3be539812/src/hub/backbones.py)把 `VJEPA_BASE_URL` 设为测试用 `http://localhost:8300`，而公开下载地址被注释。因此在普通新环境中调用 `torch.hub.load(..., pretrained=True)` 会尝试访问不存在的本地服务；README 中存在直接 checkpoint 链接不能证明 Hub 路径正常。S1 必须保持 `blocked-by-upstream-loader`，直到锁定一个经核验的修复 commit，或显式下载带校验和的 checkpoint 并使用与该权重兼容的本地 loader；本书当前不实施绕过下载。执行前还需要：
+
+1. 锁定 `facebookresearch/vjepa2` commit、实际 loader 路径、checkpoint URL 与校验和；
 2. 核验模型权重、代码和输入视频的各自许可；
 3. 记录 checkpoint、容器、下载量、磁盘、CPU 内存/显存和预处理时间；
 4. 用可再分发微型视频跑 shape、确定性、时间顺序和层选择 smoke；
 5. 冻结 backbone，比对常数、随机、单帧和时间打乱基线；
 6. 只有实测后才能填写 24 GB 单卡可行性。
 
-官方预训练配置面向多节点多 GPU，不能由 80M 参数量反推本书单卡可训练。官方 README 还指出其默认 `decord` 在 macOS 上不受支持，替代实现由使用者自行选择；本书因此优先在锁版本的 Linux Docker 环境做 S1 预检，并把宿主机直接安装保留为可选路径。容器化能固定依赖，不能消除 checkpoint 显存、数据许可或上游兼容性风险。
+官方预训练配置面向多节点多 GPU，不能由 80M 参数量反推本书单卡可训练。官方 README 还指出其默认 `decord` 在 macOS 上不受支持，替代实现由使用者自行选择；本书因此优先在锁版本的 Linux Docker 环境做 S1 预检，并把宿主机直接安装保留为可选路径。容器化能固定依赖，不能修复错误下载地址，也不能消除 checkpoint 显存、数据许可或权重—配置兼容性风险。
 
 官方仓库当前说明大部分代码为 MIT，少量数据增强文件为 Apache-2.0；这不意味着所有 checkpoint、训练数据和下游数据自动继承 MIT。当前实验卡因此只覆盖本书 MIT fixture。
 
@@ -217,7 +219,7 @@ M 档可在经许可的少量第一人称视频上训练轻量 masked predictor 
 | 本书结果 | 状态可读与动作条件转移分离 | `EXP-10-01` | CPU smoke | 手工接口与确定性规则 |
 | 方法事实 | I-JEPA/V-JEPA 预测 latent 目标 | 原论文/官方代码 | `[A/O,R1]` | 本书未运行 |
 | 方法更新 | V-JEPA 2.1 加入 dense loss 与深层监督 | 2026 预印本/官方代码 | `[A/O,R1]` | 论文结果未复现 |
-| 未验证 | 官方 ViT-B 特征的微型 probing | 后续 S1 | planned | checkpoint 未下载 |
+| 未验证 | 官方 ViT-B 特征的微型 probing | 后续 S1 | blocked-by-upstream-loader | 默认 Hub URL 指向 localhost；checkpoint 未下载 |
 
 S0 使用 Python 标准库、CPU、0 字节下载和 MIT fixture，不需要 GPU。S1/M 的模型、数据、磁盘、时间和显存都保持待验证；默认不得超过 24 GB 单卡，2×80 GB 只保留为研究扩展且不是阅读前置。
 
@@ -278,7 +280,7 @@ Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复�
 - Bardes et al., [V-JEPA](https://arxiv.org/abs/2404.08471)，`[A,R1]`，视频特征预测；
 - Assran et al., [V-JEPA 2](https://arxiv.org/abs/2506.09985)，`[A,R1]`，视频理解、预测与动作条件后训练；
 - Mur-Labadia et al., [V-JEPA 2.1](https://arxiv.org/abs/2603.14482)，`[A,R1]`，dense 与深层自监督；
-- Meta FAIR, [V-JEPA 2.x 官方仓库快照 `204698b`](https://github.com/facebookresearch/vjepa2/tree/204698b45b3712590f06245fbfba32d3be539812)，`[O,R1]`，代码、checkpoint 和 probe 接口；
+- Meta FAIR, [V-JEPA 2.x 官方仓库快照 `204698b`](https://github.com/facebookresearch/vjepa2/tree/204698b45b3712590f06245fbfba32d3be539812)，`[O,R1]`，代码符号与 checkpoint 链接；默认 Hub loader 指向 localhost，未达到本书 `R2`；
 - [Ego4D 官方访问说明](https://ego4d-data.org/docs/start-here/) 与 [EPIC-KITCHENS-100 官方项目](https://epic-kitchens.github.io/2025)，数据许可和获取流程。
 
 ## 下一章接口
@@ -298,6 +300,6 @@ Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch10-probe-shift-action-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch10-probe-shift-action-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`；
 - 已知限制：没有下载或运行任何 I-JEPA/V-JEPA checkpoint，也没有第一人称或驾驶数据；
-- 下一步：官方 ViT-B 微型推理仍待可用 GPU；其 24 GB 推理占用、macOS/Docker 解码路径与真实视频 probe 均保持待验证。
+- 下一步：先等待或锁定经验证的官方 loader 修复，再做不下载权重的 manifest/URL 预检；ViT-B 的24 GB推理占用、macOS/Docker 解码路径与真实视频 probe 均保持待验证。

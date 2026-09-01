@@ -9,7 +9,7 @@
 | 批次 D：第8、16、17、18、20、21章 | `reviewed` | 六章四类审查通过；40 个单元测试；imagined target—后训练—评测—部署合同闭合 | Dreamer/VLA/world model、仿真、真实系统和 GPU 未运行 |
 | 全书终审：第1、5、7、22章 | `reviewed` | 四章内容、代码、一致性和教学审查通过；29 个单元测试；记录见 `reviews/final-book-review.md` | GPU、大数据、真实仿真与硬件限制保持未验证 |
 | 快速演进来源审查 | `reviewed` | 第9–12、15、18–21章一手来源复核；第12章按 ICCV/AAAI/ICLR 2025 一手会议资料区分 current estimation、future forecasting、action-conditioned world model 与 4D generation；支持正式 `fact` 的 8 个 GitHub 官方仓库锁定完整 commit，并由门禁拒绝浮动源码锚点 | 其他扩展案例链接尚未全部归档；供应商能力和目标环境均未独立验证 |
-| 快速演进研究雷达 | `reviewed` | 9 张一手来源活页卡按问题、章节、source revision、资产开放度、复现状态、资源路径、范围边界和复核触发器登记；V-JEPA 2.1、Cosmos 3 与 POBAX 仓库已锁不可变 commit | 当前只完成论文/官方资产审计；模型、数据、GPU、仿真与真实系统均未运行，非 `fact` 的扩展仓库仍按需逐批锁定 |
+| 快速演进研究雷达 | `reviewed` | 9 张一手来源活页卡按问题、章节、source revision、资产开放度、复现状态、资源路径、范围边界和复核触发器登记；V-JEPA 2.1、Cosmos 3 与 POBAX 仓库已锁不可变 commit；源码预检已区分公开资产与可运行入口，并登记 V-JEPA localhost loader、Cosmos gated Guardrail/OpenMDW-1.1 边界 | 当前只完成论文/官方资产审计和无下载预检；模型、权重、数据、GPU、仿真与真实系统均未运行，非 `fact` 的扩展仓库仍按需逐批锁定 |
 | 编辑结构与图表无障碍审查 | `reviewed` | 22 章单一 H1、标题不越级；23 张 Mermaid 图加入 `accTitle/accDescr` 并在编译产物保留；未发现 100 字以上整段跨章重复 | 深浅色、窄屏、缩放、键盘与屏幕阅读器仍需人工巡检 |
 | 术语与章节接口审查 | `reviewed` | 15 个读者关键缩写/指标同时进入作者基线与读者术语表；6 章合并标题拆为独立教学/接口区段；22 章结构契约自动检查 | 自动覆盖只保证关键项存在，不能替代逐段术语语义、译名偏好和跨学科读者测试 |
 | 练习与自学出口审查 | `reviewed` | 22 章 116 道练习均有折叠式同编号自检要点；manifest 登记全章覆盖，门禁拒绝缺失、重复、跨章、顺序错位、未闭合和过短答案 | 自检是最低合格要点，不是开放题唯一答案或真实实验替代品；仍需真实读者测试难度与歧义 |
@@ -36,7 +36,7 @@
 | EXP-07-01 | `smoke` | 13 个单元测试；H=1/3、terminal value、扰动协议负对照、固定两动作槽的 reward-only/bootstrapped objective、受限 Bellman gap 与风险排序反转 | 三状态已知规则、一个固定扰动和五个手工等权场景；不是 learned planning、真实概率或安全性能 |
 | 第8章 在想象中学习 | `reviewed` | Dreamer V1–V4 谱系、λ-return、continuation target/累计 loss weight、terminated/truncated bootstrap、误差传播、自动驾驶正文与四类审查 | world model、actor/critic 训练、learned continuation、上游 checkpoint、仿真和 GPU 未运行 |
 | EXP-08-01 | `smoke` | 15 个单元测试；λ=0/0.5/1 target、reward bias、终止后泄漏、截断误折叠造成 4 的 bootstrap loss，以及 post-terminal loss leakage 100 | 标量解析序列，不是 Dreamer、梯度、策略改进或样本效率结果 |
-| 第10章 非生成式预测表示 | `reviewed` | 四类审查通过；JEPA 2.1 一手资料核验、ID/shift probe 协议、动作接口边界与第5/11章衔接 | 官方 checkpoint、真实数据与 GPU 未运行 |
+| 第10章 非生成式预测表示 | `reviewed` | 四类审查通过；V-JEPA 2.1 一手资料核验、ID/shift probe 协议、动作接口边界与第5/11章衔接；锁定快照的默认 Hub URL 指向 localhost 已登记为 S1 阻塞而非可运行证据 | 官方 checkpoint、真实数据与 GPU 未运行；需先锁定兼容 loader/权重与校验和 |
 | EXP-10-01 | `smoke` | 12 个单元测试；重建排名反转、ID 100%→shift 0% 捷径、状态可读但动作盲反事实失败 | 手工标量表征与确定性接口，不是 JEPA、因果或规划性能 |
 | 第11章 动作条件视频世界模型 | `reviewed` | 四类审查通过；动作敏感度单位/方向、固定分母 rollout、Cosmos 2.5→3 等开源代际与 renderer/simulator/planner 边界 | 视频训练、checkpoint、仿真和 GPU 未运行 |
 | EXP-11-01 | `smoke` | 12 个单元测试；动作盲敏感度归零、左右交换负对照、3 序列/9 转移全轨迹诊断 | 确定性网格和 ASCII 帧，不是视频、因果或规划性能 |

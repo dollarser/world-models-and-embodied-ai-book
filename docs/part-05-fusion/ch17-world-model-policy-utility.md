@@ -194,7 +194,7 @@ S 档 `EXP-17-01` 使用 Python 标准库、CPU、零下载和 MIT fixture，不
 
 M 档在第19章锁定的轻量仿真中采集小型状态/动作 rollout：机器人动力学优先 MuJoCo，驾驶闭环优先 MetaDrive；训练紧凑 latent dynamics，并与真实 simulator 做 held-out transition、return gap 和策略排序对照。目标为 24 GB 单卡以内，先用低维状态或低分辨率观察、小 horizon 和固定策略，不要求购买硬件。当前没有 GPU，且尚未安装仿真器，因此此路径为 `planned`。
 
-L1 可运行 TD-MPC2 小任务或 V-JEPA 2.1 80M encoder 的冻结 probe，但上游默认配置、数据和显存需单独实测；V-JEPA 2-AC 官方 action-conditioned checkpoint 基于更大的 ViT-g，不能用 80M encoder 规模替代其控制证据。
+L1 可运行 TD-MPC2 小任务；V-JEPA 2.1 80M encoder 的冻结 probe 只有在第10章 S1 loader 预检通过后才进入候选。当前锁定官方快照的默认 Hub URL 指向 localhost，因此不能把公开权重入口误报为已可冷启动运行；上游配置、数据和显存仍需单独实测。V-JEPA 2-AC 官方 action-conditioned checkpoint 基于更大的 ViT-g，不能用80M encoder规模替代其控制证据。
 
 L2 才考虑 WorldGym/WorldEval、Cosmos 或大 checkpoint 的代理评测与生成实验，最高限制为 2×80 GB，超过上限则只保留论文/官方案例。WorldGym README 当前示例 world-model checkpoint 约 9 GB，但它还要求具体 policy runner、转换数据和 VLM scorer；磁盘文件大小不是 VRAM 或总资源需求。完整生成缓存与运行显存尚未由本书验证。
 
@@ -296,6 +296,6 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
+- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
 - 已知限制：两套 support 都是手工声明，只验证 coverage gate 的逻辑边界；未训练 learned world model，未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
 - 下一步：在第22章综合项目中复用 return gap、策略错排和真实性锚点。

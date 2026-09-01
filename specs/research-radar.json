@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "audit_date": "2026-09-01",
+  "audit_date": "2026-09-02",
   "policy": "Fast-moving work enters this registry before stable chapters. An entry records source claims and book relevance, not an independent reproduction.",
   "entries": [
     {
@@ -82,13 +82,13 @@
       ],
       "assets": {"code": "open", "weights": "open", "data": "partial"},
       "reproduction": "R0-R1",
-      "resource_path": "S tier uses the chapter's analytic probe; optional M work may audit frozen features, while full upstream training remains outside the default resource route.",
-      "scope_boundary": "Author-reported dense and robot results do not prove that a frozen feature contains every control state or supports counterfactual planning in this book.",
+      "resource_path": "S tier uses the chapter's analytic probe. The pinned official Hub loader currently targets localhost:8300, so frozen-feature execution remains blocked until a compatible loader and checkpoint checksum are explicitly locked; full upstream training stays outside the default route.",
+      "scope_boundary": "Author-reported dense and robot results do not prove that a frozen feature contains every control state or supports counterfactual planning in this book; public checkpoint links do not prove the default loader can cold-start in a clean environment.",
       "review_triggers": [
         "The official repository changes checkpoints, licenses or dense-feature interfaces.",
         "A peer-reviewed venue or independent reproduction changes the evidence maturity."
       ],
-      "last_verified": "2026-09-01"
+      "last_verified": "2026-09-02"
     },
     {
       "id": "RADAR-2026-02",
@@ -107,13 +107,13 @@
       ],
       "assets": {"code": "open", "weights": "partial", "data": "partial"},
       "reproduction": "R1",
-      "resource_path": "S tier audits the repository contract and declared limitations; any checkpoint, data or post-training run is optional and must first pass license and resource checks.",
-      "scope_boundary": "An official unified action interface does not independently validate action-state consistency, 3D structure, physical plausibility, policy ranking or safety.",
+      "resource_path": "S tier audits the repository contract and declared limitations. Generator runs are optional and must preflight OpenMDW-1.1 materials, checkpoint and data terms, the gated Guardrail dependency, its exact revision and whether guardrails are enabled before resource checks.",
+      "scope_boundary": "An official unified action interface does not independently validate action-state consistency, 3D structure, physical plausibility, policy ranking or safety; disabling the optional Guardrail is a different safety-processing configuration, not an equivalent installation shortcut.",
       "review_triggers": [
         "The repository changes model generations, action schemas, licenses or limitation statements.",
         "A smaller frozen checkpoint becomes feasible within a measured optional resource tier."
       ],
-      "last_verified": "2026-09-01"
+      "last_verified": "2026-09-02"
     },
     {
       "id": "RADAR-2026-03",

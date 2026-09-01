@@ -112,7 +112,7 @@
       "basis": "official_asset",
       "maturity": ["A", "O"],
       "anchors": ["https://arxiv.org/abs/2603.14482", "https://github.com/facebookresearch/vjepa2/tree/204698b45b3712590f06245fbfba32d3be539812"],
-      "scope_note": "The entry records the V-JEPA 2.1 recipe and public assets in the pinned repository snapshot; no upstream score is treated as a book result."
+      "scope_note": "The entry records the V-JEPA 2.1 recipe and public symbols/checkpoint links in the pinned repository snapshot; the snapshot's default Hub base URL points to localhost, so asset existence is not treated as runnable cold-start evidence and no upstream score is a book result."
     },
     {
       "claim_id": "CLAIM-11-05",
