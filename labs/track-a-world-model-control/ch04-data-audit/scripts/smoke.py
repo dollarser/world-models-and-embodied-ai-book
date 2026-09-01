@@ -16,12 +16,15 @@ from data_audit import audit, bootstrap_allowed, describe_fixture, load_fixture,
 
 EXPECTED_INJECTED_CODES = {
     "action_out_of_range",
+    "content_fingerprint_split_overlap",
     "group_split_overlap",
     "invalid_end_flag",
     "missing_sensor_record",
     "noncontiguous_frame_index",
     "normalization_scope",
     "sensor_sync_skew",
+    "similarity_cluster_split_overlap",
+    "source_asset_split_overlap",
     "timestamp_cadence",
 }
 

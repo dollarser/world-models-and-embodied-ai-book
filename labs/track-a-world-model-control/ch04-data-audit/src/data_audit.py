@@ -10,6 +10,11 @@ from typing import Any
 
 
 REQUIRED_FEATURES = {"observation.state", "action", "timestamp"}
+IDENTITY_OVERLAP_CODES = {
+    "source_asset_id": "source_asset_split_overlap",
+    "content_fingerprint": "content_fingerprint_split_overlap",
+    "similarity_cluster_id": "similarity_cluster_split_overlap",
+}
 
 
 @dataclass(frozen=True)
@@ -88,6 +93,9 @@ def audit(fixture: dict[str, Any]) -> list[Issue]:
     lower, upper = action_range if isinstance(action_range, list) and len(action_range) == 2 else (None, None)
 
     groups_by_split: dict[str, set[str]] = {}
+    identities_by_field_and_split: dict[str, dict[str, set[str]]] = {
+        field: {} for field in IDENTITY_OVERLAP_CODES
+    }
     episode_ids: set[str] = set()
     for episode in episodes:
         episode_id = episode.get("episode_id", "<missing>")
@@ -96,6 +104,18 @@ def audit(fixture: dict[str, Any]) -> list[Issue]:
         episode_ids.add(episode_id)
         split = episode.get("split", "<missing>")
         groups_by_split.setdefault(split, set()).add(episode.get("group_id", "<missing>"))
+        for field in IDENTITY_OVERLAP_CODES:
+            value = episode.get(field)
+            if not isinstance(value, str) or not value.strip():
+                issues.append(
+                    Issue(
+                        "invalid_episode_identity",
+                        f"{episode_id}:{field}",
+                        "must be a non-empty string",
+                    )
+                )
+                continue
+            identities_by_field_and_split[field].setdefault(split, set()).add(value)
 
         frames = episode.get("frames", [])
         last_sensor_timestamps: dict[str, float] = {}
@@ -198,6 +218,11 @@ def audit(fixture: dict[str, Any]) -> list[Issue]:
             overlap = groups_by_split[left_split] & groups_by_split[right_split]
             for group in sorted(overlap):
                 issues.append(Issue("group_split_overlap", group, f"present in {left_split} and {right_split}"))
+            for field, overlap_code in IDENTITY_OVERLAP_CODES.items():
+                values_by_split = identities_by_field_and_split[field]
+                overlap = values_by_split.get(left_split, set()) & values_by_split.get(right_split, set())
+                for value in sorted(overlap):
+                    issues.append(Issue(overlap_code, value, f"{field} present in {left_split} and {right_split}"))
     return issues
 
 
@@ -207,6 +232,7 @@ def summarize(issues: list[Issue]) -> dict[str, int]:
         "issue_count": len(issues),
         "issue_type_count": len(codes),
         "group_overlap_count": sum(issue.code == "group_split_overlap" for issue in issues),
+        "identity_overlap_count": sum(issue.code in IDENTITY_OVERLAP_CODES.values() for issue in issues),
     }
 
 

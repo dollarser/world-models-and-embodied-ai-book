@@ -20,6 +20,9 @@
     {
       "episode_id": "train-001",
       "group_id": "route-a",
+      "source_asset_id": "raw-log-a",
+      "content_fingerprint": "sha256:8280c2b6e0df05587e5e72b230b4f1637b4747b73ea0b282b1aea566b2deb889",
+      "similarity_cluster_id": "near-duplicate-cluster-a",
       "split": "train",
       "frames": [
         {"frame_index": 0, "timestamp": 0.0, "action": 0.1, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.005, "valid": true}}},
@@ -30,6 +33,9 @@
     {
       "episode_id": "eval-001",
       "group_id": "route-b",
+      "source_asset_id": "raw-log-b",
+      "content_fingerprint": "sha256:10e9ffe60fc48fae1e80fc84d7e2e6f39b2d6fb41c9f90e7d52afef44eee1d80",
+      "similarity_cluster_id": "near-duplicate-cluster-b",
       "split": "eval",
       "frames": [
         {"frame_index": 0, "timestamp": 0.0, "action": -0.1, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.01, "valid": true}}},

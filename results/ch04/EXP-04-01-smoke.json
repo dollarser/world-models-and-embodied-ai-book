@@ -1,12 +1,15 @@
 {
   "detected_codes": [
     "action_out_of_range",
+    "content_fingerprint_split_overlap",
     "group_split_overlap",
     "invalid_end_flag",
     "missing_sensor_record",
     "noncontiguous_frame_index",
     "normalization_scope",
     "sensor_sync_skew",
+    "similarity_cluster_split_overlap",
+    "source_asset_split_overlap",
     "timestamp_cadence"
   ],
   "experiment_id": "EXP-04-01",
@@ -18,12 +21,14 @@
     },
     "injected_failures": {
       "group_overlap_count": 1,
-      "issue_count": 8,
-      "issue_type_count": 8
+      "identity_overlap_count": 3,
+      "issue_count": 11,
+      "issue_type_count": 11
     },
-    "injected_issue_types_detected": 8,
+    "injected_issue_types_detected": 11,
     "valid_fixture": {
       "group_overlap_count": 0,
+      "identity_overlap_count": 0,
       "issue_count": 0,
       "issue_type_count": 0
     },

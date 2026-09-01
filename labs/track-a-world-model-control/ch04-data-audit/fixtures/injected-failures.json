@@ -1,7 +1,7 @@
 {
   "fixture_version": 1,
   "dataset": {
-    "name": "procedural metadata with eight injected failure types",
+    "name": "procedural metadata with eleven injected failure types",
     "fps": 10,
     "cadence_tolerance_seconds": 0.005,
     "normalization_scope": "all",
@@ -20,6 +20,9 @@
     {
       "episode_id": "train-bad",
       "group_id": "shared-route",
+      "source_asset_id": "shared-raw-log",
+      "content_fingerprint": "sha256:78d1a177034b2ad2694bc8c8b312afbd5527c2facfcc5654986dd42854dc5f6c",
+      "similarity_cluster_id": "shared-near-duplicate-cluster",
       "split": "train",
       "frames": [
         {"frame_index": 0, "timestamp": 0.0, "action": 1.5, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.0, "valid": true}}},
@@ -30,6 +33,21 @@
     {
       "episode_id": "eval-bad",
       "group_id": "shared-route",
+      "source_asset_id": "eval-raw-log",
+      "content_fingerprint": "sha256:cef2342f078a944d4357619e66dc3dd8c5e22919a6421df74091d45e9f1ac054",
+      "similarity_cluster_id": "eval-near-duplicate-cluster",
+      "split": "eval",
+      "frames": [
+        {"frame_index": 0, "timestamp": 0.0, "action": -0.1, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.0, "valid": true}}},
+        {"frame_index": 1, "timestamp": 0.1, "action": null, "terminated": true, "truncated": false, "end_reason": "failure", "sensors": {"front_camera": {"timestamp": 0.1, "valid": true}, "wrist_camera": {"timestamp": 0.1, "valid": true}}}
+      ]
+    },
+    {
+      "episode_id": "eval-identity-leak",
+      "group_id": "distinct-route-id",
+      "source_asset_id": "shared-raw-log",
+      "content_fingerprint": "sha256:78d1a177034b2ad2694bc8c8b312afbd5527c2facfcc5654986dd42854dc5f6c",
+      "similarity_cluster_id": "shared-near-duplicate-cluster",
       "split": "eval",
       "frames": [
         {"frame_index": 0, "timestamp": 0.0, "action": -0.1, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.0, "valid": true}}},

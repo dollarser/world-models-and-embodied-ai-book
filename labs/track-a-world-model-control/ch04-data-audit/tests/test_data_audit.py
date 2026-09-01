@@ -24,6 +24,26 @@ class DataAuditTest(unittest.TestCase):
         changed["episodes"][1]["group_id"] = changed["episodes"][0]["group_id"]
         self.assertIn("group_split_overlap", {issue.code for issue in audit(changed)})
 
+    def test_shared_source_asset_is_detected_despite_distinct_group_ids(self) -> None:
+        changed = deepcopy(self.valid)
+        changed["episodes"][1]["source_asset_id"] = changed["episodes"][0]["source_asset_id"]
+        self.assertIn("source_asset_split_overlap", {issue.code for issue in audit(changed)})
+
+    def test_exact_content_duplicate_is_detected_despite_distinct_group_ids(self) -> None:
+        changed = deepcopy(self.valid)
+        changed["episodes"][1]["content_fingerprint"] = changed["episodes"][0]["content_fingerprint"]
+        self.assertIn("content_fingerprint_split_overlap", {issue.code for issue in audit(changed)})
+
+    def test_authored_similarity_cluster_overlap_is_detected(self) -> None:
+        changed = deepcopy(self.valid)
+        changed["episodes"][1]["similarity_cluster_id"] = changed["episodes"][0]["similarity_cluster_id"]
+        self.assertIn("similarity_cluster_split_overlap", {issue.code for issue in audit(changed)})
+
+    def test_episode_identity_fields_must_be_nonempty_strings(self) -> None:
+        changed = deepcopy(self.valid)
+        changed["episodes"][0]["content_fingerprint"] = ""
+        self.assertIn("invalid_episode_identity", {issue.code for issue in audit(changed)})
+
     def test_action_alignment_requires_nonfinal_action(self) -> None:
         changed = deepcopy(self.valid)
         changed["episodes"][0]["frames"][0]["action"] = None
