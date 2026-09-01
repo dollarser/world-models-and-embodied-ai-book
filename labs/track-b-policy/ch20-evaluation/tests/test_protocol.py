@@ -14,6 +14,7 @@ from protocol_fixture import (  # noqa: E402
     evaluate_protocol,
     factorial_protocol_effects,
     wilson_interval,
+    zero_event_upper_bound,
 )
 
 
@@ -106,6 +107,25 @@ class ProtocolFixtureTests(unittest.TestCase):
             wilson_interval(True, 4)
         with self.assertRaises(ValueError):
             wilson_interval(2, 4, float("nan"))
+
+    def test_zero_events_still_have_a_positive_risk_upper_bound(self):
+        self.assertEqual(zero_event_upper_bound(20), 0.139108)
+        self.assertEqual(zero_event_upper_bound(100), 0.029513)
+        self.assertEqual(zero_event_upper_bound(1000), 0.002991)
+
+    def test_zero_event_bound_shrinks_with_exposure(self):
+        self.assertGreater(zero_event_upper_bound(20), zero_event_upper_bound(100))
+        self.assertGreater(zero_event_upper_bound(100), zero_event_upper_bound(1000))
+
+    def test_zero_event_bound_rejects_invalid_inputs(self):
+        for trials in (0, -1):
+            with self.assertRaises(ValueError):
+                zero_event_upper_bound(trials)
+        with self.assertRaises(TypeError):
+            zero_event_upper_bound(True)
+        for confidence in (0.0, 1.0, float("nan")):
+            with self.assertRaises(ValueError):
+                zero_event_upper_bound(100, confidence)
 
     def test_cluster_macro_and_episode_micro_answer_different_estimands(self):
         result = exact_paired_cluster_bootstrap()

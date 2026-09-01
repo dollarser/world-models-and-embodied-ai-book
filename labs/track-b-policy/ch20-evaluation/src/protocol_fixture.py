@@ -66,6 +66,21 @@ def wilson_interval(successes: int, trials: int, z: float = 1.959963984540054) -
     }
 
 
+def zero_event_upper_bound(trials: int, confidence: float = 0.95) -> float:
+    """Return the exact one-sided binomial upper bound after zero observed events."""
+    if isinstance(trials, bool) or not isinstance(trials, int):
+        raise TypeError("trials must be an integer")
+    if trials <= 0:
+        raise ValueError("trials must be positive")
+    if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
+        raise TypeError("confidence must be a real number")
+    if not isfinite(confidence) or not 0 < confidence < 1:
+        raise ValueError("confidence must lie strictly between zero and one")
+
+    alpha = 1.0 - confidence
+    return round(1.0 - alpha ** (1.0 / trials), 6)
+
+
 def _linear_quantile(values: Sequence[float], probability: float) -> float:
     ordered = sorted(values)
     position = probability * (len(ordered) - 1)
@@ -275,4 +290,8 @@ def evaluate() -> dict[str, object]:
     metrics["comparability_warnings"] = comparability_warnings(left, right)
     metrics["factorial_protocol_effects"] = factorial_protocol_effects()
     metrics["paired_cluster_comparison"] = exact_paired_cluster_bootstrap()
+    metrics["zero_event_upper_bounds_95"] = {
+        f"{trials}_trials": zero_event_upper_bound(trials)
+        for trials in (20, 100, 1000)
+    }
     return metrics

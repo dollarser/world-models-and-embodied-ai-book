@@ -40,6 +40,12 @@ def main() -> int:
         raise AssertionError("unequal route replication must separate episode-micro and cluster-macro estimands")
     if clustered["cluster_bootstrap_95"] != {"lower": -0.75, "upper": 0.75}:
         raise AssertionError("the exact route-level bootstrap interval must remain deterministic")
+    if metrics["zero_event_upper_bounds_95"] != {
+        "20_trials": 0.139108,
+        "100_trials": 0.029513,
+        "1000_trials": 0.002991,
+    }:
+        raise AssertionError("zero observed events must retain a positive deterministic risk upper bound")
 
     report = {
         "experiment_id": "EXP-20-01",
