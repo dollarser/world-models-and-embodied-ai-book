@@ -2,6 +2,11 @@
   "experiment_id": "EXP-14-01",
   "gpu_verified": false,
   "metrics": {
+    "candidate_availability": [
+      {"batch_capacity": 10, "candidate_count": 1, "forward_pass_count": 4, "iid_any_accepted_probability": 0.2, "iid_fallback_probability": 0.8, "per_candidate_acceptance_probability": 0.2, "perfectly_correlated_any_accepted_probability": 0.2, "perfectly_correlated_fallback_probability": 0.8, "sample_model_evaluation_count": 4, "solver_step_count": 4},
+      {"batch_capacity": 10, "candidate_count": 4, "forward_pass_count": 4, "iid_any_accepted_probability": 0.5904, "iid_fallback_probability": 0.4096, "per_candidate_acceptance_probability": 0.2, "perfectly_correlated_any_accepted_probability": 0.2, "perfectly_correlated_fallback_probability": 0.8, "sample_model_evaluation_count": 16, "solver_step_count": 4},
+      {"batch_capacity": 10, "candidate_count": 16, "forward_pass_count": 8, "iid_any_accepted_probability": 0.971852502329, "iid_fallback_probability": 0.028147497671, "per_candidate_acceptance_probability": 0.2, "perfectly_correlated_any_accepted_probability": 0.2, "perfectly_correlated_fallback_probability": 0.8, "sample_model_evaluation_count": 64, "solver_step_count": 4}
+    ],
     "control_budget": {
       "sequential_10_candidates_4_steps": {
         "available_forward_pass_count": 8,
@@ -113,6 +118,6 @@
       }
     }
   },
-  "scope": "analytic bimodal action, batching budget, and candidate-gate fixture; not trained diffusion or flow policy",
+  "scope": "analytic bimodal action, candidate-dependence, batching-budget, and gate fixture; not trained diffusion or flow policy",
   "status": "smoke"
 }

@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-14-01`
-> 关联声明：`CLAIM-14-01`～`CLAIM-14-09`
-> 关联图表：`FIG-14-01` / `TAB-14-01`～`TAB-14-05`
+> 关联声明：`CLAIM-14-01`～`CLAIM-14-10`
+> 关联图表：`FIG-14-01` / `TAB-14-01`～`TAB-14-06`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -152,6 +152,26 @@ make ch14-smoke
 
 `CLAIM-14-07`（result）：`EXP-14-01` 的 10 候选、4 步 refinement 共有 40 次 sample-model evaluation；逐候选串行需要 40 个 forward，而一次容纳 10 个候选时为 4 个 forward。旧的“只比较步数与预算”规则会漏算候选数。
 
+### 14.5.1 best-of-N 的可靠性增益取决于候选相关性
+
+假设单个候选通过 model-valid 与 safety gate 的边际概率都是手写的 `q=0.2`。若 N 个候选条件独立，至少一个通过的概率为
+
+\[
+P(\text{any accepted})=1-(1-q)^N.
+\]
+
+但边际概率不决定联合分布：若所有候选完全相关——例如 sampler 的条件忽略让它们总是一起成功或一起失败——无论 N 多大，至少一个通过的概率仍是 `q`。`EXP-14-01` v4 把 iid 与完全相关作为两个解析端点，同时按 `K=4`、batch capacity=10 记录抽象计算量：
+
+| 候选 N | iid 至少一个通过 | 完全相关至少一个通过 | iid fallback | 完全相关 fallback | sample-model eval / 顺序 forward |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 20.00% | 20.00% | 80.00% | 80.00% | 4 / 4 |
+| 4 | 59.04% | 20.00% | 40.96% | 80.00% | 16 / 4 |
+| 16 | 97.1852502329% | 20.00% | 2.8147497671% | 80.00% | 64 / 8 |
+
+*TAB-14-06：固定边际 `q=0.2` 下的候选依赖结构负对照。q、iid 和完全相关结构均为手写解析端点；forward 只是抽象 batch 计数，不是实测时延。*
+
+`CLAIM-14-10`（result）：`EXP-14-01` v4 中，单候选接受概率固定为0.2时，16个 iid 候选的至少一个接受概率为0.971852502329、fallback 概率为0.028147497671；16个完全相关候选对应数值仍为0.2和0.8。该反例只证明 best-of-N 可靠性计算需要候选联合依赖假设，不估计生成器多样性、真实接受率、在线 selector、碰撞风险或闭环成功率。
+
 fixture 还把“接近演示模式”和“当前场景允许执行”分开。手工安全门把左模式 `[-1.25,-0.75]` 设为当前场景阻塞区：
 
 | 候选集 | 候选 / 模式有效 | 安全拒绝 / 接受 | 结果 |
@@ -176,7 +196,7 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 
 *TAB-14-05：`EXP-14-01` 的模式覆盖—频率负对照。两组样本都覆盖全部模式且每个动作都有效，但对已知等权目标的经验频率距离不同；10个手工样本不估计总体校准。*
 
-`CLAIM-14-09`（result）：`EXP-14-01` v3 中，`5:5` 与 `9:1` 两组样本的动作有效率均为100%、模式覆盖均为2，但相对已知等权目标的经验 total variation 为 `0/0.4`。该反例只证明 support coverage 丢失模式频率信息，不证明真实策略失配程度、训练 mode collapse、总体 calibration 或统计显著性。
+`CLAIM-14-09`（result）：`EXP-14-01` v4 中，`5:5` 与 `9:1` 两组样本的动作有效率均为100%、模式覆盖均为2，但相对已知等权目标的经验 total variation 为 `0/0.4`。该反例只证明 support coverage 丢失模式频率信息，不证明真实策略失配程度、训练 mode collapse、总体 calibration 或统计显著性。
 
 ## 14.6 怎么评测多峰动作
 
@@ -212,6 +232,8 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 
 急刹、避碰和最小风险停车不能依赖“多采几个样本或许会出现安全动作”。若所有候选无效、推理超时或观测过期，系统应进入确定性的安全降级。正文评测同时报告路线完成、碰撞、舒适度、干预、模式覆盖和 deadline miss，而不是只用 trajectory ADE/FDE。
 
+对驾驶轨迹做 best-of-N 时，还要报告候选内相关性：16条只在微小控制噪声上不同、却共享同一错误意图或错误交通预测的轨迹，不能按16次独立安全机会计算。至少按意图、交互假设和场景约束给出 effective diversity/cluster 诊断，并直接统计每次重规划 `generated / accepted / fallback`；即便历史上观察到至少一个可行候选，也不能把该概率当成紧急制动保证。
+
 ## 14.8 机器人正文：接触、多解与动作可执行性
 
 机器人操作中的多峰来自不同抓取姿态、绕障方向、接触顺序和本体冗余。生成动作前必须统一关节/末端表示、frame、角度周期、夹爪编码、控制频率与归一化；生成后需要逆运动学、整臂碰撞、速度/力限制和 workspace 检查。
@@ -242,6 +264,7 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 | 本书结果 | refinement 求值—模式距离权衡 | `EXP-14-01` | CPU smoke | 不是 DDPM/learned denoiser |
 | 本书结果 | oracle straight flow 一步到目标 | `EXP-14-01` | CPU smoke | 已知配对，不能比较方法 |
 | 本书结果 | 相同有效率/模式覆盖可隐藏频率失真 | `EXP-14-01` | CPU smoke | 已知等权目标与10个手工样本 |
+| 本书结果 | 相同边际接受率下，候选相关性改变 best-of-N 可用性 | `EXP-14-01` | CPU smoke | 手写概率与 iid/完全相关端点 |
 | 本书结果 | 候选—batch forward 预算与安全筛选 | `EXP-14-01` | CPU smoke | 抽象计数与手工阻塞区 |
 | 论文/开源 | Diffusion Policy 方法与官方资产 | 论文/官方仓库 | `[P/O,R1]` | 本书未运行 |
 | 论文 | Flow Matching 通用训练框架 | 原论文 | `[P,R0]` | 非机器人 benchmark 复现 |
@@ -260,6 +283,7 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 4. **选择偏差**：解释为什么从 32 个样本中用真实终点挑最好不是合法在线评测。
 5. **自动驾驶迁移**：设计保持/变道/减速三模式轨迹评测，并定义无有效候选时的降级动作。
 6. **频率诊断**：目标模式概率为 `0.7/0.3` 时，比较 `7:3` 与 `5:5` 两组10样本的覆盖率和经验 total variation；说明为什么这仍不是总体校准结论。
+7. **候选相关性**：单候选接受率为0.1时，分别计算 N=8 的 iid 与完全相关至少一个通过概率；再说明真实采样器需要记录什么才能判断更接近哪个端点。
 
 ## 自检要点
 
@@ -307,6 +331,13 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-14-07：best-of-N 与候选相关性</summary>
+
+若8个候选在给定场景下条件独立，至少一个通过概率为 `1-(1-0.1)^8=0.56953279`，fallback 概率为0.43046721；若候选完全相关，至少一个通过仍为0.1、fallback 仍为0.9。真实 sampler 通常位于两端之间，不能只由单候选边际率恢复联合可用性。至少应保存同一重规划内的候选、mode/intent cluster、约束失败原因和 accept bitmap，按场景/seed 估计 any-accepted、候选内相关或有效多样性，并把 selector、batch/solver 成本及所有 attempted replans 的 fallback 纳入分母；这些观测仍不等于安全保证。
+
+</details>
+
 ## 延伸阅读
 
 - Chi et al., [Diffusion Policy](https://diffusion-policy.cs.columbia.edu/) 与[官方代码](https://github.com/real-stanford/diffusion_policy)，`[P/O,R1]`；
@@ -331,6 +362,6 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 - 代码审查：通过；
 - 一致性审查：通过（第5章生成基础、第13章执行时域与第15章动作 schema 接口已核对）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch14-generative-budget-review-2026-09-01.md`、`reviews/ch14-mode-frequency-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch14-candidate-dependence-review-2026-09-02.md`、`reviews/ch14-generative-budget-review-2026-09-01.md`、`reviews/ch14-mode-frequency-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有训练 Diffusion Policy/flow policy、下载数据或 checkpoint，也未验证 GPU 与真实时延；
 - 下一步：后续 M 档实验在具备 GPU 时验证显存、墙钟时延与闭环指标，不用解析 fixture 替代模型结果。

@@ -3,23 +3,24 @@
   "id": "EXP-14-01",
   "chapter": 14,
   "status": "smoke",
-  "claim_ids": ["CLAIM-14-02", "CLAIM-14-03", "CLAIM-14-04", "CLAIM-14-07", "CLAIM-14-08", "CLAIM-14-09"],
+  "claim_ids": ["CLAIM-14-02", "CLAIM-14-03", "CLAIM-14-04", "CLAIM-14-07", "CLAIM-14-08", "CLAIM-14-09", "CLAIM-14-10"],
   "claim_scope": [
     "the conditional mean falls between two equally weighted valid scalar action modes",
     "iterative mode refinement trades model evaluations for distance to a valid mode",
     "an oracle straight-flow fixture reaches its assigned modes but does not represent learned flow-policy quality",
     "candidate count and batch capacity change sequential forward count even when solver steps are fixed",
     "data-mode validity remains distinct from independent scene-safety acceptance and deterministic fallback",
-    "equal validity and mode coverage can hide a mismatch between generated and target mode frequencies"
+    "equal validity and mode coverage can hide a mismatch between generated and target mode frequencies",
+    "best-of-N availability gains require a candidate-dependence assumption even when per-candidate acceptance probability is held fixed"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library v3 bimodal action, frequency-calibration, batching-budget, and candidate-gate fixture"
+    "config": "standard-library v4 bimodal action, frequency-calibration, candidate-dependence, batching-budget, and candidate-gate fixture"
   },
   "data": {
     "name": "procedural symmetric two-mode scalar action fixture",
-    "version": "v3",
+    "version": "v4",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -46,6 +47,12 @@
     {"name": "oracle_flow_1_step_mean_mode_distance", "value": 0.0, "unit": "action", "split": "fixed-base-samples"},
     {"name": "balanced_mode_frequency_total_variation", "value": 0.0, "unit": "ratio", "split": "authored-equal-mode-target"},
     {"name": "imbalanced_mode_frequency_total_variation", "value": 0.4, "unit": "ratio", "split": "authored-equal-mode-target"},
+    {"name": "iid_16_candidate_any_accepted_probability", "value": 0.971852502329, "unit": "probability", "split": "authored-20-percent-marginal"},
+    {"name": "perfectly_correlated_16_candidate_any_accepted_probability", "value": 0.2, "unit": "probability", "split": "authored-20-percent-marginal"},
+    {"name": "iid_16_candidate_fallback_probability", "value": 0.028147497671, "unit": "probability", "split": "authored-20-percent-marginal"},
+    {"name": "perfectly_correlated_16_candidate_fallback_probability", "value": 0.8, "unit": "probability", "split": "authored-20-percent-marginal"},
+    {"name": "availability_16_candidate_sample_model_evaluations", "value": 64, "unit": "evaluation", "split": "four-step-batch-capacity-ten"},
+    {"name": "availability_16_candidate_forward_passes", "value": 8, "unit": "forward", "split": "four-step-batch-capacity-ten"},
     {"name": "sequential_10_candidate_4_step_forward_count", "value": 40, "unit": "forward", "split": "abstract-control-budget"},
     {"name": "single_batch_10_candidate_4_step_forward_count", "value": 4, "unit": "forward", "split": "abstract-control-budget"},
     {"name": "mixed_mode_safety_acceptance_count", "value": 5, "unit": "candidate", "split": "hand-authored-safety-gate"},
@@ -57,6 +64,7 @@
     "mode-refinement update is not a DDPM or learned denoiser",
     "straight flow uses oracle target assignment and cannot compare learned policy quality",
     "ten authored samples and a known equal target distribution do not estimate population calibration or uncertainty",
+    "the twenty-percent marginal probability and iid/perfect-correlation structures are authored analytic endpoints, not measured candidate statistics",
     "abstract forward budget does not measure batch-dependent wall-clock latency or memory",
     "hand-authored blocked interval and fallback are not a collision checker or safety policy"
   ]

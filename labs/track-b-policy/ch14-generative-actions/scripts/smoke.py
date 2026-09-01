@@ -36,6 +36,13 @@ def main() -> int:
         raise AssertionError("the abstract batched four-step fixture must fit eight forward passes")
     if budget["single_batch_10_candidates_16_steps"]["fits_abstract_forward_budget"]:
         raise AssertionError("sixteen solver steps must exceed the eight-forward abstract budget")
+    availability = metrics["candidate_availability"]
+    if availability[-1]["iid_any_accepted_probability"] != 0.971852502329:
+        raise AssertionError("the iid endpoint must use the registered best-of-N formula")
+    if availability[-1]["sample_model_evaluation_count"] != 64 or availability[-1]["forward_pass_count"] != 8:
+        raise AssertionError("the availability panel must carry its candidate-generation budget")
+    if {row["perfectly_correlated_any_accepted_probability"] for row in availability} != {0.2}:
+        raise AssertionError("perfect correlation must preserve the single-candidate availability")
     if metrics["safety_screen"]["mixed_modes"]["safety_accepted_count"] != 5:
         raise AssertionError("the independent gate must reject the five blocked-mode candidates")
     if not metrics["safety_screen"]["all_candidates_blocked"]["fallback_used"]:
@@ -44,7 +51,7 @@ def main() -> int:
     report = {
         "experiment_id": "EXP-14-01",
         "status": "smoke",
-        "scope": "analytic bimodal action, batching budget, and candidate-gate fixture; not trained diffusion or flow policy",
+        "scope": "analytic bimodal action, candidate-dependence, batching-budget, and gate fixture; not trained diffusion or flow policy",
         "metrics": metrics,
         "gpu_verified": False,
     }

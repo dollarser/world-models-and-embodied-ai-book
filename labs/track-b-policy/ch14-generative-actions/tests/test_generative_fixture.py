@@ -7,6 +7,7 @@ LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from generative_fixture import (  # noqa: E402
+    candidate_availability_audit,
     conditional_mean,
     mode_frequency_report,
     mode_refinement,
@@ -91,6 +92,48 @@ class GenerativeActionFixtureTests(unittest.TestCase):
             sampling_budget_report(4, 10, 0, 8)
         with self.assertRaises(ValueError):
             sampling_budget_report(4, 10, 10, -1)
+
+    def test_iid_candidate_availability_uses_best_of_n_formula(self):
+        rows = candidate_availability_audit()
+        self.assertEqual([row["candidate_count"] for row in rows], [1, 4, 16])
+        self.assertEqual(rows[0]["iid_any_accepted_probability"], 0.2)
+        self.assertEqual(rows[1]["iid_any_accepted_probability"], 0.5904)
+        self.assertEqual(rows[2]["iid_any_accepted_probability"], 0.971852502329)
+        self.assertEqual(rows[2]["sample_model_evaluation_count"], 64)
+        self.assertEqual(rows[2]["forward_pass_count"], 8)
+
+    def test_perfect_correlation_erases_best_of_n_gain(self):
+        rows = candidate_availability_audit()
+        self.assertEqual(
+            {row["perfectly_correlated_any_accepted_probability"] for row in rows},
+            {0.2},
+        )
+        self.assertGreater(
+            rows[-1]["iid_any_accepted_probability"],
+            rows[-1]["perfectly_correlated_any_accepted_probability"],
+        )
+
+    def test_iid_more_candidates_reduce_fallback_probability(self):
+        rows = candidate_availability_audit()
+        probabilities = [row["iid_fallback_probability"] for row in rows]
+        self.assertEqual(probabilities, sorted(probabilities, reverse=True))
+        self.assertEqual(rows[-1]["perfectly_correlated_fallback_probability"], 0.8)
+
+    def test_candidate_availability_rejects_invalid_contracts(self):
+        invalid_cases = (
+            {"per_candidate_acceptance_probability": -0.1},
+            {"per_candidate_acceptance_probability": 1.1},
+            {"per_candidate_acceptance_probability": True},
+            {"candidate_counts": ()},
+            {"candidate_counts": (1, 1)},
+            {"candidate_counts": (1, 0)},
+            {"candidate_counts": [1, 4]},
+            {"solver_steps": 0},
+            {"batch_capacity": 0},
+        )
+        for kwargs in invalid_cases:
+            with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                candidate_availability_audit(**kwargs)
 
     def test_safety_screen_reports_explicit_denominators(self):
         report = screen_candidates((-1.0, 1.0, 0.0))

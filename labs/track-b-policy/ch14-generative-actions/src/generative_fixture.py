@@ -153,6 +153,58 @@ def sampling_budget_report(
     }
 
 
+def candidate_availability_audit(
+    per_candidate_acceptance_probability: float = 0.2,
+    candidate_counts: tuple[int, ...] = (1, 4, 16),
+    solver_steps: int = 4,
+    batch_capacity: int = 10,
+) -> list[dict[str, float | int]]:
+    """Compare iid and perfectly correlated best-of-N availability.
+
+    The probability is authored and the two dependence structures are analytic
+    endpoints. They diagnose an assumption in candidate-count arguments; they
+    do not estimate any generator, selector, or safety-gate performance.
+    """
+    probability = _finite_number(
+        per_candidate_acceptance_probability,
+        name="per_candidate_acceptance_probability",
+    )
+    if not 0.0 <= probability <= 1.0:
+        raise ValueError("per_candidate_acceptance_probability must be in [0, 1]")
+    if (
+        not isinstance(candidate_counts, tuple)
+        or not candidate_counts
+        or any(
+            isinstance(count, bool) or not isinstance(count, int) or count <= 0
+            for count in candidate_counts
+        )
+        or len(set(candidate_counts)) != len(candidate_counts)
+    ):
+        raise ValueError("candidate_counts must be a non-empty tuple of unique positive integers")
+    solver_steps = _positive_integer(solver_steps, name="solver_steps")
+    batch_capacity = _positive_integer(batch_capacity, name="batch_capacity")
+
+    rows = []
+    for count in candidate_counts:
+        iid_any = 1.0 - (1.0 - probability) ** count
+        correlated_any = probability
+        rows.append(
+            {
+                "candidate_count": count,
+                "solver_step_count": solver_steps,
+                "batch_capacity": batch_capacity,
+                "sample_model_evaluation_count": solver_steps * count,
+                "forward_pass_count": solver_steps * math.ceil(count / batch_capacity),
+                "per_candidate_acceptance_probability": probability,
+                "iid_any_accepted_probability": round(iid_any, 12),
+                "iid_fallback_probability": round(1.0 - iid_any, 12),
+                "perfectly_correlated_any_accepted_probability": round(correlated_any, 12),
+                "perfectly_correlated_fallback_probability": round(1.0 - correlated_any, 12),
+            }
+        )
+    return rows
+
+
 def screen_candidates(
     samples: tuple[float, ...],
     blocked_interval: tuple[float, float] = (-1.25, -0.75),
@@ -217,6 +269,7 @@ def evaluate() -> dict[str, object]:
             "single_batch_10_candidates_4_steps": sampling_budget_report(4, 10, 10, 8),
             "single_batch_10_candidates_16_steps": sampling_budget_report(16, 10, 10, 8),
         },
+        "candidate_availability": candidate_availability_audit(),
         "safety_screen": {
             "mixed_modes": screen_candidates(flow_one),
             "all_candidates_blocked": screen_candidates((-1.0, -1.0)),
