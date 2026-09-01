@@ -92,7 +92,7 @@ V-JEPA 2 的官方论文和仓库把流程分为两部分：先用大规模图�
 
 ## 10.4 V-JEPA 2.1：dense 特征是新分支，不是简单版本号
 
-2026 年 [V-JEPA 2.1 预印本](https://arxiv.org/abs/2603.14482)与[官方代码](https://github.com/facebookresearch/vjepa2)更新聚焦 dense、时空一致表示。论文描述四个组成：可见与 masked token 都参与的 dense predictive loss、多层 deep self-supervision、图像/视频 tokenizer，以及模型与数据扩展。官方仓库同时提供 80M 到 2B 的多个 checkpoint 入口。
+2026 年 [V-JEPA 2.1 预印本](https://arxiv.org/abs/2603.14482)与[官方代码快照 `204698b`](https://github.com/facebookresearch/vjepa2/tree/204698b45b3712590f06245fbfba32d3be539812)更新聚焦 dense、时空一致表示。论文描述四个组成：可见与 masked token 都参与的 dense predictive loss、多层 deep self-supervision、图像/视频 tokenizer，以及模型与数据扩展。该仓库快照同时提供 80M 到 2B 的多个 checkpoint 入口。
 
 论文报告了动作预期、深度、分割、机器人规划等结果，但本书不抄录排行榜作为结论。它们使用不同 probe、数据、模型规模和任务，不能被一句“2.1 更好”替代。尤其是：
 
@@ -239,7 +239,7 @@ JEPA 把预测目标从像素移到表示空间，使模型可以忽略部分不
 - Bardes et al., [V-JEPA](https://arxiv.org/abs/2404.08471)，`[A,R1]`，视频特征预测；
 - Assran et al., [V-JEPA 2](https://arxiv.org/abs/2506.09985)，`[A,R1]`，视频理解、预测与动作条件后训练；
 - Mur-Labadia et al., [V-JEPA 2.1](https://arxiv.org/abs/2603.14482)，`[A,R1]`，dense 与深层自监督；
-- Meta FAIR, [V-JEPA 2.x 官方仓库](https://github.com/facebookresearch/vjepa2)，`[O,R1]`，代码、checkpoint 和 probe 接口；
+- Meta FAIR, [V-JEPA 2.x 官方仓库快照 `204698b`](https://github.com/facebookresearch/vjepa2/tree/204698b45b3712590f06245fbfba32d3be539812)，`[O,R1]`，代码、checkpoint 和 probe 接口；
 - [Ego4D 官方访问说明](https://ego4d-data.org/docs/start-here/) 与 [EPIC-KITCHENS-100 官方项目](https://epic-kitchens.github.io/2025)，数据许可和获取流程。
 
 ## 下一章接口

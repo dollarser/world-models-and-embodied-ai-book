@@ -65,11 +65,11 @@
 
 *TAB-16-01：三类数据入口的角色。格式、采集平台与训练 mixture 是三个层次。*
 
-[Open X-Embodiment](https://github.com/google-deepmind/open_x_embodiment) 将各贡献数据转换为 RLDS episode，并为每个子数据集保留 metadata 与引用 `[P/O,R1]`。其论文报告多机器人联合训练的正迁移案例，但官方 README 同时说明动作七维可能分别表示绝对值、delta 或速度。统一成七维并没有消除控制语义差异；每个贡献数据的引用与许可仍需单独检查。
+[Open X-Embodiment 官方仓库快照 `9eeb68b`](https://github.com/google-deepmind/open_x_embodiment/tree/9eeb68b989efbcf474e8fb9019e01d02b962a604)将各贡献数据转换为 RLDS episode，并为每个子数据集保留 metadata 与引用 `[P/O,R1]`。其论文报告多机器人联合训练的正迁移案例，但该 README 同时说明动作七维可能分别表示绝对值、delta 或速度。统一成七维并没有消除控制语义差异；每个贡献数据的引用与许可仍需单独检查。
 
 [DROID](https://droid-dataset.github.io/) 聚焦分布式真实机器人采集。论文报告 76k demonstration、350 小时、564 场景和 84 任务 `[P/O,R1]`；这些是上游数据说明，不是本书下载或审计结果。DROID适合研究同类平台上的场景/任务多样性，也不能单独回答不同关节、夹爪或底盘的动作对齐。
 
-[LeRobot Dataset v3](https://github.com/huggingface/lerobot/blob/main/docs/source/lerobot-dataset-v3.mdx) 把低维 Parquet、分相机 MP4 与 episode metadata 解耦，并提供 schema、fps、统计量和 streaming 接口 `[O,R1]`。第4章已经解释：一个文件可含多个 episode，实验切分必须读 metadata。streaming 减少本地磁盘，不会消除网络、revision、缓存、许可和可重复性问题。
+[LeRobot Dataset v3 文档快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/lerobot-dataset-v3.mdx)把低维 Parquet、分相机 MP4 与 episode metadata 解耦，并提供 schema、fps、统计量和 streaming 接口 `[O,R1]`。第4章已经解释：一个文件可含多个 episode，实验切分必须读 metadata。streaming 减少本地磁盘，不会消除网络、revision、缓存、许可和可重复性问题。
 
 `CLAIM-16-01`（fact）：统一 episode 存储与加载 API 只解决格式层兼容；动作 frame、单位、absolute/delta、频率、本体和许可仍需逐数据集对齐与审计。
 
@@ -269,9 +269,9 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 
 ## 延伸阅读
 
-- Open X-Embodiment Collaboration, [论文](https://arxiv.org/abs/2310.08864)与[官方仓库](https://github.com/google-deepmind/open_x_embodiment)，`[P/O,R1]`；
+- Open X-Embodiment Collaboration, [论文](https://arxiv.org/abs/2310.08864)与[官方仓库快照 `9eeb68b`](https://github.com/google-deepmind/open_x_embodiment/tree/9eeb68b989efbcf474e8fb9019e01d02b962a604)，`[P/O,R1]`；
 - Khazatsky et al., [DROID](https://arxiv.org/abs/2403.12945) 与[项目页](https://droid-dataset.github.io/)，`[P/O,R1]`；
-- Hugging Face, [LeRobot Dataset v3](https://github.com/huggingface/lerobot/blob/main/docs/source/lerobot-dataset-v3.mdx)，`[O,R1]`；
+- Hugging Face, [LeRobot Dataset v3 文档快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/lerobot-dataset-v3.mdx)，`[O,R1]`；
 - Octo Model Team, [Octo 数据标准化与 mixture 管线](https://github.com/octo-models/octo/blob/main/octo/data/dataset.py)，`[O,R1]`；
 - NVIDIA, [Isaac-GR00T 数据配置](https://github.com/NVIDIA/Isaac-GR00T/blob/main/getting_started/data_config.md)与[统计量 fingerprint 实现](https://github.com/NVIDIA/Isaac-GR00T/blob/main/gr00t/data/stats.py)，`[O,R1]`；
 - Physical Intelligence, [openpi normalization statistics](https://github.com/Physical-Intelligence/openpi/blob/main/docs/norm_stats.md)，`[O,R1]`；

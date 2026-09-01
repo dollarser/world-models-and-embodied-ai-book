@@ -158,7 +158,7 @@ make ch09-smoke
 
 ## 9.6 WorldArena：同时测感知与功能，但不要抹平任务边界
 
-[WorldArena 官方仓库](https://github.com/tsinghua-fib-lab/WorldArena) 在 2026 年公开的版本中，将评测分为视频感知质量、合成数据、策略评估、动作规划与人工评价，并使用 RoboTwin 2.0 的 Clean-50 仿真子集。官方说明的视频质量部分包含多个维度和指标，功能部分则面向不同下游用途；这里按官方资产与部分公开复现材料记为 `[O,R1]`。`CLAIM-09-03`（fact）：WorldArena 的设计本身就把感知质量与功能用途分开，而不是假设一个视频分数能够代表全部能力。
+[WorldArena 官方仓库快照 `2da2ae2`](https://github.com/tsinghua-fib-lab/WorldArena/tree/2da2ae253b8637ba9de3afc7bea4e087f778ee4d) 将评测分为视频感知质量、合成数据、策略评估、动作规划与人工评价，并使用 RoboTwin 2.0 的 Clean-50 仿真子集。官方说明的视频质量部分包含多个维度和指标，功能部分则面向不同下游用途；这里按官方资产与部分公开复现材料记为 `[O,R1]`。`CLAIM-09-03`（fact）：该 WorldArena 快照的设计把感知质量与功能用途分开，而不是假设一个视频分数能够代表全部能力。
 
 本书当前没有下载其数据、运行官方命令或核对排行榜结果，因此不能标记为 `R2` 或本书复现。使用时还应锁定仓库 commit、测试集发布日期、RoboTwin 版本、所选 track 与外部模型/API；不能把 v1、后续版本或在线 Arena 的覆盖范围混成一个稳定结论。
 
@@ -270,7 +270,7 @@ resources + experiment_ids + artifacts + limitations
 ## 延伸阅读
 
 - Yu et al., [How Should World Models Be Evaluated?](https://arxiv.org/abs/2606.15032)，`[A,R0]`，评测层级与声明错位；
-- Shang et al., [WorldArena 官方仓库](https://github.com/tsinghua-fib-lab/WorldArena)，`[O,R1]`，感知与功能评测案例；
+- Shang et al., [WorldArena 官方仓库快照 `2da2ae2`](https://github.com/tsinghua-fib-lab/WorldArena/tree/2da2ae253b8637ba9de3afc7bea4e087f778ee4d)，`[O,R1]`，感知与功能评测案例；
 - [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 与[官方项目页](https://v2.world-arena.ai/)，`[A/O,R0–R1]`，多模态、多用途和多平台评测案例；
 - [KineBench](https://arxiv.org/abs/2607.19876)，`[P,R0]`，避免额外 inverse dynamics model 混淆的闭环评测案例；
 - Geifman & El-Yaniv, [Selective Classification for Deep Neural Networks](https://arxiv.org/abs/1705.08500)，`[P]`，risk–coverage 基础；

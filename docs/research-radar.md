@@ -11,7 +11,7 @@
 | 方向 | 代表入口 | 真正的新问题 | 不能越过的证据边界 |
 | --- | --- | --- | --- |
 | 更大、更快的 learned simulator | [Dreamer 4](https://arxiv.org/abs/2509.24527)、[Interactive World Simulator](https://arxiv.org/abs/2603.08546) | 能否在足够长、足够快的动作条件 rollout 中训练或比较策略 | 推理实时不等于训练便宜；长视频不等于物理正确；相关性不等于绝对校准 |
-| 表征与生成接口扩展 | [V-JEPA 2.1](https://arxiv.org/abs/2603.14482)、[Cosmos 3](https://github.com/NVIDIA/cosmos) | dense representation 和统一 action 接口怎样服务状态估计、预测与控制 | feature 可读不等于动作转移正确；接口含 action 不等于 simulator fidelity |
+| 表征与生成接口扩展 | [V-JEPA 2.1](https://arxiv.org/abs/2603.14482)、[Cosmos 3 快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827) | dense representation 和统一 action 接口怎样服务状态估计、预测与控制 | feature 可读不等于动作转移正确；接口含 action 不等于 simulator fidelity |
 | 世界模型进入策略训练与评测 | [GE-Sim 2.0](https://arxiv.org/abs/2605.27491)、[OSCAR](https://arxiv.org/abs/2606.04463) | learned rollout、state decoder、reward/judge 和 policy update 如何组成闭环 | 每个学习组件都带来独立误差；上游真实结果不是本书复现 |
 | “评测器也会错”成为显式研究对象 | [WorldArena 2.0](https://arxiv.org/abs/2605.17912)、[KineBench](https://arxiv.org/abs/2607.19876) | 模态、用途、平台与动作落地层怎样分别归因 | 更完整的 benchmark 仍有作用域；去掉 IDM 不会消除 pose extractor 和 simulator 误差 |
 

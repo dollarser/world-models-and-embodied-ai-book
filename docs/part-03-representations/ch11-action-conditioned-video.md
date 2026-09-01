@@ -210,11 +210,11 @@ make ch11-smoke
 
 *TAB-11-04：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*
 
-`CLAIM-11-09`（fact）：[Cosmos-Predict2.5 官方仓库](https://github.com/nvidia-cosmos/cosmos-predict2.5)列有 2B robot/action-cond 模型及推理、后训练路径，但截至核查日已声明只做有限维护并建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
+`CLAIM-11-09`（fact）：[Cosmos-Predict2.5 官方仓库快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/tree/a2c298b0a3df3778b973fe65e9e58877b292d8a7)列有 2B robot/action-cond 模型及推理、后训练路径，并声明只做有限维护、建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
 
-[Cosmos 3 官方仓库](https://github.com/NVIDIA/cosmos)把 Generator 描述为可联合处理或生成 text、vision、sound 与 action 的 omnimodal world model，并公开推理和 post-training 入口；同一 README 也明确列出长时一致性、action-state consistency、3D 结构和物理合理性等限制。这里按 `[O,R1]` 记录“公开接口与资产存在”，不把官方的能力概述升级为独立效果验证。
+[Cosmos 3 官方仓库快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827)把 Generator 描述为可联合处理或生成 text、vision、sound 与 action 的 omnimodal world model，并公开推理和 post-training 入口；同一 README 也明确列出长时一致性、action-state consistency、3D 结构和物理合理性等限制。这里按 `[O,R1]` 记录“该快照中公开接口与资产存在”，不把官方的能力概述升级为独立效果验证。
 
-`CLAIM-11-10`（fact）：Cosmos 3 官方接口已将 action 纳入统一生成输入输出，同时仍明确列出 action-state、3D 与物理一致性限制。
+`CLAIM-11-10`（fact）：Cosmos 3 官方快照 `9aa98e5` 已将 action 纳入统一生成输入输出，同时仍明确列出 action-state、3D 与物理一致性限制；这是该快照的接口事实，不代表后续版本或独立有效性验证。
 
 迁移代际时仍应重新登记输入输出模态、运行后端、checkpoint、许可与失败边界，不能沿用 2.5 的实验卡。
 
@@ -303,7 +303,7 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - Wayve, [GAIA-2 技术报告](https://arxiv.org/abs/2503.20523) 与 [GAIA-4 官方页面](https://wayve.ai/thinking/gaia-4/)，`[A/V,R0/R1]`；
 - Waymo, [Waymo World Model 官方博客](https://waymo.com/blog/2026/02/the-waymo-world-model-a-new-frontier-for-autonomous-driving-simulation/)，`[V,R0]`；
 - Meta FAIR, [V-JEPA 2-AC 官方仓库](https://github.com/facebookresearch/vjepa2)，`[O,R1]`，latent 动作条件路线。
-- NVIDIA, [Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5)、[Cosmos 3](https://github.com/NVIDIA/cosmos) 与 [Cosmos-Drive-Dreams](https://github.com/nv-tlabs/Cosmos-Drive-Dreams)，`[O,R1]`，不同代际的统一生成、机器人动作条件视频与驾驶条件合成数据接口。
+- NVIDIA, [Cosmos-Predict2.5 快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/tree/a2c298b0a3df3778b973fe65e9e58877b292d8a7)、[Cosmos 3 快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827) 与 [Cosmos-Drive-Dreams](https://github.com/nv-tlabs/Cosmos-Drive-Dreams)，`[O,R1]`，不同代际的统一生成、机器人动作条件视频与驾驶条件合成数据接口。
 
 ## 下一章接口
 

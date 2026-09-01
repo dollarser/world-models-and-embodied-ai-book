@@ -113,7 +113,7 @@ flowchart LR
 
 ### KL 数值相同，不代表梯度流向相同
 
-上面的单项 KL 适合建立直觉，却隐藏了现代实现中的梯度路由。以 2026-09-01 核查的 [DreamerV3 官方 `rssm.py`](https://github.com/danijar/dreamerv3/blob/main/dreamerv3/rssm.py) 为例，代码把同一个前向 KL 拆为两项：
+上面的单项 KL 适合建立直觉，却隐藏了现代实现中的梯度路由。以 2026-09-01 核查的 [DreamerV3 官方 `rssm.py` 快照 `e3f0224`](https://github.com/danijar/dreamerv3/blob/e3f02248693a79dc8b0ebd62c93683888ddaccfe/dreamerv3/rssm.py) 为例，代码把同一个前向 KL 拆为两项：
 
 \[
 \mathcal{L}_{dyn}=\max\!\left(\tau,
@@ -125,11 +125,11 @@ D_{KL}\!\left(\operatorname{sg}(q)\,\|\,p\right)\right)
 D_{KL}\!\left(q\,\|\,\operatorname{sg}(p)\right)\right)
 \]
 
-其中 `sg` 是 stop-gradient，`τ` 是 `free_nats`。两项的前向数值相同，但 `L_dyn` 让 prior/dynamics 追随冻结的 posterior，`L_rep` 让 posterior/encoder 追随冻结的 prior。当前官方默认配置把 `free_nats` 设为 1.0，并在总损失中给 dynamics 与 representation 项分别乘 1.0 和 0.1；这是[当前仓库配置](https://github.com/danijar/dreamerv3/blob/main/dreamerv3/configs.yaml)的实现事实，不是 RSSM 定义，也不应外推到 PlaNet、DreamerV1/V2 或其他复现。
+其中 `sg` 是 stop-gradient，`τ` 是 `free_nats`。两项的前向数值相同，但 `L_dyn` 让 prior/dynamics 追随冻结的 posterior，`L_rep` 让 posterior/encoder 追随冻结的 prior。该[同一 commit 的配置](https://github.com/danijar/dreamerv3/blob/e3f02248693a79dc8b0ebd62c93683888ddaccfe/dreamerv3/configs.yaml)把 `free_nats` 设为 1.0，并在总损失中给 dynamics 与 representation 项分别乘 1.0 和 0.1；这是特定源码快照的实现事实，不是 RSSM 定义，也不应外推到 PlaNet、DreamerV1/V2、未来 DreamerV3 commit 或其他复现。
 
 `free_nats` 还容易被日志误读：`max(raw_KL, τ)` 会让阈值以下的报告值停在 `τ`，但该常数区的 KL 梯度为零（边界点除外）。因此“KL loss 显示为 1”不能单独证明 prior 与 posterior 仍在被该项拉近，必须同时查看 raw KL、阈值、权重和梯度路由。
 
-`CLAIM-06-05`（fact）：当前 DreamerV3 官方实现的 dynamics/representation KL 在前向计算中数值相同，但 stop-gradient 使二者更新不同参数；`free_nats` 又使阈值以下的 KL 成为常数区。该结论描述核查日期下的实现，而不是所有 RSSM 的必备形式。
+`CLAIM-06-05`（fact）：DreamerV3 官方快照 `e3f0224` 的 dynamics/representation KL 在前向计算中数值相同，但 stop-gradient 使二者更新不同参数；`free_nats` 又使阈值以下的 KL 成为常数区。该结论只描述所锁实现，而不是所有 RSSM 或未来 commit 的必备形式。
 
 ## 6.5 训练数据流与想象数据流
 

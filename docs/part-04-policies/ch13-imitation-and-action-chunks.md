@@ -91,9 +91,9 @@ ACT（Action Chunking with Transformers）把动作块建模为条件生成问�
 - 时间集成：可平滑重叠预测，但会引入权重、缓存和额外延迟；
 - 提前重规划：能缩短反应时间，但必须定义触发条件和安全优先级。
 
-训练和执行动作块时要先拆开两个量：预测时域 `K_pred` 是模型一次输出多少步，执行时域 `K_exec` 是丢弃或重新查询前实际送入环境多少步，且 `1 <= K_exec <= K_pred`。当前 [LeRobot ACT 配置](https://github.com/huggingface/lerobot/blob/main/src/lerobot/policies/act/configuration_act.py)分别称为 `chunk_size` 与 `n_action_steps`；例如预测 100 步、执行 50 步后会丢弃剩余 50 步。训练/部署记录还必须包含控制频率、两种时域对应的真实秒数、重叠方式、推理延迟、丢帧和终止处理。只写 `chunk_size=100` 没有跨系统意义。
+训练和执行动作块时要先拆开两个量：预测时域 `K_pred` 是模型一次输出多少步，执行时域 `K_exec` 是丢弃或重新查询前实际送入环境多少步，且 `1 <= K_exec <= K_pred`。本书核查的 [LeRobot ACT 配置快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)分别称为 `chunk_size` 与 `n_action_steps`；例如预测 100 步、执行 50 步后会丢弃剩余 50 步。训练/部署记录还必须包含控制频率、两种时域对应的真实秒数、重叠方式、推理延迟、丢帧和终止处理。只写 `chunk_size=100` 没有跨系统意义。
 
-`CLAIM-13-05`（fact）：ACT 的预测 horizon、执行 horizon 和 temporal ensembling 是三个不同协议旋钮。LeRobot 当前实现要求 temporal ensembling 时 `n_action_steps=1`，因为只有每步重新查询才会为同一时刻形成重叠预测；因此“时间集成更平滑”不能同时被解释成“减少推理调用”。
+`CLAIM-13-05`（fact）：ACT 的预测 horizon、执行 horizon 和 temporal ensembling 是三个不同协议旋钮。LeRobot 快照 `128d332` 要求 temporal ensembling 时 `n_action_steps=1`，因为只有每步重新查询才会为同一时刻形成重叠预测；因此“时间集成更平滑”不能同时被解释成“减少推理调用”。
 
 ### 13.4.1 动作分块解决什么，又没有解决什么
 
@@ -114,7 +114,7 @@ ACT 的 temporal ensemble 会把不同查询对当前动作的重叠预测做指
 \bar a_t=\frac{\sum_{i=0}^{n-1}\exp(-m i)\hat a_t^{(i)}}{\sum_{i=0}^{n-1}\exp(-m i)}.
 \]
 
-[ACT 原仓库评测脚本](https://github.com/tonyzhaozh/act/blob/main/imitate_episodes.py)当前把 `m` 固定为 `0.01`；LeRobot 的 [配置默认值](https://github.com/huggingface/lerobot/blob/main/src/lerobot/policies/act/configuration_act.py)也是 `0.01`，其 [`ACTTemporalEnsembler`](https://github.com/huggingface/lerobot/blob/main/src/lerobot/policies/act/modeling_act.py)明确让 `i=0` 对应最旧预测。正的 `m` 因而给旧预测更大权重：它能抑制逐次查询抖动，也会在目标真的变化时产生惯性。权重方向、系数、reset 时机和有效 mask 都是协议字段，不能只写“使用 temporal aggregation”。
+[ACT 原仓库评测脚本](https://github.com/tonyzhaozh/act/blob/main/imitate_episodes.py)当前把 `m` 固定为 `0.01`；LeRobot 快照 `128d332` 的[配置默认说明](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)也是 `0.01`，其 [`ACTTemporalEnsembler`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/modeling_act.py)明确让 `i=0` 对应最旧预测。正的 `m` 因而给旧预测更大权重：它能抑制逐次查询抖动，也会在目标真的变化时产生惯性。权重方向、系数、reset 时机和有效 mask 都是协议字段，不能只写“使用 temporal aggregation”。
 
 ## 13.5 EXP-13-01：三个协议反例
 
@@ -197,7 +197,7 @@ S 档下载量 0、无 GPU、无外部数据，代码和 fixture 按 MIT 发布�
 ## 延伸阅读
 
 - Zhao et al., [Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware](https://arxiv.org/abs/2304.13705)，`[P,R0]`，ACT 原论文；
-- [LeRobot ACT 官方实现](https://github.com/huggingface/lerobot/blob/main/src/lerobot/policies/act/modeling_act.py)，`[O,R1]`，动作预测与执行步数接口；
+- [LeRobot ACT 官方实现快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/modeling_act.py)，`[O,R1]`，动作预测与执行步数接口；
 - Ross et al., [A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning](https://proceedings.mlr.press/v15/ross11a.html)，`[P]`，DAgger。
 
 ## 下一章接口

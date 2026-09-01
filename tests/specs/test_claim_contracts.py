@@ -219,6 +219,40 @@ class FactEvidenceContractTest(unittest.TestCase):
         errors = check_fact_evidence_contract({"CLAIM-11-05"}, registry)
         self.assertTrue(any("must be labeled V" in item for item in errors))
 
+    def test_rejects_floating_github_official_asset(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-06-05",
+                    "basis": "official_asset",
+                    "maturity": ["O"],
+                    "anchors": ["https://github.com/example/project/blob/main/model.py"],
+                    "scope_note": "The implementation detail is valid only for the exact source revision named by the evidence anchor.",
+                }
+            ],
+        }
+        errors = check_fact_evidence_contract({"CLAIM-06-05"}, registry)
+        self.assertTrue(any("40-character commit" in item for item in errors))
+
+    def test_accepts_commit_pinned_github_official_asset(self) -> None:
+        commit = "0123456789abcdef0123456789abcdef01234567"
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-06-05",
+                    "basis": "official_asset",
+                    "maturity": ["O"],
+                    "anchors": [f"https://github.com/example/project/blob/{commit}/model.py"],
+                    "scope_note": "The implementation detail is valid only for the exact source revision named by the evidence anchor.",
+                }
+            ],
+        }
+        self.assertEqual([], check_fact_evidence_contract({"CLAIM-06-05"}, registry))
+
 
 class InferenceEvidenceContractTest(unittest.TestCase):
     def test_accepts_explicit_premises_counterexample_and_scope(self) -> None:
@@ -445,6 +479,42 @@ class ResearchRadarContractTest(unittest.TestCase):
         self.assertTrue(any("lock a revision" in item for item in errors))
         self.assertTrue(any("code/weights/data openness" in item for item in errors))
         self.assertTrue(any("review triggers" in item for item in errors))
+
+    def test_rejects_floating_github_repository_snapshot(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "entries": [
+                {
+                    "id": "RADAR-2026-01",
+                    "title": "A current embodied world-model repository",
+                    "chapters": [10],
+                    "book_action": "case_card",
+                    "problem": "The repository exposes a fast-moving implementation interface that the chapter needs to audit.",
+                    "why_it_matters": "A floating default branch can silently change the evidence behind a dated implementation statement.",
+                    "sources": [
+                        {
+                            "url": "https://github.com/example/project",
+                            "kind": "official_repository",
+                            "maturity": "O",
+                            "revision": "main checked 2026-09-01",
+                        }
+                    ],
+                    "assets": {"code": "open", "weights": "unknown", "data": "unknown"},
+                    "reproduction": "R1",
+                    "resource_path": "Audit source and metadata at S tier; model execution remains an optional resource-gated path.",
+                    "scope_boundary": "The source snapshot proves only the inspected interface and does not establish model performance.",
+                    "review_triggers": ["A new release changes the interface or asset license."],
+                    "last_verified": "2026-09-01",
+                }
+            ],
+        }
+        errors = check_research_radar_contract(registry)
+        self.assertTrue(any("40-character commit" in item for item in errors))
+        commit = "0123456789abcdef0123456789abcdef01234567"
+        registry["entries"][0]["sources"][0]["url"] = f"https://github.com/example/project/tree/{commit}"
+        registry["entries"][0]["sources"][0]["revision"] = f"commit {commit}"
+        self.assertEqual([], check_research_radar_contract(registry))
 
 
 if __name__ == "__main__":

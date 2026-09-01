@@ -51,7 +51,7 @@
 
 `CLAIM-04-01`（recommendation）：时序具身数据默认按产生依赖关系的最小完整组切分，而不是按帧切分；具体组可以是 episode、轨迹、任务实例、场景、路线、主体或采集会话。
 
-`terminated` 与 `truncated` 也不能合并成一个含义不明的 `done`：前者表示任务定义内的自然终态，例如成功、失败或摔倒；后者表示 MDP 之外的采集上限、日志切断或外部超时。[Gymnasium 的 time-limit 文档](https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/)明确区分两者。二者不是必须互斥：当前官方 [`TimeLimit` 实现](https://github.com/Farama-Foundation/Gymnasium/blob/main/gymnasium/wrappers/common.py)在达到步数上限时把 `truncated` 置真，并保留下层同一步的 `terminated`；因此恰好在上限步到达自然终态时可以双真。任一标志为真都会阻止序列窗口跨到下一个 episode，而常见价值目标只由 `terminated` 关闭 bootstrap；双真时自然终止语义优先：
+`terminated` 与 `truncated` 也不能合并成一个含义不明的 `done`：前者表示任务定义内的自然终态，例如成功、失败或摔倒；后者表示 MDP 之外的采集上限、日志切断或外部超时。[Gymnasium 的 time-limit 文档](https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/)明确区分两者。二者不是必须互斥：本书核查的官方 [`TimeLimit` 实现快照 `9e04324`](https://github.com/Farama-Foundation/Gymnasium/blob/9e04324f6b0adbe19112206dfe247edc4142e7ec/gymnasium/wrappers/common.py)在达到步数上限时把 `truncated` 置真，并保留下层同一步的 `terminated`；因此恰好在上限步到达自然终态时可以双真。任一标志为真都会阻止序列窗口跨到下一个 episode，而常见价值目标只由 `terminated` 关闭 bootstrap；双真时自然终止语义优先：
 
 \[
 m_t^{\text{value}}=1-\mathbb{1}[\text{terminated}_t].

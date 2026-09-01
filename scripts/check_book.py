@@ -91,6 +91,16 @@ ALLOWED_RADAR_ACTIONS = {"monitor", "case_card", "body_candidate"}
 ALLOWED_RADAR_ASSET_STATES = {"open", "partial", "unknown", "closed", "not_applicable"}
 ALLOWED_RADAR_REPRODUCTION = {"R0", "R1", "R2", "R3", "R4", "R0-R1"}
 RESULT_BOUNDARY_MARKERS = ("不", "不能", "只", "未", "无法", "并非", "不是", "没有")
+PINNED_GITHUB_URL_PATTERN = re.compile(
+    r"^https://github\.com/[^/]+/[^/]+/(?:blob|tree|commit)/([0-9a-f]{40})(?:/|$)"
+)
+
+
+def pinned_github_commit(url: str) -> str | None:
+    """Return the immutable commit embedded in a GitHub URL, if present."""
+
+    match = PINNED_GITHUB_URL_PATTERN.match(url)
+    return match.group(1) if match else None
 
 
 def check_required() -> list[str]:
@@ -337,6 +347,12 @@ def check_fact_evidence_contract(
         local_anchors = [item for item in anchors if "://" not in item]
         if basis in {"primary_source", "official_asset", "vendor_statement"} and not external_anchors:
             errors.append(f"fact evidence {claim_id} basis {basis} requires an external anchor")
+        if basis == "official_asset":
+            for anchor in external_anchors:
+                if anchor.startswith("https://github.com/") and pinned_github_commit(anchor) is None:
+                    errors.append(
+                        f"fact evidence {claim_id} GitHub official asset must pin a 40-character commit: {anchor}"
+                    )
         if basis in {"book_definition", "repository_contract", "mathematical_identity"} and not local_anchors:
             errors.append(f"fact evidence {claim_id} basis {basis} requires a local anchor")
         for anchor in local_anchors:
@@ -562,6 +578,20 @@ def check_research_radar_contract(registry: object) -> list[str]:
                 revision = source.get("revision")
                 if not isinstance(revision, str) or len(revision.strip()) < 3:
                     errors.append(f"research radar {entry_id} source must lock a revision or dated snapshot")
+                if (
+                    source.get("kind") == "official_repository"
+                    and isinstance(url, str)
+                    and url.startswith("https://github.com/")
+                ):
+                    commit = pinned_github_commit(url)
+                    if commit is None:
+                        errors.append(
+                            f"research radar {entry_id} GitHub repository must pin a 40-character commit"
+                        )
+                    elif not isinstance(revision, str) or commit not in revision:
+                        errors.append(
+                            f"research radar {entry_id} revision must name its pinned GitHub commit"
+                        )
         assets = entry.get("assets")
         if not isinstance(assets, dict) or set(assets) != {"code", "weights", "data"}:
             errors.append(f"research radar {entry_id} must state code/weights/data openness")

@@ -43,10 +43,10 @@
           "revision": "arXiv:2603.14482v3"
         },
         {
-          "url": "https://github.com/facebookresearch/vjepa2",
+          "url": "https://github.com/facebookresearch/vjepa2/tree/204698b45b3712590f06245fbfba32d3be539812",
           "kind": "official_repository",
           "maturity": "O",
-          "revision": "main snapshot checked 2026-09-01"
+          "revision": "commit 204698b45b3712590f06245fbfba32d3be539812"
         }
       ],
       "assets": {"code": "open", "weights": "open", "data": "partial"},
@@ -68,10 +68,10 @@
       "why_it_matters": "It is a useful open interface case for teaching why action support, simulator fidelity and downstream control validity remain separate claims.",
       "sources": [
         {
-          "url": "https://github.com/NVIDIA/cosmos",
+          "url": "https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827",
           "kind": "official_repository",
           "maturity": "O",
-          "revision": "main snapshot checked 2026-09-01"
+          "revision": "commit 9aa98e5a0773a5558f07d2699e640858f7ca8827"
         }
       ],
       "assets": {"code": "open", "weights": "partial", "data": "partial"},
