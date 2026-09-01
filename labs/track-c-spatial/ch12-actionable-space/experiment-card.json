@@ -3,23 +3,24 @@
   "id": "EXP-12-01",
   "chapter": 12,
   "status": "smoke",
-  "claim_ids": ["CLAIM-12-02", "CLAIM-12-03", "CLAIM-12-04", "CLAIM-12-07", "CLAIM-12-08", "CLAIM-12-09"],
+  "claim_ids": ["CLAIM-12-02", "CLAIM-12-03", "CLAIM-12-04", "CLAIM-12-07", "CLAIM-12-08", "CLAIM-12-09", "CLAIM-12-10"],
   "claim_scope": [
     "cells behind a depth return remain unknown rather than observed free in the ray-grid fixture",
     "a one-cell coordinate shift can destroy occupied-cell alignment",
     "treating unknown cells as free can mark a dynamically occupied path falsely safe",
     "a departed depth return does not prove its old cell free without explicit clearing evidence",
     "a free point centerline can become unsafe after sweeping a nonzero footprint",
-    "expired free-space evidence returns to unknown and blocks a conservative path"
+    "expired free-space evidence returns to unknown and blocks a conservative path",
+    "rasterizing the segments between sparse waypoints can expose an intermediate occupied cell that waypoint-only checking misses"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library tri-state ray grid, evidence aging, and footprint actionability fixture"
+    "config": "standard-library v3 tri-state ray grid, segment rasterization, evidence aging, and footprint actionability fixture"
   },
   "data": {
     "name": "procedural three-ray seven-by-seven BEV fixture",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -46,12 +47,15 @@
     {"name": "binary_unknown_as_free_false_safe", "value": 1.0, "unit": "boolean", "split": "dynamic-path"},
     {"name": "old_cell_unknown_without_clearing_evidence", "value": 1.0, "unit": "boolean", "split": "dynamic-update"},
     {"name": "radius_one_footprint_safe", "value": 0.0, "unit": "boolean", "split": "centerline-path"},
-    {"name": "expired_free_path_safe", "value": 0.0, "unit": "boolean", "split": "observation-aging"}
+    {"name": "expired_free_path_safe", "value": 0.0, "unit": "boolean", "split": "observation-aging"},
+    {"name": "sparse_waypoint_only_safe", "value": 1.0, "unit": "boolean", "split": "path-segment-validation"},
+    {"name": "sparse_segment_rasterized_safe", "value": 0.0, "unit": "boolean", "split": "path-segment-validation"}
   ],
   "artifacts": ["results/ch12/EXP-12-01-smoke.json"],
   "limitations": [
     "two-dimensional integer grid with three noiseless rays",
     "hand-defined dynamic update, square footprint, and approach affordance rather than learned prediction",
+    "Bresenham interpolation over integer center cells rather than supercover, continuous pose interpolation, continuous collision checking, or dynamics",
     "no height, semantics, velocity uncertainty, continuous swept volume, or real calibration"
   ]
 }

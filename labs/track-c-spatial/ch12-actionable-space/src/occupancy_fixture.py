@@ -110,8 +110,13 @@ def path_risk_report(
     path: tuple[Cell, ...],
     unknown_is_free: bool = False,
     footprint_radius_cells: int = 0,
+    interpolate_segments: bool = True,
 ) -> dict[str, int | bool]:
-    """Audit the unique cells swept by a square footprint along a static path."""
+    """Audit a square footprint over rasterized segments of a static path.
+
+    Bresenham interpolation closes gaps between integer waypoints. It is still
+    a discrete grid approximation, not continuous collision checking.
+    """
     _validate_grid(grid)
     if not isinstance(unknown_is_free, bool):
         raise ValueError("unknown_is_free must be boolean")
@@ -121,14 +126,23 @@ def path_risk_report(
         or footprint_radius_cells < 0
     ):
         raise ValueError("footprint_radius_cells must be a non-negative integer")
+    if not isinstance(interpolate_segments, bool):
+        raise ValueError("interpolate_segments must be boolean")
     if not path:
         raise ValueError("path must contain at least one cell")
     for index, cell in enumerate(path):
         _validate_cell(cell, name=f"path[{index}]", require_in_bounds=False)
 
+    if interpolate_segments:
+        center_cells = set(path[:1])
+        for start, end in zip(path, path[1:]):
+            center_cells.update(trace_line(start, end))
+    else:
+        center_cells = set(path)
+
     swept = {
         (x + dx, y + dy)
-        for x, y in path
+        for x, y in center_cells
         for dx in range(-footprint_radius_cells, footprint_radius_cells + 1)
         for dy in range(-footprint_radius_cells, footprint_radius_cells + 1)
     }
@@ -138,6 +152,9 @@ def path_risk_report(
     out_of_bounds_count = len(swept - in_bounds)
     return {
         "path_step_count": len(path),
+        "sampled_waypoint_count": len(path),
+        "traced_center_cell_count": len(center_cells),
+        "segment_interpolation_enabled": interpolate_segments,
         "checked_cell_count": len(in_bounds),
         "occupied_cell_count": occupied_count,
         "unknown_cell_count": unknown_count,
@@ -153,8 +170,17 @@ def path_is_safe(
     path: tuple[Cell, ...],
     unknown_is_free: bool = False,
     footprint_radius_cells: int = 0,
+    interpolate_segments: bool = True,
 ) -> bool:
-    return bool(path_risk_report(grid, path, unknown_is_free, footprint_radius_cells)["safe"])
+    return bool(
+        path_risk_report(
+            grid,
+            path,
+            unknown_is_free,
+            footprint_radius_cells,
+            interpolate_segments,
+        )["safe"]
+    )
 
 
 def occupied_iou(first: set[Cell], second: set[Cell]) -> float:
@@ -221,6 +247,13 @@ def evaluate() -> dict[str, object]:
     footprint_report = path_risk_report(grid, centerline_path, footprint_radius_cells=1)
     fresh_path = ((3, 0), (3, 1), (3, 2), (3, 3))
     stale_grid = expire_stale_observations(grid, {(3, 2): 0}, current_step=3, max_age_steps=2)
+    sparse_waypoints = ((3, 3), (3, 5))
+    sparse_waypoint_only_report = path_risk_report(
+        grid, sparse_waypoints, unknown_is_free=True, interpolate_segments=False
+    )
+    sparse_segment_report = path_risk_report(
+        grid, sparse_waypoints, unknown_is_free=True, interpolate_segments=True
+    )
     return {
         "state_counts": counts,
         "occluded_cell_is_unknown": grid[(3, 5)] == "unknown",
@@ -237,4 +270,6 @@ def evaluate() -> dict[str, object]:
         "fresh_free_path_safe": path_is_safe(grid, fresh_path),
         "stale_free_path_safe": path_is_safe(stale_grid, fresh_path),
         "expired_cell_count": sum(grid[cell] != stale_grid[cell] for cell in grid),
+        "sparse_waypoint_only_report": sparse_waypoint_only_report,
+        "sparse_segment_report": sparse_segment_report,
     }

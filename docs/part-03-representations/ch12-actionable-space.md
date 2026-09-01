@@ -1,10 +1,10 @@
 # 第12章 可行动的空间表征
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-12-01`
-> 关联声明：`CLAIM-12-01`～`CLAIM-12-09`
-> 关联图表：`FIG-12-01` / `FIG-12-02` / `TAB-12-01`～`TAB-12-03`
+> 关联声明：`CLAIM-12-01`～`CLAIM-12-10`
+> 关联图表：`FIG-12-01` / `FIG-12-02` / `TAB-12-01`～`TAB-12-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -34,7 +34,7 @@
 
 ### 学完后的可验证产出
 
-读者应能从带 frame/单位/时间戳的 RGB-D 或点云构造简化 occupancy，解释 free/occupied/unknown，分析分辨率、遮挡、坐标偏移和动态更新，并把空间状态连接到导航、接近、抓取或驾驶规划。
+读者应能从带 frame/单位/时间戳的 RGB-D 或点云构造简化 occupancy，解释 free/occupied/unknown，分析分辨率、遮挡、坐标偏移和动态更新，拒绝只检查稀疏 waypoint 的路径假安全，并把空间状态连接到导航、接近、抓取或驾驶规划。
 
 ## 12.1 从像素到行动约束
 
@@ -172,6 +172,25 @@ make ch12-smoke
 
 `CLAIM-12-09`（result）：fixture 中一条 4 格 free 路径原本安全；其中 1 格的观测年龄超过两步阈值后回退为 unknown，路径被保守查询拒绝。两步是教学参数，不是推荐安全阈值。
 
+### 12.7.1 Waypoint 安全不等于路径段安全
+
+路径通常由稀疏 waypoint 表示，但机器人执行的是 waypoint 之间的运动。两个端点都有效，不能推出连接它们的 motion 有效。对整数栅格中的中心路径，本章先用 Bresenham 追踪相邻 waypoint 之间的中心格：
+
+\[
+C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
+\]
+
+再以每个中心格展开 footprint。OMPL 的官方 state-validity 文档同样区分 state validity 与 motion validity，并说明离散 motion validator 的结果依赖路径段采样分辨率；若有 continuous collision checking，应使用相应 validator，而不是把离散检查当作连续保证。Nav2 的 costmap 文档也把 footprint 明确作为路径碰撞检查的几何输入。
+
+| 查询 | waypoint 数 | 检查的中心格 | 中间 occupied | 判定 |
+| --- | ---: | ---: | ---: | --- |
+| 只查 waypoint | 2 | 2 | 0 | safe |
+| 栅格化连接段 | 2 | 3 | 1 | unsafe |
+
+*TAB-12-04：`EXP-12-01` v3 的稀疏 waypoint 反例。第二行只修复整数栅格上的跳格，不是连续时间、连续姿态或车辆动力学碰撞检测。*
+
+`CLAIM-12-10`（result）：`EXP-12-01` v3 中，稀疏路径 `(3,3)→(3,5)` 只检查两个 waypoint 时没有命中 occupied，因允许 unknown 而误判 safe；Bresenham 段栅格化检查三个中心格并检出一个中间 occupied，判为 unsafe。这只验证固定二维整数格的离散路径合同，不证明 continuous collision、转弯扫掠、动态可达性或真实车辆安全。
+
 ## 12.8 自动驾驶正文：BEV occupancy、flow 与安全时域
 
 自动驾驶中的 BEV 把相机、lidar、地图和 ego-motion 对齐到车辆或世界平面，适合表达可行驶区域、车道、静态障碍和动态参与者。正文中的最小状态应区分：
@@ -180,6 +199,7 @@ make ch12-smoke
 - 静态语义、实例和可行驶边界；
 - 动态对象速度、occupancy flow 或未来占用分布；
 - 车辆 footprint、规划轨迹和预测 horizon；
+- 相邻轨迹点之间的 motion-validation 分辨率，而不只是 waypoint 数量；
 - 定位、标定和时间同步的不确定性。
 
 [Occ3D](https://github.com/Tsinghua-MARS-Lab/Occ3D) 公开了基于 nuScenes/Waymo 的 3D occupancy benchmark 资产 `[O,R1]`，[论文](https://arxiv.org/abs/2304.14365) 讨论从多相机观测预测完整 3D occupancy `[A,R1]`；[OpenScene](https://github.com/OpenDriveLab/OpenScene) 提供基于 nuPlan 的 occupancy-centric 驾驶场景资产 `[O,R1]`。这些仓库证明相应代码/数据说明被公开，不代表本书已获得底层数据许可、下载数据或复现分数。正式使用前必须逐项核验衍生数据条款、非商业限制、体积和版本。
@@ -198,7 +218,7 @@ make ch12-smoke
 
 ## 12.10 资源、许可与升级路径
 
-S 档 `EXP-12-01` 使用 Python 标准库、CPU、零下载和 MIT 程序化 fixture；它只验证三态地图、连通、坐标误差、证据更新、离散 footprint 与观测过期。
+S 档 `EXP-12-01` 使用 Python 标准库、CPU、零下载和 MIT 程序化 fixture；它只验证三态地图、连通、坐标误差、证据更新、Bresenham 路径段、离散 footprint 与观测过期。
 
 M 档可在用户明确同意数据条款与下载量后，使用许可允许的小型 RGB-D/仿真子集训练轻量 depth/occupancy baseline，默认不超过 24 GB 单卡。应先记录数据体积、预处理缓存、输入范围、体素分辨率和峰值显存。当前无 GPU 阶段不执行。
 
@@ -206,7 +226,7 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 
 ## 12.11 失效模式与安全边界
 
-重点失效包括：深度尺度错误、外参方向写反、左右手系混用、时间错位、ego-motion 未补偿、unknown 被当 free、薄物体消失、BEV 高度混叠、动态对象拖影、对象 ID 切换、affordance 不匹配本体，以及模型对视野外过度自信。
+重点失效包括：深度尺度错误、外参方向写反、左右手系混用、时间错位、ego-motion 未补偿、unknown 被当 free、稀疏 waypoint 跳过障碍、motion-validation 分辨率过粗、薄物体消失、BEV 高度混叠、动态对象拖影、对象 ID 切换、affordance 不匹配本体，以及模型对视野外过度自信。
 
 调试顺序应从单位/坐标/时间和可视化开始，再检查 occupancy 更新与任务指标，最后讨论网络。连接执行器前，独立碰撞检测、动作限幅、传感器新鲜度、watchdog 和停止策略不可省略。
 
@@ -214,7 +234,7 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 三态射线、坐标偏移、证据更新、footprint 与过期 smoke | `EXP-12-01` | CPU smoke | 2D 无噪声手工格子 |
+| 本书结果 | 三态射线、坐标偏移、证据更新、路径段、footprint 与过期 smoke | `EXP-12-01` | CPU smoke | 2D 无噪声手工格子；非连续碰撞器 |
 | 开源基准 | Occ3D/OpenScene occupancy 资产 | 官方仓库/论文 | `[O/A,R1]` | 本书未下载或运行 |
 | 开源工具 | Nerfstudio 场景重建工具链 | 官方仓库 | `[O,R1]` | 本书未训练；非行动证明 |
 | 研究案例 | D4RT 动态 4D 重建与跟踪 | 官方页面/论文项目 | `[V/A,R0]` | 本书未独立验证 |
@@ -231,6 +251,7 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 3. **时间实验**：改变 free 证据的新鲜度阈值，按速度和制动距离解释路径判定在哪个时刻改变。
 4. **机器人迁移**：为吸盘和两指夹爪分别定义 approach affordance，列出额外状态。
 5. **自动驾驶迁移**：设计遮挡车辆切入的 occupancy-flow fixture，分别报告 IoU 和碰撞。
+6. **路径离散化**：把两个 waypoint 的间距依次改为 1、2、4 格，比较 waypoint-only、Bresenham 与更细连续碰撞器各自能支持什么结论。
 
 ## 延伸阅读
 
@@ -239,6 +260,8 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 - OpenDriveLab, [OpenScene](https://github.com/OpenDriveLab/OpenScene)，`[O,R1]`；
 - Nerfstudio, [开源 NeRF 工具链](https://github.com/nerfstudio-project/nerfstudio)，`[O,R1]`；
 - Google DeepMind, [D4RT 官方介绍](https://deepmind.google/blog/d4rt-teaching-ai-to-see-the-world-in-four-dimensions/) 与[论文项目页](https://d4rt-paper.github.io/)，`[V/A,R0]`。
+- OMPL, [State Validity Checking](https://docs.ros.org/en/iron/p/ompl/doc/markdown/stateValidation.html)，离散 motion validation 的分辨率与连续检查边界；
+- Nav2, [Costmap 2D](https://docs.nav2.org/jazzy/configuration_and_development/configuration_guide/core_servers/costmap_2d/)，footprint 与 costmap collision checking 接口。
 
 ## 下一章接口
 
@@ -257,6 +280,6 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch12-actionability-evidence-review-2026-09-01.md`；
-- 已知限制：未训练 3D/occupancy 模型，未下载真实数据，未运行仿真或 GPU；
-- 下一步：在真实 RGB-D/驾驶数据上加入标定噪声、连续 swept volume 与动态 occupancy；当前接口已与第3、4、9、10、11、15、19章核对。
+- 审查记录路径：`reviews/ch12-path-segment-validation-review-2026-09-01.md`；
+- 已知限制：未训练 3D/occupancy 模型，Bresenham 不是 supercover 或 continuous collision checking，未下载真实数据，未运行仿真或 GPU；
+- 下一步：在真实 RGB-D/驾驶数据上加入标定噪声、连续 swept volume、姿态插值与动态 occupancy；当前接口已与第3、4、9、10、11、15、19章核对。

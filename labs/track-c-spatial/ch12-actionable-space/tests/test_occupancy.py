@@ -55,6 +55,20 @@ class ActionableOccupancyTests(unittest.TestCase):
         self.assertEqual(report["path_step_count"], 3)
         self.assertGreater(report["occupied_cell_count"] + report["unknown_cell_count"], 0)
 
+    def test_sparse_waypoints_do_not_skip_intermediate_obstacle(self):
+        grid = build_occupancy()
+        path = ((3, 3), (3, 5))
+        self.assertTrue(path_is_safe(grid, path, unknown_is_free=True, interpolate_segments=False))
+        self.assertFalse(path_is_safe(grid, path, unknown_is_free=True, interpolate_segments=True))
+
+    def test_segment_report_exposes_waypoint_and_traced_cell_denominators(self):
+        report = path_risk_report(
+            build_occupancy(), ((3, 3), (3, 5)), unknown_is_free=True
+        )
+        self.assertEqual(report["sampled_waypoint_count"], 2)
+        self.assertEqual(report["traced_center_cell_count"], 3)
+        self.assertEqual(report["occupied_cell_count"], 1)
+
     def test_stale_free_evidence_expires_to_unknown(self):
         grid = build_occupancy()
         path = ((3, 0), (3, 1), (3, 2), (3, 3))
@@ -81,6 +95,8 @@ class ActionableOccupancyTests(unittest.TestCase):
             path_is_safe(grid, ())
         with self.assertRaises(ValueError):
             path_is_safe(grid, ((3, 0),), footprint_radius_cells=-1)
+        with self.assertRaises(ValueError):
+            path_is_safe(grid, ((3, 0),), interpolate_segments=1)
 
     def test_out_of_bounds_returns_and_updates_are_rejected(self):
         with self.assertRaises(ValueError):

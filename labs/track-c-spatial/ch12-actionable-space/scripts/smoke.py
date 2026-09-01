@@ -32,11 +32,13 @@ def main() -> int:
         raise AssertionError("the fixture must expose point-centerline versus footprint safety")
     if not metrics["fresh_free_path_safe"] or metrics["stale_free_path_safe"]:
         raise AssertionError("expired free-space evidence must conservatively block the path")
+    if not metrics["sparse_waypoint_only_report"]["safe"] or metrics["sparse_segment_report"]["safe"]:
+        raise AssertionError("segment rasterization must expose the obstacle between sparse waypoints")
 
     report = {
         "experiment_id": "EXP-12-01",
         "status": "smoke",
-        "scope": "tri-state ray grid and actionability fixture; not learned 3D perception",
+        "scope": "tri-state ray grid, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
         "metrics": metrics,
         "gpu_verified": False,
     }

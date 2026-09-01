@@ -10,6 +10,9 @@
       "out_of_bounds_cell_count": 0,
       "path_step_count": 3,
       "safe": false,
+      "sampled_waypoint_count": 3,
+      "segment_interpolation_enabled": true,
+      "traced_center_cell_count": 3,
       "unknown_cell_count": 6
     },
     "dynamic_old_cell_with_clearing_evidence": "free",
@@ -22,6 +25,28 @@
     "occluded_cell_is_unknown": true,
     "one_cell_shift_occupied_iou": 0.0,
     "reachable_free_count": 8,
+    "sparse_segment_report": {
+      "checked_cell_count": 3,
+      "occupied_cell_count": 1,
+      "out_of_bounds_cell_count": 0,
+      "path_step_count": 2,
+      "safe": false,
+      "sampled_waypoint_count": 2,
+      "segment_interpolation_enabled": true,
+      "traced_center_cell_count": 3,
+      "unknown_cell_count": 1
+    },
+    "sparse_waypoint_only_report": {
+      "checked_cell_count": 2,
+      "occupied_cell_count": 0,
+      "out_of_bounds_cell_count": 0,
+      "path_step_count": 2,
+      "safe": true,
+      "sampled_waypoint_count": 2,
+      "segment_interpolation_enabled": false,
+      "traced_center_cell_count": 2,
+      "unknown_cell_count": 1
+    },
     "stale_free_path_safe": false,
     "state_counts": {
       "free": 10,
@@ -29,6 +54,6 @@
       "unknown": 36
     }
   },
-  "scope": "tri-state ray grid and actionability fixture; not learned 3D perception",
+  "scope": "tri-state ray grid, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
   "status": "smoke"
 }
