@@ -11,6 +11,7 @@ from imitation_fixture import (  # noqa: E402
     action_error_correlation_audit,
     chunk_tradeoff,
     compounding_error,
+    distribution_shift_rollout_audit,
     evaluate,
     temporal_ensemble,
 )
@@ -43,6 +44,55 @@ class ImitationFixtureTests(unittest.TestCase):
         for horizon, magnitude in invalid_cases:
             with self.subTest(horizon=horizon, magnitude=magnitude), self.assertRaises(ValueError):
                 action_error_correlation_audit(horizon, magnitude)
+
+    def test_equal_expert_support_error_can_hide_opposite_feedback(self):
+        result = distribution_shift_rollout_audit()
+        self.assertEqual(
+            result["expert_support_action_mse"],
+            {"negative_feedback": 0.0, "positive_feedback": 0.0},
+        )
+        self.assertEqual(result["expert_support"], [{"state": 0.0, "action": 0.0}])
+
+    def test_same_disturbance_yields_recovery_and_divergence(self):
+        result = distribution_shift_rollout_audit()
+        self.assertAlmostEqual(result["negative_feedback"]["final_absolute_state"], 0.00390625)
+        self.assertAlmostEqual(result["positive_feedback"]["final_absolute_state"], 2.84765625)
+        self.assertLess(
+            result["negative_feedback"]["final_absolute_state"], result["initial_disturbance"]
+        )
+        self.assertGreater(
+            result["positive_feedback"]["final_absolute_state"], result["initial_disturbance"]
+        )
+
+    def test_zero_disturbance_does_not_probe_off_support_behavior(self):
+        result = distribution_shift_rollout_audit(initial_disturbance=0.0)
+        self.assertEqual(result["negative_feedback"]["final_absolute_state"], 0.0)
+        self.assertEqual(result["positive_feedback"]["final_absolute_state"], 0.0)
+
+    def test_disturbance_direction_preserves_the_absolute_outcome(self):
+        positive = distribution_shift_rollout_audit(initial_disturbance=0.25)
+        negative = distribution_shift_rollout_audit(initial_disturbance=-0.25)
+        self.assertEqual(
+            positive["negative_feedback"]["final_absolute_state"],
+            negative["negative_feedback"]["final_absolute_state"],
+        )
+        self.assertEqual(
+            positive["positive_feedback"]["final_absolute_state"],
+            negative["positive_feedback"]["final_absolute_state"],
+        )
+
+    def test_distribution_shift_audit_rejects_invalid_contracts(self):
+        invalid_cases = (
+            {"horizon": 0},
+            {"horizon": True},
+            {"initial_disturbance": float("nan")},
+            {"policy_gain": 0.0},
+            {"policy_gain": 1.0},
+            {"policy_gain": True},
+        )
+        for kwargs in invalid_cases:
+            with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                distribution_shift_rollout_audit(**kwargs)
 
     def test_chunk_one_reacts_without_stale_delay(self):
         result = chunk_tradeoff()[0]

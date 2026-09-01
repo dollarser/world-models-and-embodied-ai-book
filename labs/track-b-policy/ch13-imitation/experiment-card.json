@@ -3,20 +3,21 @@
   "id": "EXP-13-01",
   "chapter": 13,
   "status": "smoke",
-  "claim_ids": ["CLAIM-13-01", "CLAIM-13-02", "CLAIM-13-05", "CLAIM-13-06", "CLAIM-13-07"],
+  "claim_ids": ["CLAIM-13-01", "CLAIM-13-02", "CLAIM-13-05", "CLAIM-13-06", "CLAIM-13-07", "CLAIM-13-08"],
   "claim_scope": [
     "equal teacher-forced action RMSE and MAE can hide temporal sign correlation and different state-integration outcomes",
     "holding prediction horizon fixed while increasing execution horizon can reduce policy queries while increasing stale-action reaction delay",
-    "the fixed oldest-first exponential temporal ensemble reduces stationary jitter but lags a real target change"
+    "the fixed oldest-first exponential temporal ensemble reduces stationary jitter but lags a real target change",
+    "two hand-authored policies with zero action error on the same one-point expert support can recover from or amplify the same off-support reset disturbance"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library v3 imitation, temporal-correlation, execution-horizon, and temporal-ensemble fixture"
+    "config": "standard-library v4 expert-support, feedback-rollout, temporal-correlation, execution-horizon, and temporal-ensemble fixture"
   },
   "data": {
-    "name": "procedural action-correlation, perturbation-timing, and overlapping-prediction fixture",
-    "version": "v3",
+    "name": "procedural expert-support, feedback-rollout, action-correlation, perturbation-timing, and overlapping-prediction fixture",
+    "version": "v4",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -40,6 +41,10 @@
     {"name": "persistent_integrated_final_state_error", "value": 0.4, "unit": "state", "split": "temporal-correlation"},
     {"name": "alternating_integrated_final_state_error", "value": 0.0, "unit": "state", "split": "temporal-correlation"},
     {"name": "alternating_maximum_absolute_state_error", "value": 0.02, "unit": "state", "split": "temporal-correlation"},
+    {"name": "negative_feedback_expert_support_action_mse", "value": 0.0, "unit": "action_squared", "split": "single-state-expert-support"},
+    {"name": "positive_feedback_expert_support_action_mse", "value": 0.0, "unit": "action_squared", "split": "single-state-expert-support"},
+    {"name": "negative_feedback_final_absolute_state", "value": 0.00390625, "unit": "state", "split": "six-step-disturbed-rollout"},
+    {"name": "positive_feedback_final_absolute_state", "value": 2.84765625, "unit": "state", "split": "six-step-disturbed-rollout"},
     {"name": "prediction_horizon_steps", "value": 8, "unit": "steps", "split": "execution-policy"},
     {"name": "execution_1_policy_queries", "value": 16, "unit": "count", "split": "execution-policy"},
     {"name": "execution_8_policy_queries", "value": 2, "unit": "count", "split": "execution-policy"},
@@ -49,7 +54,8 @@
   ],
   "artifacts": ["results/ch13/EXP-13-01-smoke.json"],
   "limitations": [
-    "hand-designed scalar integrator without observation-dependent feedback rather than a learned BC or ACT policy",
+    "the error-correlation panel is a hand-designed scalar integrator without observation-dependent feedback",
+    "the distribution-shift panel uses two hand-authored scalar feedback rules and one expert support point rather than learned BC or ACT policies",
     "reaction delay is measured in abstract steps without robot timing jitter",
     "temporal predictions are four hand-authored scalars rather than model outputs",
     "demonstrates protocol trade-offs, not expected real-task effect sizes"

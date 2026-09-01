@@ -18,6 +18,7 @@ def main() -> int:
     metrics = evaluate()
     compounding = metrics["compounding_error"]
     correlation = metrics["action_error_correlation_audit"]
+    distribution_shift = metrics["distribution_shift_rollout_audit"]
     chunks = metrics["chunk_tradeoff"]
     if compounding["integrated_final_state_error"] <= compounding["open_loop_action_rmse"]:
         raise AssertionError("fixture must expose integrated state error")
@@ -27,6 +28,14 @@ def main() -> int:
         raise AssertionError("the temporal-correlation control must hold action RMSE fixed")
     if persistent["integrated_final_state_error"] <= alternating["integrated_final_state_error"]:
         raise AssertionError("persistent errors must accumulate more than alternating errors")
+    if set(distribution_shift["expert_support_action_mse"].values()) != {0.0}:
+        raise AssertionError("both policies must have zero error on the authored expert support")
+    if not (
+        distribution_shift["negative_feedback"]["final_absolute_state"]
+        < distribution_shift["initial_disturbance"]
+        < distribution_shift["positive_feedback"]["final_absolute_state"]
+    ):
+        raise AssertionError("the common disturbance must expose recovery versus divergence")
     if not chunks[0]["policy_queries"] > chunks[-1]["policy_queries"]:
         raise AssertionError("larger execution horizons must reduce policy queries")
     if not chunks[0]["mean_reaction_delay_steps"] < chunks[-1]["mean_reaction_delay_steps"]:
@@ -42,7 +51,7 @@ def main() -> int:
     report = {
         "experiment_id": "EXP-13-01",
         "status": "smoke",
-        "scope": "deterministic protocol fixture; not a learned policy comparison",
+        "scope": "deterministic support, rollout, and chunk protocol fixture; not a learned policy comparison",
         "metrics": metrics,
         "gpu_verified": False,
     }

@@ -12,8 +12,27 @@
       {"deadline_pass_rate": 0.3333333333333333, "deadline_steps": 2, "discarded_prediction_steps_per_full_query": 0, "execution_horizon_steps": 8, "max_reaction_delay_steps": 7, "mean_reaction_delay_steps": 3.7333333333333334, "policy_queries": 2, "prediction_horizon_steps": 8}
     ],
     "compounding_error": {"horizon": 20, "integrated_final_state_error": 0.4, "integration_gain_steps": 20.0, "open_loop_action_rmse": 0.02},
+    "distribution_shift_rollout_audit": {
+      "expert_support": [{"action": 0.0, "state": 0.0}],
+      "expert_support_action_mse": {"negative_feedback": 0.0, "positive_feedback": 0.0},
+      "horizon": 6,
+      "initial_disturbance": 0.25,
+      "negative_feedback": {
+        "actions": [-0.125, -0.0625, -0.03125, -0.015625, -0.0078125, -0.00390625],
+        "final_absolute_state": 0.00390625,
+        "maximum_absolute_state": 0.25,
+        "states": [0.25, 0.125, 0.0625, 0.03125, 0.015625, 0.0078125, 0.00390625]
+      },
+      "positive_feedback": {
+        "actions": [0.125, 0.1875, 0.28125, 0.421875, 0.6328125, 0.94921875],
+        "final_absolute_state": 2.84765625,
+        "maximum_absolute_state": 2.84765625,
+        "states": [0.25, 0.375, 0.5625, 0.84375, 1.265625, 1.8984375, 2.84765625]
+      },
+      "transition": "next_state = state + action"
+    },
     "temporal_ensemble": {"changed_ensemble_absolute_error": 0.753737406774, "changed_ensembled_action": 0.246262593226, "changed_latest_absolute_error": 0.0, "changed_latest_action": 1.0, "changed_target": 1.0, "coefficient": 0.01, "stationary_ensemble_absolute_error": 0.000999991667, "stationary_ensembled_action": 0.999000008333, "stationary_latest_absolute_error": 0.2, "stationary_latest_action": 1.2, "stationary_target": 1.0}
   },
-  "scope": "deterministic protocol fixture; not a learned policy comparison",
+  "scope": "deterministic support, rollout, and chunk protocol fixture; not a learned policy comparison",
   "status": "smoke"
 }

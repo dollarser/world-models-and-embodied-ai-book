@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-13-01`
-> 关联声明：`CLAIM-13-01`～`CLAIM-13-07`
-> 关联图表：`FIG-13-01` / `TAB-13-01` / `TAB-13-02` / `TAB-13-03`
+> 关联声明：`CLAIM-13-01`～`CLAIM-13-08`
+> 关联图表：`FIG-13-01` / `TAB-13-01`～`TAB-13-04`
 > 资源档位：S / M
 > GPU 状态：待验证
 
@@ -116,15 +116,28 @@ ACT 的 temporal ensemble 会把不同查询对当前动作的重叠预测做指
 
 [ACT 原仓库评测脚本快照 `742c753`](https://github.com/tonyzhaozh/act/blob/742c753c0d4a5d87076c8f69e5628c79a8cc5488/imitate_episodes.py)把 `m` 固定为 `0.01`；LeRobot 快照 `128d332` 的[配置默认说明](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)也是 `0.01`，其 [`ACTTemporalEnsembler`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/modeling_act.py)明确让 `i=0` 对应最旧预测。正的 `m` 因而给旧预测更大权重：它能抑制逐次查询抖动，也会在目标真的变化时产生惯性。权重方向、系数、reset 时机和有效 mask 都是协议字段，不能只写“使用 temporal aggregation”。
 
-## 13.5 EXP-13-01：三个协议反例
+## 13.5 EXP-13-01：四个协议反例
 
-S 档实验使用 Python 标准库，不训练模型。第一部分令专家动作始终为零，在单位增益标量积分器中比较两列 20 步动作误差：持续 `+0.02` 与 `+0.02/-0.02` 交替。两者 teacher-forced RMSE 和 MAE 都是 `0.02`，最终积分状态误差却分别是 `0.40` 与 `0`。这个系统没有观测依赖反馈，只是误差传播负对照，不能称为闭环策略评测。第二部分固定 `K_pred=8`，只改变 `K_exec=1/4/8`，并枚举 16 步任务中初始查询之后的 15 个动作边界；这样 policy query—陈旧权衡来自固定周期执行政策，而不是同时更换模型输出长度。第三部分对四个重叠标量预测应用 `m=0.01` 的 temporal ensemble。
+S 档实验使用 Python 标准库，不训练模型。第一部分令专家动作始终为零，在单位增益标量积分器中比较两列 20 步动作误差：持续 `+0.02` 与 `+0.02/-0.02` 交替。两者 teacher-forced RMSE 和 MAE 都是 `0.02`，最终积分状态误差却分别是 `0.40` 与 `0`。这个系统没有观测依赖反馈，只是误差传播负对照，不能称为闭环策略评测。第二部分用一个专家支持点和两个手写反馈规则，显式连接离线拟合与扰动后的 rollout。第三部分固定 `K_pred=8`，只改变 `K_exec=1/4/8`，并枚举 16 步任务中初始查询之后的 15 个动作边界；这样 policy query—陈旧权衡来自固定周期执行政策，而不是同时更换模型输出长度。第四部分对四个重叠标量预测应用 `m=0.01` 的 temporal ensemble。
 
 ```bash
 make ch13-test-local
 make ch13-smoke-local
 make ch13-smoke
 ```
+
+### 13.5.1 专家支持集上的零误差不约束离开支持集后的反馈方向
+
+固定标量转移 `x_{t+1}=x_t+a_t`，专家数据只有一行 `(x=0,a*=0)`。手写 negative-feedback policy 为 `a=-0.5x`，positive-feedback policy 为 `a=+0.5x`；二者在唯一专家支持点上的 action MSE 都为0。若从支持点开始且不扰动，它们的轨迹也完全相同。只有把 reset state 改为 `x_0=0.25`，才会看到六步后一个收敛、一个放大：
+
+| 手写策略 | expert-support action MSE | `x_0` | 六步状态序列末值 | 最大绝对状态 |
+| --- | ---: | ---: | ---: | ---: |
+| negative feedback `a=-0.5x` | 0 | 0.25 | 0.00390625 | 0.25 |
+| positive feedback `a=+0.5x` | 0 | 0.25 | 2.84765625 | 2.84765625 |
+
+*TAB-13-04：`EXP-13-01` v4 的 support—rollout 负对照。两条规则是为暴露接口而手写的确定性标量函数，不是从单点数据学出的 BC，也不代表真实控制器、机器人或车辆。*
+
+`CLAIM-13-08`（result）：`EXP-13-01` v4 的两个手写策略在唯一专家支持点 `(0,0)` 上 action MSE 同为0；同受 `x_0=0.25` 的 reset disturbance 后，六步最终绝对状态分别为0.00390625和2.84765625。该固定反例只证明 expert-support loss 不识别 off-support feedback behavior，不估计 learned policy 的泛化、DAgger 收益、真实扰动概率、稳定域或安全性。
 
 | `K_pred` | `K_exec` | 每次完整查询丢弃后缀/步 | policy query | 平均/最大反应延迟 | 2 步期限通过率 |
 | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -143,7 +156,7 @@ make ch13-smoke
 
 *TAB-13-03：`EXP-13-01` 的时间相关性负对照。两列误差具有相同逐点幅值指标，却在手工标量积分器中产生不同状态轨迹；这不是 BC/ACT 或真实闭环性能。*
 
-`CLAIM-13-07`（result）：`EXP-13-01` v3 中，持续同号与正负交替误差的动作 RMSE/MAE 都是 `0.02`，但 20 步后的积分状态误差为 `0.40/0`，交替序列的最大瞬态状态误差仍为 `0.02`。该负对照只证明逐点幅值指标丢失误差符号的时间相关性，不能推出真实反馈系统中哪种策略更安全或误差会线性累积。
+`CLAIM-13-07`（result）：`EXP-13-01` v4 中，持续同号与正负交替误差的动作 RMSE/MAE 都是 `0.02`，但 20 步后的积分状态误差为 `0.40/0`，交替序列的最大瞬态状态误差仍为 `0.02`。该负对照只证明逐点幅值指标丢失误差符号的时间相关性，不能推出真实反馈系统中哪种策略更安全或误差会线性累积。
 
 | 场景与当前 target | 最新预测 | ensemble 动作 | 最新预测绝对误差 | ensemble 绝对误差 |
 | --- | ---: | ---: | ---: | ---: |
@@ -152,7 +165,7 @@ make ch13-smoke
 
 *TAB-13-02：同一指数时间集成在稳态抖动与真实突变上的相反后果。四个预测按最旧到最新排列；这是构造反例，不是 ACT 误差测量。*
 
-`CLAIM-13-06`（result）：`EXP-13-01` v3 中，时间集成把固定稳态预测 `[0.8,1.2,0.8,1.2]` 对 target 1 的误差从 0.2 降到约 0.001；但当预测为 `[0,0,0,1]` 且真实 target 已变为 1 时，ensemble 仍为约 0.246，误差约 0.754。它证明 smoothing 与 change-response 必须分别测试，不估计真实策略发生频率。
+`CLAIM-13-06`（result）：`EXP-13-01` v4 中，时间集成把固定稳态预测 `[0.8,1.2,0.8,1.2]` 对 target 1 的误差从 0.2 降到约 0.001；但当预测为 `[0,0,0,1]` 且真实 target 已变为 1 时，ensemble 仍为约 0.246，误差约 0.754。它证明 smoothing 与 change-response 必须分别测试，不估计真实策略发生频率。
 
 这些反例只证明偏差累积、执行陈旧和时间集成滞后在逻辑上可能发生。真实反馈控制可能抑制偏差，策略也可能在块内预测不同动作；反过来，接触任务和高速驾驶中的微小误差可能造成非线性后果。因此 smoke 是评测契约测试，不是效果量估计。
 
@@ -172,6 +185,8 @@ make ch13-smoke
 
 驾驶策略也可能一次输出未来若干转向、加速度或轨迹点。较长时域能减少抖动、表达连贯变道，但前车切入、信号变化或定位跳变会让旧计划失效。块长度必须同时换算为控制秒数，并与感知频率、制动距离和最小风险策略联动。
 
+本章的 support—rollout 反例在驾驶中的对应物，是两个转向策略在“车辆始终位于车道中心”的专家日志上都取得极低误差，却在侧风、定位跳变或其他车辆挤压造成横向偏移后给出相反恢复动作。因此闭环协议应按初始横向/航向误差、速度、曲率、路面附着和交通交互分桶，并报告恢复时间、最大偏离、越界/碰撞、接管与无效运行分母。手工注入扰动只能验证恢复接口；若扰动幅度、方向或时机在看到结果后挑选，就不能支持预先声明的鲁棒性结论。
+
 `CLAIM-13-03`（recommendation）：自动驾驶动作块应报告实际持续时间、最坏重规划延迟和事件触发重规划，而不是只报告离散 token 数。
 
 学习策略的输出不得直接绕过约束检查。至少需要独立的碰撞/道路边界检查、超时监测、控制限幅和最小风险停车。仿真成功也不能替代真实车辆安全验证。
@@ -183,6 +198,7 @@ make ch13-smoke
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 本书结果 | 相同动作 RMSE/MAE 可对应不同积分状态轨迹 | `EXP-13-01` | CPU smoke | 无反馈的手工标量积分器 |
+| 本书结果 | expert-support MSE 相同不约束扰动后的反馈方向 | `EXP-13-01` | CPU smoke | 单支持点与两个手写标量规则 |
 | 本书结果 | 长执行时域减少 policy query 但增大反应延迟 | `EXP-13-01` | CPU smoke | 离散边界模型 |
 | 本书结果 | temporal ensemble 在稳态降抖、在真实突变时滞后 | `EXP-13-01` | CPU smoke | 四个手工标量预测 |
 | 论文方法 | ACT 生成动作块并使用时间集成 | ACT 论文 | `[P,R0]` | 本书未训练 |
@@ -203,6 +219,7 @@ S 档下载量 0、无 GPU、无外部数据，代码和 fixture 按 MIT 发布�
 3. **协议设计**：为 ACT 实验列出避免 episode 泄漏的划分与三类闭环失败。
 4. **迁移分析**：将 `K_exec=8` 分别换算到 20Hz 车辆控制和 5Hz 机械臂控制，讨论安全含义。
 5. **指标审计**：构造两列 RMSE 和 MAE 相同、但有符号误差和不同的动作误差；解释还缺哪些闭环证据才能讨论策略安全性。
+6. **支持集审计**：保持两个策略在专家支持点上的 action MSE 都为0，分别改变 reset disturbance、policy gain 和 horizon；解释为什么该扫描仍不是 learned BC 的 OOD 泛化评测。
 
 ## 自检要点
 
@@ -243,6 +260,13 @@ S 档下载量 0、无 GPU、无外部数据，代码和 fixture 按 MIT 发布�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-13-06：支持集拟合与扰动 rollout</summary>
+
+在唯一专家点 `(x=0,a*=0)` 上，`a=-0.5x` 与 `a=+0.5x` 都输出0，所以 action MSE 同为0；无扰动地从 `x=0` 出发也无法区分它们。固定 `x_{t+1}=x_t+a_t` 并令 `x_0=0.25` 后，六步末值分别为 `0.25×0.5^6=0.00390625` 与 `0.25×1.5^6=2.84765625`。这只说明单点支持集没有约束其外部函数值。要评测 learned BC，还需真实训练过程、独立 episode/source split、支持距离或扰动分桶、相同初态闭环 rollout、随机种子、限幅/终止/失败分母与安全接管；不能把手写正负反馈差称为算法效果。
+
+</details>
+
 ## 延伸阅读
 
 - Zhao et al., [Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware](https://arxiv.org/abs/2304.13705)，`[P,R0]`，ACT 原论文；
@@ -266,5 +290,5 @@ S 档下载量 0、无 GPU、无外部数据，代码和 fixture 按 MIT 发布�
 - 代码审查：通过；
 - 一致性审查：通过（当前 schema 与策略主线接口；第3章进入 `reviewed` 后仍按全书统稿流程复核）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-b-review.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`、`reviews/ch13-action-error-correlation-review-2026-09-02.md`；
-- 已知限制：未运行 LeRobot、BC 或 ACT，GPU 与数据资源均待验证。
+- 审查记录路径：`reviews/ch13-expert-support-rollout-review-2026-09-02.md`、`reviews/batch-b-review.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`、`reviews/ch13-action-error-correlation-review-2026-09-02.md`；
+- 已知限制：新增反馈 rollout 仍是单状态支持集和两个手写标量规则；未运行 LeRobot、BC 或 ACT，GPU 与数据资源均待验证。

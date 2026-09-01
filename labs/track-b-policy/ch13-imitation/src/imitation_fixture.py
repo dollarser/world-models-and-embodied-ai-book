@@ -67,6 +67,73 @@ def action_error_correlation_audit(
     }
 
 
+def distribution_shift_rollout_audit(
+    horizon: int = 6,
+    initial_disturbance: float = 0.25,
+    policy_gain: float = 0.5,
+) -> dict[str, object]:
+    """Contrast equal expert-support error with different off-support rollouts.
+
+    The expert fixture contains only ``state=0, action=0``. Both hand-authored
+    policies fit that single support point exactly. After the same external
+    reset disturbance, one applies negative feedback and the other applies
+    positive feedback in the scalar transition ``next_state=state+action``.
+    This is a support/execution diagnostic, not a learned-policy benchmark.
+    """
+    if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon <= 0:
+        raise ValueError("horizon must be a positive integer")
+    for name, value in (
+        ("initial_disturbance", initial_disturbance),
+        ("policy_gain", policy_gain),
+    ):
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value):
+            raise ValueError(f"{name} must be a finite number")
+    if not 0.0 < policy_gain < 1.0:
+        raise ValueError("policy_gain must be strictly between zero and one")
+
+    expert_support = [(0.0, 0.0)]
+
+    def policy_action(state: float, action_sign: float) -> float:
+        return action_sign * float(policy_gain) * state
+
+    def rollout(action_sign: float) -> dict[str, object]:
+        state = float(initial_disturbance)
+        states = [state]
+        actions = []
+        for _ in range(horizon):
+            action = policy_action(state, action_sign)
+            actions.append(action)
+            state += action
+            states.append(state)
+        return {
+            "states": [round(value, 12) for value in states],
+            "actions": [round(value, 12) for value in actions],
+            "final_absolute_state": round(abs(state), 12),
+            "maximum_absolute_state": round(max(abs(value) for value in states), 12),
+        }
+
+    return {
+        "expert_support": [
+            {"state": state, "action": action} for state, action in expert_support
+        ],
+        "expert_support_action_mse": {
+            "negative_feedback": sum(
+                (policy_action(state, -1.0) - action) ** 2 for state, action in expert_support
+            )
+            / len(expert_support),
+            "positive_feedback": sum(
+                (policy_action(state, 1.0) - action) ** 2 for state, action in expert_support
+            )
+            / len(expert_support),
+        },
+        "initial_disturbance": float(initial_disturbance),
+        "horizon": horizon,
+        "transition": "next_state = state + action",
+        "negative_feedback": rollout(-1.0),
+        "positive_feedback": rollout(1.0),
+    }
+
+
 def chunk_tradeoff(
     horizon: int = 16,
     prediction_horizon: int = 8,
@@ -152,6 +219,7 @@ def evaluate() -> dict[str, object]:
     return {
         "compounding_error": compounding_error(),
         "action_error_correlation_audit": action_error_correlation_audit(),
+        "distribution_shift_rollout_audit": distribution_shift_rollout_audit(),
         "chunk_tradeoff": chunk_tradeoff(),
         "temporal_ensemble": {
             "coefficient": 0.01,
