@@ -22,6 +22,46 @@
     "dynamic_path_safe_tristate_before_update": false,
     "expired_cell_count": 1,
     "fresh_free_path_safe": true,
+    "grid_boundary_report": {
+      "axis_order": "(x_index, y_index)",
+      "center_point_cell": [
+        1,
+        0
+      ],
+      "center_point_xy_m": [
+        0.75,
+        0.25
+      ],
+      "center_round_trip_xy_m": [
+        0.75,
+        0.25
+      ],
+      "interval_convention": "half-open [lower, upper)",
+      "negative_edge_floor_cell": [
+        -1,
+        0
+      ],
+      "negative_edge_floor_in_bounds": false,
+      "negative_edge_point_xy_m": [
+        -0.01,
+        0.25
+      ],
+      "negative_edge_truncation_cell": [
+        0,
+        0
+      ],
+      "negative_edge_truncation_in_bounds": true,
+      "origin_xy_m": [
+        0.0,
+        0.0
+      ],
+      "resolution_m": 0.5,
+      "upper_edge_cell": [
+        7,
+        0
+      ],
+      "upper_edge_in_bounds": false
+    },
     "occluded_cell_is_unknown": true,
     "one_cell_shift_occupied_iou": 0.0,
     "reachable_free_count": 8,
@@ -54,6 +94,6 @@
       "unknown": 36
     }
   },
-  "scope": "tri-state ray grid, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
+  "scope": "tri-state ray grid, metric-to-cell boundary contract, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
   "status": "smoke"
 }

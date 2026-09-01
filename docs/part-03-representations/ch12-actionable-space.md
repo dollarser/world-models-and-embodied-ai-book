@@ -1,10 +1,10 @@
 # 第12章 可行动的空间表征
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-12-01`
-> 关联声明：`CLAIM-12-01`～`CLAIM-12-10`
-> 关联图表：`FIG-12-01` / `FIG-12-02` / `TAB-12-01`～`TAB-12-04`
+> 关联声明：`CLAIM-12-01`～`CLAIM-12-11`
+> 关联图表：`FIG-12-01` / `FIG-12-02` / `TAB-12-01`～`TAB-12-06`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -101,6 +101,28 @@ N=\left\lceil\frac{L_x}{r}\right\rceil
 
 分辨率减半会令三维稠密格子约增至八倍。稀疏结构、分层地图和 BEV 压缩可以省资源，却不会消除精细碰撞与范围之间的取舍。必须同时报告地图范围、分辨率与机器人/车辆 footprint。
 
+### 12.3.1 米制点怎样落进格子
+
+“点已经在共同 frame”仍不足以得到 cell。二维栅格至少还要声明米制原点 `(x_min,y_min)`、分辨率 `r`、有限范围、轴顺序，以及边界属于哪一格。本章采用 `(x_index,y_index)`，并将第 `(i,j)` 格定义为半开区域：
+
+\[
+x\in[x_{min}+ir,\ x_{min}+(i+1)r),\qquad
+y\in[y_{min}+jr,\ y_{min}+(j+1)r).
+\]
+
+因此米制点到 cell 的映射是
+
+\[
+i=\left\lfloor\frac{x-x_{min}}{r}\right\rfloor,\qquad
+j=\left\lfloor\frac{y-y_{min}}{r}\right\rfloor.
+\]
+
+这里必须用 floor，而不是把浮点数直接转为整数：许多语言的整数转换向 0 截断，`-0.02` 会变成 `0`，从而把原点左侧的越界点错误吸进第 0 格。映射后还要独立检查 `0≤i<W, 0≤j<H`；上边界 `x=x_min+Wr` 属于格外，不是最后一格。数组实现若采用 `[row,column]=[y_index,x_index]`，也必须在接口处显式交换，不能让数学坐标顺序随实现悄悄改变。
+
+半开数学定义还不等于任意浮点实现都能精确命中十进制边界。例如 `0.1` 通常不能被二进制浮点精确表示；项目应固定 dtype、坐标量化与边界容差策略，并用边界两侧的 `nextafter`/整数单位负对照测试。不能随意给所有坐标加 epsilon，因为这会把一侧误差转移到另一侧。本章 fixture 选择二进制可精确表示的 `0.5 m`，没有验证一般浮点栅格化。
+
+这一步是第3章 `frame / unit / timestamp` 合同进入 occupancy 的最后一道离散化接口。Nav2 costmap 的官方配置同样把 `global_frame`、`origin_x/y`、米制 `resolution` 和 footprint 分开登记；这些字段存在仍不证明本书固定栅格与 Nav2 使用相同内部实现。
+
 ## 12.4 从几何 occupancy 到语义与动态空间
 
 几何 occupancy 只回答“是否占用”。语义 occupancy 再标注道路、车辆、墙面、可移动物等类别；实例与轨迹保留对象身份；动态 occupancy 或 occupancy flow 还估计未来格子状态、速度或流向。
@@ -187,9 +209,23 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 | 只查 waypoint | 2 | 2 | 0 | safe |
 | 栅格化连接段 | 2 | 3 | 1 | unsafe |
 
-*TAB-12-04：`EXP-12-01` v3 的稀疏 waypoint 反例。第二行只修复整数栅格上的跳格，不是连续时间、连续姿态或车辆动力学碰撞检测。*
+*TAB-12-04：`EXP-12-01` v4 保留的稀疏 waypoint 反例。第二行只修复整数栅格上的跳格，不是连续时间、连续姿态或车辆动力学碰撞检测。*
 
-`CLAIM-12-10`（result）：`EXP-12-01` v3 中，稀疏路径 `(3,3)→(3,5)` 只检查两个 waypoint 时没有命中 occupied，因允许 unknown 而误判 safe；Bresenham 段栅格化检查三个中心格并检出一个中间 occupied，判为 unsafe。这只验证固定二维整数格的离散路径合同，不证明 continuous collision、转弯扫掠、动态可达性或真实车辆安全。
+`CLAIM-12-10`（result）：`EXP-12-01` v4 保留的稀疏路径 `(3,3)→(3,5)` 只检查两个 waypoint 时没有命中 occupied，因允许 unknown 而误判 safe；Bresenham 段栅格化检查三个中心格并检出一个中间 occupied，判为 unsafe。这只验证固定二维整数格的离散路径合同，不证明 continuous collision、转弯扫掠、动态可达性或真实车辆安全。
+
+### 12.7.2 栅格边界也需要负对照
+
+`EXP-12-01` v4 固定 `origin=(0,0) m`、`resolution=0.5 m` 和 `7×7` 半开栅格。格 `(1,0)` 的中心 `(0.75,0.25) m` 可精确往返；另外两例专门检查有限地图边界：
+
+| 米制点 | floor cell / 是否在界内 | 向 0 截断 baseline | 正确解释 |
+| --- | --- | --- | --- |
+| `(0.75,0.25) m` | `(1,0)` / 是 | `(1,0)` | 格中心的正常对照 |
+| `(-0.01,0.25) m` | `(-1,0)` / 否 | `(0,0)` / 是 | 截断产生假纳入 |
+| `(3.5,0.25) m` | `(7,0)` / 否 | `(7,0)` / 否 | 半开上边界在格外 |
+
+*TAB-12-05：`EXP-12-01` v4 的米制点—栅格边界负对照。它验证本书固定索引合同，不代表任何外部地图实现。*
+
+`CLAIM-12-11`（result）：`EXP-12-01` v4 中，原点左侧 `0.01 m` 的点经 floor 映射到越界 cell `(-1,0)`，而向 0 截断会错误映射到界内 `(0,0)`；`3.5 m` 的上边界映射到 `(7,0)` 并被拒绝。这只验证固定 `0.5 m`、`7×7` 半开栅格的边界合同，不证明 ROS/Nav2、连续碰撞或真实定位行为。
 
 ## 12.8 自动驾驶正文：BEV occupancy、flow 与安全时域
 
@@ -210,6 +246,21 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 
 学习 occupancy 是感知层，不是安全层。定位漂移、相机掉线、时间延迟或 OOD 天气应触发置信度下降、速度限制、冗余检查或最小风险动作，而不是继续把旧地图当作当前真实状态。
 
+### 12.8.1 当前估计、未来预测、世界模型与场景生成不是同一任务
+
+快速演进的论文常都使用 `occupancy` 或 `4D world`，但输入、输出和用途不同。ICCV 2025 的 UniOcc 明确把 current-frame occupancy prediction 与基于历史的 future occupancy forecasting 分开，并提供 flow 接口；AAAI 2025 的 Drive-OccWorld 再加入动作条件并用未来 occupancy cost 连接规划；ICLR 2025 的 DynamicCity 面向条件化 4D 场景生成。它们适合放在一张接口表中比较，不能仅凭输出都是 voxel 就互换结论。
+
+| 任务 | 最小输入 | 输出回答 | 进入行动前还缺什么 |
+| --- | --- | --- | --- |
+| 当前 occupancy estimation | 当前传感器、标定、位姿 | “现在何处 free/occupied/unknown？” | 时间新鲜度、定位误差、碰撞查询 |
+| future occupancy/flow forecasting | 历史状态或观测 | “未来哪些格会被占用、怎样运动？” | horizon 覆盖、校准、闭环更新 |
+| action-conditioned occupancy world model | 历史 + 候选 ego action/trajectory | “采取该动作后可能出现什么？” | 动作覆盖、反事实有效性、独立 outcome scorer |
+| 4D scene generation | noise/布局/轨迹/命令等条件 | “能生成哪些时空场景样本？” | 与真实状态的绑定、覆盖度、simulator validity |
+
+*TAB-12-06：occupancy 相关任务的接口区分。来源锚点：UniOcc（ICCV 2025）、Drive-OccWorld（AAAI 2025）、DynamicCity（ICLR 2025）；本书均未运行，表中不引用其性能数字。*
+
+即使 action-conditioned 模型生成了视觉上合理的未来，也不能自动得到正确反事实：训练数据可能没有覆盖该动作，生成器可能只学到场景先验，cost function 还可能遗漏舒适度或交通规则。第11章处理“动作是否真正影响预测”，第17章处理代理 rollout 与 outcome scorer 的误差，第20章处理评测协议；本节只建立空间输出的接口边界。
+
 ## 12.9 机器人正文：接近、抓取与导航
 
 移动机器人先膨胀障碍物或用 footprint 做配置空间碰撞，再在已知自由空间规划；机械臂需要把末端候选姿态、逆运动学、整臂碰撞和接触约束共同检查。二维抓取热力图若没有相机到机器人基座变换，无法变成可执行位姿；点云中的平面若不可达，也不是当前机器人的放置 affordance。
@@ -218,7 +269,7 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 
 ## 12.10 资源、许可与升级路径
 
-S 档 `EXP-12-01` 使用 Python 标准库、CPU、零下载和 MIT 程序化 fixture；它只验证三态地图、连通、坐标误差、证据更新、Bresenham 路径段、离散 footprint 与观测过期。
+S 档 `EXP-12-01` 使用 Python 标准库、CPU、零下载和 MIT 程序化 fixture；它只验证三态地图、连通、半开米制栅格边界、坐标误差、证据更新、Bresenham 路径段、离散 footprint 与观测过期。
 
 M 档可在用户明确同意数据条款与下载量后，使用许可允许的小型 RGB-D/仿真子集训练轻量 depth/occupancy baseline，默认不超过 24 GB 单卡。应先记录数据体积、预处理缓存、输入范围、体素分辨率和峰值显存。当前无 GPU 阶段不执行。
 
@@ -234,7 +285,7 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 三态射线、坐标偏移、证据更新、路径段、footprint 与过期 smoke | `EXP-12-01` | CPU smoke | 2D 无噪声手工格子；非连续碰撞器 |
+| 本书结果 | 三态射线、米制栅格边界、坐标偏移、证据更新、路径段、footprint 与过期 smoke | `EXP-12-01` | CPU smoke | 2D 无噪声手工格子；非外部地图或连续碰撞器 |
 | 开源基准 | Occ3D/OpenScene occupancy 资产 | 官方仓库/论文 | `[O/A,R1]` | 本书未下载或运行 |
 | 开源工具 | Nerfstudio 场景重建工具链 | 官方仓库 | `[O,R1]` | 本书未训练；非行动证明 |
 | 研究案例 | D4RT 动态 4D 重建与跟踪 | 官方页面/论文项目 | `[V/A,R0]` | 本书未独立验证 |
@@ -252,12 +303,16 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 4. **机器人迁移**：为吸盘和两指夹爪分别定义 approach affordance，列出额外状态。
 5. **自动驾驶迁移**：设计遮挡车辆切入的 occupancy-flow fixture，分别报告 IoU 和碰撞。
 6. **路径离散化**：把两个 waypoint 的间距依次改为 1、2、4 格，比较 waypoint-only、Bresenham 与更细连续碰撞器各自能支持什么结论。
+7. **边界规则**：分别用 floor、round 和向 0 截断把 `(-0.01,0.25) m` 映射到 0.5 m 栅格，解释哪个结果符合半开区间；再检查恰好位于上边界的点。
 
 ## 延伸阅读
 
 - Tian et al., [Occ3D](https://arxiv.org/abs/2304.14365) 与[官方仓库](https://github.com/Tsinghua-MARS-Lab/Occ3D)，`[A/O,R1]`；
 - Wang et al., [OpenOccupancy](https://arxiv.org/abs/2303.03991)，`[A,R1]`，多模态 occupancy benchmark；
 - OpenDriveLab, [OpenScene](https://github.com/OpenDriveLab/OpenScene)，`[O,R1]`；
+- Wang et al., [UniOcc（ICCV 2025）](https://openaccess.thecvf.com/content/ICCV2025/html/Wang_UniOcc_A_Unified_Benchmark_for_Occupancy_Forecasting_and_Prediction_in_ICCV_2025_paper.html)，`[P,R0]`，区分 current prediction、future forecasting 与 flow；
+- Yang et al., [Drive-OccWorld（AAAI 2025）](https://ojs.aaai.org/index.php/AAAI/article/view/33010)，`[P,R0]`，动作条件 4D occupancy 与 planning 接口；
+- Bian et al., [DynamicCity（ICLR 2025）](https://proceedings.iclr.cc/paper_files/paper/2025/hash/6506964d22ede4d36adae956e6a9919a-Abstract-Conference.html)，`[P,R0]`，条件化 4D occupancy generation；
 - Nerfstudio, [开源 NeRF 工具链](https://github.com/nerfstudio-project/nerfstudio)，`[O,R1]`；
 - Google DeepMind, [D4RT 官方介绍](https://deepmind.google/blog/d4rt-teaching-ai-to-see-the-world-in-four-dimensions/) 与[论文项目页](https://d4rt-paper.github.io/)，`[V/A,R0]`。
 - OMPL, [State Validity Checking](https://docs.ros.org/en/iron/p/ompl/doc/markdown/stateValidation.html)，离散 motion validation 的分辨率与连续检查边界；
@@ -280,6 +335,6 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch12-path-segment-validation-review-2026-09-01.md`；
-- 已知限制：未训练 3D/occupancy 模型，Bresenham 不是 supercover 或 continuous collision checking，未下载真实数据，未运行仿真或 GPU；
+- 审查记录路径：`reviews/ch12-metric-grid-and-task-boundary-review-2026-09-02.md`；
+- 已知限制：固定 0.5 m fixture 未验证任意十进制分辨率的浮点边界；未训练 3D/occupancy 模型，Bresenham 不是 supercover 或 continuous collision checking，未下载真实数据，未运行仿真或 GPU；
 - 下一步：在真实 RGB-D/驾驶数据上加入标定噪声、连续 swept volume、姿态插值与动态 occupancy；当前接口已与第3、4、9、10、11、15、19章核对。

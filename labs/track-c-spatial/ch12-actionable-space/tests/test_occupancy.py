@@ -9,17 +9,45 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 from occupancy_fixture import (  # noqa: E402
     approach_affordances,
     build_occupancy,
+    cell_center,
+    cell_is_in_bounds,
     dynamic_update,
     expire_stale_observations,
+    grid_boundary_report,
     occupied_iou,
     path_is_safe,
     path_risk_report,
     shifted_occupied,
     trace_line,
+    world_to_cell,
 )
 
 
 class ActionableOccupancyTests(unittest.TestCase):
+    def test_metric_point_maps_to_half_open_cell_and_center(self):
+        self.assertEqual(world_to_cell((0.75, 0.25)), (1, 0))
+        self.assertEqual(cell_center((1, 0)), (0.75, 0.25))
+
+    def test_negative_edge_uses_floor_instead_of_truncation(self):
+        report = grid_boundary_report()
+        self.assertEqual(report["negative_edge_floor_cell"], [-1, 0])
+        self.assertFalse(report["negative_edge_floor_in_bounds"])
+        self.assertEqual(report["negative_edge_truncation_cell"], [0, 0])
+        self.assertTrue(report["negative_edge_truncation_in_bounds"])
+
+    def test_upper_boundary_is_outside_half_open_grid(self):
+        upper_edge_cell = world_to_cell((3.5, 0.25))
+        self.assertEqual(upper_edge_cell, (7, 0))
+        self.assertFalse(cell_is_in_bounds(upper_edge_cell))
+
+    def test_grid_contract_rejects_invalid_metric_inputs(self):
+        with self.assertRaises(ValueError):
+            world_to_cell((0.0, 0.0), resolution_m=0.0)
+        with self.assertRaises(ValueError):
+            world_to_cell((float("nan"), 0.0))
+        with self.assertRaises(ValueError):
+            cell_center((0, 0), resolution_m=True)
+
     def test_ray_marks_endpoint_but_not_cells_behind_it(self):
         grid = build_occupancy()
         self.assertEqual(grid[(3, 3)], "free")

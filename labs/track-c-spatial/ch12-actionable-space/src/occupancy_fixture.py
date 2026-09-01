@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+import math
 
 
 GRID_SIZE = 7
@@ -10,6 +11,8 @@ ORIGIN = (3, 0)
 ENDPOINTS = ((1, 4), (3, 4), (5, 4))
 Cell = tuple[int, int]
 VALID_STATES = frozenset({"free", "occupied", "unknown"})
+GRID_ORIGIN_XY_M = (0.0, 0.0)
+GRID_RESOLUTION_M = 0.5
 
 
 def _validate_cell(cell: Cell, *, name: str, require_in_bounds: bool = True) -> None:
@@ -33,6 +36,103 @@ def _validate_grid(grid: dict[Cell, str]) -> None:
         raise ValueError("grid must contain exactly the fixture's in-bounds cells")
     if any(status not in VALID_STATES for status in grid.values()):
         raise ValueError("grid contains an invalid occupancy state")
+
+
+def _validate_metric_pair(value: tuple[float, float], *, name: str) -> None:
+    if (
+        not isinstance(value, tuple)
+        or len(value) != 2
+        or any(
+            isinstance(item, bool)
+            or not isinstance(item, (int, float))
+            or not math.isfinite(item)
+            for item in value
+        )
+    ):
+        raise ValueError(f"{name} must be a finite metric-coordinate pair")
+
+
+def world_to_cell(
+    point_xy_m: tuple[float, float],
+    *,
+    origin_xy_m: tuple[float, float] = GRID_ORIGIN_XY_M,
+    resolution_m: float = GRID_RESOLUTION_M,
+) -> Cell:
+    """Map a metric point to half-open grid cells using floor, not truncation.
+
+    Cell ``(i, j)`` covers ``[origin_x + i*r, origin_x + (i+1)*r)``
+    by ``[origin_y + j*r, origin_y + (j+1)*r)``.  The returned cell may be
+    outside this fixture's finite grid; callers must check bounds explicitly.
+    """
+    _validate_metric_pair(point_xy_m, name="point_xy_m")
+    _validate_metric_pair(origin_xy_m, name="origin_xy_m")
+    if (
+        isinstance(resolution_m, bool)
+        or not isinstance(resolution_m, (int, float))
+        or not math.isfinite(resolution_m)
+        or resolution_m <= 0
+    ):
+        raise ValueError("resolution_m must be a finite positive number")
+    return (
+        math.floor((point_xy_m[0] - origin_xy_m[0]) / resolution_m),
+        math.floor((point_xy_m[1] - origin_xy_m[1]) / resolution_m),
+    )
+
+
+def cell_center(
+    cell: Cell,
+    *,
+    origin_xy_m: tuple[float, float] = GRID_ORIGIN_XY_M,
+    resolution_m: float = GRID_RESOLUTION_M,
+) -> tuple[float, float]:
+    """Return the metric center of a cell under the same grid contract."""
+    _validate_cell(cell, name="cell", require_in_bounds=False)
+    _validate_metric_pair(origin_xy_m, name="origin_xy_m")
+    if (
+        isinstance(resolution_m, bool)
+        or not isinstance(resolution_m, (int, float))
+        or not math.isfinite(resolution_m)
+        or resolution_m <= 0
+    ):
+        raise ValueError("resolution_m must be a finite positive number")
+    return (
+        origin_xy_m[0] + (cell[0] + 0.5) * resolution_m,
+        origin_xy_m[1] + (cell[1] + 0.5) * resolution_m,
+    )
+
+
+def cell_is_in_bounds(cell: Cell) -> bool:
+    _validate_cell(cell, name="cell", require_in_bounds=False)
+    return 0 <= cell[0] < GRID_SIZE and 0 <= cell[1] < GRID_SIZE
+
+
+def grid_boundary_report() -> dict[str, object]:
+    """Expose correct half-open indexing and two common boundary failures."""
+    center_point = (0.75, 0.25)
+    center_cell = world_to_cell(center_point)
+    just_before_origin = (-0.01, 0.25)
+    floor_cell = world_to_cell(just_before_origin)
+    truncation_cell = (
+        int((just_before_origin[0] - GRID_ORIGIN_XY_M[0]) / GRID_RESOLUTION_M),
+        int((just_before_origin[1] - GRID_ORIGIN_XY_M[1]) / GRID_RESOLUTION_M),
+    )
+    upper_edge_cell = world_to_cell((GRID_SIZE * GRID_RESOLUTION_M, 0.25))
+    return {
+        "origin_xy_m": list(GRID_ORIGIN_XY_M),
+        "resolution_m": GRID_RESOLUTION_M,
+        "axis_order": "(x_index, y_index)",
+        "interval_convention": "half-open [lower, upper)",
+        "center_point_xy_m": list(center_point),
+        "center_point_cell": list(center_cell),
+        "center_round_trip_xy_m": list(cell_center(center_cell)),
+        "negative_edge_point_xy_m": list(just_before_origin),
+        "negative_edge_floor_cell": list(floor_cell),
+        "negative_edge_floor_in_bounds": cell_is_in_bounds(floor_cell),
+        "negative_edge_truncation_cell": list(truncation_cell),
+        "negative_edge_truncation_in_bounds": cell_is_in_bounds(truncation_cell),
+        "upper_edge_cell": list(upper_edge_cell),
+        "upper_edge_in_bounds": cell_is_in_bounds(upper_edge_cell),
+    }
 
 
 def trace_line(start: Cell, end: Cell) -> list[Cell]:
@@ -272,4 +372,5 @@ def evaluate() -> dict[str, object]:
         "expired_cell_count": sum(grid[cell] != stale_grid[cell] for cell in grid),
         "sparse_waypoint_only_report": sparse_waypoint_only_report,
         "sparse_segment_report": sparse_segment_report,
+        "grid_boundary_report": grid_boundary_report(),
     }

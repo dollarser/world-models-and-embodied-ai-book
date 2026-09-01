@@ -34,11 +34,16 @@ def main() -> int:
         raise AssertionError("expired free-space evidence must conservatively block the path")
     if not metrics["sparse_waypoint_only_report"]["safe"] or metrics["sparse_segment_report"]["safe"]:
         raise AssertionError("segment rasterization must expose the obstacle between sparse waypoints")
+    boundary = metrics["grid_boundary_report"]
+    if boundary["negative_edge_floor_in_bounds"] or not boundary["negative_edge_truncation_in_bounds"]:
+        raise AssertionError("floor indexing must expose the negative-edge truncation false inclusion")
+    if boundary["upper_edge_in_bounds"]:
+        raise AssertionError("the upper edge of a half-open finite grid must be out of bounds")
 
     report = {
         "experiment_id": "EXP-12-01",
         "status": "smoke",
-        "scope": "tri-state ray grid, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
+        "scope": "tri-state ray grid, metric-to-cell boundary contract, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
         "metrics": metrics,
         "gpu_verified": False,
     }

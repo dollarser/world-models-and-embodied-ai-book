@@ -3,7 +3,7 @@
   "id": "EXP-12-01",
   "chapter": 12,
   "status": "smoke",
-  "claim_ids": ["CLAIM-12-02", "CLAIM-12-03", "CLAIM-12-04", "CLAIM-12-07", "CLAIM-12-08", "CLAIM-12-09", "CLAIM-12-10"],
+  "claim_ids": ["CLAIM-12-02", "CLAIM-12-03", "CLAIM-12-04", "CLAIM-12-07", "CLAIM-12-08", "CLAIM-12-09", "CLAIM-12-10", "CLAIM-12-11"],
   "claim_scope": [
     "cells behind a depth return remain unknown rather than observed free in the ray-grid fixture",
     "a one-cell coordinate shift can destroy occupied-cell alignment",
@@ -11,16 +11,17 @@
     "a departed depth return does not prove its old cell free without explicit clearing evidence",
     "a free point centerline can become unsafe after sweeping a nonzero footprint",
     "expired free-space evidence returns to unknown and blocks a conservative path",
-    "rasterizing the segments between sparse waypoints can expose an intermediate occupied cell that waypoint-only checking misses"
+    "rasterizing the segments between sparse waypoints can expose an intermediate occupied cell that waypoint-only checking misses",
+    "half-open metric-to-cell indexing with floor rejects a point just below the map origin that truncation would falsely include in cell zero"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library v3 tri-state ray grid, segment rasterization, evidence aging, and footprint actionability fixture"
+    "config": "standard-library v4 tri-state ray grid, half-open metric indexing, segment rasterization, evidence aging, and footprint actionability fixture"
   },
   "data": {
     "name": "procedural three-ray seven-by-seven BEV fixture",
-    "version": "v3",
+    "version": "v4",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -49,13 +50,17 @@
     {"name": "radius_one_footprint_safe", "value": 0.0, "unit": "boolean", "split": "centerline-path"},
     {"name": "expired_free_path_safe", "value": 0.0, "unit": "boolean", "split": "observation-aging"},
     {"name": "sparse_waypoint_only_safe", "value": 1.0, "unit": "boolean", "split": "path-segment-validation"},
-    {"name": "sparse_segment_rasterized_safe", "value": 0.0, "unit": "boolean", "split": "path-segment-validation"}
+    {"name": "sparse_segment_rasterized_safe", "value": 0.0, "unit": "boolean", "split": "path-segment-validation"},
+    {"name": "negative_edge_floor_in_bounds", "value": 0.0, "unit": "boolean", "split": "metric-grid-boundary"},
+    {"name": "negative_edge_truncation_in_bounds", "value": 1.0, "unit": "boolean", "split": "metric-grid-boundary"},
+    {"name": "upper_edge_in_bounds", "value": 0.0, "unit": "boolean", "split": "metric-grid-boundary"}
   ],
   "artifacts": ["results/ch12/EXP-12-01-smoke.json"],
   "limitations": [
     "two-dimensional integer grid with three noiseless rays",
     "hand-defined dynamic update, square footprint, and approach affordance rather than learned prediction",
     "Bresenham interpolation over integer center cells rather than supercover, continuous pose interpolation, continuous collision checking, or dynamics",
+    "fixed binary-exact 0.5 m half-open grid contract rather than arbitrary decimal-resolution floating-point behavior or a ROS/Nav2 map implementation",
     "no height, semantics, velocity uncertainty, continuous swept volume, or real calibration"
   ]
 }
