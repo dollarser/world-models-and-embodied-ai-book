@@ -2,30 +2,53 @@
 
 from __future__ import annotations
 
+import math
+
 
 VALID_MODES = (-1.0, 1.0)
 INITIAL_NOISE = (-2.0, -1.5, -1.0, -0.5, -0.25, 0.25, 0.5, 1.0, 1.5, 2.0)
 VALID_TOLERANCE = 0.25
 
 
+def _finite_number(value: float, *, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError(f"{name} must be a finite number")
+    return float(value)
+
+
+def _positive_integer(value: int, *, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise ValueError(f"{name} must be a positive integer")
+    return value
+
+
 def conditional_mean(demonstrations: tuple[float, ...] = VALID_MODES) -> float:
     """The scalar MSE optimum for equally weighted demonstrations."""
-    return sum(demonstrations) / len(demonstrations)
+    if not demonstrations:
+        raise ValueError("demonstrations must not be empty")
+    values = tuple(_finite_number(value, name="demonstration") for value in demonstrations)
+    return sum(values) / len(values)
 
 
 def nearest_mode(value: float) -> float:
     """Resolve ties toward the positive mode to keep the fixture deterministic."""
+    value = _finite_number(value, name="value")
     return min(VALID_MODES, key=lambda mode: (abs(value - mode), -mode))
 
 
 def nearest_mode_distance(value: float) -> float:
+    value = _finite_number(value, name="value")
     return min(abs(value - mode) for mode in VALID_MODES)
 
 
 def mode_refinement(initial: float, steps: int, rate: float = 0.5) -> float:
     """Iteratively approach a mode; an interface fixture, not a DDPM sampler."""
-    if steps < 0:
+    initial = _finite_number(initial, name="initial")
+    rate = _finite_number(rate, name="rate")
+    if isinstance(steps, bool) or not isinstance(steps, int) or steps < 0:
         raise ValueError("steps must be non-negative")
+    if not 0.0 < rate <= 1.0:
+        raise ValueError("rate must be in (0, 1]")
     value = initial
     for _ in range(steps):
         value += rate * (nearest_mode(value) - value)
@@ -34,8 +57,8 @@ def mode_refinement(initial: float, steps: int, rate: float = 0.5) -> float:
 
 def oracle_straight_flow(initial: float, steps: int) -> float:
     """Euler-integrate an oracle straight path from base sample to assigned mode."""
-    if steps <= 0:
-        raise ValueError("steps must be positive")
+    initial = _finite_number(initial, name="initial")
+    _positive_integer(steps, name="steps")
     target = nearest_mode(initial)
     velocity = target - initial
     dt = 1.0 / steps
@@ -46,6 +69,9 @@ def oracle_straight_flow(initial: float, steps: int) -> float:
 
 
 def summarize(samples: tuple[float, ...]) -> dict[str, float | int]:
+    if not samples:
+        raise ValueError("samples must not be empty")
+    samples = tuple(_finite_number(value, name="sample") for value in samples)
     distances = tuple(nearest_mode_distance(value) for value in samples)
     valid = tuple(distance <= VALID_TOLERANCE for distance in distances)
     covered = {
@@ -62,10 +88,66 @@ def summarize(samples: tuple[float, ...]) -> dict[str, float | int]:
     }
 
 
-def sampling_fits_budget(steps_per_sample: int, available_evaluations: int = 8) -> bool:
-    if steps_per_sample <= 0 or available_evaluations < 0:
-        raise ValueError("steps must be positive and budget must be non-negative")
-    return steps_per_sample <= available_evaluations
+def sampling_budget_report(
+    solver_steps: int,
+    candidate_count: int,
+    batch_capacity: int,
+    available_forward_passes: int,
+) -> dict[str, int | bool]:
+    """Count abstract forwards without equating batching to measured latency."""
+    solver_steps = _positive_integer(solver_steps, name="solver_steps")
+    candidate_count = _positive_integer(candidate_count, name="candidate_count")
+    batch_capacity = _positive_integer(batch_capacity, name="batch_capacity")
+    if (
+        isinstance(available_forward_passes, bool)
+        or not isinstance(available_forward_passes, int)
+        or available_forward_passes < 0
+    ):
+        raise ValueError("available_forward_passes must be a non-negative integer")
+    batches_per_solver_step = math.ceil(candidate_count / batch_capacity)
+    forward_pass_count = solver_steps * batches_per_solver_step
+    return {
+        "solver_step_count": solver_steps,
+        "candidate_count": candidate_count,
+        "batch_capacity": batch_capacity,
+        "sample_model_evaluation_count": solver_steps * candidate_count,
+        "batches_per_solver_step": batches_per_solver_step,
+        "forward_pass_count": forward_pass_count,
+        "available_forward_pass_count": available_forward_passes,
+        "fits_abstract_forward_budget": forward_pass_count <= available_forward_passes,
+    }
+
+
+def screen_candidates(
+    samples: tuple[float, ...],
+    blocked_interval: tuple[float, float] = (-1.25, -0.75),
+    fallback_action: float = 0.0,
+) -> dict[str, int | float | bool]:
+    """Apply an independent hand-authored safety gate to generated candidates."""
+    if not samples:
+        raise ValueError("samples must not be empty")
+    samples = tuple(_finite_number(value, name="sample") for value in samples)
+    if not isinstance(blocked_interval, tuple) or len(blocked_interval) != 2:
+        raise ValueError("blocked_interval must contain lower and upper bounds")
+    lower = _finite_number(blocked_interval[0], name="blocked lower bound")
+    upper = _finite_number(blocked_interval[1], name="blocked upper bound")
+    if lower > upper:
+        raise ValueError("blocked_interval lower bound must not exceed upper bound")
+    fallback_action = _finite_number(fallback_action, name="fallback_action")
+
+    validity = tuple(nearest_mode_distance(value) <= VALID_TOLERANCE for value in samples)
+    blocked = tuple(lower <= value <= upper for value in samples)
+    accepted = tuple(valid and not is_blocked for valid, is_blocked in zip(validity, blocked))
+    selected = next((value for value, allowed in zip(samples, accepted) if allowed), fallback_action)
+    return {
+        "candidate_count": len(samples),
+        "valid_action_count": sum(validity),
+        "invalid_action_count": len(samples) - sum(validity),
+        "safety_rejected_valid_count": sum(valid and is_blocked for valid, is_blocked in zip(validity, blocked)),
+        "safety_accepted_count": sum(accepted),
+        "fallback_used": not any(accepted),
+        "selected_action": selected,
+    }
 
 
 def evaluate() -> dict[str, object]:
@@ -77,23 +159,27 @@ def evaluate() -> dict[str, object]:
     return {
         "mse_mean": {
             **summarize(mean_samples),
-            "model_evaluations": len(INITIAL_NOISE),
+            "sample_model_evaluations": len(INITIAL_NOISE),
         },
         "mode_refinement_1_step": {
             **summarize(refinement_one),
-            "model_evaluations": len(INITIAL_NOISE),
+            "sample_model_evaluations": len(INITIAL_NOISE),
         },
         "mode_refinement_4_steps": {
             **summarize(refinement_four),
-            "model_evaluations": 4 * len(INITIAL_NOISE),
+            "sample_model_evaluations": 4 * len(INITIAL_NOISE),
         },
         "oracle_straight_flow_1_step": {
             **summarize(flow_one),
-            "model_evaluations": len(INITIAL_NOISE),
+            "sample_model_evaluations": len(INITIAL_NOISE),
         },
         "control_budget": {
-            "available_model_evaluations_per_replan": 8,
-            "refinement_4_steps_feasible": sampling_fits_budget(4),
-            "refinement_16_steps_feasible": sampling_fits_budget(16),
+            "sequential_10_candidates_4_steps": sampling_budget_report(4, 10, 1, 8),
+            "single_batch_10_candidates_4_steps": sampling_budget_report(4, 10, 10, 8),
+            "single_batch_10_candidates_16_steps": sampling_budget_report(16, 10, 10, 8),
+        },
+        "safety_screen": {
+            "mixed_modes": screen_candidates(flow_one),
+            "all_candidates_blocked": screen_candidates((-1.0, -1.0)),
         },
     }

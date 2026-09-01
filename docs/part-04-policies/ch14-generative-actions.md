@@ -1,10 +1,10 @@
 # 第14章 生成动作：Diffusion Policy 与 Flow Matching
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-14-01`
-> 关联声明：`CLAIM-14-01`～`CLAIM-14-06`
-> 关联图表：`FIG-14-01` / `TAB-14-01` / `TAB-14-02`
+> 关联声明：`CLAIM-14-01`～`CLAIM-14-08`
+> 关联图表：`FIG-14-01` / `TAB-14-01`～`TAB-14-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -105,7 +105,9 @@ Diffusion 与 flow 不应按营销标签做速度结论。公平比较至少固�
 
 预测 32 步不等于盲执行 32 步。receding horizon 可以每次只执行前 4 步，再用新观测生成新 chunk。较短执行 horizon 响应快，却增加生成调用；较多去噪/ODE 步可能提高样本精度，也增加端到端延迟。必须测量完整路径：传感器就绪、预处理、编码、采样、反归一化、安全检查、传输到首个动作，而非只测网络 kernel。
 
-控制预算可写成 `T_control - T_nonmodel`，再除以单次模型调用的 P95 时间，得到最多可用的采样调用数。若超预算，应明确选择更少 solver 步、缓存视觉特征、降低模型/输入、异步推理或安全降级；不能只用平均 FPS 掩盖尾延迟。
+控制预算可写成 `T_control - T_nonmodel`，再除以一次目标 batch forward 的 P95 时间，得到最多可用的顺序 forward 数。这里必须同时记录 solver 步数 `K`、候选数 `N` 和 batch 容量 `B`。若每一步都能把候选放入 batch，抽象 forward 数是 `K⌈N/B⌉`；逐候选串行则是 `KN`。两者都有 `KN` 次 sample-model evaluation，但墙钟和显存不同。batch 变大后的 P95 不会自动等于单样本 P95，最终仍须实测端到端 deadline。
+
+若超预算，应明确选择更少 solver 步、减少候选、缓存视觉特征、降低模型/输入、异步推理或安全降级；不能只用平均 FPS 掩盖尾延迟，也不能只比较 `K` 而漏掉 `N` 与 batch 策略。
 
 ## 14.5 EXP-14-01：双峰动作与采样接口
 
@@ -121,7 +123,7 @@ make ch14-smoke-local
 make ch14-smoke
 ```
 
-| 方法 | 平均最近模式距离 ↓ | 无效动作率 ↓ | 覆盖模式数 ↑ | 每样本调用数 |
+| 方法 | 平均最近模式距离 ↓ | 无效动作率 ↓ | 覆盖模式数 ↑ | 每样本模型求值数 |
 | --- | ---: | ---: | ---: | ---: |
 | MSE mean | 1.000000 | 100% | 0 | 1 |
 | mode refinement，1 步 | 0.275000 | 40% | 2 | 1 |
@@ -132,11 +134,32 @@ make ch14-smoke
 
 `CLAIM-14-02`（result）：`EXP-14-01` 中，MSE 均值为 0，样本均值也为 0，但相对 `±1` 两个有效模式的无效率为 100%。样本均值“平衡”没有证明动作有效。
 
-`CLAIM-14-03`（result）：手工 refinement 从 1 步增加到 4 步时，平均最近模式距离从 `0.275` 降到 `0.034375`，每样本模型调用从 1 增到 4。它只展示调用—精度接口，不代表 DDPM 的收敛率。
+`CLAIM-14-03`（result）：手工 refinement 从 1 步增加到 4 步时，平均最近模式距离从 `0.275` 降到 `0.034375`，每样本模型求值从 1 增到 4。它只展示求值—精度接口，不代表 DDPM 的收敛率。
 
 `CLAIM-14-04`（result）：oracle straight flow 在一步后到达两个指定模式，因为目标配对和常速度都已知；该结果不能用于比较 learned flow 与 learned diffusion。
 
-实验另设每次重规划最多 8 个模型调用的抽象预算：4 步可行、16 步不可行。这里的“调用”不是毫秒，不能写成实时性能；真实章节升级必须在目标硬件报告 P50/P95 和 deadline miss。
+实验另设每次重规划最多 8 个顺序 forward 的抽象预算，并固定 10 个候选：
+
+| 采样调度 | sample-model evaluations | 顺序 forward | 8-forward 预算内 |
+| --- | ---: | ---: | ---: |
+| 4 步、10 候选、逐候选串行 | 40 | 40 | false |
+| 4 步、10 候选、单 batch | 40 | 4 | true |
+| 16 步、10 候选、单 batch | 160 | 16 | false |
+
+*TAB-14-03：候选数、solver 步数与 batching 的抽象预算。它不测 batch 相关 P95、显存或并行效率，不能写成实时性能。*
+
+`CLAIM-14-07`（result）：`EXP-14-01` 的 10 候选、4 步 refinement 共有 40 次 sample-model evaluation；逐候选串行需要 40 个 forward，而一次容纳 10 个候选时为 4 个 forward。旧的“只比较步数与预算”规则会漏算候选数。
+
+fixture 还把“接近演示模式”和“当前场景允许执行”分开。手工安全门把左模式 `[-1.25,-0.75]` 设为当前场景阻塞区：
+
+| 候选集 | 候选 / 模式有效 | 安全拒绝 / 接受 | 结果 |
+| --- | ---: | ---: | --- |
+| 正负模式各 5 个 | 10 / 10 | 5 / 5 | 选择首个安全候选 `+1` |
+| 两个左模式 | 2 / 2 | 2 / 0 | 执行确定性 fallback `0` |
+
+*TAB-14-04：生成有效性与独立安全筛选的分母。阻塞区和 fallback 是手工教学合同，不是碰撞器或安全策略。*
+
+`CLAIM-14-08`（result）：fixture 中 10 个候选全部靠近数据模式，但独立门禁只接受 5 个；当两个模式有效候选都落入阻塞区时，系统不继续随机重采样，而是使用确定性 fallback。模式有效率不能替代场景安全接受率。
 
 ## 14.6 怎么评测多峰动作
 
@@ -153,7 +176,7 @@ make ch14-smoke
 
 *TAB-14-02：生成式动作策略的评测矩阵。*
 
-评估单个观测时应保存多个随机样本；评估策略时，每个 seed 必须进入独立闭环 episode，不能从多个候选中用真实未来“事后挑最好”。若用 critic、规划器或碰撞器选样本，要把选择器算进系统并单独消融。
+评估单个观测时应保存多个随机样本；评估策略时，每个 seed 必须进入独立闭环 episode，不能从多个候选中用真实未来“事后挑最好”。若用 critic、规划器或碰撞器选样本，要把选择器算进系统并单独消融，同时报告 `generated / model-valid / safety-accepted / executed` 四个分母和无候选时的 fallback 次数。
 
 `CLAIM-14-05`（recommendation）：生成式策略比较应同时报告单样本有效性、模式覆盖、闭环 outcome 与完整采样时延；用 oracle 从多个样本事后选优会高估可部署性能。
 
@@ -180,11 +203,11 @@ make ch14-smoke
 
 ## 14.9 开源实现与资源路线
 
-S 档 `EXP-14-01` 使用 Python 标准库、CPU、零下载与 MIT fixture，只验证多峰与调用预算。
+S 档 `EXP-14-01` 使用 Python 标准库、CPU、零下载与 MIT fixture，只验证多峰、候选—batch 预算和独立安全筛选接口。
 
-M 档优先使用 [LeRobot](https://github.com/huggingface/lerobot) 中的 Diffusion Policy 接口，在同一 Push-T 或小型许可数据划分上比较 MSE chunk policy 与 diffusion policy。官方配置明确区分 `horizon`、`n_action_steps`、训练/推理 timestep、DDPM/DDIM scheduler 和动作归一化 `[O,R1]`。默认目标为 24 GB 单卡以内；先跑状态输入或低分辨率视觉、小 batch、少量 episode 和 2–3 seeds。当前未下载、未训练、未验证显存。
+M 档优先使用 [LeRobot](https://github.com/huggingface/lerobot) 中的 Diffusion Policy 接口，在同一 Push-T 或小型许可数据划分上比较 MSE chunk policy 与 diffusion policy。[当前官方配置](https://github.com/huggingface/lerobot/blob/main/src/lerobot/policies/diffusion/configuration_diffusion.py)明确区分 `n_obs_steps`、`horizon`、`n_action_steps`、`num_train_timesteps` 与 `num_inference_steps`；未指定推理步数时会回落到训练 timestep 数，sample clipping 还要求动作归一化范围与之匹配，padding loss mask 则需显式选择 `[O,R1]`。这些是必须冻结的配置，不是通用推荐值。默认目标为 24 GB 单卡以内；先跑状态输入或低分辨率视觉、小 batch、少量 episode 和 2–3 seeds。当前未下载、未训练、未验证显存。
 
-L1 可加入 flow-matching action head，并在固定 backbone/数据下按模型调用数和墙钟时延比较。openpi README 的上游估算是推理需大于 8 GB、LoRA 微调大于 22.5 GB、全量微调大于 70 GB；这是官方当前配置说明 `[O,R1]`，不是本书实测。LoRA 已贴近 24 GB 边界，必须先做显存预检；full fine-tune 属于可选 L2，最多 2×80 GB，不是必做，也不要求购置硬件。
+L1 可加入 flow-matching action head，并在固定 backbone/数据下按模型调用数和墙钟时延比较。openpi README 的上游估算是推理需大于 8 GB、LoRA 微调大于 22.5 GB、全量微调大于 70 GB；这是官方当前配置说明 `[O,R1]`，不是本书实测。仓库同时提供 JAX 与 PyTorch 路线，但当前 PyTorch 说明仍列出不支持 π0-FAST、mixed precision、FSDP、LoRA 与 EMA 等差异，不能跨后端照搬显存结论。LoRA 已贴近 24 GB 边界，必须先做显存预检；full fine-tune 属于可选 L2，最多 2×80 GB，不是必做，也不要求购置硬件。
 
 Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分别核验许可和体积。Docker 镜像只负责环境锁定，不应在默认 smoke 中自动下载大数据或权重。
 
@@ -199,8 +222,9 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 本书结果 | 条件均值落在双峰无效区 | `EXP-14-01` | CPU smoke | 一维对称解析 fixture |
-| 本书结果 | refinement 调用—模式距离权衡 | `EXP-14-01` | CPU smoke | 不是 DDPM/learned denoiser |
+| 本书结果 | refinement 求值—模式距离权衡 | `EXP-14-01` | CPU smoke | 不是 DDPM/learned denoiser |
 | 本书结果 | oracle straight flow 一步到目标 | `EXP-14-01` | CPU smoke | 已知配对，不能比较方法 |
+| 本书结果 | 候选—batch forward 预算与安全筛选 | `EXP-14-01` | CPU smoke | 抽象计数与手工阻塞区 |
 | 论文/开源 | Diffusion Policy 方法与官方资产 | 论文/官方仓库 | `[P/O,R1]` | 本书未运行 |
 | 论文 | Flow Matching 通用训练框架 | 原论文 | `[P,R0]` | 非机器人 benchmark 复现 |
 | 开源案例 | openpi flow action head | 官方仓库 | `[O,R1]` | 大型 VLA，本书未下载 |
@@ -240,8 +264,8 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 
 - 内容审查：通过；
 - 代码审查：通过；
-- 一致性审查：通过（第13/15章接口已核对；第5章成稿后按全书统稿流程复核数学桥接）；
+- 一致性审查：通过（第5章生成基础、第13章执行时域与第15章动作 schema 接口已核对）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-b-review.md`；
+- 审查记录路径：`reviews/ch14-generative-budget-review-2026-09-01.md`；
 - 已知限制：没有训练 Diffusion Policy/flow policy、下载数据或 checkpoint，也未验证 GPU 与真实时延；
 - 下一步：后续 M 档实验在具备 GPU 时验证显存、墙钟时延与闭环指标，不用解析 fixture 替代模型结果。

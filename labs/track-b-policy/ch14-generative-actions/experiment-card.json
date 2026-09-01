@@ -3,20 +3,22 @@
   "id": "EXP-14-01",
   "chapter": 14,
   "status": "smoke",
-  "claim_ids": ["CLAIM-14-02", "CLAIM-14-03", "CLAIM-14-04"],
+  "claim_ids": ["CLAIM-14-02", "CLAIM-14-03", "CLAIM-14-04", "CLAIM-14-07", "CLAIM-14-08"],
   "claim_scope": [
     "the conditional mean falls between two equally weighted valid scalar action modes",
     "iterative mode refinement trades model evaluations for distance to a valid mode",
-    "an oracle straight-flow fixture reaches its assigned modes but does not represent learned flow-policy quality"
+    "an oracle straight-flow fixture reaches its assigned modes but does not represent learned flow-policy quality",
+    "candidate count and batch capacity change sequential forward count even when solver steps are fixed",
+    "data-mode validity remains distinct from independent scene-safety acceptance and deterministic fallback"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library bimodal action and sampler-interface fixture"
+    "config": "standard-library bimodal action, batching-budget, and candidate-gate fixture"
   },
   "data": {
     "name": "procedural symmetric two-mode scalar action fixture",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -40,13 +42,18 @@
     {"name": "refinement_1_step_mean_mode_distance", "value": 0.275, "unit": "action", "split": "fixed-base-samples"},
     {"name": "refinement_4_steps_mean_mode_distance", "value": 0.034375, "unit": "action", "split": "fixed-base-samples"},
     {"name": "refinement_4_steps_covered_modes", "value": 2, "unit": "mode", "split": "fixed-base-samples"},
-    {"name": "oracle_flow_1_step_mean_mode_distance", "value": 0.0, "unit": "action", "split": "fixed-base-samples"}
+    {"name": "oracle_flow_1_step_mean_mode_distance", "value": 0.0, "unit": "action", "split": "fixed-base-samples"},
+    {"name": "sequential_10_candidate_4_step_forward_count", "value": 40, "unit": "forward", "split": "abstract-control-budget"},
+    {"name": "single_batch_10_candidate_4_step_forward_count", "value": 4, "unit": "forward", "split": "abstract-control-budget"},
+    {"name": "mixed_mode_safety_acceptance_count", "value": 5, "unit": "candidate", "split": "hand-authored-safety-gate"},
+    {"name": "all_blocked_fallback_used", "value": 1.0, "unit": "boolean", "split": "hand-authored-safety-gate"}
   ],
   "artifacts": ["results/ch14/EXP-14-01-smoke.json"],
   "limitations": [
     "one-dimensional symmetric action modes with hand-selected base samples",
     "mode-refinement update is not a DDPM or learned denoiser",
     "straight flow uses oracle target assignment and cannot compare learned policy quality",
-    "abstract model-evaluation budget is not measured wall-clock latency"
+    "abstract forward budget does not measure batch-dependent wall-clock latency or memory",
+    "hand-authored blocked interval and fallback are not a collision checker or safety policy"
   ]
 }

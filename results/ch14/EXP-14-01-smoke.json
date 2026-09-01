@@ -3,43 +3,90 @@
   "gpu_verified": false,
   "metrics": {
     "control_budget": {
-      "available_model_evaluations_per_replan": 8,
-      "refinement_16_steps_feasible": false,
-      "refinement_4_steps_feasible": true
+      "sequential_10_candidates_4_steps": {
+        "available_forward_pass_count": 8,
+        "batch_capacity": 1,
+        "batches_per_solver_step": 10,
+        "candidate_count": 10,
+        "fits_abstract_forward_budget": false,
+        "forward_pass_count": 40,
+        "sample_model_evaluation_count": 40,
+        "solver_step_count": 4
+      },
+      "single_batch_10_candidates_16_steps": {
+        "available_forward_pass_count": 8,
+        "batch_capacity": 10,
+        "batches_per_solver_step": 1,
+        "candidate_count": 10,
+        "fits_abstract_forward_budget": false,
+        "forward_pass_count": 16,
+        "sample_model_evaluation_count": 160,
+        "solver_step_count": 16
+      },
+      "single_batch_10_candidates_4_steps": {
+        "available_forward_pass_count": 8,
+        "batch_capacity": 10,
+        "batches_per_solver_step": 1,
+        "candidate_count": 10,
+        "fits_abstract_forward_budget": true,
+        "forward_pass_count": 4,
+        "sample_model_evaluation_count": 40,
+        "solver_step_count": 4
+      }
     },
     "mode_refinement_1_step": {
       "covered_mode_count": 2,
       "invalid_action_rate": 0.4,
       "mean_nearest_mode_distance": 0.275,
-      "model_evaluations": 10,
       "sample_count": 10,
-      "sample_mean": 0.0
+      "sample_mean": 0.0,
+      "sample_model_evaluations": 10
     },
     "mode_refinement_4_steps": {
       "covered_mode_count": 2,
       "invalid_action_rate": 0.0,
       "mean_nearest_mode_distance": 0.034375,
-      "model_evaluations": 40,
       "sample_count": 10,
-      "sample_mean": 0.0
+      "sample_mean": 0.0,
+      "sample_model_evaluations": 40
     },
     "mse_mean": {
       "covered_mode_count": 0,
       "invalid_action_rate": 1.0,
       "mean_nearest_mode_distance": 1.0,
-      "model_evaluations": 10,
       "sample_count": 10,
-      "sample_mean": 0.0
+      "sample_mean": 0.0,
+      "sample_model_evaluations": 10
     },
     "oracle_straight_flow_1_step": {
       "covered_mode_count": 2,
       "invalid_action_rate": 0.0,
       "mean_nearest_mode_distance": 0.0,
-      "model_evaluations": 10,
       "sample_count": 10,
-      "sample_mean": 0.0
+      "sample_mean": 0.0,
+      "sample_model_evaluations": 10
+    },
+    "safety_screen": {
+      "all_candidates_blocked": {
+        "candidate_count": 2,
+        "fallback_used": true,
+        "invalid_action_count": 0,
+        "safety_accepted_count": 0,
+        "safety_rejected_valid_count": 2,
+        "selected_action": 0.0,
+        "valid_action_count": 2
+      },
+      "mixed_modes": {
+        "candidate_count": 10,
+        "fallback_used": false,
+        "invalid_action_count": 0,
+        "safety_accepted_count": 5,
+        "safety_rejected_valid_count": 5,
+        "selected_action": 1.0,
+        "valid_action_count": 10
+      }
     }
   },
-  "scope": "analytic bimodal action and sampler-interface fixture; not trained diffusion or flow policy",
+  "scope": "analytic bimodal action, batching budget, and candidate-gate fixture; not trained diffusion or flow policy",
   "status": "smoke"
 }

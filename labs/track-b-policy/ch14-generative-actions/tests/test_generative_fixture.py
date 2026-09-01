@@ -11,7 +11,8 @@ from generative_fixture import (  # noqa: E402
     mode_refinement,
     nearest_mode_distance,
     oracle_straight_flow,
-    sampling_fits_budget,
+    sampling_budget_report,
+    screen_candidates,
     summarize,
 )
 
@@ -47,10 +48,66 @@ class GenerativeActionFixtureTests(unittest.TestCase):
         self.assertEqual(summary["covered_mode_count"], 0)
 
     def test_sampling_budget_is_per_replan(self):
-        self.assertTrue(sampling_fits_budget(4, available_evaluations=8))
-        self.assertFalse(sampling_fits_budget(16, available_evaluations=8))
+        sequential = sampling_budget_report(4, 10, 1, 8)
+        batched = sampling_budget_report(4, 10, 10, 8)
+        self.assertEqual(sequential["forward_pass_count"], 40)
+        self.assertFalse(sequential["fits_abstract_forward_budget"])
+        self.assertEqual(batched["forward_pass_count"], 4)
+        self.assertTrue(batched["fits_abstract_forward_budget"])
+
+    def test_budget_rejects_invalid_counts(self):
         with self.assertRaises(ValueError):
-            sampling_fits_budget(0)
+            sampling_budget_report(0, 10, 10, 8)
+        with self.assertRaises(ValueError):
+            sampling_budget_report(4, 0, 10, 8)
+        with self.assertRaises(ValueError):
+            sampling_budget_report(4, 10, 0, 8)
+        with self.assertRaises(ValueError):
+            sampling_budget_report(4, 10, 10, -1)
+
+    def test_safety_screen_reports_explicit_denominators(self):
+        report = screen_candidates((-1.0, 1.0, 0.0))
+        self.assertEqual(report["candidate_count"], 3)
+        self.assertEqual(report["valid_action_count"], 2)
+        self.assertEqual(report["invalid_action_count"], 1)
+        self.assertEqual(report["safety_rejected_valid_count"], 1)
+        self.assertEqual(report["safety_accepted_count"], 1)
+        self.assertFalse(report["fallback_used"])
+        self.assertEqual(report["selected_action"], 1.0)
+        with self.assertRaises(ValueError):
+            screen_candidates(())
+        with self.assertRaises(ValueError):
+            screen_candidates((1.0,), blocked_interval=(1.0, -1.0))
+
+    def test_all_safety_rejected_candidates_use_fallback(self):
+        report = screen_candidates((-1.0, -1.0), fallback_action=0.0)
+        self.assertTrue(report["fallback_used"])
+        self.assertEqual(report["safety_accepted_count"], 0)
+        self.assertEqual(report["selected_action"], 0.0)
+
+    def test_conditional_mean_requires_finite_nonempty_demonstrations(self):
+        with self.assertRaises(ValueError):
+            conditional_mean(())
+        with self.assertRaises(ValueError):
+            conditional_mean((float("nan"),))
+
+    def test_summary_requires_finite_nonempty_samples(self):
+        with self.assertRaises(ValueError):
+            summarize(())
+        with self.assertRaises(ValueError):
+            summarize((float("inf"),))
+
+    def test_scalar_sampler_inputs_reject_nonfinite_values(self):
+        with self.assertRaises(ValueError):
+            mode_refinement(float("nan"), steps=1)
+        with self.assertRaises(ValueError):
+            oracle_straight_flow(float("inf"), steps=1)
+
+    def test_refinement_rate_has_a_bounded_contract(self):
+        with self.assertRaises(ValueError):
+            mode_refinement(0.5, steps=1, rate=0.0)
+        with self.assertRaises(ValueError):
+            mode_refinement(0.5, steps=1, rate=1.1)
 
 
 if __name__ == "__main__":
