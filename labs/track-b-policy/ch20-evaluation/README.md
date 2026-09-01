@@ -4,6 +4,8 @@
 
 完整协议另报告 `8 attempted / 8 valid / 7 terminated / 1 truncated / 0 invalid`：有效 timeout 留在失败分母，具名技术无效运行会阻止聚合，不能静默删除；双真结束标志分别计数但只贡献一个 attempted episode。该 fixture 属于 E0 协议/聚合合同测试，不是 E4 部署证据。
 
+v5 另含 10 对 candidate/baseline 结果，嵌套在 4 条重复数不均的 route 中。episode-micro 配对差为 `+0.3`，等 route macro 差为 `0.0`；代码枚举全部 `4^4=256` 个 route-level bootstrap replicate，得到手工 percentile 区间 `[-0.75,0.75]`。它只演示配对、cluster 重采样和 estimand 权重，不提供可靠 population coverage 或策略等效证据。
+
 它没有运行 LIBERO、MetaDrive、CARLA 或真实机器人，不能作为任何模型的 benchmark。其用途是阻止脱离协议比较成功率。
 
 ```bash

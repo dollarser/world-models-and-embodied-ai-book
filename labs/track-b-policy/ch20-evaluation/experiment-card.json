@@ -3,23 +3,24 @@
   "id": "EXP-20-01",
   "chapter": 20,
   "status": "smoke",
-  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07"],
+  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08"],
   "benchmark_ids": ["BENCH-20-01"],
   "claim_scope": [
     "success rates are not directly comparable when task populations, success definitions, or denominators differ",
     "a benchmark card should expose protocol differences before ranking models",
     "a small-sample point estimate should be accompanied by an uncertainty interval under explicit assumptions",
     "valid truncations remain in a frozen denominator while declared technical-invalid attempts block aggregation instead of disappearing",
-    "a factorial protocol audit can expose interaction and prevent warning labels from being misread as additive causal effects"
+    "a factorial protocol audit can expose interaction and prevent warning labels from being misread as additive causal effects",
+    "paired route-level analysis can separate episode-micro and equal-route-macro estimands while preserving within-pair comparisons"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library fixed episode-table protocol audit"
+    "config": "standard-library fixed episode-table and paired route-cluster protocol audit"
   },
   "data": {
-    "name": "procedural eight-episode factorial evaluation table with explicit end semantics",
-    "version": "v4",
+    "name": "procedural eight-episode factorial table plus ten paired outcomes in four route clusters",
+    "version": "v5",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -54,13 +55,20 @@
     {"name": "full_valid_episode_count", "value": 8, "unit": "count", "split": "full-eight-episode"},
     {"name": "full_terminated_episode_count", "value": 7, "unit": "count", "split": "full-eight-episode"},
     {"name": "full_truncated_episode_count", "value": 1, "unit": "count", "split": "full-eight-episode"},
-    {"name": "full_invalid_episode_count", "value": 0, "unit": "count", "split": "full-eight-episode"}
+    {"name": "full_invalid_episode_count", "value": 0, "unit": "count", "split": "full-eight-episode"},
+    {"name": "paired_candidate_micro_success_rate", "value": 0.9, "unit": "ratio", "split": "ten-pair-episode-micro"},
+    {"name": "paired_baseline_micro_success_rate", "value": 0.6, "unit": "ratio", "split": "ten-pair-episode-micro"},
+    {"name": "paired_micro_success_difference", "value": 0.3, "unit": "ratio_difference", "split": "ten-pair-episode-micro"},
+    {"name": "paired_macro_cluster_difference", "value": 0.0, "unit": "ratio_difference", "split": "four-route-equal-weight-macro"},
+    {"name": "paired_cluster_bootstrap_95_lower", "value": -0.75, "unit": "ratio_difference", "split": "four-route-256-exact-resamples"},
+    {"name": "paired_cluster_bootstrap_95_upper", "value": 0.75, "unit": "ratio_difference", "split": "four-route-256-exact-resamples"}
   ],
   "artifacts": ["results/ch20/EXP-20-01-smoke.json"],
   "limitations": [
     "fixed hand-authored outcomes rather than simulator rollouts",
-    "Wilson intervals assume independent Bernoulli trials and do not repair protocol incomparability or clustering",
+    "Wilson intervals assume independent Bernoulli trials and are not applied to the clustered paired subfixture",
     "the factorial effects are arithmetic contrasts on authored rows, not population causal-effect estimates",
+    "the four-route exact bootstrap and percentile interval demonstrate mechanics but are too small and authored for calibrated population inference",
     "does not estimate any real policy or benchmark performance",
     "the injected invalid-run case tests rejection only and does not estimate a technical failure rate"
   ]

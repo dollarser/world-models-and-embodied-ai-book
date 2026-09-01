@@ -19,6 +19,7 @@
 - [第9章长时分母与动作干预审查](ch09-horizon-denominator-review-2026-09-01.md)
 - [第2章三态能力蕴含审查](ch02-capability-implication-review-2026-09-01.md)
 - [第20章评测有效性与证据层级审查](ch20-evaluation-validity-review-2026-09-01.md)
+- [第20章相关 episode、配对比较与 cluster bootstrap 审查](ch20-clustered-paired-statistics-review-2026-09-01.md)
 - [第21章运行时队列与降级状态审查](ch21-runtime-fallback-review-2026-09-01.md)
 - [第22章 Artifact Provenance 与独立评测审查](ch22-artifact-provenance-review-2026-09-01.md)
 - [第3/10/11/12章零基础3D与刚体变换桥接审查](ch03-rigid-transform-bridge-review-2026-09-01.md)

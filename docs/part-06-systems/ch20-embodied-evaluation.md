@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-20-01`
-> 关联声明：`CLAIM-20-01`～`CLAIM-20-07`
-> 关联图表：`FIG-20-01` / `TAB-20-01`
+> 关联声明：`CLAIM-20-01`～`CLAIM-20-08`
+> 关联图表：`FIG-20-01` / `TAB-20-01` / `TAB-20-02`
 > 资源档位：S / M
 > GPU 状态：不需要
 
@@ -146,11 +146,32 @@ make ch20-smoke
 
 四格反事实把混杂进一步展开：在 goal-only 下从 easy 换到 full，成功率变化 `-12.5` 个百分点；在 safety-aware 下同一总体变化是 `-37.5` 个百分点。安全规则在 easy 上变化 `0`，在 full 上变化 `-25` 个百分点，difference-in-differences interaction 为 `-25` 个百分点。这些是固定表格的算术差，不是总体效应估计。
 
-`CLAIM-20-07`（result）：`EXP-20-01` v4 的 2×2 协议格证明，同一个 protocol warning 的数值影响依赖另一个协议因素；因此首尾成功率差不能被唯一归因给任务总体、安全定义或分母。要解释归因，必须预先设计共同总体上的反事实或配对比较。
+`CLAIM-20-07`（result）：`EXP-20-01` v5 的 2×2 协议格证明，同一个 protocol warning 的数值影响依赖另一个协议因素；因此首尾成功率差不能被唯一归因给任务总体、安全定义或分母。要解释归因，必须预先设计共同总体上的反事实或配对比较。
 
 聚合产物同时报告 `attempted_count`、`valid_episode_count`、`terminated_episode_count`、`truncated_episode_count` 与 `invalid_episode_count`。完整协议是 `8 attempted / 8 valid / 7 terminated / 1 truncated / 0 invalid`；截断没有被误当技术坏样本删除，因此成功率仍为 `5/8`。同一步若同时 natural terminal 与 timeout，会分别进入两个结束原因计数，但 attempted 分母只增加一次；value bootstrap 仍按第4、8章由 `terminated` 关闭。fixture 另有反例注入 `reset_failed`：审计器会保留无效 episode ID 和原因，并阻止生成聚合比例。
 
-`CLAIM-20-06`（result）：`EXP-20-01` v4 验证了两条分母规则：有效 timeout 截断仍进入预先定义的 episode 分母；技术无效运行必须具名报告并使当前聚合失败，不能在计算后静默删除。这个合同不规定所有 benchmark 必须采用同一重跑政策；它要求重跑、替换或排除政策在运行前冻结。
+`CLAIM-20-06`（result）：`EXP-20-01` v5 验证了两条分母规则：有效 timeout 截断仍进入预先定义的 episode 分母；技术无效运行必须具名报告并使当前聚合失败，不能在计算后静默删除。这个合同不规定所有 benchmark 必须采用同一重跑政策；它要求重跑、替换或排除政策在运行前冻结。
+
+### 20.5.1 配对与 cluster：先决定谁获得相同权重
+
+第二个子 fixture 比较 candidate 与 baseline，并让两者在相同 `pair_id`、相同 route 上运行。四条 route 的重复数故意不均衡：`route-a/b` 各有 4 对，`route-c/d` 各有 1 对。
+
+| route cluster | pair 数 | candidate 成功 | baseline 成功 | route 内配对差 `candidate-baseline` |
+| --- | ---: | ---: | ---: | ---: |
+| route-a | 4 | 4/4 | 4/4 | 0.0 |
+| route-b | 4 | 4/4 | 0/4 | +1.0 |
+| route-c | 1 | 0/1 | 1/1 | -1.0 |
+| route-d | 1 | 1/1 | 1/1 | 0.0 |
+| episode micro | 10 | 9/10 | 6/10 | +0.3 |
+| route macro | 4 clusters | — | — | 0.0 |
+
+*TAB-20-02：配对 episode 微平均与等 route 宏平均回答不同 estimand。数据为手工反例，不是策略成绩。*
+
+micro 差值让每个 episode 权重相同，因此重复 4 次的 `route-b` 对总体贡献更大；macro 差值先在每条 route 内求平均，再让四条 route 权重相同。如果目标总体确实按 episode 暴露频率分布，micro 可能合理；如果四条预注册 route 是同等重要的独立采样单元，macro 更贴近问题。不能看到哪个结果更有利后再选权重。
+
+代码保留每一对的 candidate-baseline 差，再在 route 层重采样。四个 cluster 的一次 bootstrap replicate 抽取 4 条 route、有放回；小规模 fixture 枚举全部 `4^4=256` 个有序 replicate，而不是依赖随机 seed。equal-route macro 差的简单 percentile 95% 区间为 `[-0.75, 0.75]`。[Field 与 Welsh 的 clustered-data bootstrap 研究](https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9868.2007.00593.x)强调 bootstrap 是否合适取决于 cluster 模型和重采样设计；本例只有四个手工 cluster，区间离散且不能当成具有可靠 95% population coverage 的推断。
+
+`CLAIM-20-08`（result）：`EXP-20-01` v5 的十对固定结果中，candidate/baseline 的 episode-micro 成功率为 `0.9/0.6`、配对差为 `+0.3`，但四条 route 等权后的 macro 配对差为 `0.0`；枚举 256 个 route-level bootstrap replicate 得到 percentile 区间 `[-0.75,0.75]`。这只证明不均衡重复、配对和 cluster 权重可以改变 estimand，并演示重采样机制；不估计任何真实策略差异，也不能由区间含 0 证明两策略等效。
 
 ## 20.6 benchmark card 的最小字段
 
@@ -171,7 +192,7 @@ make ch20-smoke
 
 `CLAIM-20-03`（recommendation）：若 benchmark card 的任务、成功定义或分母不同，应先标记“不可直接比较”，再决定是否能通过重算得到共同协议，而不是直接排序。
 
-上述字段已经映射到 `specs/benchmark-card.schema.json`。`benchmarks/BENCH-20-01.json` v4 冻结本章四种具名协议、完整八行分母、结束标志、无效运行政策、成功判据、Wilson 95% 区间假设和不可比因素；它还明确将 hard suite 的加入视为任务总体变化，而不是 OOD score 实验。严格验证可以发现缺字段、错误章节引用和产物漂移，但不能让这八个手工 episode 变成真实 benchmark 样本。
+上述字段已经映射到 `specs/benchmark-card.schema.json`。`benchmarks/BENCH-20-01.json` v5 冻结本章四种具名协议、完整八行分母、十行配对 route 表、结束标志、无效运行政策、成功判据、Wilson/cluster bootstrap 假设和不可比因素；它还明确将 hard suite 的加入视为任务总体变化，而不是 OOD score 实验。严格验证可以发现缺字段、错误章节引用和产物漂移，但不能让这些手工行变成真实 benchmark 样本。
 
 ### 20.6.1 防止 checkpoint 与评测者泄漏
 
@@ -210,6 +231,7 @@ make ch20-smoke
 | 本书结果 | 同一表在两协议下为 100% 与 62.5% | `EXP-20-01` | CPU smoke | 手工 8 episode |
 | 本书结果 | 四格协议存在 `-25` 个百分点 interaction | `EXP-20-01` | CPU smoke | 协议算术反事实，不是总体因果效应 |
 | 本书结果 | 小样本成功率的 Wilson 95% 区间 | `EXP-20-01` | CPU smoke | 假定独立 Bernoulli，不能修复协议差异 |
+| 本书结果 | episode-micro 差 `+0.3`，等 route macro 差 `0.0` | `EXP-20-01` | CPU smoke | 四个手工 cluster，bootstrap 只演示机制 |
 | 官方事实 | LIBERO 官方仓库描述 4 suite、130 任务 | 官方仓库 | `[O,R1]` | 本书未运行 |
 | 未验证 | 通用仿真上的策略成功与鲁棒性 | 后续 M 档 | planned | 环境角色已锁定，尚未安装或运行 |
 
@@ -225,11 +247,13 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 2. **代码实验**：为 `EXP-20-01` 增加“允许一次重试”协议，分别计算 per-attempt 与 best-of-two estimand，说明分母和部署语义如何变化。
 3. **卡片审计**：从一篇策略论文提取 benchmark card 字段，并列出不能确定的项目。
 4. **自动驾驶迁移**：设计一套同时防止“慢而安全”和“快而危险”垄断总分的指标表。
+5. **统计协议**：把四条 route 改成你自己的不平衡重复表，先声明目标是按实际暴露量还是 route 等权，再比较 micro、macro 与 cluster bootstrap。
 
 ## 延伸阅读
 
 - [LIBERO 官方仓库](https://github.com/Lifelong-Robot-Learning/LIBERO)，`[O,R1]`，终身机器人学习 benchmark；
 - NIST, [Binomial Proportion](https://itl.nist.gov/div898/handbook/prc/section2/prc241.htm)，`[O]`，Wilson/Agresti–Coull 小样本区间建议；
+- Field & Welsh, [Bootstrapping clustered data](https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9868.2007.00593.x)，`[P]`，cluster 模型与 bootstrap 设计边界；
 - [SimplerEnv 官方项目](https://simpler-env.github.io/)，`[O,R0]`，真实到仿真的策略评测案例，尚未运行；
 - Atreya et al., [RoboArena](https://arxiv.org/abs/2506.18123)，`[A,R0]`，分布式 double-blind 真机两两评测，尚未连接；
 - [RoboCasa 官方项目](https://robocasa.ai/)，`[O,R0]`，日常任务仿真环境，尚未运行；
@@ -253,5 +277,5 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch20-evaluation-validity-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
-- 已知限制：未运行 LIBERO、SimplerEnv、RoboArena、MetaDrive、CARLA 或真实硬件；Wilson 区间只覆盖独立二项比例，不替代分层/相关 episode 的统计设计；2×2 格只是协议算术反事实；无效运行反例只验证拒绝路径，没有估计真实 reset/logging 故障率。
+- 审查记录路径：`reviews/ch20-evaluation-validity-review-2026-09-01.md`、`reviews/ch20-clustered-paired-statistics-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
+- 已知限制：未运行 LIBERO、SimplerEnv、RoboArena、MetaDrive、CARLA 或真实硬件；Wilson 区间只覆盖独立二项比例；cluster bootstrap 只有四个手工 route、简单 percentile 区间与宏平均 estimand，不能作为校准 population inference；2×2 格只是协议算术反事实；无效运行反例只验证拒绝路径，没有估计真实 reset/logging 故障率。

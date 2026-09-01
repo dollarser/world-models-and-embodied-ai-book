@@ -10,6 +10,7 @@ from protocol_fixture import (  # noqa: E402
     EPISODES,
     audit_episode_rows,
     comparability_warnings,
+    exact_paired_cluster_bootstrap,
     evaluate_protocol,
     factorial_protocol_effects,
     wilson_interval,
@@ -105,6 +106,37 @@ class ProtocolFixtureTests(unittest.TestCase):
             wilson_interval(True, 4)
         with self.assertRaises(ValueError):
             wilson_interval(2, 4, float("nan"))
+
+    def test_cluster_macro_and_episode_micro_answer_different_estimands(self):
+        result = exact_paired_cluster_bootstrap()
+        self.assertEqual(result["pair_count"], 10)
+        self.assertEqual(result["cluster_count"], 4)
+        self.assertEqual(result["micro_paired_difference"], 0.3)
+        self.assertEqual(result["macro_cluster_difference"], 0.0)
+        self.assertEqual(result["cluster_pair_counts"], {"route-a": 4, "route-b": 4, "route-c": 1, "route-d": 1})
+
+    def test_exact_cluster_bootstrap_preserves_pairs_and_resamples_routes(self):
+        result = exact_paired_cluster_bootstrap()
+        self.assertEqual(result["cluster_differences"], {"route-a": 0.0, "route-b": 1.0, "route-c": -1.0, "route-d": 0.0})
+        self.assertEqual(result["cluster_bootstrap_95"], {"lower": -0.75, "upper": 0.75})
+        self.assertEqual(result["bootstrap_resample_count"], 256)
+
+    def test_cluster_bootstrap_rejects_broken_sampling_contracts(self):
+        duplicate = (
+            {"pair_id": "same", "cluster": "a", "candidate_success": True, "baseline_success": False},
+            {"pair_id": "same", "cluster": "b", "candidate_success": False, "baseline_success": True},
+        )
+        with self.assertRaisesRegex(ValueError, "pair_id"):
+            exact_paired_cluster_bootstrap(duplicate)
+        one_cluster = (
+            {"pair_id": "one", "cluster": "a", "candidate_success": True, "baseline_success": False},
+        )
+        with self.assertRaisesRegex(ValueError, "at least two clusters"):
+            exact_paired_cluster_bootstrap(one_cluster)
+        with self.assertRaises(ValueError):
+            exact_paired_cluster_bootstrap(confidence=1.0)
+        with self.assertRaisesRegex(ValueError, "max_exact_resamples"):
+            exact_paired_cluster_bootstrap(max_exact_resamples=100)
 
 
 if __name__ == "__main__":

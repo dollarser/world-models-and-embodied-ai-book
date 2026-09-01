@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from itertools import product
 from math import isfinite, sqrt
 from typing import Sequence
 
@@ -26,6 +27,20 @@ PROTOCOLS = {
 }
 
 
+PAIRED_CLUSTER_ROWS = (
+    {"pair_id": "route-a-1", "cluster": "route-a", "candidate_success": True, "baseline_success": True},
+    {"pair_id": "route-a-2", "cluster": "route-a", "candidate_success": True, "baseline_success": True},
+    {"pair_id": "route-a-3", "cluster": "route-a", "candidate_success": True, "baseline_success": True},
+    {"pair_id": "route-a-4", "cluster": "route-a", "candidate_success": True, "baseline_success": True},
+    {"pair_id": "route-b-1", "cluster": "route-b", "candidate_success": True, "baseline_success": False},
+    {"pair_id": "route-b-2", "cluster": "route-b", "candidate_success": True, "baseline_success": False},
+    {"pair_id": "route-b-3", "cluster": "route-b", "candidate_success": True, "baseline_success": False},
+    {"pair_id": "route-b-4", "cluster": "route-b", "candidate_success": True, "baseline_success": False},
+    {"pair_id": "route-c-1", "cluster": "route-c", "candidate_success": False, "baseline_success": True},
+    {"pair_id": "route-d-1", "cluster": "route-d", "candidate_success": True, "baseline_success": True},
+)
+
+
 def wilson_interval(successes: int, trials: int, z: float = 1.959963984540054) -> dict[str, float]:
     """Return a two-sided Wilson score interval for a binomial proportion."""
     if isinstance(successes, bool) or isinstance(trials, bool):
@@ -48,6 +63,93 @@ def wilson_interval(successes: int, trials: int, z: float = 1.959963984540054) -
     return {
         "lower": round(max(0.0, center - margin), 6),
         "upper": round(min(1.0, center + margin), 6),
+    }
+
+
+def _linear_quantile(values: Sequence[float], probability: float) -> float:
+    ordered = sorted(values)
+    position = probability * (len(ordered) - 1)
+    lower_index = int(position)
+    upper_index = min(lower_index + 1, len(ordered) - 1)
+    weight = position - lower_index
+    return ordered[lower_index] + weight * (ordered[upper_index] - ordered[lower_index])
+
+
+def exact_paired_cluster_bootstrap(
+    rows: Sequence[dict[str, object]] = PAIRED_CLUSTER_ROWS,
+    confidence: float = 0.95,
+    max_exact_resamples: int = 100_000,
+) -> dict[str, object]:
+    """Enumerate a tiny cluster bootstrap over paired candidate-baseline differences."""
+    if isinstance(rows, (str, bytes)) or not isinstance(rows, Sequence) or not rows:
+        raise ValueError("paired rows must be a non-empty sequence")
+    if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
+        raise TypeError("confidence must be a real number")
+    if not isfinite(confidence) or not 0 < confidence < 1:
+        raise ValueError("confidence must lie strictly between zero and one")
+    if isinstance(max_exact_resamples, bool) or not isinstance(max_exact_resamples, int):
+        raise TypeError("max_exact_resamples must be an integer")
+    if max_exact_resamples <= 0:
+        raise ValueError("max_exact_resamples must be positive")
+
+    cluster_differences: dict[str, list[float]] = {}
+    seen_pair_ids: set[str] = set()
+    candidate_successes = 0
+    baseline_successes = 0
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise ValueError(f"paired row {index} must be a mapping")
+        pair_id = row.get("pair_id")
+        cluster = row.get("cluster")
+        if not isinstance(pair_id, str) or not pair_id or pair_id in seen_pair_ids:
+            raise ValueError("pair_id values must be non-empty and unique")
+        if not isinstance(cluster, str) or not cluster:
+            raise ValueError(f"paired row {pair_id} needs a non-empty cluster")
+        candidate = row.get("candidate_success")
+        baseline = row.get("baseline_success")
+        if not isinstance(candidate, bool) or not isinstance(baseline, bool):
+            raise ValueError(f"paired row {pair_id} success fields must be boolean")
+        seen_pair_ids.add(pair_id)
+        candidate_successes += int(candidate)
+        baseline_successes += int(baseline)
+        cluster_differences.setdefault(cluster, []).append(float(int(candidate) - int(baseline)))
+
+    cluster_names = sorted(cluster_differences)
+    if len(cluster_names) < 2:
+        raise ValueError("paired cluster bootstrap requires at least two clusters")
+    resample_count = len(cluster_names) ** len(cluster_names)
+    if resample_count > max_exact_resamples:
+        raise ValueError("exact cluster bootstrap exceeds max_exact_resamples")
+
+    cluster_means = {
+        cluster: sum(cluster_differences[cluster]) / len(cluster_differences[cluster])
+        for cluster in cluster_names
+    }
+    bootstrap_values = [
+        sum(cluster_means[cluster_names[index]] for index in sample) / len(cluster_names)
+        for sample in product(range(len(cluster_names)), repeat=len(cluster_names))
+    ]
+    alpha = (1 - confidence) / 2
+    pair_count = len(rows)
+    return {
+        "estimand": "candidate minus baseline success; clusters receive equal weight",
+        "pair_count": pair_count,
+        "cluster_count": len(cluster_names),
+        "cluster_pair_counts": {
+            cluster: len(cluster_differences[cluster]) for cluster in cluster_names
+        },
+        "cluster_differences": {
+            cluster: round(cluster_means[cluster], 6) for cluster in cluster_names
+        },
+        "candidate_micro_success_rate": candidate_successes / pair_count,
+        "baseline_micro_success_rate": baseline_successes / pair_count,
+        "micro_paired_difference": (candidate_successes - baseline_successes) / pair_count,
+        "macro_cluster_difference": sum(cluster_means.values()) / len(cluster_names),
+        "cluster_bootstrap_95": {
+            "lower": round(_linear_quantile(bootstrap_values, alpha), 6),
+            "upper": round(_linear_quantile(bootstrap_values, 1 - alpha), 6),
+        },
+        "bootstrap_resample_count": resample_count,
     }
 
 
@@ -172,4 +274,5 @@ def evaluate() -> dict[str, object]:
     metrics = {name: evaluate_protocol(name) for name in PROTOCOLS}
     metrics["comparability_warnings"] = comparability_warnings(left, right)
     metrics["factorial_protocol_effects"] = factorial_protocol_effects()
+    metrics["paired_cluster_comparison"] = exact_paired_cluster_bootstrap()
     return metrics

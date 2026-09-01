@@ -35,6 +35,11 @@ def main() -> int:
     effects = metrics["factorial_protocol_effects"]
     if effects["interaction"] != -0.25:
         raise AssertionError("the fixture must expose a population-by-success-rule interaction")
+    clustered = metrics["paired_cluster_comparison"]
+    if clustered["micro_paired_difference"] != 0.3 or clustered["macro_cluster_difference"] != 0.0:
+        raise AssertionError("unequal route replication must separate episode-micro and cluster-macro estimands")
+    if clustered["cluster_bootstrap_95"] != {"lower": -0.75, "upper": 0.75}:
+        raise AssertionError("the exact route-level bootstrap interval must remain deterministic")
 
     report = {
         "experiment_id": "EXP-20-01",
