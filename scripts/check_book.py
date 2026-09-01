@@ -34,6 +34,7 @@ REQUIRED = (
     "docs/index.md",
     "docs/status.md",
     "docs/glossary.md",
+    "docs/reading-map.md",
     "docs/research-radar.md",
     "docs/part-02-world-models/ch06-rssm.md",
 )
@@ -753,6 +754,44 @@ def check_research_radar_contract(registry: object) -> list[str]:
     return errors
 
 
+def check_reading_map_contract(reading_map_text: str, chapters: object) -> list[str]:
+    """Keep the running cases connected to every chapter without overstating evidence."""
+
+    errors: list[str] = []
+    if not isinstance(chapters, list):
+        return ["reading map requires a manifest chapter list"]
+
+    link_targets = LINK_PATTERN.findall(reading_map_text)
+    for chapter in chapters:
+        if not isinstance(chapter, dict):
+            continue
+        number = chapter.get("number", "<missing>")
+        document = chapter.get("document")
+        if not isinstance(document, str):
+            errors.append(f"reading map cannot resolve chapter {number} without a document")
+            continue
+        target = document.removeprefix("docs/")
+        count = link_targets.count(target)
+        if count != 1:
+            errors.append(
+                f"reading map must link chapter {number} exactly once, found {count}: {target}"
+            )
+
+    for term in ("observation", "state", "action", "prediction", "horizon", "success", "uncertainty"):
+        if term not in reading_map_text:
+            errors.append(f"reading map must explain the evidence progression for: {term}")
+
+    for task_name in ("遮挡条件下移动杯子", "施工改道中的切入车辆"):
+        if task_name not in reading_map_text:
+            errors.append(f"reading map is missing running task: {task_name}")
+
+    if "不是新增实验" not in reading_map_text or "不能把22个smoke" not in reading_map_text:
+        errors.append(
+            "reading map must state that running cases are not new experiments and independent smokes are not end-to-end evidence"
+        )
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -763,6 +802,14 @@ def check_manifest() -> list[str]:
     self_check_chapters = manifest.get("exercise_self_check_chapters", [])
     numbers = [chapter.get("number") for chapter in chapters if isinstance(chapter, dict)]
     errors: list[str] = []
+    reading_map_path = ROOT / "docs/reading-map.md"
+    if reading_map_path.is_file():
+        errors.extend(
+            check_reading_map_contract(
+                reading_map_path.read_text(encoding="utf-8"),
+                chapters,
+            )
+        )
     if not isinstance(self_check_chapters, list) or any(
         not isinstance(number, int) or isinstance(number, bool) or number < 1 or number > 22
         for number in self_check_chapters
@@ -1043,7 +1090,7 @@ def main() -> int:
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
         "experiment asset packages, explicit asset versions, heading hierarchy, chapter teaching sections, exercise self-checks, reader terminology, "
         "fact/inference evidence, critical "
-        "recommendation policy, research radar, manifest, "
+        "recommendation policy, research radar, running-case reading map, manifest, "
         "local links, 22-chapter PRD tier mapping"
     )
     return 0

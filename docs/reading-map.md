@@ -1,0 +1,83 @@
+# 贯穿案例与全书阅读地图
+
+这页解决一个容易被章节结构掩盖的问题：同一个具身任务怎样从“看见一帧”逐步变成可审计的闭环系统？全书用两个虚拟但具体的任务作为贯穿线索。它们不是新增实验、数据集或性能结果，而是帮助读者把22章放到同一证据链上。
+
+## 两个贯穿任务
+
+### 任务A：遮挡条件下移动杯子
+
+桌面机械臂需要把左侧托盘中的杯子移动到目标区域。相机可能看不到杯柄，抓取后杯子可能被机械臂遮挡，失败包括抓空、碰撞、掉落、放置不稳和超时。
+
+第一遍阅读时只把输入看成RGB或RGB-D帧，把输出看成“靠近、抓取、抬起、移动、放下”等动作。随着章节推进，再逐步加入相机/机器人frame、米制位姿、夹爪状态、动作时域、接触与终止。不要在第1章就假定这些隐藏量都已可靠获得。
+
+### 任务B：施工改道中的切入车辆
+
+车辆接近一段锥桶封闭的车道，相邻车辆可能在遮挡后切入。系统要保持路线进度，同时避免碰撞、越界、过激制动和执行过期轨迹；定位或模型不可靠时需要进入合适的最小风险状态。
+
+第一遍只用前视视频、ego速度和抽象轨迹理解问题。第3、12章再引入frame、深度与occupancy；第19–21章才讨论仿真、指标、deadline和降级。正文中的“自动驾驶”始终是同一闭环主线，不是附录案例。
+
+## 同一个词在不同章节处于不同证据层
+
+| 术语 | 早期章节的最低含义 | 后续必须补上的合同 | 常见越级 |
+| --- | --- | --- | --- |
+| observation | 当前可取得的像素、深度或传感记录 | 时间戳、mask、标定、来源与新鲜度 | 把一帧当完整state |
+| state | 为当前任务保留的变量或belief | frame、单位、历史、uncertainty与可达性 | probe可读就称物理正确 |
+| action | 抽象选择或数值命令 | 本体、单位、频率、延迟、有效期与执行前缀 | shape相同就认为可互换 |
+| prediction | 下一观察、latent、状态、reward或termination之一 | 预测对象、条件、horizon、分母与真实性锚点 | 视频合理就称simulator可靠 |
+| horizon | 预测、规划、训练想象、动作chunk或实际执行长度 | 每一层分别登记，并绑定控制周期 | 用一个“长时序”数字覆盖五种时域 |
+| success | 某个冻结协议下的episode outcome | 任务总体、失败/timeout、有效分母、安全与成本 | 只报点估计或让路线进度抵消碰撞 |
+| uncertainty | 分布多模态、模型分歧、OOD或执行拒绝分数 | estimator版本、校准、risk–coverage与fallback后果 | 把低分歧当成安全保证 |
+
+这张表不是术语表的替代品。它强调的是证据升级：后续章节增加合同后，早期直觉仍可用，但允许作出的声明会变化。
+
+## 第1–12章：从观测到可行动表征
+
+| 章 | 杯子任务追问 | 施工改道追问 | 本章新增的最小证据 |
+| --- | --- | --- | --- |
+| [1](part-01-loop/ch01-from-seeing-to-acting.md) | 抓取动作后是否重新观察？ | 制动后是否读取新的距离/速度证据？ | observation→action→environment→observation闭环 |
+| [2](part-01-loop/ch02-what-is-a-world-model.md) | 相同图像是否对应“杯子已抓住/仍在桌上”？ | 相同前视帧是否对应不同闭合速度或遮挡车辆？ | observation、task state、transition与policy能力分开 |
+| [3](part-01-loop/ch03-minimal-robotics-and-decision.md) | 像素、深度怎样进入相机和机器人frame？ | 相机点、ego pose和轨迹使用什么单位与时间？ | frame/unit/timestamp、运动学与MDP/POMDP最小合同 |
+| [4](part-01-loop/ch04-data-and-protocols.md) | 同一次episode的相邻帧是否泄漏到测试集？ | 同一路段、源log或近重复场景是否跨split？ | episode、来源、内容、近重复与结束语义审计 |
+| [5](part-02-world-models/ch05-generative-foundations.md) | 杯柄被遮挡时是否保留多个合理状态？ | 切入/不切入两种未来怎样表示？ | 条件分布、mode coverage与aleatoric/epistemic边界 |
+| [6](part-02-world-models/ch06-rssm.md) | 抓取后遮挡时怎样用历史维持belief？ | 暂时看不到车辆时prior与posterior怎样分工？ | 循环latent、观测修正、prior rollout与KL接口 |
+| [7](part-02-world-models/ch07-model-based-planning.md) | 候选抓取和放置动作怎样比较后果？ | 不同制动/换道轨迹怎样在固定预算内排序？ | MPC/CEM接口、terminal value、风险目标与重规划 |
+| [8](part-02-world-models/ch08-imagination-learning.md) | 是否能用想象轨迹更新操作policy？ | imagined collision/reward错误怎样污染actor？ | λ-return、continuation、survival weight与误差传播 |
+| [9](part-02-world-models/ch09-evaluation.md) | 漂亮视频是否真的提高抓取成功？ | 视频指标、动作敏感度和路线outcome是否一致？ | E0–E4证据阶梯、固定分母与risk–coverage |
+| [10](part-03-representations/ch10-jepa-representations.md) | 冻结特征能否读出杯子/夹爪状态？ | 特征能否读出相对速度、车道偏移与TTC？ | ID/shift probe、负对照与动作反事实分离 |
+| [11](part-03-representations/ch11-action-conditioned-video.md) | 左/右移动是否产生方向正确的未来？ | 保持、急刹、切入是否改变正确的ego/他车状态？ | 配对动作干预、方向、自由rollout与状态oracle |
+| [12](part-03-representations/ch12-actionable-space.md) | 深度射线、unknown与杯子footprint怎样进入可达空间？ | 锥桶、遮挡区和动态占用怎样进入可行走廊？ | 三态occupancy、米制栅格、时效、路径段与affordance |
+
+读完第12章，读者只得到“可供策略消费的状态接口”，还没有得到一个合格策略，更没有得到部署安全结论。
+
+## 第13–22章：从动作策略到可审计系统
+
+| 章 | 杯子任务追问 | 施工改道追问 | 本章新增的最小证据 |
+| --- | --- | --- | --- |
+| [13](part-04-policies/ch13-imitation-and-action-chunks.md) | 示范偏差和长chunk怎样累积为掉落？ | 模仿轨迹的预测长度与实际执行前缀是否混淆？ | BC分布偏移、prediction/execution horizon与时间集成 |
+| [14](part-04-policies/ch14-generative-actions.md) | 多种可行抓法怎样保留而不取危险均值？ | 多条轨迹怎样满足采样预算并经独立安全筛选？ | diffusion/flow动作分布、候选预算与无候选fallback |
+| [15](part-04-policies/ch15-vla-architecture-patterns.md) | 语言目标怎样连接版本化夹爪动作包？ | 低频语义意图怎样连接高频车辆控制？ | action token/expert/双系统与可执行packet合同 |
+| [16](part-04-policies/ch16-data-scaling-and-adaptation.md) | 新夹爪、相机或机器人怎样适配而不混单位？ | 不同车队的方向盘角、曲率和轨迹怎样对齐？ | adapter identity、mixture、seen/few-shot/zero-shot迁移 |
+| [17](part-05-fusion/ch17-world-model-policy-utility.md) | 世界模型用于表征、数据、模拟还是规划？ | 施工锥“可穿过”幻觉会怎样诱导planner？ | 五类用途、return gap、policy exploitation与真实性锚点 |
+| [18](part-05-fusion/ch18-vla-post-training-and-wam.md) | 最终失败中的正确抓取前缀是否被丢弃？ | learned-simulator reward是否在独立路线成立？ | reward/credit/support、长时进度、恢复与WAM接口 |
+| [19](part-06-systems/ch19-physical-simulation-and-sim2real.md) | 摩擦、接触和传感尺度是否可辨识？ | MetaDrive到CARLA时哪些语义必须重验？ | simulator合同、Real2Sim可辨识性、gap与联合随机化 |
+| [20](part-06-systems/ch20-embodied-evaluation.md) | 抓取成功的task、seed、重试和置信区间是什么？ | route、碰撞、干预、速度和cluster怎样共同报告？ | estimand、有效分母、paired/cluster统计与证据等级 |
+| [21](part-06-systems/ch21-deployment-realtime-and-safety.md) | 迟到或越界动作怎样进入hold/stop？ | 旧轨迹、定位故障和模式恢复怎样触发MRM？ | deadline、异步队列、watchdog、fallback生命周期与receipt |
+| [22](part-07-capstone/ch22-auditable-capstone.md) | 第三方能否从问题追到失败和artifact？ | route隔离、终测、安全gate和停止规则是否完整？ | 问题—数据—方法—评测—部署—证据包的端到端trace |
+
+## 没有3D经验时怎样读
+
+第一次阅读不要把“补完3D课程”设为前置任务：
+
+1. 先读第1、2章，理解反馈、部分可观测和能力边界；
+2. 第3章只要求掌握像素/深度、frame、单位、时间戳和正逆变换；暂时跳过不影响后文的推导细节；
+3. 读第4–11章时，把state先理解成任务相关变量或latent，不假设它一定是完整3D；
+4. 到第12章从单条深度射线和free/occupied/unknown重新进入空间证据；需要计算时再回查第3章；
+5. 第13章以后优先审查动作和证据接口。NeRF、3DGS、大型occupancy网络或多视图重建都不是必读实验。
+
+如果只关心自动驾驶，可以沿表中“施工改道”列阅读；它仍需要第4章数据协议、第13–16章策略与动作合同，不能从视频生成章节直接跳到车辆执行。
+
+## 怎样使用这张地图做章节验收
+
+每读完一章，为两个任务各写一句：本章新增了什么可观察证据？它允许什么新决策？还缺什么才能进入真实执行？然后运行该章的 `make chNN-smoke`，把结果限制在实验卡声明的S档作用域内。
+
+贯穿案例本身没有成功率、模型大小或GPU结果。它只提供稳定的问题身份；各章fixture仍是相互独立的教学反例，不能把22个smoke相加成“完整机器人/车辆系统已经运行”。

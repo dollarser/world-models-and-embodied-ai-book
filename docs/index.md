@@ -4,6 +4,8 @@
 
 这不是一份模型排行榜，而是一条从计算机视觉走向闭环智能的学习路径：观测如何成为状态，状态如何支持预测，预测如何支持决策，决策又如何在环境反馈中接受检验。
 
+第一次阅读建议先打开[贯穿案例与全书阅读地图](reading-map.md)：它用同一杯子操作任务和同一施工改道驾驶任务串起22章，并解释 `state`、`action`、`horizon` 与 `success` 的证据含义怎样逐步升级。
+
 ## 本书面向谁
 
 本书默认读者熟悉 CNN、ViT/Transformer 或至少一种视觉任务，能够阅读 Python/PyTorch 代码；不要求预先学过强化学习、机器人学、控制或 3D 视觉。
@@ -33,6 +35,7 @@
 - [第21章：部署、实时性与安全边界](part-06-systems/ch21-deployment-realtime-and-safety.md)
 - [第22章：端到端综合项目——一个可审计的具身研究闭环](part-07-capstone/ch22-auditable-capstone.md)
 - [读者术语表](glossary.md)
+- [贯穿案例与全书阅读地图](reading-map.md)
 - [研究雷达：怎样阅读快速演进的世界模型研究](research-radar.md)
 - [编写状态](status.md)
 

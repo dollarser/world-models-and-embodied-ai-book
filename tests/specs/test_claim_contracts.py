@@ -19,6 +19,7 @@ from scripts.check_book import (
     check_mermaid_accessibility,
     check_prd_experiment_tiers,
     check_research_radar_contract,
+    check_reading_map_contract,
 )
 
 
@@ -100,6 +101,36 @@ class DocumentedAssetVersionContractTest(unittest.TestCase):
                 {"EXP-04-01": "v4"},
             ),
         )
+
+
+class ReadingMapContractTest(unittest.TestCase):
+    def test_accepts_complete_running_case_map(self) -> None:
+        chapters = [
+            {"number": 1, "document": "docs/part/ch01.md"},
+            {"number": 2, "document": "docs/part/ch02.md"},
+        ]
+        text = "\n".join(
+            [
+                "遮挡条件下移动杯子；施工改道中的切入车辆。它们不是新增实验。",
+                "observation state action prediction horizon success uncertainty",
+                "[第1章](part/ch01.md) 与 [第2章](part/ch02.md)",
+                "不能把22个smoke相加成端到端证据。",
+            ]
+        )
+        self.assertEqual([], check_reading_map_contract(text, chapters))
+
+    def test_rejects_missing_duplicate_and_overclaiming_map(self) -> None:
+        chapters = [
+            {"number": 1, "document": "docs/part/ch01.md"},
+            {"number": 2, "document": "docs/part/ch02.md"},
+        ]
+        text = "[一次](part/ch01.md) [重复](part/ch01.md) observation state action"
+        errors = check_reading_map_contract(text, chapters)
+        self.assertTrue(any("chapter 1 exactly once, found 2" in item for item in errors))
+        self.assertTrue(any("chapter 2 exactly once, found 0" in item for item in errors))
+        self.assertTrue(any("evidence progression for: prediction" in item for item in errors))
+        self.assertTrue(any("missing running task" in item for item in errors))
+        self.assertTrue(any("not new experiments" in item for item in errors))
 
 
 class FigureContractTest(unittest.TestCase):
