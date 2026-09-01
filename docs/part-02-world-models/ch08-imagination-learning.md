@@ -43,6 +43,8 @@ Dreamer 的关键不是“生成一段看起来真实的视频”，而是把学
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-08-01 Dreamer 的真实数据与想象双循环
+    accDescr: 真实交互数据训练世界模型，世界模型产生 latent imagination 轨迹供 actor 和 critic 学习；更新后的策略仍需回到真实或独立环境接受闭环检验。
     E[真实环境/独立仿真器] -->|o, r, done| R[replay]
     P[actor] -->|a| E
     R -->|序列 batch| W[world model losses]

@@ -44,6 +44,8 @@
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-03-01 具身智能的观测决策闭环
+    accDescr: 不可直接获得的真实状态产生观测，智能体由观测形成状态或信念并选择动作，环境转移后再返回新观测。
     E[真实状态 e_t] --> S[传感器]
     S --> O[观测 o_t]
     O --> B[状态/信念 z_t]
@@ -141,6 +143,8 @@ p_world = T_world_body @ T_body_camera @ p_camera
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-03-02 从二维像素到三维可行动空间
+    accDescr: 像素与深度先反投影到相机坐标，再经外参变换到机器人或世界坐标，形成点云、占用和可行动空间；每步保留坐标系、单位和时间。
     R[RGB-D 像素] --> I[内参反投影]
     I --> PC[相机点云]
     PC --> X[外参变换]

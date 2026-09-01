@@ -89,6 +89,8 @@ p(o_{t+1},r_t,d_t\mid o_{\le t},a_t)
 
 ```mermaid
 sequenceDiagram
+    accTitle: FIG-04-01 观测动作与下一观测的时序
+    accDescr: 传感器把带来源时间戳的观测交给策略，策略下发带命令时间戳的动作，控制器和环境经过排队与执行延迟后产生下一观测。
     participant S as 传感器
     participant P as 策略
     participant C as 控制器/环境

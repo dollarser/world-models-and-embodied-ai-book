@@ -42,6 +42,8 @@
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-10-01 JEPA 的最小训练数据流
+    accDescr: 输入被拆成上下文和目标区域；上下文编码器与预测器估计目标 latent，目标编码器提供停止梯度的训练目标，两者在 latent loss 中比较。
     X[图像/视频 x] --> MC[上下文 mask]
     X --> MT[目标区域]
     MC --> EC[上下文编码器]

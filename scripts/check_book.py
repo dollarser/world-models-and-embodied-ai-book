@@ -40,6 +40,11 @@ CLAIM_DEFINITION_PATTERN = re.compile(
 CLAIM_ID_PATTERN = re.compile(r"^CLAIM-(\d{2})-(\d{2})$")
 ALLOWED_CLAIM_TYPES = {"fact", "result", "inference", "recommendation", "unverified"}
 FIGURE_ID_PATTERN = re.compile(r"\b((?:FIG|TAB)-(\d{2})-(\d{2}))\b")
+MERMAID_BLOCK_PATTERN = re.compile(r"```mermaid\n(.*?)\n```", re.DOTALL)
+MERMAID_ACC_TITLE_PATTERN = re.compile(r"^\s*accTitle:\s*(FIG-(\d{2})-(\d{2}))\s+(.+)$", re.MULTILINE)
+MERMAID_ACC_DESCR_PATTERN = re.compile(r"^\s*accDescr:\s*(.+)$", re.MULTILINE)
+FENCED_BLOCK_PATTERN = re.compile(r"^```[^\n]*\n.*?^```\s*$", re.MULTILINE | re.DOTALL)
+HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
 
 
 def check_required() -> list[str]:
@@ -135,6 +140,56 @@ def check_figure_contract(chapter_number: int, registered_figures: object, docum
     return errors
 
 
+def check_mermaid_accessibility(chapter_number: int, registered_figures: object, document_text: str) -> list[str]:
+    """Require every registered Mermaid figure to expose a stable title and useful description."""
+
+    if not isinstance(registered_figures, list) or any(not isinstance(item, str) for item in registered_figures):
+        return []
+
+    errors: list[str] = []
+    expected_ids = {item for item in registered_figures if item.startswith("FIG-")}
+    actual_ids: list[str] = []
+    for index, block in enumerate(MERMAID_BLOCK_PATTERN.findall(document_text), start=1):
+        title_match = MERMAID_ACC_TITLE_PATTERN.search(block)
+        description_match = MERMAID_ACC_DESCR_PATTERN.search(block)
+        if title_match is None:
+            errors.append(f"chapter {chapter_number} Mermaid diagram {index} has no canonical accTitle with FIG ID")
+        else:
+            figure_id = title_match.group(1)
+            actual_ids.append(figure_id)
+            if int(title_match.group(2)) != chapter_number:
+                errors.append(f"chapter {chapter_number} Mermaid diagram {index} has foreign accTitle: {figure_id}")
+        if description_match is None or len(description_match.group(1).strip()) < 20:
+            errors.append(f"chapter {chapter_number} Mermaid diagram {index} has no useful accDescr")
+
+    actual_set = set(actual_ids)
+    for figure_id in sorted(actual_set - expected_ids):
+        errors.append(f"chapter {chapter_number} Mermaid accTitle is not a registered figure: {figure_id}")
+    if len(actual_ids) != len(actual_set):
+        errors.append(f"chapter {chapter_number} has duplicate Mermaid accTitle IDs")
+    return errors
+
+
+def check_heading_hierarchy(chapter_number: int, document_text: str) -> list[str]:
+    """Keep the chapter outline navigable for screen readers and generated TOCs."""
+
+    text_without_code = FENCED_BLOCK_PATTERN.sub("", document_text)
+    headings = [(len(match.group(1)), match.group(2).strip()) for match in HEADING_PATTERN.finditer(text_without_code)]
+    errors: list[str] = []
+    h1_count = sum(level == 1 for level, _ in headings)
+    if h1_count != 1:
+        errors.append(f"chapter {chapter_number} must contain exactly one H1 heading, found {h1_count}")
+    if headings and headings[0][0] != 1:
+        errors.append(f"chapter {chapter_number} first heading must be H1")
+    for (previous_level, previous_title), (level, title) in zip(headings, headings[1:]):
+        if level > previous_level + 1:
+            errors.append(
+                f"chapter {chapter_number} heading level skips from H{previous_level} {previous_title!r} "
+                f"to H{level} {title!r}"
+            )
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -188,6 +243,8 @@ def check_manifest() -> list[str]:
                 )
             if isinstance(number, int):
                 errors.extend(check_figure_contract(number, chapter.get("figures", []), document_text))
+                errors.extend(check_mermaid_accessibility(number, chapter.get("figures", []), document_text))
+                errors.extend(check_heading_hierarchy(number, document_text))
             if manifest_phase in {"reviewed", "reproducible", "published"}:
                 for review_name in ("内容审查", "代码审查", "一致性审查", "教学审查"):
                     if f"- {review_name}：通过" not in document_text:
@@ -232,7 +289,8 @@ def main() -> int:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
     print(
-        "book checks passed: required files, JSON, bidirectional claim/figure contracts, "
+        "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
+        "heading hierarchy, "
         "manifest, local links, 22-chapter PRD"
     )
     return 0

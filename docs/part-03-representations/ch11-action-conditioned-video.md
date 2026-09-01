@@ -45,6 +45,8 @@ p_\theta(o_{t+1:t+H}\mid o_{\le t},a_{t:t+H-1},c),
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-11-01 动作条件视频模型的规划接口
+    accDescr: 历史观测与候选动作生成未来视频或 latent，状态与效用读出把未来交给规划器比较，选中动作仍需真实环境和独立安全层验证。
     O[历史观测 o_≤t] --> E[编码器/视频 tokenizer]
     A[候选动作 a_t:t+H] --> D[动作编码器]
     C[文本/地图/目标 c] --> P[预测器/生成模型]

@@ -36,6 +36,8 @@ p(x_{t+1:t+H}\mid x_{\le t}, a_{t:t+H-1}, c),
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-05-01 生成式预测的共同合同
+    accDescr: 历史、上下文和可选动作条件进入生成模型，模型产生分布或样本；样本还要按覆盖、校准、任务效用和安全等用途分别验证。
     C[历史/动作/上下文] --> E[可选 encoder/tokenizer]
     E --> G{分布参数化}
     G --> AR[自回归或 masked token]

@@ -62,9 +62,27 @@ def main() -> int:
 
     errors: list[str] = []
     html_pages = sorted(SITE.rglob("*.html"))
+    accessible_mermaid = 0
     for expected in expected_chapter_pages():
         if not expected.is_file():
             errors.append(f"missing compiled chapter: {expected.relative_to(ROOT)}")
+
+    manifest = json.loads((ROOT / "specs/book-manifest.json").read_text(encoding="utf-8"))
+    for chapter in manifest["chapters"]:
+        source = ROOT / chapter["document"]
+        relative = Path(chapter["document"]).relative_to("docs").with_suffix("")
+        compiled = SITE / relative / "index.html"
+        if not compiled.is_file():
+            continue
+        source_text = source.read_text(encoding="utf-8")
+        compiled_text = compiled.read_text(encoding="utf-8")
+        expected_titles = source_text.count("accTitle:")
+        expected_descriptions = source_text.count("accDescr:")
+        if compiled_text.count("accTitle:") != expected_titles:
+            errors.append(f"compiled chapter lost Mermaid accTitle metadata: {compiled.relative_to(ROOT)}")
+        if compiled_text.count("accDescr:") != expected_descriptions:
+            errors.append(f"compiled chapter lost Mermaid accDescr metadata: {compiled.relative_to(ROOT)}")
+        accessible_mermaid += expected_titles
 
     checked_targets = 0
     for source in html_pages:
@@ -93,7 +111,8 @@ def main() -> int:
         return 1
     print(
         f"site checks passed: {len(html_pages)} HTML page(s), "
-        f"22 compiled chapter(s), {checked_targets} internal target(s)"
+        f"22 compiled chapter(s), {accessible_mermaid} accessible Mermaid diagram(s), "
+        f"{checked_targets} internal target(s)"
     )
     return 0
 

@@ -2,13 +2,14 @@
 
 | 资产 | 状态 | 已验证 | 待验证 |
 | --- | --- | --- | --- |
-| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema 严格检查通过；164 条声明及全部 `FIG/TAB` 双向登记，75 条 `result` 均绑定同章实验卡 | 机器规则不能替代来源解释、外部效度或 benchmark 科学有效性审查 |
+| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema 严格检查通过；164 条声明及全部 `FIG/TAB` 双向登记，23 张 Mermaid 图有可访问名称/描述，75 条 `result` 均绑定同章实验卡 | 机器规则不能替代来源解释、外部效度、视觉可用性或 benchmark 科学有效性审查 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
 | 批次 B：第13、14、15、20章 | `reviewed` | 第13–15章在批次 B 通过；第20章由批次 D 关闭第17/19章一致性门 | 上游策略、仿真、真实数据和 GPU 未运行 |
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
 | 批次 D：第8、16、17、18、20、21章 | `reviewed` | 六章四类审查通过；40 个单元测试；imagined target—后训练—评测—部署合同闭合 | Dreamer/VLA/world model、仿真、真实系统和 GPU 未运行 |
 | 全书终审：第1、5、7、22章 | `reviewed` | 四章内容、代码、一致性和教学审查通过；29 个单元测试；记录见 `reviews/final-book-review.md` | GPU、大数据、真实仿真与硬件限制保持未验证 |
 | 快速演进来源审查 | `reviewed` | 第9–11、15、18–21章一手来源复核；修正 WorldArena 2.0/RoboArena 成熟度，确认 KineBench ECCV 2026，补入 Cosmos 3 与 GR00T 四层 horizon | 上游 commit 尚未全部归档；供应商能力和目标环境均未独立验证 |
+| 编辑结构与图表无障碍审查 | `reviewed` | 22 章单一 H1、标题不越级；23 张 Mermaid 图加入 `accTitle/accDescr` 并在编译产物保留；未发现 100 字以上整段跨章重复 | 深浅色、窄屏、缩放、键盘与屏幕阅读器仍需人工巡检 |
 | 第1章 从看见到行动 | `reviewed` | 零 3D/RL 入口、闭环地图、三条阅读路线、机器人/自动驾驶双案例与 S 档反例 | 真实感知、控制器、仿真和硬件未运行 |
 | EXP-01-01 | `smoke` | 6 个单元测试；相同 MAE、不同积分状态和边界结局 | 标量手工 residual，不是感知、控制或安全性能 |
 | 第2章 世界模型到底是什么 | `reviewed` | 8 类四轴卡、三态能力矩阵、VLA/仿真器/学习转移蕴含边界、10 个单元测试与 CPU smoke | 上游逐版本运行核验；教学 archetype 计数不是领域比例 |
@@ -53,6 +54,6 @@
 | EXP-21-01 | `smoke` | 14 个单元测试；mean 45 ms 掩盖尾部；同 miss rate 的 burst 长度 2/1；8 步 schedule 有 1 stale/1 underflow；3-failure/2-health 状态机 | 手工 latency/packet/score/chunk/状态，不是实时、OOD、MRM 可达性或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 12 个单元测试；完整包 5 段 trace/0 issue，无效包 16 个具名 issue，缺段与错误依赖被拒绝 | metadata 图检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、256 个章节单元测试、22 组结果精确比对、27 个 HTML/994 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、256 个章节单元测试、22 组结果精确比对、27 个 HTML/23 张可访问 Mermaid 图/994 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸、深浅色、键盘与屏幕阅读器巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

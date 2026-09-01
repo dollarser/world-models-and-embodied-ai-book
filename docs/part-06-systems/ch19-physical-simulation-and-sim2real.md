@@ -55,6 +55,8 @@ episode：初始化、reset、终止、截断和随机种子
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-19-01 Real2Sim2Real 的证据闭环
+    accDescr: 真实日志或受控观测用于校准仿真，仿真支持训练和压力测试，策略再由独立真实证据回查；回查失败会反向更新参数与实验边界。
     R[目标世界/日志] --> C[校准集]
     C --> I[系统辨识与 Real2Sim]
     S[名义仿真] --> I

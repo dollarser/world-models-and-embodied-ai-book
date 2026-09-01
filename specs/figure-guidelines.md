@@ -18,6 +18,19 @@ figures/ch06/FIG-06-01.svg
 figures/ch06/FIG-06-01.md
 ```
 
+正文内联 Mermaid 必须把无障碍名称写进图本身，不能只依赖图下方的视觉图注：
+
+````text
+```mermaid
+flowchart LR
+    accTitle: FIG-06-01 RSSM 的 prior 与 posterior 数据流
+    accDescr: 上一状态和动作形成 prior，训练时观测形成 posterior，未来想象只能沿 prior 推进。
+    ...
+```
+````
+
+`accTitle` 以已登记的 `FIG-NN-MM` 开头并给出短标题；`accDescr` 用完整句描述节点间最重要的关系，而不是重复“流程图”或颜色。纯文本图的字符含义必须在相邻 `FIG-*` 图注中完整解释。表格通过列标题、正文单元格和紧邻的 `TAB-*` 图注表达语义，不能用合并单元格或颜色代替字段关系。
+
 ## 3. 绘制规则
 
 - 架构图优先 Mermaid 或 SVG；

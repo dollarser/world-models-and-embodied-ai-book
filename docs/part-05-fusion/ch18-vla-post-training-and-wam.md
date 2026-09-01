@@ -48,6 +48,8 @@ SFT 最大化示范动作在观察和指令下的似然：
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-18-01 VLA 后训练的审计闭环
+    accDescr: 数据、策略、世界模型和奖励模型分别登记并参与后训练，更新后的策略必须在未参与训练的独立环境和冻结协议中评测。
     B[SFT policy + versioned action schema] --> R[rollout source]
     R --> P[physical simulator]
     R --> W[learned world model]

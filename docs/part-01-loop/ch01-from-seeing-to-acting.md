@@ -53,6 +53,8 @@ o_t\rightarrow z_t\rightarrow a_t\rightarrow e_{t+1}\rightarrow o_{t+1}.
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-01-01 全书闭环地图
+    accDescr: 观测经感知和状态估计进入世界模型与策略规划，候选动作通过独立安全网关作用于环境，环境再产生新观测形成闭环。
     E[环境真实状态 e_t] --> O[传感器观测 o_t]
     O --> Z[状态/信念 z_t]
     Z --> W[预测/世界模型]

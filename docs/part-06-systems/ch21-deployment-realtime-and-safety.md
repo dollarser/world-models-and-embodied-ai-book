@@ -49,6 +49,8 @@ L_{e2e}=L_{sensor}+L_{transport}+L_{pre}+L_{infer}+L_{post}+L_{queue}+L_{actuato
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-21-01 部署控制周期与独立执行网关
+    accDescr: 传感器、预处理、模型和动作队列连接低层控制器；独立网关同时检查时效、deadline、健康、单位范围和不确定性，拒绝时进入具名降级模式。
     S[带时间戳的传感器] --> P[预处理]
     P --> M[策略/世界模型]
     M --> Q[动作块与队列]

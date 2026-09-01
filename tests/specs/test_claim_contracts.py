@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.check_book import check_claim_contract, check_figure_contract
+from scripts.check_book import (
+    check_claim_contract,
+    check_figure_contract,
+    check_heading_hierarchy,
+    check_mermaid_accessibility,
+)
 
 
 class ClaimContractTest(unittest.TestCase):
@@ -64,6 +69,36 @@ class FigureContractTest(unittest.TestCase):
         self.assertTrue(any("does not contain registered" in item for item in errors))
         self.assertTrue(any("contains unregistered" in item for item in errors))
         self.assertTrue(any("invalid or foreign" in item for item in errors))
+
+
+class MermaidAccessibilityTest(unittest.TestCase):
+    def test_accepts_registered_title_and_description(self) -> None:
+        text = (
+            "```mermaid\nflowchart LR\n"
+            "    accTitle: FIG-15-01 VLA contract\n"
+            "    accDescr: Inputs are decoded and checked before the controller executes actions.\n"
+            "    A --> B\n```\n"
+        )
+        self.assertEqual([], check_mermaid_accessibility(15, ["FIG-15-01", "TAB-15-01"], text))
+
+    def test_rejects_missing_description_and_mismatched_id(self) -> None:
+        text = "```mermaid\nflowchart LR\n    accTitle: FIG-14-01 wrong chapter\n    A --> B\n```\n"
+        errors = check_mermaid_accessibility(15, ["FIG-15-01"], text)
+        self.assertTrue(any("foreign accTitle" in item for item in errors))
+        self.assertTrue(any("no useful accDescr" in item for item in errors))
+        self.assertTrue(any("accTitle is not a registered figure" in item for item in errors))
+
+
+class HeadingHierarchyTest(unittest.TestCase):
+    def test_accepts_single_h1_and_sequential_levels(self) -> None:
+        text = "# Chapter\n\n## Section\n\n### Detail\n\n## Next\n"
+        self.assertEqual([], check_heading_hierarchy(6, text))
+
+    def test_rejects_multiple_h1_and_level_skip_but_ignores_code(self) -> None:
+        text = "# Chapter\n\n```text\n#### not a heading\n```\n\n### Skipped\n\n# Duplicate\n"
+        errors = check_heading_hierarchy(6, text)
+        self.assertTrue(any("exactly one H1" in item for item in errors))
+        self.assertTrue(any("heading level skips" in item for item in errors))
 
 
 if __name__ == "__main__":

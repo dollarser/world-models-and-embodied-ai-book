@@ -42,6 +42,8 @@ RGB 告诉我们表面看起来怎样，深度把像素连接到尺度，标定�
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-12-01 从传感器证据到可行动空间
+    accDescr: RGB-D、激光雷达和多视图证据变换为带坐标系与时间的点，再压缩成体素或俯视表示、三态占用、语义速度和可行动区域供规划使用。
     S[RGB-D / lidar / 多视图] --> P[带 frame 与时间戳的点]
     P --> V[体素 / BEV / 对象与关系]
     V --> O[free / occupied / unknown]

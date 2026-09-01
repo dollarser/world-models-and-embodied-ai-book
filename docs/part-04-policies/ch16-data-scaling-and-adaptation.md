@@ -85,6 +85,8 @@
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-16-01 跨本体数据与策略接口
+    accDescr: 不同本体的数据先由版本化适配器映射到 canonical action 合同，策略在共同接口上学习，部署时再由目标本体适配器转换为可执行动作。
     A[数据集 A raw action] --> AA[adapter A]
     B[数据集 B raw action] --> AB[adapter B]
     C[数据集 C raw action] --> AC[adapter C]

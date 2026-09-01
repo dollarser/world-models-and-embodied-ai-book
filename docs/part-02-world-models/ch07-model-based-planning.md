@@ -49,6 +49,8 @@
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-07-01 滚动时域模型规划闭环
+    accDescr: 新观测更新信念状态，候选动作经模型 rollout 和代价风险评价后被搜索器选择，只执行通过独立安全网关的首步，再根据新观测重规划。
     O[新观测] --> B[belief/state 更新]
     B --> C[候选动作序列]
     C --> W[learned/known model rollout]

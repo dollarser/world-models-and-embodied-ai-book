@@ -75,6 +75,8 @@ prior 回答“如果只知道过去和动作，我预期现在是什么状态�
 
 ```mermaid
 flowchart LR
+    accTitle: FIG-06-01 RSSM 的 prior 与 posterior 数据流
+    accDescr: 上一循环状态、随机状态和动作产生当前循环状态及 prior；训练时观测编码器形成 posterior，未来想象时只能沿 prior 推进。
     H0[上一循环状态 h_t-1] --> T[确定性转移]
     S0[上一随机状态 s_t-1] --> T
     A[动作 a_t-1] --> T
