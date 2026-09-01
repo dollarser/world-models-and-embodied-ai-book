@@ -4,11 +4,13 @@
   "chapter": 6,
   "title": "Posterior filtering, prior rollout, and KL-routing audit",
   "status": "executed",
-  "purpose": "Keep observation-corrected filtering error separate from prior-only rollout error and freeze the forward arithmetic and scope labels of a Dreamer-style KL-routing diagnostic.",
-  "claim_ids": ["CLAIM-06-02", "CLAIM-06-03", "CLAIM-06-05", "CLAIM-06-06"],
+  "purpose": "Keep posterior filtering, posterior-anchored one-step prior, and no-reset open-loop errors separate; verify their observation visibility; and freeze the forward arithmetic and scope labels of a Dreamer-style KL-routing diagnostic.",
+  "claim_ids": ["CLAIM-06-02", "CLAIM-06-03", "CLAIM-06-05", "CLAIM-06-06", "CLAIM-06-07"],
   "evaluation_layers": ["E0", "E1"],
   "allowed_claims": [
     "The fixed seeded fixture has higher prior-only open-loop RMSE than observation-corrected filtering RMSE.",
+    "The fixed posterior-anchored one-step prior RMSE lies between filtering and no-reset open-loop RMSE, but this ordering is fixture-specific.",
+    "Adding one authored unit to every observation after initialization changes filtering and posterior-anchored one-step metrics while leaving true open-loop metrics exactly unchanged.",
     "Filtering, open-loop, and persistence measurements use the same generated trajectory.",
     "The two authored KL cases place raw KL on opposite sides of a one-nat free-nats threshold.",
     "Dynamics and representation branches share the same forward KL value while retaining different declared gradient targets; no gradient is measured."
@@ -17,6 +19,8 @@
     "The fixture is a trained neural RSSM or reproduces PlaNet or Dreamer.",
     "The fixture estimates population performance, training convergence, GPU use, planning utility, or deployment safety.",
     "Low filtering error proves that prior-only imagined rollouts are accurate.",
+    "A posterior-anchored one-step prior metric is an open-loop or H-step rollout metric.",
+    "The authored observation offset estimates real posterior leakage prevalence or model robustness.",
     "The standard-library KL fixture verifies automatic differentiation, encoder or prior gradients, optimization, posterior collapse, or Dreamer training.",
     "The locked DreamerV3 free-nats value and loss scales are universal RSSM defaults."
   ],
@@ -25,7 +29,7 @@
       "name": "ToyRSSM",
       "role": "system_under_test",
       "type": "hand-written scalar predict-correct state-space model",
-      "revision": "fixture-v2",
+      "revision": "fixture-v3",
       "inputs": ["scalar action", "scalar observation for posterior branch"],
       "outputs": ["scalar latent position", "scalar latent velocity"],
       "preprocessing": "none"
@@ -34,7 +38,7 @@
       "name": "persistence",
       "role": "baseline",
       "type": "previous-observation next-position predictor",
-      "revision": "fixture-v2",
+      "revision": "fixture-v3",
       "inputs": ["previous scalar observation"],
       "outputs": ["scalar next-position prediction"],
       "preprocessing": "none"
@@ -43,7 +47,7 @@
       "name": "categorical_kl_route_audit",
       "role": "oracle",
       "type": "standard-library exact categorical KL and threshold arithmetic",
-      "revision": "fixture-v2",
+      "revision": "fixture-v3",
       "inputs": ["strictly positive categorical posterior", "strictly positive categorical prior", "free-nats threshold", "dynamics scale", "representation scale"],
       "outputs": ["raw KL", "clamped dynamics and representation forward values", "weighted total", "declared prior/posterior gradient-target labels"],
       "preprocessing": "validate finite positive equal-length probability vectors that sum to one; compute KL(posterior || prior), then clamp each forward branch at one nat"
@@ -52,7 +56,7 @@
   "datasets": [
     {
       "name": "procedural 1D partially observed trajectory",
-      "version": "v2-seed-7",
+      "version": "v3-seed-7",
       "license": "MIT",
       "classification": "fixture",
       "fixture": true,
@@ -65,7 +69,8 @@
       "leakage_controls": [
         "No parameters are fitted to the generated trajectory.",
         "Filtering, open-loop, and persistence use identical actions and ground-truth positions.",
-        "Future observations are unavailable to the open-loop branch."
+        "Future observations are unavailable to the open-loop branch.",
+        "The future-observation offset negative control must leave the open-loop branch bit-for-bit unchanged while altering observation-consuming branches."
       ]
     },
     {
@@ -89,22 +94,22 @@
     }
   ],
   "protocol": {
-    "version": "fixture-v2",
-    "comparison_unit": "three paired prediction branches on the same 31 transitions plus two authored categorical posterior-prior cases",
+    "version": "fixture-v3",
+    "comparison_unit": "four paired prediction views on the same 31 transitions, one authored future-observation visibility perturbation, and two categorical posterior-prior cases",
     "sample_count": 33,
     "randomness": {
       "deterministic": false,
       "seeds": [7],
       "rationale": "Trajectory process and observation noise are stochastic, but the authored smoke freezes seed 7; both KL cases are deterministic authored inputs. One trajectory seed does not estimate seed variability."
     },
-    "horizons": [1, 31],
+    "horizons": [1, 4, 8, 16, 31],
     "action_space": "scalar deterministic sinusoidal action schedule with an authored periodic offset",
     "timing": "one abstract transition per step; no wall-clock or controller-frequency claim",
     "termination_conditions": ["Generate exactly 32 states and evaluate the following 31 transitions.", "Evaluate each of the two frozen categorical posterior-prior cases exactly once."],
     "baselines": ["previous-observation persistence predictor"],
-    "comparison_design": "Compute filtering, prior-only open-loop, and persistence errors against the same latent positions without dropping steps. Separately compute raw and one-nat-clamped KL for both authored probability pairs, keeping forward values apart from declared gradient-target labels.",
+    "comparison_design": "Compute posterior filtering, posterior-anchored one-step prior, no-reset open-loop, and persistence errors against the same latent positions without dropping steps; report open-loop absolute error at registered horizons. Then offset only observations after initialization and require the open-loop metric to remain exactly invariant while observation-consuming branches change. Separately compute raw and one-nat-clamped KL for both authored probability pairs.",
     "selection_protocol": "Observation and velocity gains, seed, step count, probability pairs, KL direction, threshold, and branch scales are fixed before evaluation; no result-dependent selection is allowed.",
-    "failure_definition": "A run is invalid if it emits a non-finite metric, uses a transition count other than 31, exposes a future observation to the open-loop branch, omits either KL case, changes the KL direction/threshold/scales, or accepts an invalid probability vector."
+    "failure_definition": "A run is invalid if it emits a non-finite metric, uses a transition count other than 31, resets the open-loop state from a posterior, lets the future-observation perturbation change open-loop output, omits a registered horizon or KL case, changes the KL direction/threshold/scales, or accepts an invalid trajectory/probability vector."
   },
   "metrics": [
     {
@@ -117,7 +122,7 @@
       "split": "seed-7 procedural fixture",
       "aggregation": "root mean squared filtered-position error over all 31 transitions",
       "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:evaluate",
-      "implementation_version": "fixture-v2",
+      "implementation_version": "fixture-v3",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "A single frozen seed is a regression fixture, not a repeated-seed estimate."
@@ -133,7 +138,7 @@
       "split": "seed-7 procedural fixture",
       "aggregation": "root mean squared prior-only position error over all 31 transitions",
       "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:evaluate",
-      "implementation_version": "fixture-v2",
+      "implementation_version": "fixture-v3",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The fixed trajectory supports exact regression comparison only; it does not support a population interval."
@@ -149,7 +154,7 @@
       "split": "seed-7 procedural fixture",
       "aggregation": "root mean squared previous-observation error over all 31 transitions",
       "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:evaluate",
-      "implementation_version": "fixture-v2",
+      "implementation_version": "fixture-v3",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The baseline is evaluated on one frozen regression fixture rather than sampled deployments."
@@ -165,7 +170,7 @@
       "split": "reported separately for the small and large authored posterior-prior mismatches",
       "aggregation": "sum posterior_i * log(posterior_i / prior_i) over both categorical entries",
       "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:categorical_kl",
-      "implementation_version": "fixture-v2",
+      "implementation_version": "fixture-v3",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "Both values are deterministic arithmetic on authored categorical vectors, not population estimates."
@@ -181,7 +186,7 @@
       "split": "small versus large mismatch and dynamics versus representation branch",
       "aggregation": "apply max(raw_KL, 1.0) separately to both forward branches; branches share a value but retain distinct declared gradient targets",
       "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:kl_balance_diagnostic",
-      "implementation_version": "fixture-v2",
+      "implementation_version": "fixture-v3",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The fixture has no automatic differentiation graph. Equal forward values and target labels are deterministic contract evidence only."
@@ -197,10 +202,58 @@
       "split": "small versus large authored mismatch",
       "aggregation": "1.0 * dynamics_loss + 0.1 * representation_loss after each branch is clamped at one nat",
       "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:kl_balance_diagnostic",
-      "implementation_version": "fixture-v2",
+      "implementation_version": "fixture-v3",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The scales mirror one locked DreamerV3 configuration for an arithmetic fixture and are not estimated hyperparameters or universal defaults."
+      }
+    },
+    {
+      "id": "METRIC-06-07",
+      "name": "posterior_anchored_one_step_prior_rmse",
+      "layer": "E1",
+      "role": "diagnostic",
+      "direction": "minimize",
+      "unit": "scalar position",
+      "split": "seed-7 procedural fixture",
+      "aggregation": "root mean squared one-step prior error over 31 transitions, with each prior initialized from the previous observation-corrected posterior",
+      "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:evaluate",
+      "implementation_version": "fixture-v3",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "This is a deterministic visibility diagnostic on one frozen trajectory, not an open-loop population estimate."
+      }
+    },
+    {
+      "id": "METRIC-06-08",
+      "name": "open_loop_absolute_error_by_horizon",
+      "layer": "E1",
+      "role": "diagnostic",
+      "direction": "minimize",
+      "unit": "scalar position",
+      "split": "seed-7 procedural fixture",
+      "aggregation": "absolute error on the single no-reset prior rollout at horizons 1, 4, 8, 16, and 31",
+      "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:evaluate",
+      "implementation_version": "fixture-v3",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "Five points on one rollout expose horizon identity but do not establish monotonic error growth or a confidence interval."
+      }
+    },
+    {
+      "id": "METRIC-06-09",
+      "name": "future_observation_visibility_audit",
+      "layer": "E0",
+      "role": "diagnostic",
+      "direction": "none",
+      "unit": "scalar position",
+      "split": "baseline versus authored +1 future-observation offset",
+      "aggregation": "compare full-trajectory RMSE before and after offsetting observations 1 through 31 while preserving actions, truth, and the initial observation",
+      "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:evaluate",
+      "implementation_version": "fixture-v3",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "The offset is an authored structural probe; it is not sampled corruption or robustness evidence."
       }
     }
   ],
@@ -211,17 +264,19 @@
   "reporting": {
     "per_system": true,
     "per_task": false,
-    "disaggregations": ["filtering versus prior-only branch", "ToyRSSM versus persistence baseline", "small versus large categorical mismatch", "raw versus free-nats-clamped KL", "dynamics-prior versus representation-posterior declared gradient target"],
+    "disaggregations": ["posterior filtering versus posterior-anchored one-step prior versus no-reset open loop", "open-loop horizon", "baseline versus future-observation offset", "ToyRSSM versus persistence baseline", "small versus large categorical mismatch", "raw versus free-nats-clamped KL", "dynamics-prior versus representation-posterior declared gradient target"],
     "raw_predictions": "Recompute trajectory errors and both complete categorical pairs from the source; no large prediction artifact is emitted.",
     "failure_artifacts": "Invalid shape, action-conditioning, posterior-correction, and rollout-gap behavior is covered by chapter unit tests.",
     "confounders": [
       "One authored dynamics process and one seed are used.",
       "The model gains are hand-set rather than learned.",
       "Filtering has observation access that prior-only rollout deliberately lacks.",
+      "The posterior-anchored one-step prior repeatedly starts from an observation-corrected state and therefore is not an H-step open loop.",
+      "The +1 observation offset is deliberately artificial and only audits branch visibility.",
       "The KL cases use binary authored distributions rather than learned stochastic latents.",
       "Gradient targets are source-derived labels and are not measured by automatic differentiation in this standard-library fixture."
     ],
-    "missing_value_policy": "All 31 transitions, both KL cases, all three RMSE metrics, and all three registered KL metric families are required; no imputation, truncation, or failed-step/case filtering is allowed."
+    "missing_value_policy": "All 31 transitions, both KL cases, four branch RMSE metrics, five registered open-loop horizons, the complete visibility negative control, and all three KL metric families are required; no imputation, truncation, reset, or failed-step/case filtering is allowed."
   },
   "resources": {
     "tier": "S",

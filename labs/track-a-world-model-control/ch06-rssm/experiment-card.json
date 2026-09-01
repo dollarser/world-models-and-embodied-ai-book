@@ -3,23 +3,24 @@
   "id": "EXP-06-01",
   "chapter": 6,
   "status": "smoke",
-  "claim_ids": ["CLAIM-06-01", "CLAIM-06-02", "CLAIM-06-03", "CLAIM-06-04", "CLAIM-06-05", "CLAIM-06-06"],
+  "claim_ids": ["CLAIM-06-01", "CLAIM-06-02", "CLAIM-06-03", "CLAIM-06-04", "CLAIM-06-05", "CLAIM-06-06", "CLAIM-06-07"],
   "benchmark_ids": ["BENCH-06-01"],
   "claim_scope": [
     "prior uses history and action",
     "posterior uses observations for correction",
-    "open-loop and filtering metrics are evaluated separately",
+    "posterior filtering, posterior-anchored one-step prior, and no-reset open-loop metrics are evaluated separately",
+    "an authored future-observation shift changes filtering and posterior-anchored one-step metrics but cannot change a correctly isolated open-loop rollout",
     "Dreamer-style stop-gradient routes share a forward KL value but name different gradient targets",
     "free-nats arithmetic is checked on both sides of the threshold"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py fixture-v2 defaults"
+    "config": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py fixture-v3 defaults"
   },
   "data": {
     "name": "procedural 1D partially observed trajectory",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -41,6 +42,11 @@
   "metrics": [
     {"name": "filtering_rmse", "value": 0.060841746232133065, "unit": "position", "split": "procedural-fixture"},
     {"name": "open_loop_rmse", "value": 0.33316748072297736, "unit": "position", "split": "procedural-fixture"},
+    {"name": "posterior_anchored_one_step_prior_rmse", "value": 0.07841884223609763, "unit": "position", "split": "procedural-fixture"},
+    {"name": "open_loop_h1_absolute_error", "value": 0.03837381665767289, "unit": "position", "split": "procedural-fixture"},
+    {"name": "open_loop_h31_absolute_error", "value": 0.6010378611857945, "unit": "position", "split": "procedural-fixture"},
+    {"name": "shifted_future_observation_open_loop_rmse_delta", "value": 0.0, "unit": "position", "split": "future-observation-visibility-audit"},
+    {"name": "shifted_future_observation_one_step_prior_rmse", "value": 0.9954134555256738, "unit": "position", "split": "future-observation-visibility-audit"},
     {"name": "persistence_rmse", "value": 0.7043701827101412, "unit": "position", "split": "procedural-fixture"},
     {"name": "small_raw_kl", "value": 0.005025167926750729, "unit": "nat", "split": "analytic-fixture"},
     {"name": "small_free_nats_loss", "value": 1.0, "unit": "nat", "split": "analytic-fixture"},
@@ -54,6 +60,7 @@
     "not a neural RSSM",
     "gradient targets are contract labels; the standard-library fixture does not run automatic differentiation",
     "the KL examples are authored binary distributions rather than learned latents",
+    "the +1 future-observation shift is an authored visibility probe, not an estimate of posterior leakage frequency or model robustness",
     "does not validate training convergence or paper scores",
     "does not validate GPU memory or runtime"
   ]

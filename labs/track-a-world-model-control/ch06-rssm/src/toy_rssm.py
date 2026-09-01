@@ -180,32 +180,88 @@ def kl_balance_diagnostic(
 
 
 def evaluate(model: ToyRSSM, trajectory: Trajectory) -> dict[str, object]:
-    """Compare observation-corrected filtering and open-loop priors."""
+    """Separate posterior filtering, posterior-anchored one-step prior, and open loop."""
 
-    initial = LatentState(position=trajectory.observations[0], velocity=0.0)
-    filtered = initial
-    open_loop = initial
+    if not isinstance(model, ToyRSSM) or not isinstance(trajectory, Trajectory):
+        raise ValueError("model and trajectory must use the declared fixture contract")
+    if any(
+        not isinstance(values, tuple)
+        for values in (trajectory.actions, trajectory.positions, trajectory.observations)
+    ):
+        raise ValueError("trajectory actions, positions, and observations must be tuples")
+    if (
+        len(trajectory.positions) < 2
+        or len(trajectory.observations) != len(trajectory.positions)
+        or len(trajectory.actions) != len(trajectory.positions) - 1
+    ):
+        raise ValueError("trajectory lengths must describe adjacent state transitions")
+    values = trajectory.actions + trajectory.positions + trajectory.observations
+    if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in values):
+        raise ValueError("trajectory values must be real numbers")
+    if not all(math.isfinite(value) for value in values):
+        raise ValueError("trajectory values must be finite")
 
-    filtering_errors: list[float] = []
-    open_loop_errors: list[float] = []
-    persistence_errors: list[float] = []
+    def rollout_metrics(observations: tuple[float, ...]) -> dict[str, object]:
+        initial = LatentState(position=observations[0], velocity=0.0)
+        filtered = initial
+        open_loop = initial
+        filtering_errors: list[float] = []
+        posterior_anchored_prior_errors: list[float] = []
+        open_loop_errors: list[float] = []
+        persistence_errors: list[float] = []
 
-    for index, action in enumerate(trajectory.actions, start=1):
-        filtered_prior = model.prior(filtered, action)
-        filtered = model.posterior(filtered_prior, trajectory.observations[index])
-        open_loop = model.prior(open_loop, action)
+        for index, action in enumerate(trajectory.actions, start=1):
+            filtered_prior = model.prior(filtered, action)
+            truth = trajectory.positions[index]
+            posterior_anchored_prior_errors.append(filtered_prior.position - truth)
+            filtered = model.posterior(filtered_prior, observations[index])
+            open_loop = model.prior(open_loop, action)
+            filtering_errors.append(filtered.position - truth)
+            open_loop_errors.append(open_loop.position - truth)
+            persistence_errors.append(observations[index - 1] - truth)
 
-        truth = trajectory.positions[index]
-        filtering_errors.append(filtered.position - truth)
-        open_loop_errors.append(open_loop.position - truth)
-        persistence_errors.append(trajectory.observations[index - 1] - truth)
-
-    return {
-        "rollout": {
+        horizons = tuple(
+            horizon
+            for horizon in (1, 4, 8, 16, len(open_loop_errors))
+            if 1 <= horizon <= len(open_loop_errors)
+        )
+        return {
             "steps": len(trajectory.positions),
             "filtering_rmse": rmse(filtering_errors),
+            "posterior_anchored_one_step_prior_rmse": rmse(posterior_anchored_prior_errors),
             "open_loop_rmse": rmse(open_loop_errors),
             "persistence_rmse": rmse(persistence_errors),
+            "open_loop_absolute_error_by_horizon": {
+                f"h{horizon}": abs(open_loop_errors[horizon - 1]) for horizon in dict.fromkeys(horizons)
+            },
+        }
+
+    baseline = rollout_metrics(trajectory.observations)
+    offset = 1.0
+    shifted_observations = (
+        trajectory.observations[0],
+        *(value + offset for value in trajectory.observations[1:]),
+    )
+    shifted = rollout_metrics(shifted_observations)
+
+    return {
+        "rollout": baseline,
+        "future_observation_visibility_audit": {
+            "future_observation_offset": offset,
+            "open_loop_rmse_baseline": baseline["open_loop_rmse"],
+            "open_loop_rmse_shifted": shifted["open_loop_rmse"],
+            "posterior_anchored_one_step_prior_rmse_baseline": baseline[
+                "posterior_anchored_one_step_prior_rmse"
+            ],
+            "posterior_anchored_one_step_prior_rmse_shifted": shifted[
+                "posterior_anchored_one_step_prior_rmse"
+            ],
+            "filtering_rmse_baseline": baseline["filtering_rmse"],
+            "filtering_rmse_shifted": shifted["filtering_rmse"],
+            "scope": (
+                "authored offset to observations after initialization; proves metric visibility only, "
+                "not learned posterior leakage frequency or model performance"
+            ),
         },
         "kl_balance": {
             "small_mismatch": kl_balance_diagnostic((0.55, 0.45), (0.5, 0.5)),

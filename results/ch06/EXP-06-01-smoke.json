@@ -2,6 +2,16 @@
   "experiment_id": "EXP-06-01",
   "gpu_verified": false,
   "metrics": {
+    "future_observation_visibility_audit": {
+      "filtering_rmse_baseline": 0.060841746232133065,
+      "filtering_rmse_shifted": 0.9871947803417027,
+      "future_observation_offset": 1.0,
+      "open_loop_rmse_baseline": 0.33316748072297736,
+      "open_loop_rmse_shifted": 0.33316748072297736,
+      "posterior_anchored_one_step_prior_rmse_baseline": 0.07841884223609763,
+      "posterior_anchored_one_step_prior_rmse_shifted": 0.9954134555256738,
+      "scope": "authored offset to observations after initialization; proves metric visibility only, not learned posterior leakage frequency or model performance"
+    },
     "kl_balance": {
       "large_mismatch": {
         "dynamics_gradient_target": "prior",
@@ -30,8 +40,16 @@
     },
     "rollout": {
       "filtering_rmse": 0.060841746232133065,
+      "open_loop_absolute_error_by_horizon": {
+        "h1": 0.03837381665767289,
+        "h16": 0.23932980327482412,
+        "h31": 0.6010378611857945,
+        "h4": 0.05032749281896276,
+        "h8": 0.17187438877951866
+      },
       "open_loop_rmse": 0.33316748072297736,
       "persistence_rmse": 0.7043701827101412,
+      "posterior_anchored_one_step_prior_rmse": 0.07841884223609763,
       "steps": 32
     }
   },

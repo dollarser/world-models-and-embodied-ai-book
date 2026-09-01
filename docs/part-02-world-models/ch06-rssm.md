@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-06-01`
-> 关联声明：`CLAIM-06-01`～`CLAIM-06-06`
-> 关联图表：`FIG-06-01` / `TAB-06-01` / `TAB-06-02`
+> 关联声明：`CLAIM-06-01`～`CLAIM-06-07`
+> 关联图表：`FIG-06-01` / `TAB-06-01`～`TAB-06-03`
 > 资源档位：S / M / L1
 > 当前验证：标准库 CPU smoke；完整训练与 GPU 资源待验证
 
@@ -164,13 +164,14 @@ DreamerV2 进一步采用离散潜变量处理 Atari 等任务；DreamerV3 后�
 
 ## 6.7 EXP-06-01：RSSM 数据流 CPU smoke
 
-当前配套实验不是神经网络训练。它使用一个带位置、速度和观测噪声的一维程序化系统、一个教学版“预测—观测修正”状态更新器，以及二分类分布的解析 KL，验证五件事：
+当前配套实验不是神经网络训练。它使用一个带位置、速度和观测噪声的一维程序化系统、一个教学版“预测—观测修正”状态更新器，以及二分类分布的解析 KL，验证六件事：
 
 1. 动作参与 prior 更新；
 2. posterior 使用新观测修正状态；
-3. 拿走未来观测后，多步 prior 误差通常比持续观测修正更快累积。
-4. stop-gradient 不改变 dynamics/representation KL 的前向数值；
-5. `free_nats` 能区分阈值以下的常数区与阈值以上的失配。
+3. posterior filtering、从每个 posterior 历史出发的一步 prior 与初始化后不再重置的 open-loop 是三种不同指标；
+4. 改写初始化后的未来观测会改变前两者，却不能改变真正的 open-loop；
+5. stop-gradient 不改变 dynamics/representation KL 的前向数值；
+6. `free_nats` 能区分阈值以下的常数区与阈值以上的失配。
 
 本地命令：
 
@@ -185,23 +186,42 @@ Docker 优先命令：
 make ch06-smoke
 ```
 
-该 smoke 只依赖 Python 标准库，不下载数据或模型。输出包含 filtering、open-loop 和 persistence 三类 RMSE，以及两组 KL 诊断。它验证的是接口、前向算术和评测协议，不计算真实梯度，不证明 RSSM 已经学会环境，也不能升级为 PlaNet/Dreamer 复现结果。
+该 smoke 只依赖 Python 标准库，不下载数据或模型。输出包含 filtering、posterior-anchored one-step prior、open-loop 和 persistence 四类 RMSE、五个 open-loop horizon、一个观测可见性负对照及两组 KL 诊断。它验证的是接口、前向算术和评测协议，不计算真实梯度，不证明 RSSM 已经学会环境，也不能升级为 PlaNet/Dreamer 复现结果。
 
 本轮基线使用 seed 7 的 32 步程序化轨迹，宿主 Python 与 CPU Docker 输出一致：
 
-`TAB-06-01`：`EXP-06-01` 固定程序化 fixture 的三类 RMSE；这些指标只用于验证数据流与评测接口。
+`TAB-06-01`：`EXP-06-01` 固定程序化 fixture 的四类 RMSE；这些指标只用于验证数据流与评测接口。
 
 | 指标 | RMSE | 解释 |
 | --- | ---: | --- |
 | filtering | 0.06084 | 每步使用观测修正后的状态误差 |
+| posterior-anchored one-step prior | 0.07842 | 每步从已吸收截至上一时刻观测的 posterior 状态预测下一步；不是 open-loop |
 | open-loop | 0.33317 | 初始化后只使用 prior 的多步误差 |
 | persistence | 0.70437 | 用上一观测预测下一状态的朴素基线 |
 
 原始结果记录在 `results/ch06/EXP-06-01-smoke.json`。这些数字只属于 `EXP-06-01` 的固定教学 fixture，不与论文分数比较，也不用于声称学习方法优于其他模型。
 
-同一协议已冻结为 `benchmarks/BENCH-06-01.json` v2：它除登记31个有效转移、seed 7、filtering/open-loop 的观测可见性、persistence 基线与三项 RMSE，还登记两组 categorical posterior/prior、`KL(q‖p)` 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
+同一协议已冻结为 `benchmarks/BENCH-06-01.json` v3：它除登记31个有效转移、seed 7、四种预测视图、五个 open-loop horizon 与未来观测可见性负对照，还登记两组 categorical posterior/prior、`KL(q‖p)` 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、状态是否从 posterior 重置、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
 
 `CLAIM-06-03`（result）：在 `EXP-06-01` 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
+
+### 一步 prior 仍可能偷看历史中的未来观测
+
+从时刻 `t-1` 的 posterior 状态预测 `t`，虽然预测式本身只调用 prior，但该起点已经吸收截至 `t-1` 的观测。对每个时刻重复这种重置，得到的是 **posterior-anchored one-step prior**，不是从同一初态连续展开到 horizon `H` 的 open-loop。二者适合回答不同问题，不能只因函数名都叫 `prior` 就合并。
+
+`EXP-06-01` v3 固定 actions、真值位置和初始观测，仅给后续31个观测统一加 `+1`。真正 open-loop 初始化后不再读取这些值，因此 RMSE 必须逐位不变；filtering 与 posterior-anchored one-step 分支会改变：
+
+| 分支 | 原始 RMSE | 未来观测 `+1` 后 RMSE | 是否读取偏移后的观测 |
+| --- | ---: | ---: | --- |
+| filtering | 0.060842 | 0.987195 | 是，当前步 |
+| posterior-anchored one-step prior | 0.078419 | 0.995413 | 是，包含在每次起点历史中 |
+| no-reset open-loop | 0.333167 | 0.333167 | 否 |
+
+*TAB-06-03：未来观测可见性负对照。`+1` 是作者构造的结构探针，不是传感噪声模型或鲁棒性评测。*
+
+同一条 no-reset rollout 的绝对位置误差在 h1/h4/h8/h16/h31 分别约为 `0.0384/0.0503/0.1719/0.2393/0.6010`。这五个点确认代码没有在中途从 posterior 重置，并展示本 fixture 的长时偏离；它不证明误差对所有 horizon 单调增加，也不估计其他 seed、神经模型或真实系统误差。
+
+`CLAIM-06-07`（result）：`EXP-06-01` v3 中，posterior-anchored one-step prior RMSE 为 0.078419，位于 filtering 的 0.060842 与 no-reset open-loop 的 0.333167 之间；后续观测统一偏移 `+1` 后，前两类指标显著改变，而 open-loop RMSE 精确保持 0.333167。这只验证三条代码路径的观测可见性与命名边界，不估计真实 posterior leakage 频率、学习性能或规划价值。
 
 | posterior / prior | raw KL（nat） | `free_nats` 后的 dyn/rep 值 | 权重后总值 |
 | --- | ---: | ---: | ---: |
@@ -262,6 +282,7 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 4. **阈值分析**：将 `free_nats` 改为 0、0.5 和 2，画出 raw KL 到报告 loss 的分段函数，并标出常数区。
 5. **反例设计**：构造一种画面预测误差下降但控制所需状态变差的情况。
 6. **迁移分析**：在自动驾驶中，哪些变量可能无法从单帧 RGB 唯一确定？它们分别会影响哪类动作？
+7. **泄漏审计**：保持动作、真值和初始观测不变，只改写后续观测；分别预测 filtering、posterior-anchored one-step prior 和 no-reset open-loop 哪些指标必须改变，并说明原因。
 
 ## 自检要点
 
@@ -309,6 +330,13 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-06-07：一步 prior 不能冒充多步 open-loop</summary>
+
+filtering 在预测后读取当前观测；posterior-anchored one-step prior 的当前预测不读 `o_t`，但每一步起点都来自已经吸收 `o_{≤t-1}` 的 posterior；no-reset open-loop 只在 horizon 0 用初始 belief，之后连续调用 prior。因此只改 `o_1...o_H` 时，前两条观测消费路径应改变，真正 open-loop 必须完全不变。若 open-loop 变化，说明实现发生 posterior reset、共享可变状态或其他泄漏。当前 `+1` 负对照只证明 fixture 的数据流隔离，不能估计神经模型真实误差、部署噪声或规划成功率。
+
+</details>
+
 ## 延伸阅读
 
 - Ha & Schmidhuber, [World Models](https://arxiv.org/abs/1803.10122)，`[A]`；
@@ -335,5 +363,5 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch06-kl-routing-review-2026-09-01.md`、`reviews/ch06-benchmark-kl-contract-review-2026-09-02.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch06-posterior-leakage-review-2026-09-02.md`、`reviews/batch-a-review.md`、`reviews/ch06-kl-routing-review-2026-09-01.md`、`reviews/ch06-benchmark-kl-contract-review-2026-09-02.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
 - 已知限制与下一步：PyTorch mini-RSSM、24 GB 单卡资源和完整训练仍待后续阶段验证。

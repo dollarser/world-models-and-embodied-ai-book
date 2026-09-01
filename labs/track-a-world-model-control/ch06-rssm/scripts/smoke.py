@@ -20,6 +20,20 @@ def main() -> int:
 
     if not metrics["rollout"]["open_loop_rmse"] > metrics["rollout"]["filtering_rmse"]:
         raise AssertionError("open-loop RMSE should exceed filtering RMSE in the fixture")
+    one_step = metrics["rollout"]["posterior_anchored_one_step_prior_rmse"]
+    if not metrics["rollout"]["filtering_rmse"] < one_step < metrics["rollout"]["open_loop_rmse"]:
+        raise AssertionError("posterior-anchored one-step prior must remain distinct from both branches")
+    horizons = metrics["rollout"]["open_loop_absolute_error_by_horizon"]
+    if tuple(horizons) != ("h1", "h4", "h8", "h16", "h31") or not horizons["h31"] > horizons["h1"]:
+        raise AssertionError("the fixture must retain its registered no-reset open-loop horizons")
+    visibility = metrics["future_observation_visibility_audit"]
+    if visibility["open_loop_rmse_baseline"] != visibility["open_loop_rmse_shifted"]:
+        raise AssertionError("future observations must be invisible to the open-loop branch")
+    if (
+        visibility["posterior_anchored_one_step_prior_rmse_baseline"]
+        == visibility["posterior_anchored_one_step_prior_rmse_shifted"]
+    ):
+        raise AssertionError("posterior-anchored one-step metrics must expose future observations")
     small = metrics["kl_balance"]["small_mismatch"]
     large = metrics["kl_balance"]["large_mismatch"]
     if not small["raw_kl_nats"] < small["free_nats"]:

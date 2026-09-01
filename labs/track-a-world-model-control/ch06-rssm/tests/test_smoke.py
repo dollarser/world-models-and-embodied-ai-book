@@ -10,6 +10,7 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from toy_rssm import (  # noqa: E402
     LatentState,
+    Trajectory,
     ToyRSSM,
     categorical_kl,
     evaluate,
@@ -41,6 +42,33 @@ class ToyRSSMTest(unittest.TestCase):
         second = evaluate(model, generate_trajectory(steps=32, seed=7))
         self.assertEqual(first, second)
         self.assertGreater(first["rollout"]["open_loop_rmse"], first["rollout"]["filtering_rmse"])
+
+    def test_posterior_anchored_one_step_is_not_open_loop(self) -> None:
+        rollout = evaluate(ToyRSSM(), generate_trajectory())["rollout"]
+        self.assertGreater(
+            rollout["posterior_anchored_one_step_prior_rmse"],
+            rollout["filtering_rmse"],
+        )
+        self.assertLess(
+            rollout["posterior_anchored_one_step_prior_rmse"],
+            rollout["open_loop_rmse"],
+        )
+
+    def test_future_observation_shift_cannot_change_true_open_loop(self) -> None:
+        audit = evaluate(ToyRSSM(), generate_trajectory())["future_observation_visibility_audit"]
+        self.assertEqual(audit["open_loop_rmse_baseline"], audit["open_loop_rmse_shifted"])
+        self.assertNotEqual(
+            audit["posterior_anchored_one_step_prior_rmse_baseline"],
+            audit["posterior_anchored_one_step_prior_rmse_shifted"],
+        )
+        self.assertNotEqual(audit["filtering_rmse_baseline"], audit["filtering_rmse_shifted"])
+
+    def test_open_loop_reports_registered_horizons_without_resetting_state(self) -> None:
+        errors = evaluate(ToyRSSM(), generate_trajectory())["rollout"][
+            "open_loop_absolute_error_by_horizon"
+        ]
+        self.assertEqual(tuple(errors), ("h1", "h4", "h8", "h16", "h31"))
+        self.assertGreater(errors["h31"], errors["h1"])
 
     def test_kl_is_zero_for_matching_categorical_states(self) -> None:
         self.assertAlmostEqual(categorical_kl((0.25, 0.75), (0.25, 0.75)), 0.0)
@@ -95,6 +123,16 @@ class ToyRSSMTest(unittest.TestCase):
         for values in ((), (True,), (float("nan"),)):
             with self.subTest(values=values), self.assertRaises(ValueError):
                 rmse(values)
+
+    def test_invalid_trajectory_contracts_are_rejected(self) -> None:
+        for trajectory in (
+            Trajectory(actions=(), positions=(0.0,), observations=(0.0,)),
+            Trajectory(actions=(0.0,), positions=(0.0, 0.0), observations=(0.0,)),
+            Trajectory(actions=(float("nan"),), positions=(0.0, 0.0), observations=(0.0, 0.0)),
+            Trajectory(actions=[0.0], positions=(0.0, 0.0), observations=(0.0, 0.0)),  # type: ignore[arg-type]
+        ):
+            with self.subTest(trajectory=trajectory), self.assertRaises(ValueError):
+                evaluate(ToyRSSM(), trajectory)
 
 
 if __name__ == "__main__":
