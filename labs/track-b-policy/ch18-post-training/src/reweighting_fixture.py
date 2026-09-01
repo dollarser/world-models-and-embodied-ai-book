@@ -13,6 +13,8 @@ TRAJECTORIES = (
     {"id": "failure-recovery-b", "reward": 0.0, "actions": (0.9, 0.1), "final_event": "recover"},
 )
 
+JOINT_SUPPORT_MAX_MAE = 0.1
+
 
 def _finite_weights(weights: Sequence[float], expected_length: int) -> tuple[float, ...]:
     if isinstance(weights, (str, bytes)) or not isinstance(weights, Sequence) or len(weights) != expected_length:
@@ -71,6 +73,56 @@ def within_dataset_support(actions: Sequence[float]) -> bool:
     return True
 
 
+def joint_support_report(
+    actions: Sequence[float], max_mean_absolute_distance: float = JOINT_SUPPORT_MAX_MAE
+) -> dict[str, object]:
+    """Compare a proposal with complete observed trajectories, not marginal ranges."""
+    if (
+        isinstance(max_mean_absolute_distance, bool)
+        or not isinstance(max_mean_absolute_distance, (int, float))
+        or not isfinite(max_mean_absolute_distance)
+        or max_mean_absolute_distance < 0.0
+    ):
+        raise ValueError("joint-support distance must be a finite non-negative number")
+    # Reuse the marginal validator before computing distances.
+    marginal_accepted = within_dataset_support(actions)
+    distances = tuple(
+        (trajectory["id"], mean_absolute_error(actions, trajectory["actions"]))
+        for trajectory in TRAJECTORIES
+    )
+    nearest_id, nearest_distance = min(distances, key=lambda item: (item[1], item[0]))
+    return {
+        "marginal_range_accepted": marginal_accepted,
+        "nearest_trajectory_id": nearest_id,
+        "nearest_trajectory_mae": nearest_distance,
+        "maximum_allowed_mae": float(max_mean_absolute_distance),
+        "joint_support_accepted": nearest_distance <= max_mean_absolute_distance,
+    }
+
+
+def leave_one_out_advantages(rewards: Sequence[float]) -> tuple[float, ...]:
+    """Compute an unnormalized reward-minus-other-samples baseline per group."""
+    if isinstance(rewards, (str, bytes)) or not isinstance(rewards, Sequence) or len(rewards) < 2:
+        raise ValueError("leave-one-out rewards require at least two samples")
+    converted = []
+    for reward in rewards:
+        if isinstance(reward, bool) or not isinstance(reward, (int, float)) or not isfinite(reward):
+            raise ValueError("rewards must be finite numbers")
+        converted.append(float(reward))
+    total = sum(converted)
+    count_other = len(converted) - 1
+    return tuple(round(reward - (total - reward) / count_other, 12) for reward in converted)
+
+
+def advantage_group_report(rewards: Sequence[float]) -> dict[str, object]:
+    advantages = leave_one_out_advantages(rewards)
+    return {
+        "rewards": tuple(float(reward) for reward in rewards),
+        "advantages": advantages,
+        "has_nonzero_learning_signal": any(abs(value) > 0.0 for value in advantages),
+    }
+
+
 def evaluate() -> dict[str, object]:
     uniform = summarize((1.0, 1.0, 1.0, 1.0))
     reward_weighted = summarize((3.0, 3.0, 1.0, 1.0))
@@ -87,7 +139,13 @@ def evaluate() -> dict[str, object]:
             "reference_mae": mean_absolute_error(success_only["action_target"], successful_reference),
         },
         "support_gate": {
-            "successful_reference_in_support": within_dataset_support(successful_reference),
-            "out_of_support_proposal_accepted": within_dataset_support((-0.1, 1.1)),
+            "successful_reference": joint_support_report(successful_reference),
+            "marginal_extreme": joint_support_report((-0.1, 1.1)),
+            "unseen_hybrid": joint_support_report((0.9, 0.8)),
+        },
+        "leave_one_out_advantage": {
+            "all_success": advantage_group_report((1.0, 1.0, 1.0)),
+            "all_failure": advantage_group_report((0.0, 0.0, 0.0)),
+            "mixed": advantage_group_report((1.0, 0.0, 0.0)),
         },
     }

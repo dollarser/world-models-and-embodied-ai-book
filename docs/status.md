@@ -42,8 +42,8 @@
 | EXP-16-01 | `smoke` | 12 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0，3/3 合同错误拒绝且语义变化改变 fingerprint | 两维手工动作；fingerprint 不是安全签名，不是 learned transfer 性能 |
 | 第17章 世界模型帮助策略的五种方式 | `reviewed` | 五类非互斥用途、代理评测三段误差、model exploitation、coverage gate、自动驾驶四角色正文与四类审查 | learned world model、真实仿真器、上游 checkpoint 与 GPU 均未运行 |
 | EXP-17-01 | `smoke` | 10 个单元测试；8/9 转移一致仍造成错排与碰撞；support gate 拒绝 support 外捷径并把 regret 1.85→0 | 手工 corridor/oracle support，不是 learned OOD 或 simulator 性能 |
-| 第18章 VLA 后训练与 WAM | `reviewed` | 五类后训练、稀疏 credit、长时层级/记忆、WAM 四类接口、自动驾驶正文与四类审查 | VLA/RL/world model、LIBERO、仿真、GPU 和硬件未运行 |
-| EXP-18-01 | `smoke` | 7 个单元测试；reward-weighted target、ESS、recovery coverage 与 support gate | 四条标量轨迹，不是 offline RL 或 policy 改进 |
+| 第18章 VLA 后训练与 WAM | `reviewed` | 五类后训练、RLOO 退化/重采样分母、联合轨迹支持、长时层级/记忆、WAM 四类接口、自动驾驶正文与四类审查 | VLA/RL/world model、LIBERO、仿真、GPU 和硬件未运行 |
+| EXP-18-01 | `smoke` | 11 个单元测试；reward target/ESS/recovery；marginal gate 错收未见组合；全同 reward 零 LOO 信号 | 四条标量轨迹与手工阈值，不是 offline RL、learned support 或 policy 改进 |
 | 第19章 物理仿真、Real2Sim 与 Sim2Real | `reviewed` | 仿真合同、gap 分解、环境矩阵、系统辨识、域随机化、自动驾驶正文与四类审查 | MuJoCo/MetaDrive/CARLA/Isaac、真实系统、资产和 GPU 均未运行 |
 | EXP-19-01 | `smoke` | 8 个单元测试；名义 held-out state MAE 0.6625，12 个候选恢复预设参数 | 标量确定性 fixture，不是物理仿真或 Sim2Real 性能 |
 | 第20章 具身评测 | `reviewed` | 四类审查通过；model exploitation、simulator gap、结束语义/分母审计、小样本 Wilson 区间与机器 benchmark card 已接入 | 分层/相关 episode 的统计设计与实际仿真 |
@@ -52,6 +52,6 @@
 | EXP-21-01 | `smoke` | 9 个单元测试；mean 45 ms 掩盖 150 ms 尾部，六类异常分别拒绝；两个阈值展示 coverage—failure 取舍 | 手工 latency/packet/score/label，不是实时、OOD 或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 12 个单元测试；完整包 5 段 trace/0 issue，无效包 16 个具名 issue，缺段与错误依赖被拒绝 | metadata 图检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、233 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、237 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

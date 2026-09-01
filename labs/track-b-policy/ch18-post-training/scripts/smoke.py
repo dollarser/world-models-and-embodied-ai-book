@@ -20,8 +20,16 @@ def main() -> int:
         raise AssertionError("fixed reward weighting must move the target toward the successful reference")
     if metrics["reward_weighted"]["effective_sample_size"] >= metrics["uniform"]["effective_sample_size"]:
         raise AssertionError("fixed reward weighting must expose sample concentration")
-    if metrics["support_gate"]["out_of_support_proposal_accepted"]:
-        raise AssertionError("the fixed out-of-support proposal must be rejected")
+    if not metrics["support_gate"]["unseen_hybrid"]["marginal_range_accepted"]:
+        raise AssertionError("the unseen hybrid must expose the weakness of marginal ranges")
+    if metrics["support_gate"]["unseen_hybrid"]["joint_support_accepted"]:
+        raise AssertionError("the joint trajectory gate must reject the unseen hybrid")
+    if metrics["leave_one_out_advantage"]["all_success"]["has_nonzero_learning_signal"]:
+        raise AssertionError("an all-success group must have zero leave-one-out advantage")
+    if metrics["leave_one_out_advantage"]["all_failure"]["has_nonzero_learning_signal"]:
+        raise AssertionError("an all-failure group must have zero leave-one-out advantage")
+    if not metrics["leave_one_out_advantage"]["mixed"]["has_nonzero_learning_signal"]:
+        raise AssertionError("a mixed-outcome group must retain relative advantage signal")
     report = {
         "experiment_id": "EXP-18-01",
         "status": "smoke",

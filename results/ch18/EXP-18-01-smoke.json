@@ -2,6 +2,47 @@
   "experiment_id": "EXP-18-01",
   "gpu_verified": false,
   "metrics": {
+    "leave_one_out_advantage": {
+      "all_failure": {
+        "advantages": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "has_nonzero_learning_signal": false,
+        "rewards": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "all_success": {
+        "advantages": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "has_nonzero_learning_signal": false,
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mixed": {
+        "advantages": [
+          1.0,
+          -0.5,
+          -0.5
+        ],
+        "has_nonzero_learning_signal": true,
+        "rewards": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
     "reward_weighted": {
       "action_target": [
         0.4,
@@ -33,8 +74,27 @@
       ]
     },
     "support_gate": {
-      "out_of_support_proposal_accepted": false,
-      "successful_reference_in_support": true
+      "marginal_extreme": {
+        "joint_support_accepted": false,
+        "marginal_range_accepted": false,
+        "maximum_allowed_mae": 0.1,
+        "nearest_trajectory_id": "success-a",
+        "nearest_trajectory_mae": 0.3
+      },
+      "successful_reference": {
+        "joint_support_accepted": true,
+        "marginal_range_accepted": true,
+        "maximum_allowed_mae": 0.1,
+        "nearest_trajectory_id": "success-a",
+        "nearest_trajectory_mae": 0.05
+      },
+      "unseen_hybrid": {
+        "joint_support_accepted": false,
+        "marginal_range_accepted": true,
+        "maximum_allowed_mae": 0.1,
+        "nearest_trajectory_id": "failure-recovery-a",
+        "nearest_trajectory_mae": 0.35
+      }
     },
     "uniform": {
       "action_target": [

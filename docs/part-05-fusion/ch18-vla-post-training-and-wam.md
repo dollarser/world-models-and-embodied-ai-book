@@ -1,10 +1,10 @@
 # 第18章 VLA 后训练、长时序与 World-Action Models
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-18-01`
-> 关联声明：`CLAIM-18-01`～`CLAIM-18-06`
-> 关联图表：`FIG-18-01` / `TAB-18-01` / `TAB-18-02` / `TAB-18-03`
+> 关联声明：`CLAIM-18-01`～`CLAIM-18-08`
+> 关联图表：`FIG-18-01` / `TAB-18-01` / `TAB-18-02` / `TAB-18-03` / `TAB-18-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -62,7 +62,7 @@ flowchart LR
     G[independent safety gate] --> E
 ```
 
-*FIG-18-01：VLA 后训练的审计闭环。来源：本书原创，MIT，2026-08-31。learned world model 与独立评测环境必须分别登记。*
+*FIG-18-01：VLA 后训练的审计闭环。来源：本书原创，MIT，2026-09-01。learned world model、reward model 与独立评测环境必须分别登记。*
 
 ## 18.2 五条后训练路线
 
@@ -85,6 +85,8 @@ flowchart LR
 \]
 
 权重可以来自 episode success、return、advantage、preference 或人工评级。它仍是加权监督学习；没有 Bellman backup、policy interaction 或 actor objective 时，不应标成 offline RL。
+
+上式是按 transition 归一化；若所有轨迹长度相同，才与 fixture 的“每个 phase 按 trajectory weight 求均值”一致。长度不同时，按 episode 等权、按 transition 等权和截断到固定 horizon 会得到不同 target。ESS 也必须注明是在 trajectory、transition、task group 还是 token 层计算，不能把四条轨迹的 ESS 直接解释为动作样本数。
 
 稀疏 episode reward 会把同一权重施加给长轨迹内所有动作：成功轨迹中的偶然动作被奖励，失败轨迹中正确前缀和恢复动作被惩罚。解决 credit assignment 需要阶段状态、dense progress、value/advantage、counterfactual 或更细粒度 verifier，但每一种又可能引入 reward misspecification。
 
@@ -110,13 +112,27 @@ make ch18-smoke
 
 `CLAIM-18-03`（result）：同一重加权把 ESS 从 4.0 降到 3.2，并把 recovery 样本权重占比从 0.50 降到 0.25；只保留成功时 ESS=2、recovery mass=0。target 更接近参考与 coverage 下降在此 fixture 中同时发生。
 
-fixture 还用逐阶段数据最小/最大值拒绝 `(-0.1,1.1)` 这一 OOD proposal。范围内不代表安全或可达，只是最弱的 behavior-support 检查。
+fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最近完整轨迹的 action MAE 不超过 `0.1`”。极端 proposal `(-0.1,1.1)` 两者都拒绝；但 `(0.9,0.8)` 的每一维都落在观测范围内，会被 marginal gate 接受，而它到最近完整轨迹的 MAE 为 `0.35`，被 joint gate 拒绝。
+
+| 诊断 | 固定结果 | 解释边界 |
+| --- | ---: | --- |
+| 成功参考 `(0.25,0.75)` 最近轨迹 MAE | 0.05 / accepted | 手工阈值 0.1 |
+| 极端 `(-0.1,1.1)` marginal/joint | rejected / rejected | 明显逐维越界 |
+| 未见组合 `(0.9,0.8)` marginal/joint | accepted / rejected | 单维范围不能证明 joint support |
+| 全成功/全失败组 LOO advantage | 全 0 / 全 0 | 无组内相对学习信号 |
+| 混合组 `(1,0,0)` LOO advantage | `(1,-0.5,-0.5)` | 未归一化教学公式 |
+
+*TAB-18-03：联合支持与 leave-one-out advantage 退化。最近邻阈值和 reward group 都是手工 fixture。*
+
+`CLAIM-18-07`（result）：`EXP-18-01` 的未见组合 `(0.9,0.8)` 通过逐阶段 min/max，却被最大 MAE `0.1` 的最近完整轨迹门禁拒绝，最近距离为 `0.35`。该结果只说明 marginal range 不能代表联合轨迹支持；最近邻同样不证明状态条件可达、安全或真实行为密度。
+
+`CLAIM-18-08`（result）：三样本组中，全成功与全失败 reward 的未归一化 leave-one-out advantage 都为 `(0,0,0)`，混合 `(1,0,0)` 为 `(1,-0.5,-0.5)`。这验证相对信号退化，不是 RIPT-VLA 梯度、PPO clipping 或训练稳定性复现。
 
 ## 18.4 交互式后训练：稀疏成功信号也有代价
 
-[RIPT-VLA](https://arxiv.org/abs/2505.17016)用稀疏二元 success 做 VLA interactive post-training，并采用动态 rollout sampling 与 leave-one-out advantage estimation；作者[代码仓库](https://github.com/Ariostgx/ript-vla)提供 QueST/OpenVLA-OFT + LIBERO 路线 `[A/O,R1]`。它展示的是交互环境中的 RL，不是 learned world model 路线。
+[RIPT-VLA](https://arxiv.org/abs/2505.17016)用稀疏二元 success 做 VLA interactive post-training，并采用动态 rollout sampling 与 leave-one-out advantage estimation；作者[代码仓库](https://github.com/Ariostgx/ript-vla/blob/main/train_ript.py)当前入口显式传递 `rloo_batch_size`、dynamic sampling、PPO epoch/batch 和 clipping 配置，提供 QueST/OpenVLA-OFT + LIBERO 路线 `[A/O,R1]`。它展示的是交互环境中的 RL，不是 learned world model 路线。
 
-二元 success 避免手工 dense reward 的部分偏置，却没有消除 credit assignment：需要同任务/初态下足够多的成功与失败 rollout 才能形成可用组内相对信号。若一组全失败或全成功，优势退化；若 policy 更新太快，旧 rollout 与新 policy 不匹配；若 simulator success 使用 privileged state，真实部署未必拥有同一 verifier。
+二元 success 避免手工 dense reward 的部分偏置，却没有消除 credit assignment：需要同任务/初态下足够多的成功与失败 rollout 才能形成可用组内相对信号。若一组全失败或全成功，fixture 所示的 RLOO 相对优势退化。dynamic sampling 丢弃并重采这类组可以恢复梯度信号，却会改变实际 task/难度分布、增加 rollout 成本，并可能长期饿死过难或过易任务；必须报告 attempted、discarded、resampled 和 used group 数。若 policy 更新太快，旧 rollout 与新 policy 不匹配；若 simulator success 使用 privileged state，真实部署未必拥有同一 verifier。
 
 人类纠正可记录 intervention 前观察、模型原动作、纠正动作、触发原因和恢复结果。只保存纠正动作会丢失“为何接管”和 policy-induced state，无法区分动作学习与数据选择效应。高风险机器人/车辆必须先用保守 controller 和安全员协议限定探索范围。
 
@@ -127,10 +143,11 @@ fixture 还用逐阶段数据最小/最大值拒绝 `(-0.1,1.1)` 这一 OOD prop
 - [VLA-RFT](https://arxiv.org/abs/2510.00406)用数据驱动 world simulator 预测动作条件视觉未来，并从目标参考构造 trajectory-level 学习信号 `[A,R0]`；
 - [World-Gymnast](https://arxiv.org/abs/2602.02454)让 VLA 在 action-conditioned video world model 中 rollout，再由 VLM 给任务完成 reward；其[作者仓库](https://github.com/world-gymnast/world-gymnast)公开 OpenVLA-OFT 训练入口 `[A/O,R1]`；
 - [WoVR](https://arxiv.org/abs/2602.13977)不假设 world model 完美，而用可控动作条件模型、Keyframe-Initialized Rollouts 与 world-model/policy co-evolution 缩短有效误差链 `[A,R0]`。
+- [WMPO](https://github.com/WM-PO/WMPO)让 policy 与像素 world model 交替生成 imagined trajectory，再由 VideoMAE reward model 评分并更新 policy `[A/O,R1]`。官方仓库把 SFT policy、task-specific world model、reward model 和最终 policy 分成独立 checkpoint，正说明“on-policy in world model”仍依赖多模型版本合同。
 
 这些 2025–2026 工作属于快速变化的方法簇，论文结果是上游证据，不是本书实测。三者即使都叫 world-model RL，也不共享 simulator、reward、policy backbone、rollout horizon 或真实回查协议，不能直接横比摘要成功率。
 
-最低审计矩阵是：SFT baseline、reward reweight baseline、物理 simulator RL、learned simulator RL，以及相同最终 policy 在独立环境的闭环评测。还要报告 model-only return、外部 return、策略排序、hallucination、VLM reward agreement、OOD 和迭代后 simulator gap。
+最低审计矩阵是：SFT baseline、reward reweight baseline、物理 simulator RL、learned simulator RL，以及相同最终 policy 在独立环境的闭环评测。还要报告 model-only return、外部 return、策略排序、hallucination、VLM/reward-model confusion matrix、OOD 和迭代后 simulator gap。World-Gymnast 的公开 JSON 还把 `partial_credit_criteria` 作为数据字段，意味着 reward rubric 本身也要锁定版本，不能只保存一个最终标量。
 
 ## 18.6 长时序不是把短时策略重复更多次
 
@@ -159,9 +176,11 @@ fixture 还用逐阶段数据最小/最大值拒绝 `(-0.1,1.1)` 这一 OOD prop
 | joint video-action modeling | 同一模型联合生成未来与动作 | 不一定可交互递归 | 因果 mask、动作条件性、时间对齐 |
 | auxiliary future prediction | future loss 只在训练期塑造 policy | 通常不提供 | 去掉 future head 后的因果 ablation |
 
-*TAB-18-03：World-Action Model 的四类实现路径。联合预测不自动得到 planner、critic 或 simulator。*
+*TAB-18-04：World-Action Model 的四类实现路径。联合预测不自动得到 planner、critic 或 simulator。*
 
-[SimWAM 作者仓库](https://github.com/H-EmbodVis/SimWAM)是自动驾驶中的第四类案例：视频生成作为训练信号，推理走 action-only 路径，并公开 NAVSIM 上的 supervised/action-only RL 代码入口 `[O,R1]`。这恰好说明 WAM 可以在部署时不生成未来；此时不能仅凭名称声称它提供在线 world rollout。
+[SimWAM 作者仓库](https://github.com/H-EmbodVis/SimWAM)是自动驾驶中的第四类案例：当前公开实现用 isolated attention mask 让 action token 与 future-video token 互不可见，两类 expert 不共享权重，部署时丢弃视频分支并走 action-only 路径 `[O,R1]`。这恰好说明 WAM 可以在部署时不生成或读取预测未来；其视频分支是训练信号，不能仅凭名称声称在线 planner 在 imagined future 上比较候选。
+
+2026 年的 WAM 分类本身仍在演化：本章沿用“未来如何连接动作”的四接口轴；另一些当前 survey 使用 render-and-decode、latent-only、video-generation-free 等推理 substrate。两种分类可以交叉，不应把 taxonomy 名称当能力声明。工程卡仍应直接登记：动作是否条件化未来、未来是否递归、推理是否解码视频、action head 是否能看未来 token，以及 reward/termination 是否存在。
 
 `CLAIM-18-05`（inference）：一个 WAM 是否能用于规划、RL simulator 或安全反事实，取决于它是否暴露经验证的动作条件未来、递归 state、reward/termination 与候选比较接口；联合视频—动作 loss 或“world”命名本身不提供这些能力。
 
@@ -184,13 +203,13 @@ reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预�
 | L1 | 小 policy/adapter 的短步后训练 | 可选、待验证 | 目标 24 GB 单卡；先测峰值 VRAM、墙钟和外部 return |
 | L2 | learned-world-model + VLA 对照 | 非必需、待验证 | 最多 2×80 GB；超限则只做论文/接口审计 |
 
-当前无 GPU，M/L1/L2 均未运行。RIPT-VLA 作者仓库的 OpenVLA-OFT 示例建议至少 3 GPU，超出本书最多双卡的默认范围，因此不能直接成为核心复现；只有经实测缩小且不削弱比较合同的配方才能进入 L1/L2。World-Gymnast、VLA-RFT、WoVR 的 world model + policy 完整栈也未证明落入 24 GB 单卡。
+当前无 GPU，M/L1/L2 均未运行。RIPT-VLA 作者仓库的 OpenVLA-OFT 示例建议至少 3 GPU，超出本书最多双卡的默认范围，因此不能直接成为核心复现；只有经实测缩小且不削弱比较合同的配方才能进入 L1/L2。World-Gymnast、VLA-RFT、WoVR 的 world model + policy 完整栈也未证明落入 24 GB 单卡。WMPO 官方 README 标注完整 checkpoint 约 `364 GiB`、数据约 `530 GiB`，因此默认禁止整包下载；即使只选单任务资产，也必须先列出文件清单、字节数、缓存路径与许可。
 
 本章不要求购买硬件。S 档原创代码、数据和图表为 MIT；RIPT-VLA、World-Gymnast、LIBERO、OpenVLA-OFT、world model、checkpoint 和生成数据各有独立许可与来源要求，运行前必须锁定 commit 和资产条款。
 
 ## 18.10 失效模式与停止条件
 
-重点失败包括：reward 与任务错位、VLM verifier 被视觉伪迹欺骗、terminal/timeout 混淆、成功轨迹过采样导致 ESS/coverage 塌缩、失败中有用恢复被丢弃、critic 对 OOD action 过估计、policy 更新后离开 world-model support、长 chunk 无法中断、memory 写入错误阶段、subgoal 循环，以及模拟成功但独立环境退化。
+重点失败包括：reward 与任务错位、VLM verifier 被视觉伪迹欺骗、terminal/timeout 混淆、成功轨迹过采样导致 ESS/coverage 塌缩、全同 reward group 零优势与反复重采样、marginal support 接受未见组合、失败中有用恢复被丢弃、critic 对 OOD action 过估计、policy 更新后离开 world-model support、长 chunk 无法中断、memory 写入错误阶段、subgoal 循环，以及模拟成功但独立环境退化。
 
 出现以下任一情况就停止升级 policy：ESS 或分桶 coverage 低于预注册阈值；真实/独立仿真 return 与 model return 排序反转；碰撞/干预/安全尾部恶化；reward audit 发现捷径；action schema 或时间戳不匹配；结果无法追溯 policy、world model、reward 和 seed。
 
@@ -201,7 +220,7 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 1. 给 fixture 增加一条“最终失败但第一阶段最优”的轨迹，比较 episode 与 step-level 权重。
 2. 为全成功/全失败 rollout group 写 leave-one-out advantage 的退化测试。
 3. 给一个五阶段操作任务定义 subgoal completion、stuck 和 recovery 状态机。
-4. 任选 WAM 项目，判断它属于 `TAB-18-03` 哪一行，并找出因果 ablation。
+4. 任选 WAM 项目，判断它属于 `TAB-18-04` 哪一行，并找出因果 ablation。
 5. 为驾驶 cut-in 后训练写出 SFT、MetaDrive RL、learned simulator RL 和 held-out CARLA 四列对照。
 
 ## 延伸阅读
@@ -209,6 +228,7 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 - Tan et al., [RIPT-VLA](https://arxiv.org/abs/2505.17016) 与[作者代码](https://github.com/Ariostgx/ript-vla)；
 - Li et al., [VLA-RFT](https://arxiv.org/abs/2510.00406)；
 - Sharma et al., [World-Gymnast](https://arxiv.org/abs/2602.02454) 与[作者代码](https://github.com/world-gymnast/world-gymnast)；
+- Zhu et al., [WMPO 官方代码、数据与 checkpoint](https://github.com/WM-PO/WMPO)；
 - Jiang et al., [WoVR](https://arxiv.org/abs/2602.13977)；
 - Zhang et al., [From World Models to World Action Models](https://github.com/clearlab-sustech/WorldModelSurvey)；
 - [SimWAM 作者仓库](https://github.com/H-EmbodVis/SimWAM)与 [WorldRFT](https://arxiv.org/abs/2512.19133)。
@@ -221,5 +241,5 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-d-review.md`；
+- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`；
 - 已知限制：只有离线标量重加权，没有 VLA/RL/world-model 训练、LIBERO、物理仿真、GPU、机器人或车辆。

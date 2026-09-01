@@ -7,7 +7,15 @@ import unittest
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from reweighting_fixture import evaluate, mean_absolute_error, summarize, within_dataset_support  # noqa: E402
+from reweighting_fixture import (  # noqa: E402
+    advantage_group_report,
+    evaluate,
+    joint_support_report,
+    leave_one_out_advantages,
+    mean_absolute_error,
+    summarize,
+    within_dataset_support,
+)
 
 
 class ReweightingFixtureTests(unittest.TestCase):
@@ -39,10 +47,36 @@ class ReweightingFixtureTests(unittest.TestCase):
 
     def test_support_gate_rejects_unobserved_extremes(self):
         result = evaluate()["support_gate"]
-        self.assertTrue(result["successful_reference_in_support"])
-        self.assertFalse(result["out_of_support_proposal_accepted"])
+        self.assertTrue(result["successful_reference"]["joint_support_accepted"])
+        self.assertFalse(result["marginal_extreme"]["marginal_range_accepted"])
+        self.assertFalse(result["marginal_extreme"]["joint_support_accepted"])
         with self.assertRaises(ValueError):
             within_dataset_support((True, 0.5))
+
+    def test_marginal_ranges_accept_an_unseen_hybrid_that_joint_support_rejects(self):
+        hybrid = joint_support_report((0.9, 0.8))
+        self.assertTrue(hybrid["marginal_range_accepted"])
+        self.assertFalse(hybrid["joint_support_accepted"])
+        self.assertEqual(hybrid["nearest_trajectory_mae"], 0.35)
+
+    def test_joint_support_threshold_is_explicit_and_validated(self):
+        self.assertTrue(joint_support_report((0.9, 0.8), max_mean_absolute_distance=0.35)["joint_support_accepted"])
+        for threshold in (-1.0, True, math.inf, math.nan):
+            with self.subTest(threshold=threshold), self.assertRaises(ValueError):
+                joint_support_report((0.25, 0.75), max_mean_absolute_distance=threshold)  # type: ignore[arg-type]
+
+    def test_leave_one_out_advantage_exposes_uniform_group_degeneracy(self):
+        self.assertEqual(leave_one_out_advantages((1.0, 1.0, 1.0)), (0.0, 0.0, 0.0))
+        self.assertEqual(leave_one_out_advantages((0.0, 0.0, 0.0)), (0.0, 0.0, 0.0))
+        self.assertFalse(advantage_group_report((1.0, 1.0, 1.0))["has_nonzero_learning_signal"])
+        self.assertFalse(advantage_group_report((0.0, 0.0, 0.0))["has_nonzero_learning_signal"])
+
+    def test_leave_one_out_advantage_preserves_mixed_group_signal(self):
+        self.assertEqual(leave_one_out_advantages((1.0, 0.0, 0.0)), (1.0, -0.5, -0.5))
+        self.assertTrue(advantage_group_report((1.0, 0.0, 0.0))["has_nonzero_learning_signal"])
+        for rewards in ((), (1.0,), (1.0, True), (1.0, math.nan)):
+            with self.subTest(rewards=rewards), self.assertRaises(ValueError):
+                leave_one_out_advantages(rewards)
 
     def test_invalid_weights_and_values_are_rejected(self):
         for weights in ((), (1, 1), (0, 0, 0, 0), (1, -1, 1, 1), (1, True, 1, 1), (1, math.inf, 1, 1)):
