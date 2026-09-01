@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
+from hashlib import sha256
+import json
 from math import ceil, isfinite
 from pathlib import Path
 import sys
@@ -60,6 +62,8 @@ class ActionPacket:
     uncertainty_score: float
     uncertainty_revision: str
     command_id: int = 8
+    command_session_id: str = "policy-session-003"
+    executor_boot_id: str = "executor-boot-012"
     schema_id: str = MOBILE_BASE_SCHEMA.schema_id
     frame_id: str = MOBILE_BASE_SCHEMA.frame_id
     field_names: tuple[str, ...] = tuple(field.name for field in MOBILE_BASE_SCHEMA.fields)
@@ -76,12 +80,129 @@ class AppliedAction:
     applied_step: int
     command_id: int = 7
     acknowledged_command_id: int = 7
+    command_session_id: str = "policy-session-003"
+    executor_boot_id: str = "executor-boot-012"
     schema_id: str = MOBILE_BASE_SCHEMA.schema_id
     frame_id: str = MOBILE_BASE_SCHEMA.frame_id
     field_names: tuple[str, ...] = tuple(field.name for field in MOBILE_BASE_SCHEMA.fields)
     units: tuple[str, ...] = tuple(field.unit for field in MOBILE_BASE_SCHEMA.fields)
     control_hz: float = MOBILE_BASE_SCHEMA.control_hz
     clock_id: str = MOBILE_BASE_SCHEMA.clock_id
+
+
+@dataclass(frozen=True)
+class CommandReceipt:
+    """Executor-local receipt; it is not an authenticated or durable device acknowledgement."""
+
+    command_session_id: str
+    executor_boot_id: str
+    command_id: int
+    action: tuple[float, ...]
+    applied_step: int
+    payload_digest: str
+
+
+@dataclass(frozen=True)
+class ExecutorLedger:
+    """Immutable teaching state for one negotiated producer session and executor boot."""
+
+    command_session_id: str
+    executor_boot_id: str
+    highest_command_id: int = -1
+    receipts: tuple[CommandReceipt, ...] = ()
+
+
+def command_payload_digest(packet: ActionPacket) -> str:
+    """Digest the action envelope deterministically; this is not authentication or a signature."""
+
+    payload = {
+        "action": packet.action,
+        "current_step": packet.current_step,
+        "valid_until_step": packet.valid_until_step,
+        "schema_id": packet.schema_id,
+        "frame_id": packet.frame_id,
+        "field_names": packet.field_names,
+        "units": packet.units,
+        "control_hz": packet.control_hz,
+        "clock_id": packet.clock_id,
+    }
+    try:
+        encoded = json.dumps(
+            payload,
+            ensure_ascii=False,
+            allow_nan=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    except (TypeError, ValueError) as exc:
+        raise ValueError("command payload must be finite and JSON-serializable") from exc
+    return sha256(encoded).hexdigest()
+
+
+def apply_command_once(
+    packet: ActionPacket,
+    ledger: ExecutorLedger,
+) -> tuple[ExecutorLedger, dict[str, object]]:
+    """Model executor-side deduplication after gating, without claiming crash atomicity."""
+
+    if not isinstance(packet, ActionPacket) or not isinstance(ledger, ExecutorLedger):
+        raise ValueError("packet and ledger must use the declared command contract")
+    if not ledger.command_session_id or not ledger.executor_boot_id:
+        raise ValueError("ledger session and boot identities must be explicit")
+    if (
+        isinstance(ledger.highest_command_id, bool)
+        or not isinstance(ledger.highest_command_id, int)
+        or ledger.highest_command_id < -1
+    ):
+        raise ValueError("highest_command_id must be an integer greater than or equal to -1")
+    if not isinstance(ledger.receipts, tuple) or any(
+        not isinstance(receipt, CommandReceipt)
+        or receipt.command_session_id != ledger.command_session_id
+        or receipt.executor_boot_id != ledger.executor_boot_id
+        or receipt.command_id > ledger.highest_command_id
+        for receipt in ledger.receipts
+    ):
+        raise ValueError("ledger receipts must belong to its session, boot, and sequence range")
+    receipt_ids = tuple(receipt.command_id for receipt in ledger.receipts)
+    if len(receipt_ids) != len(set(receipt_ids)):
+        raise ValueError("ledger receipt command IDs must be unique")
+    if packet.command_session_id != ledger.command_session_id:
+        return ledger, {"applied_new": False, "status": "command_session_mismatch"}
+    if packet.executor_boot_id != ledger.executor_boot_id:
+        return ledger, {"applied_new": False, "status": "executor_boot_mismatch"}
+    if isinstance(packet.command_id, bool) or not isinstance(packet.command_id, int) or packet.command_id < 0:
+        return ledger, {"applied_new": False, "status": "invalid_command_id"}
+
+    payload_digest = command_payload_digest(packet)
+    existing = next(
+        (receipt for receipt in ledger.receipts if receipt.command_id == packet.command_id),
+        None,
+    )
+    if existing is not None:
+        if existing.payload_digest == payload_digest:
+            return ledger, {
+                "applied_new": False,
+                "status": "duplicate_returned_cached_receipt",
+                "receipt": asdict(existing),
+            }
+        return ledger, {"applied_new": False, "status": "command_identity_conflict"}
+    if packet.command_id <= ledger.highest_command_id:
+        return ledger, {"applied_new": False, "status": "stale_or_out_of_order_command"}
+
+    receipt = CommandReceipt(
+        command_session_id=packet.command_session_id,
+        executor_boot_id=packet.executor_boot_id,
+        command_id=packet.command_id,
+        action=packet.action,
+        applied_step=packet.current_step,
+        payload_digest=payload_digest,
+    )
+    updated = replace(
+        ledger,
+        highest_command_id=packet.command_id,
+        receipts=ledger.receipts + (receipt,),
+    )
+    return updated, {"applied_new": True, "status": "applied_once", "receipt": asdict(receipt)}
 
 
 @dataclass(frozen=True)
@@ -734,6 +855,10 @@ def gate(
         reasons.append("control_rate_mismatch")
     if packet.clock_id != schema.clock_id:
         reasons.append("clock_mismatch")
+    if not isinstance(packet.command_session_id, str) or not packet.command_session_id:
+        reasons.append("invalid_command_session_id")
+    if not isinstance(packet.executor_boot_id, str) or not packet.executor_boot_id:
+        reasons.append("invalid_executor_boot_id")
     if isinstance(packet.command_id, bool) or not isinstance(packet.command_id, int) or packet.command_id < 0:
         reasons.append("invalid_command_id")
 
@@ -764,6 +889,10 @@ def gate(
                 reasons.append("previous_control_rate_mismatch")
             if previous_applied_action.clock_id != schema.clock_id:
                 reasons.append("previous_clock_mismatch")
+            if previous_applied_action.command_session_id != packet.command_session_id:
+                reasons.append("previous_command_session_mismatch")
+            if previous_applied_action.executor_boot_id != packet.executor_boot_id:
+                reasons.append("previous_executor_boot_mismatch")
             if (
                 isinstance(previous_applied_action.command_id, bool)
                 or not isinstance(previous_applied_action.command_id, int)
@@ -867,6 +996,16 @@ def action_transition_audit() -> dict[str, object]:
             config,
             previous_applied_action=replace(previous, acknowledged_command_id=6),
         ),
+        "previous_session": gate(
+            smooth_packet,
+            config,
+            previous_applied_action=replace(previous, command_session_id="policy-session-002"),
+        ),
+        "previous_boot": gate(
+            smooth_packet,
+            config,
+            previous_applied_action=replace(previous, executor_boot_id="executor-boot-011"),
+        ),
     }
 
     def transition_record(packet: ActionPacket, decision: dict[str, object]) -> dict[str, object]:
@@ -899,6 +1038,8 @@ def action_transition_audit() -> dict[str, object]:
         "previous_applied_action": previous.action,
         "previous_command_id": previous.command_id,
         "acknowledged_command_id": previous.acknowledged_command_id,
+        "command_session_id": previous.command_session_id,
+        "executor_boot_id": previous.executor_boot_id,
         "smooth_transition": transition_record(smooth_packet, smooth),
         "legal_endpoint_jump": transition_record(jump_packet, jump),
         "missing_history": missing_history,
@@ -907,6 +1048,48 @@ def action_transition_audit() -> dict[str, object]:
             "hand-authored physical-unit action vectors, identity fields, command acknowledgement, and "
             "step IDs; not authenticated acknowledgement, dynamics, acceleration, jerk, tracking, "
             "feasibility, or safety evidence"
+        ),
+    }
+
+
+def command_idempotency_audit() -> dict[str, object]:
+    """Exercise duplicate, conflict, ordering, session, and boot controls in one epoch."""
+
+    ledger = ExecutorLedger("policy-session-003", "executor-boot-012", highest_command_id=7)
+    packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")
+    updated, first = apply_command_once(packet, ledger)
+    after_duplicate, duplicate = apply_command_once(packet, updated)
+    _, conflict = apply_command_once(replace(packet, action=(0.3, -0.1)), updated)
+    _, contract_conflict = apply_command_once(replace(packet, valid_until_step=6), updated)
+    _, out_of_order = apply_command_once(replace(packet, command_id=6), updated)
+    _, wrong_session = apply_command_once(
+        replace(packet, command_id=9, command_session_id="policy-session-004"), updated
+    )
+    _, wrong_boot = apply_command_once(
+        replace(packet, command_id=9, executor_boot_id="executor-boot-013"), updated
+    )
+    restarted = ExecutorLedger("policy-session-004", "executor-boot-013")
+    restarted_packet = replace(
+        packet,
+        command_id=0,
+        command_session_id="policy-session-004",
+        executor_boot_id="executor-boot-013",
+    )
+    restarted_updated, explicit_restart = apply_command_once(restarted_packet, restarted)
+    return {
+        "first": first,
+        "duplicate": duplicate,
+        "conflict": conflict,
+        "contract_conflict": contract_conflict,
+        "out_of_order": out_of_order,
+        "wrong_session": wrong_session,
+        "wrong_boot": wrong_boot,
+        "explicit_restart": explicit_restart,
+        "receipt_count_after_duplicate": len(after_duplicate.receipts),
+        "receipt_count_after_explicit_restart": len(restarted_updated.receipts),
+        "scope": (
+            "immutable in-memory state transition after gating; not a database transaction, "
+            "authenticated actuator acknowledgement, crash-recovery proof, or exactly-once physical effect"
         ),
     }
 
@@ -972,6 +1155,7 @@ def evaluate() -> dict[str, object]:
         },
         "severity_stratified_selective_audit": severity_stratified_selective_audit(),
         "action_transition_audit": action_transition_audit(),
+        "command_idempotency_audit": command_idempotency_audit(),
         "fallback_is_profile_specific": {
             "manipulator": GateConfig(fallback="hold_position").fallback,
             "mobile_robot": GateConfig(fallback="controlled_stop").fallback,

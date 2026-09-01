@@ -12,12 +12,15 @@ from deployment_gate import (  # noqa: E402
     AppliedAction,
     BURSTED_LATENCIES_MS,
     GateConfig,
+    ExecutorLedger,
     LATENCIES_MS,
     ReactivationReceipt,
     SCATTERED_LATENCIES_MS,
     audit_async_schedule,
     action_transition_audit,
+    apply_command_once,
     audit_fallback_lifecycle,
+    command_idempotency_audit,
     evaluate,
     fallback_lifecycle_audit,
     fallback_reactivation_audit,
@@ -288,6 +291,41 @@ class DeploymentGateTests(unittest.TestCase):
             ["previous_control_rate_mismatch"],
         )
         self.assertEqual(cases["previous_ack"]["reasons"], ["invalid_applied_action_ack"])
+        self.assertEqual(
+            cases["previous_session"]["reasons"],
+            ["previous_command_session_mismatch"],
+        )
+        self.assertEqual(
+            cases["previous_boot"]["reasons"],
+            ["previous_executor_boot_mismatch"],
+        )
+
+    def test_duplicate_command_returns_cached_receipt_without_reapplication(self):
+        audit = command_idempotency_audit()
+        self.assertTrue(audit["first"]["applied_new"])
+        self.assertFalse(audit["duplicate"]["applied_new"])
+        self.assertEqual(audit["duplicate"]["status"], "duplicate_returned_cached_receipt")
+        self.assertEqual(audit["receipt_count_after_duplicate"], 1)
+
+    def test_same_command_identity_cannot_change_payload(self):
+        audit = command_idempotency_audit()
+        self.assertEqual(audit["conflict"]["status"], "command_identity_conflict")
+        self.assertEqual(audit["contract_conflict"]["status"], "command_identity_conflict")
+        self.assertEqual(audit["out_of_order"]["status"], "stale_or_out_of_order_command")
+
+    def test_command_ledger_binds_producer_session_and_executor_boot(self):
+        audit = command_idempotency_audit()
+        self.assertEqual(audit["wrong_session"]["status"], "command_session_mismatch")
+        self.assertEqual(audit["wrong_boot"]["status"], "executor_boot_mismatch")
+        self.assertEqual(audit["explicit_restart"]["status"], "applied_once")
+        self.assertEqual(audit["receipt_count_after_explicit_restart"], 1)
+
+    def test_command_ledger_rejects_ambiguous_state(self):
+        packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")
+        with self.assertRaises(ValueError):
+            apply_command_once(packet, ExecutorLedger("", "boot"))
+        with self.assertRaises(ValueError):
+            apply_command_once(packet, ExecutorLedger("session", "boot", highest_command_id=True))
 
     def test_current_packet_identity_is_checked_without_transition_history(self):
         packet = ActionPacket(

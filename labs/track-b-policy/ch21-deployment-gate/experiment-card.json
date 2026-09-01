@@ -3,7 +3,7 @@
   "id": "EXP-21-01",
   "chapter": 21,
   "status": "smoke",
-  "claim_ids": ["CLAIM-21-02", "CLAIM-21-03", "CLAIM-21-07", "CLAIM-21-09", "CLAIM-21-10", "CLAIM-21-11", "CLAIM-21-12", "CLAIM-21-13", "CLAIM-21-14", "CLAIM-21-15", "CLAIM-21-16"],
+  "claim_ids": ["CLAIM-21-02", "CLAIM-21-03", "CLAIM-21-07", "CLAIM-21-09", "CLAIM-21-10", "CLAIM-21-11", "CLAIM-21-12", "CLAIM-21-13", "CLAIM-21-14", "CLAIM-21-15", "CLAIM-21-16", "CLAIM-21-17"],
   "claim_scope": [
     "a mean latency below the deadline can hide a deadline miss in a fixed tail sample",
     "stale observations, deadline misses, invalid actions, bounds violations, expired chunks, and excessive uncertainty need distinct gate reasons",
@@ -15,7 +15,8 @@
     "a fixed reactivation-receipt audit rejects stale, future, misbound, unauthorized, denied, replayed, consumed, and out-of-order records",
     "equal coverage, accepted failure rate, and count-based rejection recall can hide which authored-severity failure remains accepted",
     "actions inside identical static bounds can differ under a per-field physical-unit adjacent-step delta gate, which fails closed without bound applied-action history",
-    "current and prior actions must share schema, frame, field, unit, rate, clock, command, acknowledgement, and step identity before a transition is compared"
+    "current and prior actions must share schema, frame, field, unit, rate, clock, command, acknowledgement, session, boot, and step identity before a transition is compared",
+    "within one authored executor epoch, an exact command retry returns a cached receipt while payload conflicts, stale order, and session or boot mismatches remain distinct"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -23,8 +24,8 @@
     "config": "standard-library deadline gate with the Chapter 15/21 shared mobile-base-v1 action schema"
   },
   "data": {
-    "name": "procedural latency bursts, physical-unit action packets, identity-bound adjacent-step transitions, async chunks, and fallback transitions",
-    "version": "v9",
+    "name": "procedural latency bursts, physical-unit action packets, epoch-bound idempotency, adjacent-step transitions, async chunks, and fallback transitions",
+    "version": "v10",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -79,8 +80,11 @@
     {"name": "smooth_linear_velocity_delta", "value": 0.2, "unit": "m/s/step", "split": "action-transition-audit"},
     {"name": "rejected_linear_velocity_delta", "value": 0.4, "unit": "m/s/step", "split": "action-transition-audit"},
     {"name": "linear_velocity_delta_limit", "value": 0.25, "unit": "m/s/step", "split": "action-transition-audit"},
-    {"name": "action_identity_negative_control_count", "value": 4.0, "unit": "case", "split": "action-transition-audit"},
-    {"name": "action_identity_rejected_count", "value": 4.0, "unit": "case", "split": "action-transition-audit"}
+    {"name": "action_identity_negative_control_count", "value": 6.0, "unit": "case", "split": "action-transition-audit"},
+    {"name": "action_identity_rejected_count", "value": 6.0, "unit": "case", "split": "action-transition-audit"},
+    {"name": "command_duplicate_new_application_count", "value": 0.0, "unit": "application", "split": "command-idempotency-audit"},
+    {"name": "command_receipt_count_after_duplicate", "value": 1.0, "unit": "receipt", "split": "command-idempotency-audit"},
+    {"name": "command_identity_failure_count", "value": 5.0, "unit": "case", "split": "command-idempotency-audit"}
   ],
   "artifacts": ["results/ch21/EXP-21-01-smoke.json"],
   "limitations": [
@@ -90,6 +94,7 @@
     "the discrete async schedule does not measure a scheduler, clock, network, queue implementation, or chunk fusion",
     "uncertainty scores, failure labels, and unvalidated consequence proxy weights are hand-authored and do not validate an estimator, calibrated probability, injury level, monetary loss, or real-world risk",
     "the adjacent-step action audit shares an authored physical-unit schema and checks identity fields, but its acknowledgement and step history remain hand-authored; it does not authenticate actuator feedback, compute physical acceleration or jerk, or establish feasibility, tracking stability, or safety",
+    "the immutable command ledger is in-memory teaching state; it does not provide durable transactions, concurrent linearization, crash recovery, authenticated receipts, or exactly-once physical effects",
     "no scheduler, network, ROS, model, accelerator, hardware, fault tree, or certification"
   ]
 }

@@ -4,23 +4,110 @@
   "metrics": {
     "action_transition_audit": {
       "acknowledged_command_id": 7,
+      "command_session_id": "policy-session-003",
+      "executor_boot_id": "executor-boot-012",
       "field_contracts": {
-        "linear_velocity": {"maximum":0.5,"maximum_delta_per_step":0.25,"minimum":-0.5,"unit":"m/s"},
-        "yaw_rate": {"maximum":1,"maximum_delta_per_step":0.25,"minimum":-1,"unit":"rad/s"}
+        "linear_velocity": {
+          "maximum": 0.5,
+          "maximum_delta_per_step": 0.25,
+          "minimum": -0.5,
+          "unit": "m/s"
+        },
+        "yaw_rate": {
+          "maximum": 1.0,
+          "maximum_delta_per_step": 0.25,
+          "minimum": -1.0,
+          "unit": "rad/s"
+        }
       },
       "identity_negative_controls": {
-        "current_schema": {"allowed":false,"reasons":["schema_mismatch"],"selected_mode":"hold_position"},
-        "previous_ack": {"allowed":false,"reasons":["invalid_applied_action_ack"],"selected_mode":"hold_position"},
-        "previous_control_rate": {"allowed":false,"reasons":["previous_control_rate_mismatch"],"selected_mode":"hold_position"},
-        "previous_units": {"allowed":false,"reasons":["previous_unit_mismatch"],"selected_mode":"hold_position"}
+        "current_schema": {
+          "allowed": false,
+          "reasons": [
+            "schema_mismatch"
+          ],
+          "selected_mode": "hold_position"
+        },
+        "previous_ack": {
+          "allowed": false,
+          "reasons": [
+            "invalid_applied_action_ack"
+          ],
+          "selected_mode": "hold_position"
+        },
+        "previous_boot": {
+          "allowed": false,
+          "reasons": [
+            "previous_executor_boot_mismatch"
+          ],
+          "selected_mode": "hold_position"
+        },
+        "previous_control_rate": {
+          "allowed": false,
+          "reasons": [
+            "previous_control_rate_mismatch"
+          ],
+          "selected_mode": "hold_position"
+        },
+        "previous_session": {
+          "allowed": false,
+          "reasons": [
+            "previous_command_session_mismatch"
+          ],
+          "selected_mode": "hold_position"
+        },
+        "previous_units": {
+          "allowed": false,
+          "reasons": [
+            "previous_unit_mismatch"
+          ],
+          "selected_mode": "hold_position"
+        }
       },
-      "legal_endpoint_jump": {"absolute_delta_by_field":{"linear_velocity":0.4,"yaw_rate":0.1},"action":[0.4,-0.1],"allowed":false,"reasons":["action_delta_exceeded:linear_velocity"],"selected_mode":"hold_position","static_endpoint_within_bounds":true},
-      "missing_history": {"allowed":false,"reasons":["missing_previous_applied_action"],"selected_mode":"hold_position"},
-      "previous_applied_action": [0,0],
+      "legal_endpoint_jump": {
+        "absolute_delta_by_field": {
+          "linear_velocity": 0.4,
+          "yaw_rate": 0.1
+        },
+        "action": [
+          0.4,
+          -0.1
+        ],
+        "allowed": false,
+        "reasons": [
+          "action_delta_exceeded:linear_velocity"
+        ],
+        "selected_mode": "hold_position",
+        "static_endpoint_within_bounds": true
+      },
+      "missing_history": {
+        "allowed": false,
+        "reasons": [
+          "missing_previous_applied_action"
+        ],
+        "selected_mode": "hold_position"
+      },
+      "previous_applied_action": [
+        0.0,
+        0.0
+      ],
       "previous_command_id": 7,
       "schema_id": "mobile-base-v1",
       "scope": "hand-authored physical-unit action vectors, identity fields, command acknowledgement, and step IDs; not authenticated acknowledgement, dynamics, acceleration, jerk, tracking, feasibility, or safety evidence",
-      "smooth_transition": {"absolute_delta_by_field":{"linear_velocity":0.2,"yaw_rate":0.1},"action":[0.2,-0.1],"allowed":true,"reasons":[],"selected_mode":"policy_action","static_endpoint_within_bounds":true}
+      "smooth_transition": {
+        "absolute_delta_by_field": {
+          "linear_velocity": 0.2,
+          "yaw_rate": 0.1
+        },
+        "action": [
+          0.2,
+          -0.1
+        ],
+        "allowed": true,
+        "reasons": [],
+        "selected_mode": "policy_action",
+        "static_endpoint_within_bounds": true
+      }
     },
     "allowed_count": 1,
     "async_schedule": {
@@ -33,19 +120,157 @@
       },
       "total_steps": 8,
       "trace": [
-        {"mode": "policy_action", "observation_lag_steps": 0, "reason": null, "selected_chunk": "chunk-a", "step": 0},
-        {"mode": "policy_action", "observation_lag_steps": 1, "reason": null, "selected_chunk": "chunk-a", "step": 1},
-        {"mode": "policy_action", "observation_lag_steps": 2, "reason": null, "selected_chunk": "chunk-a", "step": 2},
-        {"mode": "policy_action", "observation_lag_steps": 2, "reason": null, "selected_chunk": "chunk-b", "step": 3},
-        {"mode": "fallback", "observation_lag_steps": 3, "reason": "stale_chunk", "selected_chunk": "chunk-b", "step": 4},
-        {"mode": "fallback", "observation_lag_steps": null, "reason": "queue_underflow", "selected_chunk": null, "step": 5},
-        {"mode": "policy_action", "observation_lag_steps": 1, "reason": null, "selected_chunk": "chunk-c", "step": 6},
-        {"mode": "policy_action", "observation_lag_steps": 2, "reason": null, "selected_chunk": "chunk-c", "step": 7}
+        {
+          "mode": "policy_action",
+          "observation_lag_steps": 0,
+          "reason": null,
+          "selected_chunk": "chunk-a",
+          "step": 0
+        },
+        {
+          "mode": "policy_action",
+          "observation_lag_steps": 1,
+          "reason": null,
+          "selected_chunk": "chunk-a",
+          "step": 1
+        },
+        {
+          "mode": "policy_action",
+          "observation_lag_steps": 2,
+          "reason": null,
+          "selected_chunk": "chunk-a",
+          "step": 2
+        },
+        {
+          "mode": "policy_action",
+          "observation_lag_steps": 2,
+          "reason": null,
+          "selected_chunk": "chunk-b",
+          "step": 3
+        },
+        {
+          "mode": "fallback",
+          "observation_lag_steps": 3,
+          "reason": "stale_chunk",
+          "selected_chunk": "chunk-b",
+          "step": 4
+        },
+        {
+          "mode": "fallback",
+          "observation_lag_steps": null,
+          "reason": "queue_underflow",
+          "selected_chunk": null,
+          "step": 5
+        },
+        {
+          "mode": "policy_action",
+          "observation_lag_steps": 1,
+          "reason": null,
+          "selected_chunk": "chunk-c",
+          "step": 6
+        },
+        {
+          "mode": "policy_action",
+          "observation_lag_steps": 2,
+          "reason": null,
+          "selected_chunk": "chunk-c",
+          "step": 7
+        }
       ]
     },
+    "command_idempotency_audit": {
+      "conflict": {
+        "applied_new": false,
+        "status": "command_identity_conflict"
+      },
+      "contract_conflict": {
+        "applied_new": false,
+        "status": "command_identity_conflict"
+      },
+      "duplicate": {
+        "applied_new": false,
+        "receipt": {
+          "action": [
+            0.2,
+            -0.1
+          ],
+          "applied_step": 2,
+          "command_id": 8,
+          "command_session_id": "policy-session-003",
+          "executor_boot_id": "executor-boot-012",
+          "payload_digest": "7d330ad92d12119633dfd1a85d7e7382ab30257e49720c349ae06ba574bc8680"
+        },
+        "status": "duplicate_returned_cached_receipt"
+      },
+      "explicit_restart": {
+        "applied_new": true,
+        "receipt": {
+          "action": [
+            0.2,
+            -0.1
+          ],
+          "applied_step": 2,
+          "command_id": 0,
+          "command_session_id": "policy-session-004",
+          "executor_boot_id": "executor-boot-013",
+          "payload_digest": "7d330ad92d12119633dfd1a85d7e7382ab30257e49720c349ae06ba574bc8680"
+        },
+        "status": "applied_once"
+      },
+      "first": {
+        "applied_new": true,
+        "receipt": {
+          "action": [
+            0.2,
+            -0.1
+          ],
+          "applied_step": 2,
+          "command_id": 8,
+          "command_session_id": "policy-session-003",
+          "executor_boot_id": "executor-boot-012",
+          "payload_digest": "7d330ad92d12119633dfd1a85d7e7382ab30257e49720c349ae06ba574bc8680"
+        },
+        "status": "applied_once"
+      },
+      "out_of_order": {
+        "applied_new": false,
+        "status": "stale_or_out_of_order_command"
+      },
+      "receipt_count_after_duplicate": 1,
+      "receipt_count_after_explicit_restart": 1,
+      "scope": "immutable in-memory state transition after gating; not a database transaction, authenticated actuator acknowledgement, crash-recovery proof, or exactly-once physical effect",
+      "wrong_boot": {
+        "applied_new": false,
+        "status": "executor_boot_mismatch"
+      },
+      "wrong_session": {
+        "applied_new": false,
+        "status": "command_session_mismatch"
+      }
+    },
     "deadline_burst_comparison": {
-      "bursted": {"all_cycles_meet_deadline": false, "deadline_miss_count": 2, "deadline_miss_rate": 0.333333, "max_ms": 80.0, "maximum_consecutive_deadline_misses": 2, "mean_ms": 40.0, "mean_passes_deadline": true, "p95_ms": 80.0, "p99_ms": 80.0},
-      "scattered": {"all_cycles_meet_deadline": false, "deadline_miss_count": 2, "deadline_miss_rate": 0.333333, "max_ms": 80.0, "maximum_consecutive_deadline_misses": 1, "mean_ms": 40.0, "mean_passes_deadline": true, "p95_ms": 80.0, "p99_ms": 80.0}
+      "bursted": {
+        "all_cycles_meet_deadline": false,
+        "deadline_miss_count": 2,
+        "deadline_miss_rate": 0.333333,
+        "max_ms": 80.0,
+        "maximum_consecutive_deadline_misses": 2,
+        "mean_ms": 40.0,
+        "mean_passes_deadline": true,
+        "p95_ms": 80.0,
+        "p99_ms": 80.0
+      },
+      "scattered": {
+        "all_cycles_meet_deadline": false,
+        "deadline_miss_count": 2,
+        "deadline_miss_rate": 0.333333,
+        "max_ms": 80.0,
+        "maximum_consecutive_deadline_misses": 1,
+        "mean_ms": 40.0,
+        "mean_passes_deadline": true,
+        "p95_ms": 80.0,
+        "p99_ms": 80.0
+      }
     },
     "decisions": {
       "expired": {
@@ -107,20 +332,92 @@
         "max_operating_steps": 2,
         "reactivation_count": 0,
         "trace": [
-          {"blocked_reason": null, "effective_state": "requested", "failure_reason": null, "operating_steps": 0, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "requested", "step": 0},
-          {"blocked_reason": "fallback_not_succeeded", "effective_state": "operating", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "operating", "step": 1},
-          {"blocked_reason": "fallback_not_succeeded", "effective_state": "operating", "failure_reason": null, "operating_steps": 2, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "operating", "step": 2},
-          {"blocked_reason": "fallback_failed", "effective_state": "failed", "failure_reason": "fallback_timeout", "operating_steps": 3, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "operating", "step": 3}
+          {
+            "blocked_reason": null,
+            "effective_state": "requested",
+            "failure_reason": null,
+            "operating_steps": 0,
+            "reactivation_allowed": false,
+            "reactivation_authorized": false,
+            "reported_state": "requested",
+            "step": 0
+          },
+          {
+            "blocked_reason": "fallback_not_succeeded",
+            "effective_state": "operating",
+            "failure_reason": null,
+            "operating_steps": 1,
+            "reactivation_allowed": false,
+            "reactivation_authorized": true,
+            "reported_state": "operating",
+            "step": 1
+          },
+          {
+            "blocked_reason": "fallback_not_succeeded",
+            "effective_state": "operating",
+            "failure_reason": null,
+            "operating_steps": 2,
+            "reactivation_allowed": false,
+            "reactivation_authorized": true,
+            "reported_state": "operating",
+            "step": 2
+          },
+          {
+            "blocked_reason": "fallback_failed",
+            "effective_state": "failed",
+            "failure_reason": "fallback_timeout",
+            "operating_steps": 3,
+            "reactivation_allowed": false,
+            "reactivation_authorized": true,
+            "reported_state": "operating",
+            "step": 3
+          }
         ]
       },
       "reported_failure": {
         "max_operating_steps": 2,
         "reactivation_count": 0,
         "trace": [
-          {"blocked_reason": null, "effective_state": "requested", "failure_reason": null, "operating_steps": 0, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "requested", "step": 0},
-          {"blocked_reason": null, "effective_state": "operating", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "operating", "step": 1},
-          {"blocked_reason": "fallback_failed", "effective_state": "failed", "failure_reason": "fallback_reported_failed", "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "failed", "step": 2},
-          {"blocked_reason": "fallback_failed", "effective_state": "failed", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "failed", "step": 3}
+          {
+            "blocked_reason": null,
+            "effective_state": "requested",
+            "failure_reason": null,
+            "operating_steps": 0,
+            "reactivation_allowed": false,
+            "reactivation_authorized": false,
+            "reported_state": "requested",
+            "step": 0
+          },
+          {
+            "blocked_reason": null,
+            "effective_state": "operating",
+            "failure_reason": null,
+            "operating_steps": 1,
+            "reactivation_allowed": false,
+            "reactivation_authorized": false,
+            "reported_state": "operating",
+            "step": 1
+          },
+          {
+            "blocked_reason": "fallback_failed",
+            "effective_state": "failed",
+            "failure_reason": "fallback_reported_failed",
+            "operating_steps": 1,
+            "reactivation_allowed": false,
+            "reactivation_authorized": true,
+            "reported_state": "failed",
+            "step": 2
+          },
+          {
+            "blocked_reason": "fallback_failed",
+            "effective_state": "failed",
+            "failure_reason": null,
+            "operating_steps": 1,
+            "reactivation_allowed": false,
+            "reactivation_authorized": true,
+            "reported_state": "failed",
+            "step": 3
+          }
         ]
       },
       "scope": "hand-authored lifecycle reports and authorization; not fallback execution or safety evidence",
@@ -128,20 +425,92 @@
         "max_operating_steps": 2,
         "reactivation_count": 1,
         "trace": [
-          {"blocked_reason": null, "effective_state": "requested", "failure_reason": null, "operating_steps": 0, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "requested", "step": 0},
-          {"blocked_reason": null, "effective_state": "operating", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "operating", "step": 1},
-          {"blocked_reason": "reactivation_not_authorized", "effective_state": "succeeded", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "succeeded", "step": 2},
-          {"blocked_reason": null, "effective_state": "succeeded", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": true, "reactivation_authorized": true, "reported_state": "succeeded", "step": 3}
+          {
+            "blocked_reason": null,
+            "effective_state": "requested",
+            "failure_reason": null,
+            "operating_steps": 0,
+            "reactivation_allowed": false,
+            "reactivation_authorized": false,
+            "reported_state": "requested",
+            "step": 0
+          },
+          {
+            "blocked_reason": null,
+            "effective_state": "operating",
+            "failure_reason": null,
+            "operating_steps": 1,
+            "reactivation_allowed": false,
+            "reactivation_authorized": false,
+            "reported_state": "operating",
+            "step": 1
+          },
+          {
+            "blocked_reason": "reactivation_not_authorized",
+            "effective_state": "succeeded",
+            "failure_reason": null,
+            "operating_steps": 1,
+            "reactivation_allowed": false,
+            "reactivation_authorized": false,
+            "reported_state": "succeeded",
+            "step": 2
+          },
+          {
+            "blocked_reason": null,
+            "effective_state": "succeeded",
+            "failure_reason": null,
+            "operating_steps": 1,
+            "reactivation_allowed": true,
+            "reactivation_authorized": true,
+            "reported_state": "succeeded",
+            "step": 3
+          }
         ]
       },
       "timeout_then_late_success": {
         "max_operating_steps": 1,
         "reactivation_count": 0,
         "trace": [
-          {"blocked_reason": null, "effective_state": "requested", "failure_reason": null, "operating_steps": 0, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "requested", "step": 0},
-          {"blocked_reason": null, "effective_state": "operating", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "operating", "step": 1},
-          {"blocked_reason": null, "effective_state": "failed", "failure_reason": "fallback_timeout", "operating_steps": 2, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "operating", "step": 2},
-          {"blocked_reason": "fallback_failed", "effective_state": "failed", "failure_reason": null, "operating_steps": 2, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "succeeded", "step": 3}
+          {
+            "blocked_reason": null,
+            "effective_state": "requested",
+            "failure_reason": null,
+            "operating_steps": 0,
+            "reactivation_allowed": false,
+            "reactivation_authorized": false,
+            "reported_state": "requested",
+            "step": 0
+          },
+          {
+            "blocked_reason": null,
+            "effective_state": "operating",
+            "failure_reason": null,
+            "operating_steps": 1,
+            "reactivation_allowed": false,
+            "reactivation_authorized": false,
+            "reported_state": "operating",
+            "step": 1
+          },
+          {
+            "blocked_reason": null,
+            "effective_state": "failed",
+            "failure_reason": "fallback_timeout",
+            "operating_steps": 2,
+            "reactivation_allowed": false,
+            "reactivation_authorized": false,
+            "reported_state": "operating",
+            "step": 2
+          },
+          {
+            "blocked_reason": "fallback_failed",
+            "effective_state": "failed",
+            "failure_reason": null,
+            "operating_steps": 2,
+            "reactivation_allowed": false,
+            "reactivation_authorized": true,
+            "reported_state": "succeeded",
+            "step": 3
+          }
         ]
       }
     },
@@ -151,13 +520,69 @@
         "reactivation_authorization_required": true,
         "successes_to_recover": 2,
         "trace": [
-          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 0},
-          {"allowed": false, "failure_streak": 1, "mode": "controlled_stop", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 1},
-          {"allowed": false, "failure_streak": 2, "mode": "controlled_stop", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 2},
-          {"allowed": false, "failure_streak": 3, "mode": "request_operator", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 3},
-          {"allowed": true, "failure_streak": 0, "mode": "request_operator", "reactivation_authorized": false, "recovery_blocked_reason": null, "recovery_streak": 1, "step": 4},
-          {"allowed": true, "failure_streak": 0, "mode": "request_operator", "reactivation_authorized": false, "recovery_blocked_reason": "reactivation_not_authorized", "recovery_streak": 2, "step": 5},
-          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": true, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 6}
+          {
+            "allowed": true,
+            "failure_streak": 0,
+            "mode": "policy_action",
+            "reactivation_authorized": false,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 0
+          },
+          {
+            "allowed": false,
+            "failure_streak": 1,
+            "mode": "controlled_stop",
+            "reactivation_authorized": false,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 1
+          },
+          {
+            "allowed": false,
+            "failure_streak": 2,
+            "mode": "controlled_stop",
+            "reactivation_authorized": false,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 2
+          },
+          {
+            "allowed": false,
+            "failure_streak": 3,
+            "mode": "request_operator",
+            "reactivation_authorized": false,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 3
+          },
+          {
+            "allowed": true,
+            "failure_streak": 0,
+            "mode": "request_operator",
+            "reactivation_authorized": false,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 1,
+            "step": 4
+          },
+          {
+            "allowed": true,
+            "failure_streak": 0,
+            "mode": "request_operator",
+            "reactivation_authorized": false,
+            "recovery_blocked_reason": "reactivation_not_authorized",
+            "recovery_streak": 2,
+            "step": 5
+          },
+          {
+            "allowed": true,
+            "failure_streak": 0,
+            "mode": "policy_action",
+            "reactivation_authorized": true,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 6
+          }
         ]
       },
       "health_only_negative_control": {
@@ -165,13 +590,69 @@
         "reactivation_authorization_required": false,
         "successes_to_recover": 2,
         "trace": [
-          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 0},
-          {"allowed": false, "failure_streak": 1, "mode": "controlled_stop", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 1},
-          {"allowed": false, "failure_streak": 2, "mode": "controlled_stop", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 2},
-          {"allowed": false, "failure_streak": 3, "mode": "request_operator", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 3},
-          {"allowed": true, "failure_streak": 0, "mode": "request_operator", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 1, "step": 4},
-          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 5},
-          {"allowed": true, "failure_streak": 0, "mode": "policy_action", "reactivation_authorized": null, "recovery_blocked_reason": null, "recovery_streak": 0, "step": 6}
+          {
+            "allowed": true,
+            "failure_streak": 0,
+            "mode": "policy_action",
+            "reactivation_authorized": null,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 0
+          },
+          {
+            "allowed": false,
+            "failure_streak": 1,
+            "mode": "controlled_stop",
+            "reactivation_authorized": null,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 1
+          },
+          {
+            "allowed": false,
+            "failure_streak": 2,
+            "mode": "controlled_stop",
+            "reactivation_authorized": null,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 2
+          },
+          {
+            "allowed": false,
+            "failure_streak": 3,
+            "mode": "request_operator",
+            "reactivation_authorized": null,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 3
+          },
+          {
+            "allowed": true,
+            "failure_streak": 0,
+            "mode": "request_operator",
+            "reactivation_authorized": null,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 1,
+            "step": 4
+          },
+          {
+            "allowed": true,
+            "failure_streak": 0,
+            "mode": "policy_action",
+            "reactivation_authorized": null,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 5
+          },
+          {
+            "allowed": true,
+            "failure_streak": 0,
+            "mode": "policy_action",
+            "reactivation_authorized": null,
+            "recovery_blocked_reason": null,
+            "recovery_streak": 0,
+            "step": 6
+          }
         ]
       },
       "scope": "hand-authored gate-health and reactivation-authorization sequences; not fallback completion"
@@ -191,15 +672,32 @@
       "allowed_count": 1,
       "case_count": 9,
       "cases": {
-        "denied": ["reactivation_not_approved"],
-        "expired": ["stale_or_future_receipt_time"],
-        "future": ["stale_or_future_receipt_time"],
-        "out_of_order": ["replay_or_out_of_order_receipt"],
-        "replayed": ["replay_or_out_of_order_receipt", "receipt_already_consumed"],
-        "unauthorized_approver": ["unauthorized_approver"],
+        "denied": [
+          "reactivation_not_approved"
+        ],
+        "expired": [
+          "stale_or_future_receipt_time"
+        ],
+        "future": [
+          "stale_or_future_receipt_time"
+        ],
+        "out_of_order": [
+          "replay_or_out_of_order_receipt"
+        ],
+        "replayed": [
+          "replay_or_out_of_order_receipt",
+          "receipt_already_consumed"
+        ],
+        "unauthorized_approver": [
+          "unauthorized_approver"
+        ],
         "valid": [],
-        "wrong_run": ["fallback_run_mismatch"],
-        "wrong_target": ["target_mode_mismatch"]
+        "wrong_run": [
+          "fallback_run_mismatch"
+        ],
+        "wrong_target": [
+          "target_mode_mismatch"
+        ]
       },
       "rejected_count": 8,
       "scope": "hand-authored receipt fields and in-memory single-session state; not authentication, integrity, cryptography, reboot persistence, or safety evidence"
@@ -227,7 +725,9 @@
     "severity_stratified_selective_audit": {
       "reject_high_consequence_failure": {
         "accepted_failure_authored_weight": 1.0,
-        "accepted_failure_ids": ["low-consequence-failure"],
+        "accepted_failure_ids": [
+          "low-consequence-failure"
+        ],
         "accepted_failure_rate": 0.25,
         "authored_weight_recall_by_rejection": 0.909091,
         "coverage": 0.666667,
@@ -236,7 +736,9 @@
       },
       "reject_low_consequence_failure": {
         "accepted_failure_authored_weight": 10.0,
-        "accepted_failure_ids": ["high-consequence-failure"],
+        "accepted_failure_ids": [
+          "high-consequence-failure"
+        ],
         "accepted_failure_rate": 0.25,
         "authored_weight_recall_by_rejection": 0.090909,
         "coverage": 0.666667,

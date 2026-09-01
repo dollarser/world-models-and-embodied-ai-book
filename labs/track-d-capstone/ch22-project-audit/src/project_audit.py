@@ -348,8 +348,8 @@ VALID_DRIVING_PACKAGE = {
         "deployment_or_safety_gate": {
             "chapter": 21,
             "artifact": "EXP-21-01",
-            "revision": "fixture-v9",
-            "decision": "reject stale, late, uncertain, out-of-bounds, identity-mismatched, or cross-step discontinuous actions and retain severity-stratified fallback consequences",
+            "revision": "fixture-v10",
+            "decision": "reject stale, late, uncertain, out-of-bounds, epoch-identity-mismatched, duplicate-conflicting, or cross-step discontinuous actions and retain severity-stratified fallback consequences",
             "depends_on": ["input_contract", "method_contract"],
         },
         "evidence_package": {

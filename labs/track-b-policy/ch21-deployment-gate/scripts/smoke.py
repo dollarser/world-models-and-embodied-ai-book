@@ -90,9 +90,33 @@ def main() -> int:
         "previous_units": ["previous_unit_mismatch"],
         "previous_control_rate": ["previous_control_rate_mismatch"],
         "previous_ack": ["invalid_applied_action_ack"],
+        "previous_session": ["previous_command_session_mismatch"],
+        "previous_boot": ["previous_executor_boot_mismatch"],
     }
     if any(identity_cases[name]["reasons"] != reasons for name, reasons in expected_identity_reasons.items()):
         raise AssertionError("schema, unit, rate, and acknowledgement controls must remain distinct")
+    command_audit = metrics["command_idempotency_audit"]
+    if command_audit["first"]["status"] != "applied_once":
+        raise AssertionError("the first command in a bound epoch must produce a new receipt")
+    if (
+        command_audit["duplicate"]["status"] != "duplicate_returned_cached_receipt"
+        or command_audit["receipt_count_after_duplicate"] != 1
+    ):
+        raise AssertionError("an exact duplicate must return the cached receipt without reapplication")
+    expected_command_failures = {
+        "conflict": "command_identity_conflict",
+        "contract_conflict": "command_identity_conflict",
+        "out_of_order": "stale_or_out_of_order_command",
+        "wrong_session": "command_session_mismatch",
+        "wrong_boot": "executor_boot_mismatch",
+    }
+    if any(
+        command_audit[name]["status"] != status
+        for name, status in expected_command_failures.items()
+    ):
+        raise AssertionError("command identity failures must retain distinct statuses")
+    if command_audit["explicit_restart"]["status"] != "applied_once":
+        raise AssertionError("counter reset requires an explicitly new producer session and executor boot")
     report = {
         "experiment_id": "EXP-21-01",
         "status": "smoke",

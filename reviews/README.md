@@ -2,6 +2,7 @@
 
 本目录保存章节和批次的人工审查证据。`book-manifest.json` 是章节状态的机器可读来源；审查记录解释为什么某次状态升级成立，以及哪些限制仍未解除。
 
+- [第21章命令 epoch 与幂等边界审查（2026-09-02）](ch21-command-epoch-idempotency-review-2026-09-02.md)
 - [批次 A：第2、4、6、9章四类交叉审查](batch-a-review.md)
 - [批次 B：第13、14、15、20章四类交叉审查](batch-b-review.md)（第20章的一致性门随后在批次 D 关闭）
 - [批次 C：第3、10、11、12、19章四类交叉审查](batch-c-review.md)

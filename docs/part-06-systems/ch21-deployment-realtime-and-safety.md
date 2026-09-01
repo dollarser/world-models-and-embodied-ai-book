@@ -126,7 +126,7 @@ make ch21-smoke
 
 `CLAIM-21-03`（result）：七个 packet 中只有健康包通过，六种注入分别产生唯一原因码并进入 fallback。该结果验证网关实现，不估计真实系统故障率或安全性。
 
-结果保存在 `results/ch21/EXP-21-01-smoke.json`；32 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系、授权序列长度/类型错误、跳过 `operating` 的生命周期、含糊状态机配置、非法 receipt、重复 case ID、非有限后果权重、未知接受 ID，以及缺失/错步/错维度、schema/单位/频率/ack 错配的前序已执行动作。第15章另以第19项测试确认两章导入同一共享 schema 对象。
+结果保存在 `results/ch21/EXP-21-01-smoke.json`；36 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系、授权序列长度/类型错误、跳过 `operating` 的生命周期、含糊状态机配置、非法 receipt、重复 case ID、非有限后果权重、未知接受 ID，以及缺失/错步/错维度、schema/单位/频率/ack/session/boot 错配的前序已执行动作；命令审计另区分精确重试、同 ID 改写、倒序和显式新 epoch。第15章另以第19项测试确认两章导入同一共享 schema 对象。
 
 ### 21.4.1 合法端点不等于合法跃迁
 
@@ -136,7 +136,7 @@ make ch21-smoke
 |a_{t,j}-a^{\mathrm{applied}}_{t-1,j}| \le \Delta_{max,j},\quad \forall j.
 \]
 
-这里的 `a_applied` 必须来自绑定到紧邻步号的执行确认，而不是策略刚生成但可能被网关拒绝、队列丢弃或执行器未执行的向量。`Δ_max,j` 也必须逐字段带单位，不能把 `m/s` 与 `rad/s` 取一个无量纲最大值。`EXP-21-01` v9 与第15章共同导入 `labs/shared/action_schema.py` 中唯一的 `mobile-base-v1`：`base_link`、10 Hz、`control_monotonic_ms`，线速度范围 `[-0.5,0.5] m/s`、角速度范围 `[-1,1] rad/s`，两个字段的教学单步变化上限分别为 `0.25 m/s/step` 与 `0.25 rad/s/step`。
+这里的 `a_applied` 必须来自绑定到紧邻步号的执行确认，而不是策略刚生成但可能被网关拒绝、队列丢弃或执行器未执行的向量。`Δ_max,j` 也必须逐字段带单位，不能把 `m/s` 与 `rad/s` 取一个无量纲最大值。`EXP-21-01` v10 与第15章共同导入 `labs/shared/action_schema.py` 中唯一的 `mobile-base-v1`：`base_link`、10 Hz、`control_monotonic_ms`，线速度范围 `[-0.5,0.5] m/s`、角速度范围 `[-1,1] rad/s`，两个字段的教学单步变化上限分别为 `0.25 m/s/step` 与 `0.25 rad/s/step`。
 
 固定负对照的前序手工“已执行”动作为 `(0 m/s,0 rad/s)`；当前 `(0.2,-0.1)` 的逐字段变化为 `(0.2,0.1)`，通过；当前 `(0.4,-0.1)` 的两个端点也在各自物理范围内，但线速度变化为 `0.4 m/s/step`，以 `action_delta_exceeded:linear_velocity` 拒绝。开启跃迁门却不提供前序记录时，另以 `missing_previous_applied_action` 失败关闭。
 
@@ -148,9 +148,9 @@ make ch21-smoke
 
 *TAB-21-07：静态端点与相邻步跃迁负对照。单位和字段来自共享教学 schema；数值仍是作者设定的 fixture，不是机器人或车辆限值。*
 
-`CLAIM-21-15`（result）：`EXP-21-01` v9 中，两个当前动作都通过同一 `mobile-base-v1` 静态范围；绑定前序 `(0,0)` 后，`(0.2,-0.1)` 的逐字段变化 `(0.2,0.1)` 均不超过 `0.25/step` 而允许，`(0.4,-0.1)` 因线速度变化 `0.4>0.25 m/s/step` 而拒绝；缺少前序记录也拒绝。该结果只验证共享 schema 下状态化门禁的原因码和 fail-closed 接线，不证明执行器 ack 可信、真实加速度/jerk 合法、动力学可行、跟踪稳定或安全。
+`CLAIM-21-15`（result）：`EXP-21-01` v10 中，两个当前动作都通过同一 `mobile-base-v1` 静态范围；绑定前序 `(0,0)` 后，`(0.2,-0.1)` 的逐字段变化 `(0.2,0.1)` 均不超过 `0.25/step` 而允许，`(0.4,-0.1)` 因线速度变化 `0.4>0.25 m/s/step` 而拒绝；缺少前序记录也拒绝。该结果只验证共享 schema 下状态化门禁的原因码和 fail-closed 接线，不证明执行器 ack 可信、真实加速度/jerk 合法、动力学可行、跟踪稳定或安全。
 
-当前 packet 与前序记录都携带 `schema_id/frame_id/field_names/units/control_hz/clock_id/command_id`。前序记录还携带 `acknowledged_command_id`；只有它等于该记录的 `command_id`、前序命令早于当前命令、步号紧邻且两侧身份都匹配同一共享 schema，才计算逐字段变化。四个单字段负对照保留独立原因：
+当前 packet 与前序记录都携带 `schema_id/frame_id/field_names/units/control_hz/clock_id/command_session_id/executor_boot_id/command_id`。前序记录还携带 `acknowledged_command_id`；只有它等于该记录的 `command_id`、前序命令早于当前命令、步号紧邻且两侧身份都匹配同一共享 schema、生产者会话和执行器启动 epoch，才计算逐字段变化。六个单字段负对照保留独立原因：
 
 | 负对照 | 唯一改动 | 原因码 |
 | --- | --- | --- |
@@ -158,14 +158,43 @@ make ch21-smoke
 | `previous_units` | 前序单位改成 `km/h, deg/s` | `previous_unit_mismatch` |
 | `previous_control_rate` | 前序频率从 10 Hz 改为 20 Hz | `previous_control_rate_mismatch` |
 | `previous_ack` | 命令7却声称 ack 命令6 | `invalid_applied_action_ack` |
+| `previous_session` | 前序生产者会话从003改为002 | `previous_command_session_mismatch` |
+| `previous_boot` | 前序执行器启动 epoch 从012改为011 | `previous_executor_boot_mismatch` |
 
 *TAB-21-08：共享 schema 与前序执行身份的单字段负对照。字段均为手工构造，没有认证或防篡改。*
 
-`CLAIM-21-16`（result）：`EXP-21-01` v9 的四个身份负对照分别以 `schema_mismatch`、`previous_unit_mismatch`、`previous_control_rate_mismatch` 和 `invalid_applied_action_ack` 拒绝，没有退化成同一个“动作异常”。这只验证第15/21章共享代码来源和原因码，不证明文本/数值身份真实、ack 来自执行器、跨进程状态原子持久化、通信完整性或控制安全。
+`CLAIM-21-16`（result）：`EXP-21-01` v10 的六个身份负对照分别以 `schema_mismatch`、`previous_unit_mismatch`、`previous_control_rate_mismatch`、`invalid_applied_action_ack`、`previous_command_session_mismatch` 和 `previous_executor_boot_mismatch` 拒绝，没有退化成同一个“动作异常”。这只验证第15/21章共享代码来源、epoch 绑定和原因码，不证明文本/数值身份真实、ack 来自执行器、跨进程状态原子持久化、通信完整性或控制安全。
 
 [Autoware Velocity Smoother 官方文档](https://autowarefoundation.github.io/autoware_core/main/planning/autoware_velocity_smoother/)把速度、加速度、jerk、横向加速度和转向角速度列为不同约束，并在初始状态中使用当前或上一规划值 `[O,R1]`；这支持“跨点约束需要状态且必须保留量纲”的工程模式，但不为本书的 `0.25` 教学阈值背书。真实 profile 应按动作单位、控制周期、执行器动态与运行域分别标定限制，并用仿真、封闭场地和目标硬件逐级验证。
 
-### 21.4.2 不要只发布一个拒绝阈值
+### 21.4.2 重试不应变成第二次物理动作
+
+单调 `command_id` 只在其命名空间内有意义。生产者或执行器重启后，计数器可能从零开始；若只比较整数，旧命令8和新命令8无法区分。本书把执行身份写成三元组：
+
+\[
+K=(\text{command\_session\_id},\ \text{executor\_boot\_id},\ \text{command\_id}).
+\]
+
+`command_session_id` 标识一次明确建立的命令生产会话，`executor_boot_id` 标识执行器启动 epoch，二者都不能由接收方根据“最近看到的包”静默猜测。`EXP-21-01` v10 的不可变内存 ledger 在 gate 之后执行以下状态转移：首次见到有效 `K` 时生成一条回执；完全相同的 `K+payload+step` 重试只返回缓存回执，不新增执行记录；相同 `K` 携带不同 payload 以 `command_identity_conflict` 拒绝；同 epoch 中未登记却不大于最高序号的命令以 `stale_or_out_of_order_command` 拒绝。只有显式建立新的 session 与 boot epoch 后，命令号0才可重新开始。
+
+| 输入 | 状态 | 新增执行记录 |
+| --- | --- | ---: |
+| session003/boot012/command8 首次到达 | `applied_once` | 1 |
+| 完全相同 command8 重试 | `duplicate_returned_cached_receipt` | 0 |
+| command8 改写 action 或有效期等 envelope | `command_identity_conflict` | 0 |
+| 同 epoch 的未知 command6 | `stale_or_out_of_order_command` | 0 |
+| 改 session 或 boot、但未重建 ledger | 对应 identity mismatch | 0 |
+| 显式新建 session004/boot013 后的 command0 | `applied_once` | 1 |
+
+*TAB-21-09：执行 epoch 内的命令去重与重启边界。`applied_once` 是教学状态标签，不是实体执行测量。*
+
+`CLAIM-21-17`（result）：`EXP-21-01` v10 中，首次 command8 产生一条回执；完全相同的重试返回缓存回执且 ledger 仍只有一条记录；action 改写与有效期改写都成为 identity conflict，倒序、错误 session 和错误 boot 保留独立状态；显式新 session/boot 的 command0 才被接受。回执里的 SHA-256 只是确定性 envelope 比较值，不是签名或发送者认证。这验证单进程内存状态转移，不证明数据库事务、并发线性化、崩溃恢复、回执认证或物理副作用恰好一次。
+
+[ROS 2 Actions 设计](https://design.ros2.org/articles/actions.html)用 client 生成的 UUID 关联 goal，并明确要求 action server 处理潜在并发碰撞 `[O,R1]`；[AUTOSAR E2E Protocol R25-11](https://www.autosar.org/fileadmin/standards/R25-11/FO/AUTOSAR_FO_PRS_E2EProtocol.pdf)列出 sequence/alive counter、Data/Source ID、request/response type 与 timeout，用于发现重复、丢失、乱序、错配和超时 `[O,R1]`。两者支持“身份、序号和状态机必须共同设计”，但都不为本书 fixture 或实体设备 exactly-once 背书。
+
+这里必须保留一个难以消除的边界：写入 durable ledger 与产生电机、制动或机械臂接触等物理副作用，通常不能共享一个数据库原子事务。WAL/outbox、持久回执和恢复协议可以缩小不一致窗口；若执行器本身不按稳定 command identity 去重，控制端仅靠重试无法同时保证“不丢执行”和“不重复执行”。因此当前代码只演示单进程不可变状态更新；生产系统还需定义崩溃点、持久化顺序、并发仲裁、执行器侧幂等能力和无法确认时的 fail-safe 行为。
+
+### 21.4.3 不要只发布一个拒绝阈值
 
 令 `u_i` 是“越大越不确定”的冻结分数，阈值 `τ` 下接受 `u_i≤τ` 的样本。选择性执行的 coverage 与接受样本风险为：
 
@@ -189,11 +218,11 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 
 `CLAIM-21-08`（recommendation）：任何 uncertainty/OOD 执行门都应锁定分数定义、方向、估计器与校准版本，在独立 split 上报告 risk–coverage 和 fallback 后果；单个阈值、AUROC 或“高置信”标签不能单独授权动作。
 
-### 21.4.2 相同失败率，不同严重度后果
+### 21.4.4 相同失败率，不同严重度后果
 
 只把每个失败记为 `1`，会默认一次轻微任务失败与一次高严重度安全事件可以互换。[NHTSA 的功能安全评估示例](https://www.nhtsa.gov/sites/nhtsa.gov/files/documents/13498a_812_573_alcsystemreport.pdf)把 severity、exposure 与 controllability 分开评定 `[O,R1]`；2026 年的[自动驾驶风险估计预印本](https://arxiv.org/abs/2601.15018)也把状态不确定性与潜在碰撞严重度作为不同输入 `[A,R0]`。这些来源支持“不要只数事件”，但不替本书定义真实事故代价。
 
-`EXP-21-01` v9 因而构造六个手工 case：四个成功、一个权重为 `1` 的失败、一个权重为 `10` 的失败。两个 gate 都接受四例、留下一个失败，并拒绝另一个失败；唯一变化是留下哪一个：
+`EXP-21-01` v10 因而构造六个手工 case：四个成功、一个权重为 `1` 的失败、一个权重为 `10` 的失败。两个 gate 都接受四例、留下一个失败，并拒绝另一个失败；唯一变化是留下哪一个：
 
 | gate 负对照 | coverage | 接受失败率 | 按个数拒绝召回 | 接受失败 authored weight | 按 authored weight 拒绝召回 |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -204,15 +233,15 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 
 若 `w_i` 是预先登记且有来源的后果量，可以同时报告接受失败后果 `\sum_{i\in A}w_i\ell_i` 和按后果权重的拒绝召回 `\sum_{i\notin A}w_i\ell_i/\sum_iw_i\ell_i`。但当权重只是无外部标定的任意代理量时，不能把它汇总成“预计伤亡”或跨场景比较的单一风险值；应保留原始 failure type、场景/道路使用者/速度分桶、计数与权重来源。若高严重度分桶没有足够暴露、标签不可靠，或 fallback 后果未闭环验证，应停止部署外推并回到仿真、封闭场地或人工审查，而不是用总体 failure rate 放行。
 
-`CLAIM-21-14`（result）：`EXP-21-01` v9 的两个严重度负对照具有相同 `0.666667` coverage、`0.25` 接受失败率和 `0.5` 按个数拒绝召回，但接受失败 authored weight 分别为 `1` 与 `10`，按权重拒绝召回分别为 `0.909091` 与 `0.090909`。它只证明聚合计数可能隐藏手工后果差异，不估计真实事故概率、伤害、成本、门禁性能或安全性。
+`CLAIM-21-14`（result）：`EXP-21-01` v10 的两个严重度负对照具有相同 `0.666667` coverage、`0.25` 接受失败率和 `0.5` 按个数拒绝召回，但接受失败 authored weight 分别为 `1` 与 `10`，按权重拒绝召回分别为 `0.909091` 与 `0.090909`。它只证明聚合计数可能隐藏手工后果差异，不估计真实事故概率、伤害、成本、门禁性能或安全性。
 
-### 21.4.3 相同 miss rate，不同故障形状
+### 21.4.5 相同 miss rate，不同故障形状
 
 fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80,20,20 ms`。两者 mean 都是 `40 ms`，deadline miss 都是 `2/6`，p95/p99/max 都是 `80 ms`；唯一变化是连续 miss 最大长度分别为 `2` 和 `1`。
 
-`CLAIM-21-09`（result）：`EXP-21-01` v9 的 burst/scattered 对照证明 mean、尾分位、max 和 miss rate 完全相同时，连续 deadline miss 长度仍可不同。该结果只验证日志字段必要性，不估计真实调度 burst。
+`CLAIM-21-09`（result）：`EXP-21-01` v10 的 burst/scattered 对照证明 mean、尾分位、max 和 miss rate 完全相同时，连续 deadline miss 长度仍可不同。该结果只验证日志字段必要性，不估计真实调度 burst。
 
-### 21.4.4 异步队列：有 action 也可能不可执行
+### 21.4.6 异步队列：有 action 也可能不可执行
 
 离散八步 schedule 使用三个 chunk，`valid_until_step` 采用 exclusive 语义，允许晚到 chunk 只覆盖剩余有效步。最大观测滞后为两步：第 4 步仍有 `chunk-b`，但它来自第 1 步观测，因 `stale_chunk` 拒绝；第 5 步 `chunk-c` 尚未到达，因 `queue_underflow` 降级。最终 6 步执行 policy action、2 步 fallback，且有一个 chunk 晚于目标 start step 到达。
 
@@ -246,7 +275,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 
 [Autoware 1.8.0 fail-safe API](https://autowarefoundation.github.io/autoware-documentation/1.8.0/design/autoware-architecture-v1/interfaces/ad-api/features/fail-safe/) 把 MRM 运行状态分为 `NONE / OPERATING / SUCCEEDED / FAILED`：`SUCCEEDED` 表示车辆已处于安全状态，`FAILED` 则表示仍不安全，一般需要切换到其他 MRM 行为 `[O,R1]`。其 request API 又是另一个触发接口。因此本书在该 API 之外加一个本地 `requested` 控制面状态，用来检查“发出请求”不能被当成“已经开始”。这不是对 Autoware message enum 的重命名。
 
-`EXP-21-01` v9 保留三条四步生命周期。所有状态都是手工报告，`max_operating_steps=2` 也是离散教学阈值，不是真实时间或推荐参数。
+`EXP-21-01` v10 保留三条四步生命周期。所有状态都是手工报告，`max_operating_steps=2` 也是离散教学阈值，不是真实时间或推荐参数。
 
 | 对照路径 | 关键步 | 结果 | 重新激活语义 |
 | --- | ---: | --- | --- |
@@ -267,7 +296,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 
 第15章动作 packet 已使用共同 clock、有效期和单调 `command_id` 拒绝会话内旧命令；重新激活 receipt 可复用这种接口形状，但它还必须绑定 fallback run、目标 mode、批准决定与声明的 approver identity。这里借鉴的只是通用授权协议设计原则：RFC 9396 用 `actions`、`locations`、`identifier` 等字段限制授权对象；RFC 9449 用唯一 `jti`、创建时间窗口和 nonce 讨论 replay 检测；RFC 9700 强调 audience restriction 与 replay 防护。它们是 OAuth 规范，不是机器人或自动驾驶安全标准，本书 fixture 也没有实现 OAuth、签名或 sender-constrained proof。
 
-`EXP-21-01` v9 保留一个九例 receipt audit。有效区间采用 `[issued_step, valid_until_step)`；先验证唯一有效 receipt，随后才把其 `receipt_id` 放入已消费集合并更新最后接受序号。八个负例分别覆盖原 receipt 重放、过期、未来签发、run 错配、target 错配、声明 approver 不在 allowlist、显式 `denied` 和新 ID 携带旧序号。
+`EXP-21-01` v10 保留一个九例 receipt audit。有效区间采用 `[issued_step, valid_until_step)`；先验证唯一有效 receipt，随后才把其 `receipt_id` 放入已消费集合并更新最后接受序号。八个负例分别覆盖原 receipt 重放、过期、未来签发、run 错配、target 错配、声明 approver 不在 allowlist、显式 `denied` 和新 ID 携带旧序号。
 
 | receipt 例 | 关键绑定或状态 | 结果 |
 | --- | --- | --- |
@@ -280,7 +309,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 
 *TAB-21-05：重新激活 receipt 的固定绑定、时效和单次消费负对照。字符串身份与内存集合均为手工 fixture。*
 
-`CLAIM-21-13`（result）：`EXP-21-01` v9 的九个手工 receipt 中仅一个新鲜且完整绑定的 `approved` receipt 通过，其余八个因重放、时间窗、run/target、声明 approver、决定或序号错误被拒绝。该结果只验证纯函数字段合同和单进程内存状态；文本 approver ID 未经认证，receipt 没有签名、防篡改、撤销、持久化或并发原子性，也不证明 fallback 完成或重新激活安全。
+`CLAIM-21-13`（result）：`EXP-21-01` v10 的九个手工 receipt 中仅一个新鲜且完整绑定的 `approved` receipt 通过，其余八个因重放、时间窗、run/target、声明 approver、决定或序号错误被拒绝。该结果只验证纯函数字段合同和单进程内存状态；文本 approver ID 未经认证，receipt 没有签名、防篡改、撤销、持久化或并发原子性，也不证明 fallback 完成或重新激活安全。
 
 生产实现还需要可信身份来源、完整性保护、持久化去重/撤销、并发消费原子性、时钟故障策略、审计日志与 least-privilege policy。即使 receipt 合法，也只能作为“授权”谓词；它不能替代 `succeeded`、车辆/机器人当前安全状态、队列与时钟重同步以及所有其他 profile-specific 恢复门。
 
@@ -325,7 +354,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 | 证据 | 当前状态 | 不能外推 |
 | --- | --- | --- |
-| packet gate、固定 latency/burst、共享 schema、前序身份、相邻动作跃迁与离散异步 schedule | CPU smoke | ack 真实性、通信完整性、动力学/jerk、实时调度、网络、安全或可靠性 |
+| packet gate、固定 latency/burst、共享 schema、session/boot/command 身份、相邻动作跃迁、命令去重与离散异步 schedule | CPU smoke | durable ledger、并发原子性、崩溃恢复、ack 真实性、物理 exactly-once、动力学/jerk、实时调度或安全性 |
 | fallback 升级、健康恢复、生命周期与重新激活授权状态机 | CPU 手工布尔/状态序列 | 降级控制器可达性/完成性、operator 可用性、真实授权、备用 MRM 切换或安全性 |
 | 绑定、时效、序号与单次消费 receipt | CPU 手工字段/内存状态 | 身份认证、签名/防篡改、撤销、持久化、并发消费或安全性 |
 | uncertainty gate、risk–coverage 与严重度负对照 | CPU 手工分数/标签/代理权重 | 校准质量、OOD 检出、真实后果或安全性 |
@@ -334,7 +363,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 ## 小结
 
-部署把模型问题变成时序和系统问题。必须测端到端年龄、尾延迟、deadline miss 与连续 burst，异步 action chunk 还要管理队列、新鲜度和晚到语义。不确定性门需要版本化分数、独立校准、risk–coverage 和按场景严重度保留的后果证据；总体失败率相同不表示留下的风险相同。独立网关拒绝旧、迟、非法、过期、跨步突变或超过预注册阈值的动作；当前端点合法不能替代与上一条已执行命令的状态化约束，shape 相同也不能替代 schema、frame、字段、单位、频率、clock 和 command/ack 绑定。降级模式由具体本体和场景定义，并具有升级、完成与迟滞恢复合同，而不是一个万能零向量。恢复授权还应绑定事故实例和目标模式，具有时效与单次消费语义；字段齐全不等于身份真实或恢复安全。
+部署把模型问题变成时序和系统问题。必须测端到端年龄、尾延迟、deadline miss 与连续 burst，异步 action chunk 还要管理队列、新鲜度和晚到语义。不确定性门需要版本化分数、独立校准、risk–coverage 和按场景严重度保留的后果证据；总体失败率相同不表示留下的风险相同。独立网关拒绝旧、迟、非法、过期、跨步突变或超过预注册阈值的动作；当前端点合法不能替代与上一条已执行命令的状态化约束，shape 相同也不能替代 schema、frame、字段、单位、频率、clock、session、boot 和 command/ack 绑定。重试应以稳定身份返回缓存回执而非再次执行，但内存去重不能证明崩溃后或实体侧 exactly-once。降级模式由具体本体和场景定义，并具有升级、完成与迟滞恢复合同，而不是一个万能零向量。恢复授权还应绑定事故实例和目标模式，具有时效与单次消费语义；字段齐全不等于身份真实或恢复安全。
 
 ## 练习
 
@@ -347,6 +376,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 7. **严重度审计**：保持 coverage、接受失败率和按个数拒绝召回不变，只交换被接受的低/高严重度失败；列出哪些权重来源才允许进入部署决策。
 8. **动作跃迁**：让两个当前动作都通过逐字段静态范围门，但只有一个通过与前序已执行动作的带单位单步变化门；解释为何不能跨单位取统一 `max abs delta`。
 9. **身份负对照**：从有效当前/前序对每次只修改 schema、frame、字段顺序、单位、control rate、clock、command/ack 或 step 中一个字段，为每类错配定义独立 fail-closed 原因码。
+10. **重试与重启**：构造首次命令、完全重复、同 ID 改 payload、倒序命令、错误 session/boot 和显式新 epoch 六类输入，解释哪些场景可返回缓存回执，哪些必须停止执行。
 
 ## 自检要点
 
@@ -415,6 +445,13 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-21-10：幂等回执不等于物理 exactly-once</summary>
+
+合格答案把命令键写为 `(command_session_id, executor_boot_id, command_id)`。首次有效命令可执行并记录回执；同键且 payload/step 完全相同的重试只返回缓存回执；同键改 payload 是 identity conflict；同 epoch 的未知低序号是 stale/out-of-order；计数器只有在显式建立新 producer session 和 executor boot epoch 后才能归零。测试还要断言重复输入不增加 receipt/执行计数。若进程在物理动作之后、durable 回执之前崩溃，内存 ledger 无法判断重试是否会重复副作用；除非执行器也按稳定身份去重并有经过验证的恢复协议，否则不得声称 exactly-once，应进入本体特定 fail-safe 或人工确认路径。
+
+</details>
+
 ## 延伸阅读
 
 - [LeRobot inference 与 RTC 文档快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/inference.mdx)，`[O,R1]`；
@@ -422,6 +459,8 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - [OpenVLA 官方仓库](https://github.com/openvla/openvla)，`[O,R1]`；
 - [ROS 2 QoS 官方说明](https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html)，`[O,R1]`；
 - [ROS 2 实时系统设计说明](https://design.ros2.org/articles/realtime_background.html)，`[O,R1]`，deadline、确定性执行和实时路径约束；
+- [ROS 2 Actions 设计](https://design.ros2.org/articles/actions.html)，`[O,R1]`，goal UUID、client/server 关联与碰撞处理边界；
+- [AUTOSAR E2E Protocol R25-11](https://www.autosar.org/fileadmin/standards/R25-11/FO/AUTOSAR_FO_PRS_E2EProtocol.pdf)，`[O,R1]`，sequence/alive counter、Data/Source ID 与 timeout；
 - [Autoware Universe 官方仓库](https://github.com/autowarefoundation/autoware_universe)，`[O,R1]`；
 - [Autoware 1.8.0 fail-safe API](https://autowarefoundation.github.io/autoware-documentation/1.8.0/design/autoware-architecture-v1/interfaces/ad-api/features/fail-safe/)，`[O,R1]`，MRM 请求、运行、成功与失败语义；
 - [Autoware operation mode transition manager](https://autowarefoundation.github.io/autoware_universe/main/control/autoware_operation_mode_transition_manager/)，`[O,R1]`，模式过渡责任与完成检查；
@@ -452,5 +491,5 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/ch21-reactivation-authorization-review-2026-09-01.md`、`reviews/ch21-fallback-lifecycle-review-2026-09-02.md`、`reviews/ch15-ch21-reactivation-receipt-review-2026-09-02.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch21-command-epoch-idempotency-review-2026-09-02.md`、`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/ch21-reactivation-authorization-review-2026-09-01.md`、`reviews/ch21-fallback-lifecycle-review-2026-09-02.md`、`reviews/ch15-ch21-reactivation-receipt-review-2026-09-02.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有测量真实墙钟、调度器、网络、模型、uncertainty estimator、ROS、机器人、车辆或 GPU；严重度权重、异步 schedule、状态机和 receipt 均为手工离散合同，不验证真实后果、执行器可达性、MRM 完成、身份认证、消息完整性或安全认证。
