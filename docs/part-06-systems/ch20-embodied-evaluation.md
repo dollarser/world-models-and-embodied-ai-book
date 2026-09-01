@@ -1,9 +1,9 @@
 # 第20章 具身评测：从成功率到部署证据
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-20-01`
-> 关联声明：`CLAIM-20-01`～`CLAIM-20-04`
+> 关联声明：`CLAIM-20-01`～`CLAIM-20-05`
 > 关联图表：`FIG-20-01` / `TAB-20-01`
 > 资源档位：S / M
 > GPU 状态：不需要
@@ -46,6 +46,19 @@
 `CLAIM-20-01`（recommendation）：发布成功率时必须同时给出任务总体、初始化、成功/失败定义、超时、重试、有效分母和逐任务结果。
 
 对小样本，单点比例尤其不稳定。应报告每任务重复数和区间估计；当 episode 存在共享场景、种子或轨迹前缀时，不能假设所有样本独立。跨任务宏平均与按 episode 微平均回答不同问题，也不应只保留更好看的一个。
+
+### 20.1.1 给二项成功率加一个可解释的区间
+
+当每个 episode 只有成功/失败两种结果，且暂时把 episode 视为独立同分布的 Bernoulli 试验时，可以用 Wilson score interval 表达有限样本的不确定性。令成功数为 `k`、样本数为 `n`、点估计为 `p_hat=k/n`，区间中心与半宽为：
+
+\[
+c=\frac{\hat p+z^2/(2n)}{1+z^2/n},\qquad
+m=\frac{z\sqrt{\hat p(1-\hat p)/n+z^2/(4n^2)}}{1+z^2/n}.
+\]
+
+95% 区间取 `z≈1.96`，端点是 `c-m` 与 `c+m`。它比直接使用 `p_hat ± 1.96 sqrt(p_hat(1-p_hat)/n)` 的 Wald 区间更适合小样本和接近 0/1 的比例；后者甚至会在 `4/4` 时给出零宽区间。NIST 的二项比例指南也建议小样本优先考虑 Wilson 或 Agresti–Coull，而不是标准 Wald 区间。
+
+但区间成立有前提：如果多次运行共享同一场景、初始轨迹或随机种子，名义上的 `n` 可能高估有效样本量。此时应按场景/任务分层报告，或对独立采样单元做 cluster bootstrap。置信区间只量化固定协议下的抽样不确定性，不能修复任务总体、成功定义或分母不同造成的不可比性。
 
 ## 20.2 从模型分数到证据阶梯
 
@@ -108,16 +121,18 @@ make ch20-smoke-local
 make ch20-smoke
 ```
 
-| 协议 | episode | 成功率 | 碰撞率 | 介入率 | 路线/进度均值 |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| easy + goal-only | 4 | 100.0% | 0.0% | 0.0% | 1.0000 |
-| full + safety-aware | 8 | 62.5% | 12.5% | 12.5% | 0.9625 |
+| 协议 | 成功数/episode | 成功率 | Wilson 95% 区间 | 碰撞率 | 介入率 | 路线/进度均值 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| easy + goal-only | 4/4 | 100.0% | [51.0%, 100.0%] | 0.0% | 0.0% | 1.0000 |
+| full + safety-aware | 5/8 | 62.5% | [30.6%, 86.3%] | 12.5% | 12.5% | 0.9625 |
 
 *TAB-20-01：`EXP-20-01` 固定 episode 表的协议敏感性。不是模型 benchmark。*
 
 审计器标记三项不可比因素：`task_population_differs`、`success_definition_differs`、`denominator_differs`。
 
 `CLAIM-20-02`（result）：在 `EXP-20-01` 的固定结果表上，仅改变任务总体、成功定义和分母，报告成功率就从 100% 变为 62.5%。这证明脱离协议的数字比较可以失真，不估计真实 benchmark 中差异的大小。
+
+`CLAIM-20-05`（result）：同一 fixture 中，`4/4` 的 Wilson 95% 区间为 `[0.510109, 1.0]`，`5/8` 为 `[0.305742, 0.863156]`。区间揭示两组点估计都很不确定，但不能把两个不同协议变成可比较实验。
 
 ## 20.6 benchmark card 的最小字段
 
@@ -161,6 +176,7 @@ make ch20-smoke
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 本书结果 | 同一表在两协议下为 100% 与 62.5% | `EXP-20-01` | CPU smoke | 手工 8 episode |
+| 本书结果 | 小样本成功率的 Wilson 95% 区间 | `EXP-20-01` | CPU smoke | 假定独立 Bernoulli，不能修复协议差异 |
 | 官方事实 | LIBERO 官方仓库描述 4 suite、130 任务 | 官方仓库 | `[O,R1]` | 本书未运行 |
 | 未验证 | 通用仿真上的策略成功与鲁棒性 | 后续 M 档 | planned | 环境角色已锁定，尚未安装或运行 |
 
@@ -180,6 +196,7 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 ## 延伸阅读
 
 - [LIBERO 官方仓库](https://github.com/Lifelong-Robot-Learning/LIBERO)，`[O,R1]`，终身机器人学习 benchmark；
+- NIST, [Binomial Proportion](https://itl.nist.gov/div898/handbook/prc/section2/prc241.htm)，`[O]`，Wilson/Agresti–Coull 小样本区间建议；
 - [SimplerEnv 官方项目](https://simpler-env.github.io/)，`[O,R0]`，真实到仿真的策略评测案例，尚未运行；
 - [RoboCasa 官方项目](https://robocasa.ai/)，`[O,R0]`，日常任务仿真环境，尚未运行；
 - [MetaDrive 官方文档](https://metadriverse.github.io/metadrive/)，`[O,R0]`，第19章已锁定为驾驶默认闭环环境，当前尚未运行；
@@ -203,4 +220,4 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 - 一致性审查：通过；
 - 教学审查：通过；
 - 审查记录路径：`reviews/batch-d-review.md`；
-- 已知限制：未运行 LIBERO、MetaDrive、CARLA 或真实硬件，统计区间尚未加入 smoke。
+- 已知限制：未运行 LIBERO、MetaDrive、CARLA 或真实硬件；Wilson 区间只覆盖独立二项比例，不替代分层/相关 episode 的统计设计。

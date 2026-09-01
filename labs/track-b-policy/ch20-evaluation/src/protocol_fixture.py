@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from math import isfinite, sqrt
+
 
 EPISODES = (
     {"id": "easy-1", "suite": "easy", "goal": True, "collision": False, "intervention": False, "route": 1.0},
@@ -21,7 +23,32 @@ PROTOCOLS = {
 }
 
 
-def evaluate_protocol(name: str) -> dict[str, float]:
+def wilson_interval(successes: int, trials: int, z: float = 1.959963984540054) -> dict[str, float]:
+    """Return a two-sided Wilson score interval for a binomial proportion."""
+    if isinstance(successes, bool) or isinstance(trials, bool):
+        raise TypeError("successes and trials must be integers, not booleans")
+    if not isinstance(successes, int) or not isinstance(trials, int):
+        raise TypeError("successes and trials must be integers")
+    if trials <= 0 or successes < 0 or successes > trials:
+        raise ValueError("require 0 <= successes <= trials and trials > 0")
+    if isinstance(z, bool) or not isinstance(z, (int, float)):
+        raise TypeError("z must be a real number")
+    if not isfinite(z) or z <= 0:
+        raise ValueError("z must be finite and positive")
+
+    proportion = successes / trials
+    z_squared = z * z
+    denominator = 1 + z_squared / trials
+    center = (proportion + z_squared / (2 * trials)) / denominator
+    variance_term = proportion * (1 - proportion) / trials + z_squared / (4 * trials * trials)
+    margin = z * sqrt(variance_term) / denominator
+    return {
+        "lower": round(max(0.0, center - margin), 6),
+        "upper": round(min(1.0, center + margin), 6),
+    }
+
+
+def evaluate_protocol(name: str) -> dict[str, object]:
     protocol = PROTOCOLS[name]
     selected = [episode for episode in EPISODES if episode["suite"] in protocol["suites"]]
 
@@ -31,9 +58,12 @@ def evaluate_protocol(name: str) -> dict[str, float]:
         return not protocol["safety_aware"] or not (episode["collision"] or episode["intervention"])
 
     count = len(selected)
+    success_count = sum(success(episode) for episode in selected)
     return {
         "episode_count": count,
-        "success_rate": sum(success(episode) for episode in selected) / count,
+        "success_count": success_count,
+        "success_rate": success_count / count,
+        "success_wilson_95": wilson_interval(success_count, count),
         "collision_rate": sum(episode["collision"] for episode in selected) / count,
         "intervention_rate": sum(episode["intervention"] for episode in selected) / count,
         "mean_route_completion": sum(episode["route"] for episode in selected) / count,

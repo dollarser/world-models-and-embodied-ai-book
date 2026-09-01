@@ -32,6 +32,7 @@
 - [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
 - [第21章：部署、实时性与安全边界](part-06-systems/ch21-deployment-realtime-and-safety.md)
 - [第22章：端到端综合项目——一个可审计的具身研究闭环](part-07-capstone/ch22-auditable-capstone.md)
+- [读者术语表](glossary.md)
 - [编写状态](status.md)
 
 ## 当前限制

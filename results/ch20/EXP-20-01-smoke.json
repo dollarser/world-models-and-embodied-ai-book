@@ -3,8 +3,8 @@
   "gpu_verified": false,
   "metrics": {
     "comparability_warnings": ["task_population_differs", "success_definition_differs", "denominator_differs"],
-    "easy_goal_only": {"collision_rate": 0.0, "episode_count": 4, "intervention_rate": 0.0, "mean_route_completion": 1.0, "success_rate": 1.0},
-    "full_safety_aware": {"collision_rate": 0.125, "episode_count": 8, "intervention_rate": 0.125, "mean_route_completion": 0.9625, "success_rate": 0.625}
+    "easy_goal_only": {"collision_rate": 0.0, "episode_count": 4, "intervention_rate": 0.0, "mean_route_completion": 1.0, "success_count": 4, "success_rate": 1.0, "success_wilson_95": {"lower": 0.510109, "upper": 1.0}},
+    "full_safety_aware": {"collision_rate": 0.125, "episode_count": 8, "intervention_rate": 0.125, "mean_route_completion": 0.9625, "success_count": 5, "success_rate": 0.625, "success_wilson_95": {"lower": 0.305742, "upper": 0.863156}}
   },
   "scope": "fixed episode-table protocol audit; not simulator evaluation",
   "status": "smoke"

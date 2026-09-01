@@ -1,9 +1,9 @@
 # 第9章 世界模型如何评测与失败
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-09-01`
-> 关联声明：`CLAIM-09-01`～`CLAIM-09-04`
+> 关联声明：`CLAIM-09-01`～`CLAIM-09-05`
 > 关联图表：`FIG-09-01`
 > 资源档位：S / M
 > GPU 状态：不需要
@@ -145,6 +145,10 @@ make ch09-smoke
 
 本书当前没有下载其数据、运行官方命令或核对排行榜结果，因此不能标记为 `R2` 或本书复现。使用时还应锁定仓库 commit、测试集发布日期、RoboTwin 版本、所选 track 与外部模型/API；不能把 v1、后续版本或在线 Arena 的覆盖范围混成一个稳定结论。
 
+2026 年的 [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 又把范围扩展到更多生成模态、功能用途和平台。这里最值得吸收的不是“项目更新了”，而是评测对象必须写成 `模型版本 × 输入输出模态 × 下游用途 × 执行平台 × 协议版本`；只写 WorldArena 分数已经不足以定位证据。官方站点与服务接口仍在快速演进，本书仅把论文与官方项目页作为 `[P/O,R0–R1]` 设计案例，不抄录可能漂移的排行榜数字。
+
+[KineBench](https://arxiv.org/abs/2607.19876) 则从另一侧暴露闭环归因问题：若评测需要额外 inverse dynamics model 把生成状态转回动作，最终结果会同时包含世界模型和逆动力学模型的误差。该论文提出直接以运动学落地的闭环协议，并报告 ManiSkill3 任务上的多个泛化分组。`CLAIM-09-05`（inference，`[P,R0]`）：闭环评测应把额外控制器、逆动力学模型和动作落地层登记为独立组件；否则不能把端到端成败全部归因于被测世界模型。本书尚未运行 KineBench，也不把论文中的任务数或结果当作本书测量。
+
 ## 9.7 幻觉、覆盖缺口与模型利用
 
 世界模型的幻觉不一定表现为明显破图。画面可以连贯，动力学却已偏离真实环境。2026 年预印本 [Hallucination in World Models is Predictable and Preventable](https://arxiv.org/abs/2606.27326) 报告了特定数据与模型条件下的三类失败，并将失败与状态—动作覆盖缺口联系起来。这里将它标为 `[A,R0]` 案例：论文支持“在其设置中观察到并预测了这些失败”，不支持“所有世界模型幻觉都只有同一个原因”。
@@ -201,6 +205,8 @@ OOD、拒绝、安全层和人工干预协议
 | --- | --- | --- | --- | --- |
 | 本书结果 | one-step 与闭环指标发生排序反转 | `EXP-09-01` | CPU smoke | 手工一维反例 |
 | 外部事实 | WorldArena 分开评估感知与功能用途 | 官方仓库 | `[O,R1]` | 本书未运行 |
+| 外部案例 | WorldArena 2.0 扩展模态、用途与平台维度 | 论文/官方项目 | `[P/O,R0–R1]` | 接口与排行榜会变化 |
+| 外部案例 | KineBench 显式移除额外 IDM 的归因混淆 | arXiv:2607.19876 | `[P,R0]` | 本书未运行，仅限论文设置 |
 | 外部案例 | 幻觉与覆盖缺口可被量化关联 | arXiv:2606.27326 | `[A,R0]` | 仅限论文设置 |
 | 方法建议 | 决策用途至少需要干预与功能评测 | 本章综合 | recommendation | 尚无单一通用协议 |
 
@@ -224,6 +230,8 @@ OOD、拒绝、安全层和人工干预协议
 
 - Yu et al., [How Should World Models Be Evaluated?](https://arxiv.org/abs/2606.15032)，`[A,R0]`，评测层级与声明错位；
 - Shang et al., [WorldArena 官方仓库](https://github.com/tsinghua-fib-lab/WorldArena)，`[O,R1]`，感知与功能评测案例；
+- [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 与[官方项目页](https://v2.world-arena.ai/)，`[P/O,R0–R1]`，多模态、多用途和多平台评测案例；
+- [KineBench](https://arxiv.org/abs/2607.19876)，`[P,R0]`，避免额外 inverse dynamics model 混淆的闭环评测案例；
 - Hansen & Wang, [Hallucination in World Models is Predictable and Preventable](https://arxiv.org/abs/2606.27326)，`[A,R0]`，特定设置下的幻觉量化案例；
 - Zhang et al., [The Unreasonable Effectiveness of Deep Features as a Perceptual Metric](https://arxiv.org/abs/1801.03924)，`[P]`，LPIPS；
 - Unterthiner et al., [Towards Accurate Generative Models of Video](https://arxiv.org/abs/1812.01717)，`[A]`，FVD。

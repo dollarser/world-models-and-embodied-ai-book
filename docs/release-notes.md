@@ -25,7 +25,7 @@ make docs-preview-check
 git diff --check
 ```
 
-这些命令验证共 136 个章节单元测试、标准库 fixture、输入合同、22 组 smoke—结果 JSON 精确一致性、实验卡/manifest Schema、源码链接、导航、严格站点构建和生成站点内部资源。每章都完成内容、代码、一致性和教学审查，机器可读状态为 `reviewed`。
+这些命令验证共 139 个章节单元测试、标准库 fixture、输入合同、22 组 smoke—结果 JSON 精确一致性、实验卡/manifest Schema、源码链接、导航、严格站点构建和生成站点内部资源。当前站点还提供面向读者的可检索术语表。每章都完成内容、代码、一致性和教学审查，机器可读状态为 `reviewed`。
 
 ## 没有验证什么
 

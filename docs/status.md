@@ -18,7 +18,7 @@
 | EXP-04-01 | `smoke` | 有效 fixture 0 问题，5/5 注入问题类型检出 | 未审计真实数据、媒体、标定和隐私 |
 | 第5章 预测模型的生成式基础 | `reviewed` | VAE/token/自回归/masked/diffusion/flow、自动驾驶多未来与解析 fixture；四类审查通过 | 神经生成模型、图像/视频、采样性能和 GPU 未运行 |
 | EXP-05-01 | `smoke` | 7 个单元测试；点均值落在 support 外，条件 NLL 优于无条件 | 八个标量样本和解析路径，不是生成模型性能 |
-| 第9章 世界模型如何评测与失败 | `reviewed` | 正文、指标排序反转 CPU smoke 与自动驾驶评测矩阵 | benchmark card Schema 与上游运行 |
+| 第9章 世界模型如何评测与失败 | `reviewed` | 正文、指标排序反转 CPU smoke、自动驾驶评测矩阵；2026-09-01 增补 WorldArena 2.0 与 KineBench 的归因边界 | benchmark card Schema 与上游运行；新增案例均未在本书复现 |
 | 第6章正文 | `reviewed` | prior/posterior、自动驾驶正文、资源边界与 CPU smoke 交叉审查 | PyTorch mini-RSSM 与 GPU 验证 |
 | EXP-06-01 | `smoke` | 宿主与 Docker CPU 数据流、3 个单元测试、固定指标 | PyTorch 训练、24GB GPU 资源 |
 | 第7章 用模型做规划 | `reviewed` | MPC/CEM/tree search/value equivalence、自动驾驶候选轨迹与延迟回报 fixture；四类审查通过 | learned model、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
@@ -31,7 +31,7 @@
 | EXP-11-01 | `smoke` | 6 个单元测试；动作敏感性与未见序列组合 | 确定性网格和 ASCII 帧，不是视频模型 |
 | 第12章 可行动的空间表征 | `reviewed` | 3D 零基础入口、三态 occupancy、动态空间、affordance、自动驾驶正文与四类审查 | 真实 RGB-D/驾驶数据、学习模型、仿真和 GPU 均未运行 |
 | EXP-12-01 | `smoke` | 7 个单元测试；遮挡未知、坐标偏移、越界与动态路径假安全 | 2D 无噪声射线格子，不是 occupancy 网络或安全证明 |
-| 第13章 模仿学习与动作分块 | `reviewed` | 误差累积、动作块延迟、自动驾驶安全时域正文及四类审查 | LeRobot BC/ACT 与 24GB GPU 验证 |
+| 第13章 模仿学习与动作分块 | `reviewed` | 误差累积、动作块延迟、机制—残余风险矩阵、可执行 chunk 合同、自动驾驶安全时域正文及四类审查 | LeRobot BC/ACT 与 24GB GPU 验证 |
 | EXP-13-01 | `smoke` | 0.02 动作偏差在 20 步积分为 0.40；chunk 调用—延迟权衡 | 手工标量 fixture，不是策略性能 |
 | 第14章 生成动作 | `reviewed` | 多峰动作、diffusion/flow 最小桥接、采样预算、自动驾驶安全筛选及四类审查 | Push-T/LIBERO、学习策略、GPU 和真实时延均未运行 |
 | EXP-14-01 | `smoke` | 7 个单元测试；条件均值无效、refinement 调用—距离权衡 | 解析双峰和 oracle flow，不是方法性能比较 |
@@ -45,12 +45,12 @@
 | EXP-18-01 | `smoke` | 7 个单元测试；reward-weighted target、ESS、recovery coverage 与 support gate | 四条标量轨迹，不是 offline RL 或 policy 改进 |
 | 第19章 物理仿真、Real2Sim 与 Sim2Real | `reviewed` | 仿真合同、gap 分解、环境矩阵、系统辨识、域随机化、自动驾驶正文与四类审查 | MuJoCo/MetaDrive/CARLA/Isaac、真实系统、资产和 GPU 均未运行 |
 | EXP-19-01 | `smoke` | 8 个单元测试；名义 held-out state MAE 0.6625，12 个候选恢复预设参数 | 标量确定性 fixture，不是物理仿真或 Sim2Real 性能 |
-| 第20章 具身评测 | `reviewed` | 四类审查通过；第17章 model exploitation 与第19章 simulator gap 已接入 | 统计区间 smoke 与实际仿真 |
-| EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出 | 手工 8 episode，不是 benchmark |
+| 第20章 具身评测 | `reviewed` | 四类审查通过；第17章 model exploitation、第19章 simulator gap 与小样本 Wilson 区间已接入 | 分层/相关 episode 的统计设计与实际仿真 |
+| EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出；另验证 4/4 与 5/8 的 Wilson 95% 区间 | 手工 8 episode、独立 Bernoulli 假设，不是 benchmark |
 | 第21章 部署、实时性与安全边界 | `reviewed` | deadline、尾延迟、异步 chunk、watchdog、fallback、自动驾驶 MRM 与四类审查 | 真实墙钟、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
 | EXP-21-01 | `smoke` | 7 个单元测试；mean 45 ms 掩盖 150 ms 尾部，五类异常分别拒绝 | 手工 latency/packet，不是实时或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 9 个单元测试；完整包 0 issue，无效包 15 个具名 issue | metadata 字典存在性检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、22 张实验卡、136 个章节单元测试、22 组结果精确比对、26 个 HTML/877 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；应用内浏览器面板已打开，截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、139 个章节单元测试、22 组结果精确比对、27 个 HTML/977 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

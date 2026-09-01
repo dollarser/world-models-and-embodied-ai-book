@@ -28,6 +28,7 @@ REQUIRED = (
     "specs/book-quality-gates.md",
     "docs/index.md",
     "docs/status.md",
+    "docs/glossary.md",
     "docs/part-02-world-models/ch06-rssm.md",
 )
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")

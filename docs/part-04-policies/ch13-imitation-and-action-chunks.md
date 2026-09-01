@@ -1,7 +1,7 @@
 # 第13章 模仿学习、误差累积与动作分块
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-13-01`
 > 关联声明：`CLAIM-13-01`～`CLAIM-13-04`
 > 关联图表：`FIG-13-01` / `TAB-13-01`
@@ -91,6 +91,19 @@ ACT（Action Chunking with Transformers）把动作块建模为条件生成问�
 
 训练动作块时必须记录：控制频率、块长度对应的真实秒数、是否执行完整块、重叠方式、推理延迟、丢帧和终止处理。只写 `chunk_size=100` 没有跨系统意义。
 
+### 13.4.1 动作分块解决什么，又没有解决什么
+
+ACT 的主要收益是把局部时间相关动作作为一个联合预测对象，减少高频重新推理并提高动作连贯性；这不等于消除了模仿学习的分布偏移。动作块可能在第一次预测时合理，却在环境变化后变成陈旧计划。时间集成缓和重叠预测间的抖动，也不会自动检测碰撞、接管或观测失效。
+
+| 问题 | 常用机制 | 它能改善什么 | 仍需单独验证 |
+| --- | --- | --- | --- |
+| 单步动作抖动 | 动作分块、时间集成 | 局部连贯性与推理调用数 | 陈旧动作、额外缓存与尾延迟 |
+| 部署状态偏离专家分布 | DAgger、扰动恢复数据、人工纠错 | 策略访问状态的覆盖 | 采集安全、专家成本、OOD 拒绝 |
+| 同一观测存在多种合理动作 | CVAE、diffusion、flow | 多峰动作分布 | 样本选择、可执行性与安全筛选 |
+| 长任务阶段与记忆 | 层级策略、显式子目标、记忆 | 长时任务分解 | 子目标错误、恢复和终止判断 |
+
+工程上，action chunk 也不应只是一个形状为 `[K, action_dim]` 的匿名张量。最小合同还应携带 `frame_id`、动作单位、控制周期 `dt`、生成时间、prediction horizon、execution horizon、有效步掩码、终止标记和归一化版本。LeRobot 的 ACT 实现将一次预测的动作数量与实际执行的 `n_action_steps` 区分开来；部署端还需要明确何时丢弃剩余动作并重新推理。第21章继续讨论异步推理、实时 chunking 与 watchdog。
+
 ## 13.5 EXP-13-01：两个协议反例
 
 S 档实验使用 Python 标准库，不训练模型。第一部分令专家动作始终为零，假想策略每步只有 `0.02` 的固定动作偏差；teacher-forced 动作 RMSE 仍是 `0.02`，但 20 步积分后的状态偏差为 `0.40`。第二部分枚举 16 步任务中所有可能的扰动时刻，统计动作块等到下一个边界才重规划的延迟。
@@ -162,7 +175,7 @@ S 档下载量 0、无 GPU、无外部数据，代码和 fixture 按 MIT 发布�
 ## 延伸阅读
 
 - Zhao et al., [Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware](https://arxiv.org/abs/2304.13705)，`[P,R0]`，ACT 原论文；
-- [LeRobot 官方仓库](https://github.com/huggingface/lerobot)，`[O,R1]`，策略、数据和评测接口；
+- [LeRobot ACT 官方实现](https://github.com/huggingface/lerobot/blob/main/src/lerobot/policies/act/modeling_act.py)，`[O,R1]`，动作预测与执行步数接口；
 - Ross et al., [A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning](https://proceedings.mlr.press/v15/ross11a.html)，`[P]`，DAgger。
 
 ## 下一章接口

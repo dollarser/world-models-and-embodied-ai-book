@@ -3,10 +3,11 @@
   "id": "EXP-20-01",
   "chapter": 20,
   "status": "smoke",
-  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02"],
+  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05"],
   "claim_scope": [
     "success rates are not directly comparable when task populations, success definitions, or denominators differ",
-    "a benchmark card should expose protocol differences before ranking models"
+    "a benchmark card should expose protocol differences before ranking models",
+    "a small-sample point estimate should be accompanied by an uncertainty interval under explicit assumptions"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -15,7 +16,7 @@
   },
   "data": {
     "name": "procedural eight-episode evaluation table",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -37,6 +38,9 @@
   "metrics": [
     {"name": "easy_goal_only_success_rate", "value": 1.0, "unit": "ratio", "split": "easy-four-episode"},
     {"name": "full_safety_aware_success_rate", "value": 0.625, "unit": "ratio", "split": "full-eight-episode"},
+    {"name": "easy_goal_only_wilson_95_lower", "value": 0.510109, "unit": "ratio", "split": "easy-four-episode"},
+    {"name": "full_safety_aware_wilson_95_lower", "value": 0.305742, "unit": "ratio", "split": "full-eight-episode"},
+    {"name": "full_safety_aware_wilson_95_upper", "value": 0.863156, "unit": "ratio", "split": "full-eight-episode"},
     {"name": "full_collision_rate", "value": 0.125, "unit": "ratio", "split": "full-eight-episode"},
     {"name": "full_intervention_rate", "value": 0.125, "unit": "ratio", "split": "full-eight-episode"},
     {"name": "comparability_warning_count", "value": 3, "unit": "count", "split": "protocol-pair"}
@@ -44,7 +48,7 @@
   "artifacts": ["results/ch20/EXP-20-01-smoke.json"],
   "limitations": [
     "fixed hand-authored outcomes rather than simulator rollouts",
-    "shows protocol sensitivity but not statistical uncertainty",
+    "Wilson intervals assume independent Bernoulli trials and do not repair protocol incomparability",
     "does not estimate any real policy or benchmark performance"
   ]
 }

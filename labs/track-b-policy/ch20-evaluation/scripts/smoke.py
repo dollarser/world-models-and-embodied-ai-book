@@ -22,6 +22,8 @@ def main() -> int:
         raise AssertionError("fixture must expose a protocol-dependent score gap")
     if len(metrics["comparability_warnings"]) != 3:
         raise AssertionError("all three comparability dimensions must be detected")
+    if easy["success_wilson_95"]["lower"] >= easy["success_rate"]:
+        raise AssertionError("a perfect four-episode point estimate must not imply certainty")
 
     report = {
         "experiment_id": "EXP-20-01",
