@@ -159,6 +159,18 @@
       ],
       "mean_selected_action": "risky",
       "scenario_semantics": "five equally weighted fixed return outcomes per action",
+      "tail_mass_discretization_audit": {
+        "ceil_effective_tail_fraction": 0.4,
+        "ceil_lower_tail_mean": -0.25,
+        "ceil_minus_fractional_mean": 0.583333333333,
+        "ceil_tail_count": 2,
+        "fractional_boundary_weight": 0.5,
+        "fractional_lower_tail_mean": -0.833333333333,
+        "requested_tail_fraction": 0.3,
+        "requested_tail_mass_in_samples": 1.5,
+        "scenario_count": 5,
+        "scope": "five equally weighted fixed returns; no population CVaR or safety calibration"
+      },
       "worst_20_percent_selected_action": "steady"
     },
     "value_equivalence_fixture": {

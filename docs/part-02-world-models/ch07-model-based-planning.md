@@ -1,10 +1,10 @@
 # 第7章 用模型做规划：从 PlaNet 到价值等价模型
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-07-01`
-> 关联声明：`CLAIM-07-01`～`CLAIM-07-08`
-> 关联图表：`FIG-07-01` / `TAB-07-01` / `TAB-07-02` / `TAB-07-03` / `TAB-07-04`
+> 关联声明：`CLAIM-07-01`～`CLAIM-07-09`
+> 关联图表：`FIG-07-01` / `TAB-07-01` / `TAB-07-02` / `TAB-07-03` / `TAB-07-04` / `TAB-07-05`
 > 资源档位：S / M
 > GPU 状态：待验证
 
@@ -127,7 +127,7 @@ make ch07-smoke
 
 `CLAIM-07-03`（result）：加入手工精确 terminal value 后，H=1 首步变为 advance，预测 return 为 0.8；这验证 bootstrap 接口，不证明 learned value 无偏。
 
-原 fixture 还曾把“执行两步旧 suffix 得 -0.2”与“重新规划三步并完成 harvest 得 0.7”并列。这个比较同时改变了反馈方式与扰动后的动作预算，**不能**把 0.9 的差归因于重规划。v3 保留该结果作为 protocol negative control，并增加两个固定为 2 个动作槽的受控比较：
+原 fixture 还曾把“执行两步旧 suffix 得 -0.2”与“重新规划三步并完成 harvest 得 0.7”并列。这个比较同时改变了反馈方式与扰动后的动作预算，**不能**把 0.9 的差归因于重规划。`EXP-07-01` v4 保留该结果作为 protocol negative control，并增加两个固定为 2 个动作槽的受控比较：
 
 | 协议与策略 | 扰动后动作预算 | 实际执行 | 环境 reward sum | terminal value | 规划目标 |
 | --- | ---: | --- | ---: | ---: | ---: |
@@ -169,7 +169,18 @@ fixture 另给同一三个状态两套完全不同的观测标签，因此观测
 J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 \]
 
-安全或高代价任务还可能关心失败概率、最坏场景、return 的经验下尾均值，或 cost 的 CVaR。下尾比例为 `α` 时，可把等权样本从低到高排序后，对最差 `ceil(αN)` 个 return 求平均；数值越高越好。文献也直接把 CVaR 优化用于随机动力系统与机器人 MPC，例如 Wang et al. 的[风险敏感随机搜索 MPC](https://proceedings.mlr.press/v144/wang21b.html) `[P,R1]`。但风险度量不是安全证明：有限粒子会漏掉稀有事件，模型共同偏差会让所有粒子一起乐观，事后挑 `α` 或阈值还会产生评测泄漏。
+安全或高代价任务还可能关心失败概率、最坏场景、return 的经验下尾均值，或 cost 的 CVaR。这里先冻结本书的方向和参数约定：对 return 取最低的 `α` 概率质量并最大化其均值；若改写成 cost，则通常考察上尾并最小化，必须重新声明符号与置信水平，不能只沿用“CVaR”名称。
+
+对 `N` 个等权 return 从低到高排序为 $x_{(1)}\le\cdots\le x_{(N)}$，令 $t=\alpha N$、$k=\lfloor t\rfloor$、$\delta=t-k$。本书的经验下尾均值取**恰好 `α` 的经验概率质量**：
+
+\[
+\widehat L_\alpha=
+\frac{\sum_{i=1}^{k}x_{(i)}+\delta x_{(k+1)}}{t},
+\]
+
+其中 `δ=0` 时不取边界项；`α=1` 时就是全样本均值。边界样本的分数权重不是“半个真实场景”，而是离散经验分布在分位点上的概率质量分配。[Rockafellar 与 Uryasev](https://www.sciencedirect.com/science/article/pii/S0378426602002716)对一般（包括离散）损失分布给出 CVaR 定义与优化表述 `[P,R1]`；这也说明简单条件均值 `E[X | X≤VaR]` 在分位点有原子质量时可能纳入过多概率。文献也直接把 CVaR 优化用于随机动力系统与机器人 MPC，例如 Wang et al. 的[风险敏感随机搜索 MPC](https://proceedings.mlr.press/v144/wang21b.html) `[P,R1]`。
+
+常见近似“取最差 `ceil(αN)` 个样本再平均”在 `αN` 为整数时与上式一致；否则它实际使用 `ceil(αN)/N` 的更大尾部，而且方向和偏差取决于边界样本。它可作为明确命名的粗略对照，不能悄悄冒充指定 `α` 的正式指标。即使按概率质量正确离散化，风险度量也不是安全证明：[Troop et al.](https://proceedings.mlr.press/v161/troop21a.html)讨论了有限样本 CVaR 估计 `[P,R1]`；有限粒子仍会漏掉稀有事件，模型共同偏差会让所有粒子一起乐观，事后挑 `α` 或阈值还会产生评测泄漏。
 
 `EXP-07-01` 增加两个固定动作、每个五个等权 return 的解析反例：
 
@@ -181,6 +192,17 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 *TAB-07-04：固定五场景风险目标反例。来源：本书原创，MIT，2026-09-01。场景概率是手工设定，不代表真实机器人或驾驶事件频率。*
 
 `CLAIM-07-07`（result）：在五个等权手工场景中，期望回报选择 risky（0.8 > 0.6），经验最差 20% 均值和失败概率上限 0.1 都选择 steady；该固定排序反例只证明聚合目标会改变动作选择，不估计真实尾部概率、不证明 CVaR 校准或系统安全。
+
+同一 risky 样本再固定 `α=0.3`，尾部质量为 `1.5` 个等权样本。正式指标完整计入 `-2`，再给下一个 `1.5` 分配 `0.5` 权重；粗略 `ceil` 对照则完整平均两个样本：
+
+| 计算规则 | 请求 `α` | 使用的样本质量 | 实际尾部比例 | 下尾 return 均值 |
+| --- | ---: | ---: | ---: | ---: |
+| 分位点边界按比例计权 | 0.3 | 1.5 | 0.3 | -0.833333 |
+| 最差 `ceil(αN)` 个样本 | 0.3 | 2 | 0.4 | -0.25 |
+
+*TAB-07-05：非整数经验尾部质量审计。来源：`EXP-07-01` v4，本书原创，MIT，2026-09-02。两个数都只是同一五点经验分布的描述量。*
+
+`CLAIM-07-09`（result）：`EXP-07-01` v4 在五个等权固定 return、`α=0.3` 下得到按边界质量计权的经验下尾均值 `-0.833333`；`ceil` 粗略对照把尾部扩大为 40%，得到 `-0.25`，两者相差 `0.583333`。该解析对照只暴露离散化口径，不估计总体 CVaR、置信区间、真实稀有风险或系统安全。
 
 这个表还揭示三个容易漏报的实验字段：场景/粒子如何生成，风险阈值在什么 split 上冻结，以及“没有采到失败”时分母是多少。驾驶中的碰撞、越界和不可恢复状态通常应作为独立约束或网关事件，不能只乘一个小权重后被路线进度抵消。
 
@@ -217,6 +239,7 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 3. **失败归因**：注入 reward model 偏差，区分优化失败和模型失败。
 4. **驾驶约束**：为车辆急刹与绕行写一个含舒适/碰撞硬约束的候选表。
 5. **风险阈值**：把 `TAB-07-04` 的 risky 失败值从 -2 改为不同数值，分别找出均值、最差 20% 均值和 chance constraint 改变选择的临界点；说明哪类改变属于偏好，哪类属于概率模型。
+6. **尾部质量**：保持 risky 的五个 return 不变，分别计算 `α=0.1/0.3/0.5/1.0` 的按边界质量计权下尾均值与 `ceil` 粗略均值，标出两者何时相等，并解释 `N=5` 对 1% 风险提问为何几乎没有统计信息。
 
 ## 自检要点
 
@@ -257,6 +280,13 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 
 </details>
 
+<details>
+<summary>SELF-CHECK-07-06：非整数尾部质量与小样本边界</summary>
+
+对排序后 `(-2,1.5,1.5,1.5,1.5)`：`α=0.1` 对应 0.5 个样本质量，正式下尾均值仍为 -2，`ceil` 对照也取一个样本而相等；`α=0.3` 对应 1.5，正式值为 `(-2+0.5×1.5)/1.5=-0.833333`，`ceil` 值为 `(-2+1.5)/2=-0.25`；`α=0.5` 对应 2.5，正式值为 `(-2+1.5+0.5×1.5)/2.5=0.1`，`ceil` 值为 `(-2+1.5+1.5)/3=0.333333`；`α=1` 两者都等于全样本均值 0.8。相等不表示估计充分：五个等权点的原始分辨率是 20%，`α=1%` 的计算只反复使用单个最差观测，既没有见到真实 1% 事件的能力，也没有总体外推、相关性或模型偏差保证。要回答总体尾部问题，需预先定义抽样单位、独立性/分层、样本量、估计量和不确定区间。
+
+</details>
+
 ## 延伸阅读
 
 - [PlaNet 论文（PMLR）](https://proceedings.mlr.press/v97/hafner19a.html)与[官方代码](https://github.com/google-research/planet)；
@@ -266,6 +296,8 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 - [TD-MPC2 官方仓库](https://github.com/nicklashansen/tdmpc2)。
 - Chua et al., [PETS：probabilistic ensemble 与 trajectory sampling](https://papers.nips.cc/paper_files/paper/2018/file/3de568f8597b94bda53149c7d7f5958c-Paper.pdf)；
 - Wang et al., [Adaptive Risk Sensitive Model Predictive Control with Stochastic Search](https://proceedings.mlr.press/v144/wang21b.html)。
+- Rockafellar 与 Uryasev, [Conditional value-at-risk for general loss distributions](https://www.sciencedirect.com/science/article/pii/S0378426602002716)；
+- Troop et al., [Data-driven estimation of CVaR with finite samples](https://proceedings.mlr.press/v161/troop21a.html)。
 
 ## 下一章接口
 
@@ -277,5 +309,5 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/final-book-review.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/final-book-review.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`、`reviews/ch07-fractional-tail-risk-review-2026-09-02.md`；
 - 已知限制：穷举已知三状态规则和五个手工风险场景；fixed-budget 对照只覆盖一个扰动、一个 deadline 和手工 terminal value，没有 learned model、CEM/MCTS、概率校准、仿真、GPU 或真实闭环。

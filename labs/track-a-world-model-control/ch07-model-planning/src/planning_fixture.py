@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from itertools import product
-from math import ceil, isfinite
+from math import ceil, floor, isclose, isfinite
 
 
 ACTIONS = ("advance", "harvest")
@@ -127,9 +127,7 @@ def bellman_backup(state: int, values: dict[int, float]) -> float:
     return max(candidates)
 
 
-def empirical_lower_tail_mean(values: tuple[float, ...], tail_fraction: float) -> float:
-    """Average the lowest-return empirical tail; higher values are preferred."""
-
+def _validate_tail_inputs(values: tuple[float, ...], tail_fraction: float) -> None:
     if not values or any(
         isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value)
         for value in values
@@ -142,8 +140,56 @@ def empirical_lower_tail_mean(values: tuple[float, ...], tail_fraction: float) -
         or not 0.0 < tail_fraction <= 1.0
     ):
         raise ValueError("tail_fraction must be finite and in (0, 1]")
+
+
+def empirical_lower_tail_mean(values: tuple[float, ...], tail_fraction: float) -> float:
+    """Average exactly ``tail_fraction`` mass from the lower empirical return tail."""
+
+    _validate_tail_inputs(values, tail_fraction)
+    ordered = sorted(values)
+    tail_mass = len(ordered) * tail_fraction
+    nearest_integer = round(tail_mass)
+    if isclose(tail_mass, nearest_integer, rel_tol=0.0, abs_tol=1e-12):
+        full_count = int(nearest_integer)
+        boundary_weight = 0.0
+    else:
+        full_count = floor(tail_mass)
+        boundary_weight = tail_mass - full_count
+    weighted_sum = sum(ordered[:full_count])
+    if boundary_weight:
+        weighted_sum += boundary_weight * ordered[full_count]
+    return round(weighted_sum / tail_mass, 12)
+
+
+def ceil_lower_tail_mean(values: tuple[float, ...], tail_fraction: float) -> float:
+    """Coarse comparator that expands the tail to ``ceil(N * fraction)`` samples."""
+
+    _validate_tail_inputs(values, tail_fraction)
     tail_count = ceil(len(values) * tail_fraction)
     return round(sum(sorted(values)[:tail_count]) / tail_count, 12)
+
+
+def tail_mass_discretization_audit() -> dict[str, float | int | str]:
+    """Expose the non-integer-tail difference between exact mass and ceil count."""
+
+    outcomes = RISK_SCENARIO_RETURNS["risky"]
+    tail_fraction = 0.3
+    tail_mass = len(outcomes) * tail_fraction
+    ceil_tail_count = ceil(tail_mass)
+    fractional = empirical_lower_tail_mean(outcomes, tail_fraction)
+    coarse = ceil_lower_tail_mean(outcomes, tail_fraction)
+    return {
+        "scenario_count": len(outcomes),
+        "requested_tail_fraction": tail_fraction,
+        "requested_tail_mass_in_samples": tail_mass,
+        "fractional_boundary_weight": tail_mass - floor(tail_mass),
+        "fractional_lower_tail_mean": fractional,
+        "ceil_tail_count": ceil_tail_count,
+        "ceil_effective_tail_fraction": ceil_tail_count / len(outcomes),
+        "ceil_lower_tail_mean": coarse,
+        "ceil_minus_fractional_mean": round(coarse - fractional, 12),
+        "scope": "five equally weighted fixed returns; no population CVaR or safety calibration",
+    }
 
 
 def evaluate_risk_objectives() -> dict[str, object]:
@@ -174,6 +220,7 @@ def evaluate_risk_objectives() -> dict[str, object]:
         "chance_constraint_max_failure_probability": maximum_failure_probability,
         "chance_feasible_actions": sorted(chance_feasible),
         "scenario_semantics": "five equally weighted fixed return outcomes per action",
+        "tail_mass_discretization_audit": tail_mass_discretization_audit(),
     }
 
 

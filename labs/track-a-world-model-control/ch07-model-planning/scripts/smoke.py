@@ -34,6 +34,11 @@ def main() -> int:
         raise AssertionError("the surrogate labels must preserve the fixed Bellman backups")
     if metrics["risk_objective_fixture"]["mean_selected_action"] == metrics["risk_objective_fixture"]["worst_20_percent_selected_action"]:
         raise AssertionError("the fixture must expose mean-return and lower-tail ranking disagreement")
+    tail_audit = metrics["risk_objective_fixture"]["tail_mass_discretization_audit"]
+    if tail_audit["fractional_lower_tail_mean"] != -0.833333333333:
+        raise AssertionError("fractional boundary weighting must preserve the requested 30% tail mass")
+    if tail_audit["ceil_effective_tail_fraction"] <= tail_audit["requested_tail_fraction"]:
+        raise AssertionError("the ceil comparator must expose its expanded effective tail fraction")
     report = {
         "experiment_id": "EXP-07-01",
         "status": "smoke",

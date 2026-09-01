@@ -8,12 +8,14 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from planning_fixture import (  # noqa: E402
     bellman_backup,
+    ceil_lower_tail_mean,
     empirical_lower_tail_mean,
     evaluate,
     evaluate_risk_objectives,
     execute_with_disturbance,
     plan,
     rollout,
+    tail_mass_discretization_audit,
     transition,
 )
 
@@ -111,6 +113,24 @@ class ModelPlanningTests(unittest.TestCase):
             empirical_lower_tail_mean((1.0, float("nan")), 0.2)
         with self.assertRaises(ValueError):
             empirical_lower_tail_mean((1.0,), True)
+
+    def test_fractional_boundary_preserves_requested_tail_mass(self):
+        outcomes = (-2.0, 1.5, 1.5, 1.5, 1.5)
+        self.assertEqual(empirical_lower_tail_mean(outcomes, 0.3), -0.833333333333)
+        self.assertEqual(ceil_lower_tail_mean(outcomes, 0.3), -0.25)
+
+    def test_integer_tail_mass_agrees_with_ceil_comparator(self):
+        outcomes = (-2.0, 1.5, 1.5, 1.5, 1.5)
+        self.assertEqual(empirical_lower_tail_mean(outcomes, 0.2), -2.0)
+        self.assertEqual(empirical_lower_tail_mean(outcomes, 1.0), 0.8)
+        self.assertEqual(empirical_lower_tail_mean(outcomes, 0.2), ceil_lower_tail_mean(outcomes, 0.2))
+
+    def test_tail_mass_audit_exposes_ceil_expansion(self):
+        audit = tail_mass_discretization_audit()
+        self.assertEqual(audit["requested_tail_mass_in_samples"], 1.5)
+        self.assertEqual(audit["fractional_boundary_weight"], 0.5)
+        self.assertEqual(audit["ceil_effective_tail_fraction"], 0.4)
+        self.assertEqual(audit["ceil_minus_fractional_mean"], 0.583333333333)
 
 
 if __name__ == "__main__":

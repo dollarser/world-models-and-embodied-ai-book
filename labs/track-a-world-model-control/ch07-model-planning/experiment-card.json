@@ -3,13 +3,14 @@
   "id": "EXP-07-01",
   "chapter": 7,
   "status": "smoke",
-  "claim_ids": ["CLAIM-07-02", "CLAIM-07-03", "CLAIM-07-04", "CLAIM-07-07", "CLAIM-07-08"],
+  "claim_ids": ["CLAIM-07-02", "CLAIM-07-03", "CLAIM-07-04", "CLAIM-07-07", "CLAIM-07-08", "CLAIM-07-09"],
   "claim_scope": [
     "finite planning horizon can change the first action in a fixed delayed-reward MDP",
     "a terminal value can extend a one-step planner in the same fixture",
     "under a fixed two-action post-disturbance budget, replanning can outperform a stale suffix on observed environment reward in one deterministic fixture",
     "a frozen terminal-value contribution remains distinguishable from observed environment reward in the fixed-budget objective",
-    "expected return, empirical lower-tail return, and a fixed chance constraint can rank the same hand-authored actions differently"
+    "expected return, empirical lower-tail return, and a fixed chance constraint can rank the same hand-authored actions differently",
+    "for a non-integer empirical tail mass, fractional boundary weighting preserves the requested mass while a ceil-count comparator expands it"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -18,7 +19,7 @@
   },
   "data": {
     "name": "procedural delayed-reward MDP and observation labels",
-    "version": "v3",
+    "version": "v4",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -47,7 +48,11 @@
     {"name": "fixed_value_bellman_gap", "value": 0.0, "unit": "backup", "split": "label-surrogate"},
     {"name": "risky_mean_return", "value": 0.8, "unit": "return", "split": "five-scenario-risk"},
     {"name": "risky_worst_20_percent_return", "value": -2.0, "unit": "return", "split": "five-scenario-risk"},
-    {"name": "risky_failure_probability", "value": 0.2, "unit": "ratio", "split": "five-scenario-risk"}
+    {"name": "risky_failure_probability", "value": 0.2, "unit": "ratio", "split": "five-scenario-risk"},
+    {"name": "risky_fractional_lower_30_percent_return", "value": -0.833333333333, "unit": "return", "split": "five-scenario-tail-mass-audit"},
+    {"name": "risky_ceil_lower_30_percent_return", "value": -0.25, "unit": "return", "split": "five-scenario-tail-mass-audit"},
+    {"name": "ceil_effective_tail_fraction", "value": 0.4, "unit": "ratio", "split": "five-scenario-tail-mass-audit"},
+    {"name": "ceil_minus_fractional_tail_mean", "value": 0.583333333333, "unit": "return", "split": "five-scenario-tail-mass-audit"}
   ],
   "artifacts": ["results/ch07/EXP-07-01-smoke.json"],
   "limitations": [
@@ -57,7 +62,7 @@
     "one fixed disturbance and deadline; the legacy unequal-budget result is retained only as a protocol negative control",
     "the bootstrapped objective is not an observed environment return",
     "value-equivalence check covers one value function and does not establish universal equivalence",
-    "five equally weighted hand-authored outcomes do not estimate real tail probabilities or safety",
+    "five equally weighted hand-authored outcomes and the fractional boundary calculation do not estimate population CVaR, confidence intervals, real tail probabilities, or safety",
     "no simulator, neural network, policy learning, GPU, robot, or vehicle"
   ]
 }
