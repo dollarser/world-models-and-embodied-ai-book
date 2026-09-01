@@ -3,11 +3,12 @@
   "id": "EXP-08-01",
   "chapter": 8,
   "status": "smoke",
-  "claim_ids": ["CLAIM-08-02", "CLAIM-08-03", "CLAIM-08-04"],
+  "claim_ids": ["CLAIM-08-02", "CLAIM-08-03", "CLAIM-08-04", "CLAIM-08-07"],
   "claim_scope": [
     "lambda changes the fixed finite-horizon critic targets when bootstrap values are imperfect",
     "a fixed imagined terminal-reward error propagates to every earlier full-return target",
-    "a continuation mask prevents a post-terminal reward from leaking into earlier targets"
+    "a continuation mask prevents a post-terminal reward from leaking into earlier targets",
+    "a valid truncated transition keeps value bootstrap while a natural terminal transition closes it"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -16,7 +17,7 @@
   },
   "data": {
     "name": "hand-authored reward, discount, continuation, and value sequences",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -40,13 +41,14 @@
     {"name": "lambda_0_5_start_target", "value": 0.65, "unit": "return", "split": "reference"},
     {"name": "lambda_1_start_target", "value": 1.0, "unit": "return", "split": "reference"},
     {"name": "biased_reward_start_target_gap", "value": 1.0, "unit": "return", "split": "biased-model"},
-    {"name": "missing_continuation_mask_leakage_gap", "value": 10.0, "unit": "return", "split": "terminal-mask"}
+    {"name": "missing_continuation_mask_leakage_gap", "value": 10.0, "unit": "return", "split": "terminal-mask"},
+    {"name": "collapsed_truncation_bootstrap_loss", "value": 4.0, "unit": "return", "split": "episode-end-semantics"}
   ],
   "artifacts": ["results/ch08/EXP-08-01-smoke.json"],
   "limitations": [
     "hand-authored scalar rewards and values rather than a learned world model or critic",
     "no gradients, actor update, replay buffer, neural network, simulator, or environment interaction",
-    "the biased reward is a constructed counterexample rather than a measured model error",
+    "the biased reward and collapsed-done cases are constructed counterexamples rather than measured model errors",
     "no Dreamer checkpoint, benchmark, GPU, robot, or vehicle"
   ]
 }

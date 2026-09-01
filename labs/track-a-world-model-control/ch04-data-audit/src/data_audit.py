@@ -135,10 +135,6 @@ def audit(fixture: dict[str, Any]) -> list[Issue]:
                     Issue("invalid_end_flag", f"{episode_id}:{frame_position}", "terminated and truncated must be booleans")
                 )
             else:
-                if terminated and truncated:
-                    issues.append(
-                        Issue("conflicting_end_flags", f"{episode_id}:{frame_position}", "cannot be both terminated and truncated")
-                    )
                 if not is_final and (terminated or truncated):
                     issues.append(Issue("early_episode_end", f"{episode_id}:{frame_position}", "end flag before final frame"))
                 if is_final and not (terminated or truncated):

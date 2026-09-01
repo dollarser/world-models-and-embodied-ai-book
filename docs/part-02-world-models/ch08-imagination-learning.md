@@ -3,7 +3,7 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-08-31
 > 关联实验：`EXP-08-01`
-> 关联声明：`CLAIM-08-01`～`CLAIM-08-06`
+> 关联声明：`CLAIM-08-01`～`CLAIM-08-07`
 > 关联图表：`FIG-08-01` / `TAB-08-01` / `TAB-08-02`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
@@ -137,6 +137,18 @@ make ch08-smoke
 
 `CLAIM-08-04`（result）：漏掉固定终止 mask 会把 start target 从 1 变成 11，产生 10 的泄漏 gap。这个反例验证数据语义，不估计真实 Dreamer 的误差率。
 
+还要区分“序列是否结束”和“价值是否 bootstrap”。`terminated` 与 `truncated` 都会结束当前采样窗口，但只有任务定义内的自然终态把 value discount 置零。fixture 新增一个单步反例：即时 reward 为 1、下一状态 value 为 4、标量 discount 为 1。
+
+| episode 结束语义 | value discount | target | 解释 |
+| --- | ---: | ---: | --- |
+| 自然终止 `terminated` | 0 | 1 | 关闭 bootstrap |
+| 外部截断 `truncated`，最终观测有效 | 1 | 5 | 保留下一状态 value |
+| 把两者折叠为 `done` | 0 | 1 | 错误丢失 4 的 bootstrap |
+
+`CLAIM-08-07`（result）：`EXP-08-01` 的固定单步反例中，把有效截断误当自然终止会让 target 从 5 降为 1，bootstrap loss 为 4。若 `terminated/truncated` 同时为真，代码按自然终止关闭 bootstrap；若需要 bootstrap 但下一观测无效，则拒绝该 transition。这验证接口语义，不估计 learned continuation head 的误差。
+
+这里没有矛盾：外部截断之后不能把下一 episode 的 reward 接到当前序列上，但若截断时保存了有效最终观测，仍可用该观测估计截断点的 value。若最终观测丢失，正确做法是把 target 标为不可构造并暴露数据问题，而不是猜成 terminal。
+
 运行产物为 `results/ch08/EXP-08-01-smoke.json`；实验卡明确记录了零下载、CPU、未用 GPU 和非训练边界。
 
 ## 8.6 从 Dreamer 到 DreamerV3
@@ -197,7 +209,7 @@ reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和�
 
 | 档位 | 路径 | 当前状态 | 证据要求 |
 | --- | --- | --- | --- |
-| S | 本章标准库 λ-return fixture | 已运行 | 7 个单元测试、宿主与 Docker smoke、精确 JSON |
+| S | 本章标准库 λ-return fixture | 已运行 | 12 个单元测试、宿主与 Docker smoke、精确 JSON |
 | M | DreamerV3 debug/微型环境接口检查 | 可选、待运行 | CPU/Docker 优先；上游已警告 debug 不会学好模型 |
 | L1 | 小环境的缩小配置训练，目标 24 GB 单卡以内 | 可选、待验证 | 实测峰值 VRAM、墙钟、seed、return gap 与失败 |
 | L2 | 最多 2×80 GB 的 Dreamer 4 社区研究性审计 | 非必需、待验证 | 锁 commit/许可/数据；不得冒充作者实现或通用复现 |

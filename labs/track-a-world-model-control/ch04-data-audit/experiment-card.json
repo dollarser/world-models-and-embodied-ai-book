@@ -13,11 +13,11 @@
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library v2 audit of valid and injected-failure metadata fixtures"
+    "config": "standard-library v3 audit of valid and injected-failure metadata fixtures"
   },
   "data": {
     "name": "procedural multimodal episode metadata fixture",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,

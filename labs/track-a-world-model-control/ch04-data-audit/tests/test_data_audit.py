@@ -45,18 +45,20 @@ class DataAuditTest(unittest.TestCase):
         self.assertFalse(bootstrap_allowed(terminated_final))
         self.assertTrue(bootstrap_allowed(truncated_final))
 
-    def test_final_frame_requires_exactly_one_end_flag(self) -> None:
+    def test_final_frame_requires_at_least_one_end_flag(self) -> None:
         missing = deepcopy(self.valid)
         missing_final = missing["episodes"][0]["frames"][-1]
         missing_final["terminated"] = False
         missing_final["truncated"] = False
         self.assertIn("missing_episode_end", {issue.code for issue in audit(missing)})
 
-        conflicting = deepcopy(self.valid)
-        conflicting_final = conflicting["episodes"][0]["frames"][-1]
-        conflicting_final["terminated"] = True
-        conflicting_final["truncated"] = True
-        self.assertIn("conflicting_end_flags", {issue.code for issue in audit(conflicting)})
+    def test_simultaneous_terminal_and_time_limit_is_valid_and_terminal_dominates_bootstrap(self) -> None:
+        changed = deepcopy(self.valid)
+        final = changed["episodes"][0]["frames"][-1]
+        final["terminated"] = True
+        final["truncated"] = True
+        self.assertEqual(audit(changed), [])
+        self.assertFalse(bootstrap_allowed(final))
 
     def test_nonfinal_end_flag_is_rejected(self) -> None:
         changed = deepcopy(self.valid)

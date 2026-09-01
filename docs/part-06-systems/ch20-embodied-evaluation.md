@@ -3,7 +3,7 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-20-01`
-> 关联声明：`CLAIM-20-01`～`CLAIM-20-05`
+> 关联声明：`CLAIM-20-01`～`CLAIM-20-06`
 > 关联图表：`FIG-20-01` / `TAB-20-01`
 > 资源档位：S / M
 > GPU 状态：不需要
@@ -110,7 +110,7 @@ flowchart TB
 
 ## 20.5 EXP-20-01：同一结果表，两套协议
 
-固定 fixture 有 8 个 episode：4 个 easy、4 个 hard；其中包含目标未达、到达后碰撞、到达但人工介入等情况。假想模型和原始结果完全不变，只更换评测设置：
+固定 fixture 有 8 个有效 episode：4 个 easy、4 个 hard；其中包含目标未达、到达后碰撞、到达但人工介入等情况。`hard-2` 是达到时间上限的有效 `truncated` episode：它没有完成任务，仍作为失败留在完整协议分母中。假想模型和原始结果完全不变，只更换评测设置：
 
 - A：仅 easy，达到目标即成功；
 - B：完整任务，达到目标且无碰撞、无介入才成功。
@@ -134,6 +134,10 @@ make ch20-smoke
 
 `CLAIM-20-05`（result）：同一 fixture 中，`4/4` 的 Wilson 95% 区间为 `[0.510109, 1.0]`，`5/8` 为 `[0.305742, 0.863156]`。区间揭示两组点估计都很不确定，但不能把两个不同协议变成可比较实验。
 
+聚合产物同时报告 `attempted_count`、`valid_episode_count`、`terminated_episode_count`、`truncated_episode_count` 与 `invalid_episode_count`。完整协议是 `8 attempted / 8 valid / 7 terminated / 1 truncated / 0 invalid`；截断没有被误当技术坏样本删除，因此成功率仍为 `5/8`。同一步若同时 natural terminal 与 timeout，会分别进入两个结束原因计数，但 attempted 分母只增加一次；value bootstrap 仍按第4、8章由 `terminated` 关闭。fixture 另有反例注入 `reset_failed`：审计器会保留无效 episode ID 和原因，并阻止生成聚合比例。
+
+`CLAIM-20-06`（result）：`EXP-20-01` v3 验证了两条分母规则：有效 timeout 截断仍进入预先定义的 episode 分母；技术无效运行必须具名报告并使当前聚合失败，不能在计算后静默删除。这个合同不规定所有 benchmark 必须采用同一重跑政策；它要求重跑、替换或排除政策在运行前冻结。
+
 ## 20.6 benchmark card 的最小字段
 
 每次结果发布至少保存：
@@ -153,7 +157,7 @@ make ch20-smoke
 
 `CLAIM-20-03`（recommendation）：若 benchmark card 的任务、成功定义或分母不同，应先标记“不可直接比较”，再决定是否能通过重算得到共同协议，而不是直接排序。
 
-上述字段已经映射到 `specs/benchmark-card.schema.json`。`benchmarks/BENCH-20-01.json` 冻结本章两种具名协议、完整八行分母、成功判据、Wilson 95% 区间假设和不可比因素；它还明确将 hard suite 的加入视为任务总体变化，而不是 OOD score 实验。严格验证可以发现缺字段、错误章节引用和产物漂移，但不能让这八个手工 episode 变成真实 benchmark 样本。
+上述字段已经映射到 `specs/benchmark-card.schema.json`。`benchmarks/BENCH-20-01.json` v3 冻结本章两种具名协议、完整八行分母、结束标志、无效运行政策、成功判据、Wilson 95% 区间假设和不可比因素；它还明确将 hard suite 的加入视为任务总体变化，而不是 OOD score 实验。严格验证可以发现缺字段、错误章节引用和产物漂移，但不能让这八个手工 episode 变成真实 benchmark 样本。
 
 视频最好保存索引和必要片段，而非只挑成功 demo。索引应包含 episode ID、任务、种子、结果、失败类别、日志路径和许可状态；涉及人员、家庭或道路数据时先做隐私与发布审查。
 
@@ -222,4 +226,4 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 - 一致性审查：通过；
 - 教学审查：通过；
 - 审查记录路径：`reviews/batch-d-review.md`；
-- 已知限制：未运行 LIBERO、MetaDrive、CARLA 或真实硬件；Wilson 区间只覆盖独立二项比例，不替代分层/相关 episode 的统计设计。
+- 已知限制：未运行 LIBERO、MetaDrive、CARLA 或真实硬件；Wilson 区间只覆盖独立二项比例，不替代分层/相关 episode 的统计设计；无效运行反例只验证拒绝路径，没有估计真实 reset/logging 故障率。

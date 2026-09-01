@@ -17,6 +17,15 @@
         10.0
       ]
     },
+    "episode_end_semantics": {
+      "collapsed_done_target": 1.0,
+      "simultaneous_end_bootstrap_discount": 0.0,
+      "terminal_bootstrap_discount": 0.0,
+      "terminal_target": 1.0,
+      "truncation_bootstrap_discount": 1.0,
+      "truncation_bootstrap_loss": 4.0,
+      "truncation_target": 5.0
+    },
     "lambda_targets": {
       "lambda_0": [
         0.4,

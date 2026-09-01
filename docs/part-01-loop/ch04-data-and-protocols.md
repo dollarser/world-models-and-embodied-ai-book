@@ -51,7 +51,7 @@
 
 `CLAIM-04-01`（recommendation）：时序具身数据默认按产生依赖关系的最小完整组切分，而不是按帧切分；具体组可以是 episode、轨迹、任务实例、场景、路线、主体或采集会话。
 
-`terminated` 与 `truncated` 也不能合并成一个含义不明的 `done`：前者表示任务定义内的自然终态，例如成功、失败或摔倒；后者表示 MDP 之外的采集上限、日志切断或外部超时。[Gymnasium 的 time-limit 文档](https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/)明确区分两者。两种标志都会阻止序列窗口跨到下一个 episode，但在常见价值目标中，只有自然终止关闭 bootstrap：
+`terminated` 与 `truncated` 也不能合并成一个含义不明的 `done`：前者表示任务定义内的自然终态，例如成功、失败或摔倒；后者表示 MDP 之外的采集上限、日志切断或外部超时。[Gymnasium 的 time-limit 文档](https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/)明确区分两者。二者不是必须互斥：当前官方 [`TimeLimit` 实现](https://github.com/Farama-Foundation/Gymnasium/blob/main/gymnasium/wrappers/common.py)在达到步数上限时把 `truncated` 置真，并保留下层同一步的 `terminated`；因此恰好在上限步到达自然终态时可以双真。任一标志为真都会阻止序列窗口跨到下一个 episode，而常见价值目标只由 `terminated` 关闭 bootstrap；双真时自然终止语义优先：
 
 \[
 m_t^{\text{value}}=1-\mathbb{1}[\text{terminated}_t].
@@ -260,9 +260,9 @@ make ch04-smoke
 
 有效 fixture 含两个三帧 episode：一个自然终止、一个外部截断；两个相机流共有一个显式 masked sample，其余有效样本相对主时间戳最大偏差为 0.01 秒，审计问题数为 0。注入 fixture 的 8 类错误全部检出：动作越界、终止/截断冲突、跨 split route 泄漏、缺少必需传感器记录、frame index 不连续、归一化使用全部数据、传感器偏差超限，以及主时间戳 cadence 错误。
 
-13 个单元测试除原有 schema/split/action 检查外，还验证：在最终观测有效的本 fixture 中，外部截断保留 value bootstrap 而自然终止关闭它；episode 最后一帧必须且只能有一种结束标志、非末帧不能结束、显式 mask 合法但缺字段非法、sensor timestamp 必须单调且满足 skew，以及 NaN/Inf 不会绕过数值检查。
+14 个单元测试除原有 schema/split/action 检查外，还验证：在最终观测有效的本 fixture 中，外部截断保留 value bootstrap 而自然终止关闭它；episode 最后一帧至少有一种结束标志、双真合法且关闭 bootstrap、非末帧不能结束、显式 mask 合法但缺字段非法、sensor timestamp 必须单调且满足 skew，以及 NaN/Inf 不会绕过数值检查。
 
-`CLAIM-04-08`（result）：`EXP-04-01` v2 中，有效 fixture 为 0 issue，8 类注入错误均被识别；该结果只证明已编码规则覆盖已知手工反例，不估计真实数据错误率。
+`CLAIM-04-08`（result）：`EXP-04-01` v3 中，有效 fixture 为 0 issue，8 类注入错误均被识别；双真结束标志作为合法边界另有测试。该结果只证明已编码规则覆盖已知手工反例，不估计真实数据错误率。
 
 这仍只是已知错误注入测试。它不能证明真实 LeRobot、机器人或驾驶数据不存在其他问题，也没有检查视频解码、标定、隐私和第三方许可。
 

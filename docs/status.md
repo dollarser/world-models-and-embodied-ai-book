@@ -11,7 +11,7 @@
 | 第1章 从看见到行动 | `reviewed` | 零 3D/RL 入口、闭环地图、三条阅读路线、机器人/自动驾驶双案例与 S 档反例 | 真实感知、控制器、仿真和硬件未运行 |
 | EXP-01-01 | `smoke` | 6 个单元测试；相同 MAE、不同积分状态和边界结局 | 标量手工 residual，不是感知、控制或安全性能 |
 | 第2章 世界模型到底是什么 | `reviewed` | 正文、8 类四轴系统卡、4 个单元测试与 CPU smoke | 上游逐版本运行核验 |
-| 第4章 数据、基线与实验协议 | `reviewed` | terminated/truncated、显式缺帧 mask、多传感器 skew、8 类注入错误、13 个单元测试与 CPU smoke | 真实 clock/视频/标定/隐私/许可与数据集审计 |
+| 第4章 数据、基线与实验协议 | `reviewed` | terminated/truncated（含双真边界）、显式缺帧 mask、多传感器 skew、8 类注入错误、14 个单元测试与 CPU smoke | 真实 clock/视频/标定/隐私/许可与数据集审计 |
 | EXP-02-01 | `smoke` | 8/8 类别、来源和证据限制记录 | 不是性能 benchmark，未运行上游系统 |
 | 第3章 最小机器人学与决策基础 | `reviewed` | 零基础坐标/点云/BEV/运动学/MDP 桥接、动作 schema 与四类审查 | 真实标定、动力学、接触和时间同步 |
 | EXP-03-01 | `smoke` | 6 个单元测试；投影、尺度、外参与二维反馈固定结果 | 理想针孔和运动学 fixture，不是实机结果 |
@@ -23,8 +23,8 @@
 | EXP-06-01 | `smoke` | 宿主与 Docker CPU 数据流、3 个单元测试、固定指标 | PyTorch 训练、24GB GPU 资源 |
 | 第7章 用模型做规划 | `reviewed` | MPC/CEM/tree search/value equivalence、自动驾驶候选轨迹与延迟回报 fixture；四类审查通过 | learned model、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
 | EXP-07-01 | `smoke` | 7 个单元测试；H=1/3、terminal value、扰动重规划和受限 Bellman gap | 三状态已知规则，不是 learned planning 性能 |
-| 第8章 在想象中学习 | `reviewed` | Dreamer V1–V4 谱系、λ-return、continuation、误差传播、自动驾驶正文与四类审查 | world model、actor/critic 训练、上游 checkpoint、仿真和 GPU 未运行 |
-| EXP-08-01 | `smoke` | 7 个单元测试；λ=0/0.5/1 target、reward bias 传播和终止后 reward 泄漏 | 三步解析序列，不是 Dreamer、策略改进或样本效率结果 |
+| 第8章 在想象中学习 | `reviewed` | Dreamer V1–V4 谱系、λ-return、continuation、terminated/truncated bootstrap、误差传播、自动驾驶正文与四类审查 | world model、actor/critic 训练、上游 checkpoint、仿真和 GPU 未运行 |
+| EXP-08-01 | `smoke` | 12 个单元测试；λ=0/0.5/1 target、reward bias、终止后泄漏及截断误折叠造成 4 的 bootstrap loss | 标量解析序列，不是 Dreamer、策略改进或样本效率结果 |
 | 第10章 非生成式预测表示 | `reviewed` | 四类审查通过；JEPA 谱系、probe 协议与第5章非生成式边界 | 官方 checkpoint、真实数据与 GPU 未运行 |
 | EXP-10-01 | `smoke` | 5 个单元测试；重建与 shifted probe 排名反转 | 手工标量表征，不是 JEPA 性能 |
 | 第11章 动作条件视频世界模型 | `reviewed` | 四类审查通过；动作反事实、生成式谱系与 renderer/simulator/planner 边界 | 视频训练、checkpoint、仿真和 GPU 未运行 |
@@ -45,12 +45,12 @@
 | EXP-18-01 | `smoke` | 7 个单元测试；reward-weighted target、ESS、recovery coverage 与 support gate | 四条标量轨迹，不是 offline RL 或 policy 改进 |
 | 第19章 物理仿真、Real2Sim 与 Sim2Real | `reviewed` | 仿真合同、gap 分解、环境矩阵、系统辨识、域随机化、自动驾驶正文与四类审查 | MuJoCo/MetaDrive/CARLA/Isaac、真实系统、资产和 GPU 均未运行 |
 | EXP-19-01 | `smoke` | 8 个单元测试；名义 held-out state MAE 0.6625，12 个候选恢复预设参数 | 标量确定性 fixture，不是物理仿真或 Sim2Real 性能 |
-| 第20章 具身评测 | `reviewed` | 四类审查通过；model exploitation、simulator gap、小样本 Wilson 区间与机器 benchmark card 已接入 | 分层/相关 episode 的统计设计与实际仿真 |
-| EXP-20-01 | `smoke` | 同一结果表在两协议下为 100% 与 62.5%，三项差异被检出；另验证 4/4 与 5/8 的 Wilson 95% 区间 | 手工 8 episode、独立 Bernoulli 假设，不是 benchmark |
+| 第20章 具身评测 | `reviewed` | 四类审查通过；model exploitation、simulator gap、结束语义/分母审计、小样本 Wilson 区间与机器 benchmark card 已接入 | 分层/相关 episode 的统计设计与实际仿真 |
+| EXP-20-01 | `smoke` | 12 个单元测试；同一表为 100% 与 62.5%；8 attempted/8 valid/7 terminated/1 truncated/0 invalid，技术无效运行阻止聚合 | 手工 8 episode、独立 Bernoulli 假设，不是 benchmark 或故障率估计 |
 | 第21章 部署、实时性与安全边界 | `reviewed` | deadline、尾延迟、异步 chunk、watchdog、版本化 uncertainty gate、risk–coverage、fallback、自动驾驶 MRM 与四类审查 | 真实墙钟、校准 estimator、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
 | EXP-21-01 | `smoke` | 9 个单元测试；mean 45 ms 掩盖 150 ms 尾部，六类异常分别拒绝；两个阈值展示 coverage—failure 取舍 | 手工 latency/packet/score/label，不是实时、OOD 或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 9 个单元测试；完整包 0 issue，无效包 15 个具名 issue | metadata 字典存在性检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、152 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、163 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

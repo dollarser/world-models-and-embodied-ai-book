@@ -24,7 +24,7 @@
       "frames": [
         {"frame_index": 0, "timestamp": 0.0, "action": 1.5, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.0, "valid": true}}},
         {"frame_index": 1, "timestamp": 0.1, "action": 0.0, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.16, "valid": true}}},
-        {"frame_index": 3, "timestamp": 0.35, "action": null, "terminated": true, "truncated": true, "end_reason": "ambiguous", "sensors": {"front_camera": {"timestamp": 0.35, "valid": true}, "wrist_camera": {"timestamp": 0.35, "valid": true}}}
+        {"frame_index": 3, "timestamp": 0.35, "action": null, "terminated": true, "truncated": "yes", "end_reason": "ambiguous", "sensors": {"front_camera": {"timestamp": 0.35, "valid": true}, "wrist_camera": {"timestamp": 0.35, "valid": true}}}
       ]
     },
     {

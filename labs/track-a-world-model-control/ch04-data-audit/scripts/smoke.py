@@ -16,8 +16,8 @@ from data_audit import audit, bootstrap_allowed, describe_fixture, load_fixture,
 
 EXPECTED_INJECTED_CODES = {
     "action_out_of_range",
-    "conflicting_end_flags",
     "group_split_overlap",
+    "invalid_end_flag",
     "missing_sensor_record",
     "noncontiguous_frame_index",
     "normalization_scope",

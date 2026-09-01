@@ -24,6 +24,10 @@ def main() -> int:
         raise AssertionError("all three comparability dimensions must be detected")
     if easy["success_wilson_95"]["lower"] >= easy["success_rate"]:
         raise AssertionError("a perfect four-episode point estimate must not imply certainty")
+    if full["truncated_episode_count"] != 1 or full["episode_count"] != 8:
+        raise AssertionError("the valid timeout must remain visible in the complete denominator")
+    if full["invalid_episode_count"] != 0:
+        raise AssertionError("the fixed reference table must not contain invalid technical runs")
 
     report = {
         "experiment_id": "EXP-20-01",

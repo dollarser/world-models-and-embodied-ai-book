@@ -22,6 +22,8 @@ def main() -> int:
         raise AssertionError("the fixed imagined reward bias must reach the start target")
     if metrics["continuation_mask"]["leakage_gap"] != 10.0:
         raise AssertionError("the fixture must expose post-terminal reward leakage")
+    if metrics["episode_end_semantics"]["truncation_bootstrap_loss"] != 4.0:
+        raise AssertionError("collapsing truncation into done must expose lost bootstrap value")
     report = {
         "experiment_id": "EXP-08-01",
         "status": "smoke",
