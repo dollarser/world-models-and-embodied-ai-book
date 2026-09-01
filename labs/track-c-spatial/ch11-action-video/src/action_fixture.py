@@ -110,7 +110,7 @@ def rollout(start: tuple[float, float], actions: tuple[str, ...], model: str | N
     return states
 
 
-def evaluate_model(model: str) -> dict[str, float | int]:
+def evaluate_model(model: str) -> dict[str, float | int | list[str]]:
     one_step_squared = []
     frame_matches = 0
     counterfactual_start = (2.0, 3.0)
@@ -149,6 +149,9 @@ def evaluate_model(model: str) -> dict[str, float | int]:
     endpoint_errors = []
     trajectory_squared = []
     transition_count = 0
+    endpoint_cancellation_sequence_count = 0
+    endpoint_cancellation_sequence_ids: list[str] = []
+    maximum_hidden_intermediate_error = 0.0
     for actions in sequences:
         expected_rollout = rollout((1.0, 3.0), actions)
         predicted_rollout = rollout((1.0, 3.0), actions, model)
@@ -160,9 +163,18 @@ def evaluate_model(model: str) -> dict[str, float | int]:
                 predicted_endpoint[1] - expected_endpoint[1],
             )
         )
+        per_step_errors = []
         for expected, predicted in zip(expected_rollout[1:], predicted_rollout[1:], strict=True):
             trajectory_squared.extend(((predicted[0] - expected[0]) ** 2, (predicted[1] - expected[1]) ** 2))
+            per_step_errors.append(hypot(predicted[0] - expected[0], predicted[1] - expected[1]))
             transition_count += 1
+        if endpoint_errors[-1] == 0.0 and any(error > 0.0 for error in per_step_errors[:-1]):
+            endpoint_cancellation_sequence_count += 1
+            endpoint_cancellation_sequence_ids.append("→".join(actions))
+            maximum_hidden_intermediate_error = max(
+                maximum_hidden_intermediate_error,
+                max(per_step_errors[:-1]),
+            )
 
     left = predict_next(counterfactual_start, "left", model)
     right = predict_next(counterfactual_start, "right", model)
@@ -184,8 +196,11 @@ def evaluate_model(model: str) -> dict[str, float | int]:
         "unseen_transition_count": transition_count,
         "unseen_sequence_trajectory_rmse": sqrt(sum(trajectory_squared) / len(trajectory_squared)),
         "mean_unseen_sequence_endpoint_error": sum(endpoint_errors) / len(endpoint_errors),
+        "endpoint_cancellation_sequence_count": endpoint_cancellation_sequence_count,
+        "endpoint_cancellation_sequence_ids": endpoint_cancellation_sequence_ids,
+        "maximum_hidden_intermediate_error": maximum_hidden_intermediate_error,
     }
 
 
-def evaluate() -> dict[str, dict[str, float | int]]:
+def evaluate() -> dict[str, dict[str, float | int | list[str]]]:
     return {model: evaluate_model(model) for model in MODELS}

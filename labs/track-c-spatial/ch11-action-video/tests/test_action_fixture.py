@@ -63,6 +63,23 @@ class ActionConditionedFixtureTests(unittest.TestCase):
         self.assertGreater(metrics["unseen_sequence_trajectory_rmse"], 0.0)
         self.assertGreater(metrics["mean_unseen_sequence_endpoint_error"], 0.0)
 
+    def test_endpoint_only_metric_misses_a_swapped_action_sequence(self):
+        swapped = evaluate()["left_right_swapped"]
+        self.assertEqual(swapped["endpoint_cancellation_sequence_count"], 1)
+        self.assertEqual(swapped["endpoint_cancellation_sequence_ids"], ["left→forward→right"])
+        self.assertEqual(swapped["maximum_hidden_intermediate_error"], 2.0)
+
+    def test_exact_model_has_no_hidden_intermediate_error(self):
+        conditioned = evaluate()["action_conditioned"]
+        self.assertEqual(conditioned["endpoint_cancellation_sequence_count"], 0)
+        self.assertEqual(conditioned["endpoint_cancellation_sequence_ids"], [])
+        self.assertEqual(conditioned["maximum_hidden_intermediate_error"], 0.0)
+
+    def test_endpoint_cancellation_is_not_inferred_from_aggregate_mean(self):
+        swapped = evaluate()["left_right_swapped"]
+        self.assertGreater(swapped["mean_unseen_sequence_endpoint_error"], 0.0)
+        self.assertEqual(swapped["endpoint_cancellation_sequence_count"], 1)
+
     def test_unknown_action_is_rejected(self):
         with self.assertRaises(ValueError):
             transition((1.0, 1.0), "teleport")

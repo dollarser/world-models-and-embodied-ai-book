@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-11-01`
-> 关联声明：`CLAIM-11-01`～`CLAIM-11-10`
-> 关联图表：`FIG-11-01` / `TAB-11-01` / `TAB-11-02` / `TAB-11-03` / `TAB-11-04`
+> 关联声明：`CLAIM-11-01`～`CLAIM-11-11`
+> 关联图表：`FIG-11-01` / `TAB-11-01`～`TAB-11-05`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -180,6 +180,21 @@ make ch11-smoke
 
 `CLAIM-11-08`（result）：在固定的 3 条未见序列、9 个转移上，blind、swapped、conditioned 的全轨迹 RMSE 分别为 0.76830、1.33333、0。显式报告轨迹与终点能阻止中间错误被终点抵消，但仍不是随机环境的统计泛化证据。
 
+### 11.6.1 endpoint 正确仍可能掩盖中间错误
+
+聚合的平均终点误差只能说明三条序列的均值，不能指出某条序列是否发生误差抵消。对 `left→forward→right`，左右标签交换模型在第一步走向相反方向，第三步却恰好回到同一终点：
+
+| 步 | 动作 | oracle 状态 | swapped 状态 | 欧氏误差 |
+| ---: | --- | --- | --- | ---: |
+| 0 | start | (1, 3) | (1, 3) | 0 |
+| 1 | left | (2, 2) | (2, 4) | 2 |
+| 2 | forward | (3, 2) | (3, 4) | 2 |
+| 3 | right | (4, 3) | (4, 3) | **0** |
+
+*TAB-11-05：`EXP-11-01` 的 endpoint-cancellation 负对照。状态和动作均为手写确定性网格规则；单条序列的终点正确不能替代逐步轨迹检查。*
+
+`CLAIM-11-11`（result）：`EXP-11-01` 的三条未见序列中，left-right-swapped 有 1 条终点误差为 0、但中间最大误差为 2；正确模型没有这种抵消。`1/3` 不是现实错误发生率，2 也不是视频或物理单位，只证明 endpoint-only 指标可以产生假阴性。
+
 ## 11.7 renderer、simulator、planner：同一视频，不同合同
 
 | 系统角色 | 必须具备 | 不能仅凭什么证明 |
@@ -278,7 +293,7 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 动作盲、左右交换与正确查表的反事实/组合诊断 | `EXP-11-01` | CPU smoke | 确定性网格/ASCII |
+| 本书结果 | 动作盲、左右交换、endpoint cancellation 与正确查表的反事实/组合诊断 | `EXP-11-01` | CPU smoke | 确定性网格/ASCII |
 | 开源案例 | DIAMOND 提供动作条件可玩扩散模型资产 | 官方项目 | `[O,R1]` | 本书未运行 |
 | 开源案例 | Cosmos 2.5 action-cond 与 Drive-Dreams 条件生成资产 | 官方项目 | `[O,R1]` | 代际、许可、用途和资源不同 |
 | 开源案例 | Cosmos 3 forward/inverse/policy action modes | 官方快照/cookbook | `[O,R1]` | OpenMDW-1.1；Guardrail 授权/开关、资源与有效性未验证 |
@@ -297,6 +312,7 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 3. **时序实验**：将动作整体错位一帧，观察 one-step 与 rollout 指标怎样变化。
 4. **系统分类**：为一个交互视频产品填写 renderer/simulator/planner 证据表。
 5. **自动驾驶迁移**：设计保持、急刹与切入三分支，并写明其他车辆的响应协议。
+6. **指标审计**：构造另一条终点误差为零、但中间状态错误的动作序列，并说明最低报告字段。
 
 ## 自检要点
 
@@ -337,6 +353,13 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-11-06：终点正确但轨迹错误</summary>
+
+可选一对会互相抵消的动作，例如先把真实 `left/right` 语义交换，再执行包含左右各一次的序列；当前 fixture 的 `left→forward→right` 在 swapped 模型中得到 oracle/swapped 的 y 轨迹 `3→2→2→3` 与 `3→4→4→3`，终点误差为0但中间最大误差为2。最低报告应包含序列身份、attempted/available 数、每个 horizon 的状态误差、最大中间误差、终点误差、碰撞/终止与失败保留规则；不能只给跨序列平均终点。还需把这类序列在 protocol 中预登记，不能观察结果后才挑出最戏剧性的抵消案例。
+
+</details>
+
 ## 延伸阅读
 
 - Valevski et al., [GameNGen](https://arxiv.org/abs/2408.14837)，`[A,R1]`，动作条件扩散游戏引擎；
@@ -364,6 +387,6 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`；
+- 审查记录路径：`reviews/ch11-endpoint-cancellation-review-2026-09-02.md`、`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`；
 - 已知限制：没有训练视频模型、下载 checkpoint、申请 gated Guardrail、运行仿真或验证任何闭源案例；
 - 下一步：视频训练与仿真验证保持待办；Cosmos/DIAMOND 等上游资产只完成一手资料与无下载入口核验，未运行模型。

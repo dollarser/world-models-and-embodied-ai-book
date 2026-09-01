@@ -29,6 +29,14 @@ def main() -> int:
         raise AssertionError("swapped control labels must reverse the signed left-to-right effect")
     if swapped["counterfactual_vector_rmse"] <= conditioned["counterfactual_vector_rmse"]:
         raise AssertionError("direction-aware counterfactual error must detect swapped actions")
+    if swapped["endpoint_cancellation_sequence_count"] != 1:
+        raise AssertionError("one swapped-action sequence must return to the correct endpoint")
+    if swapped["endpoint_cancellation_sequence_ids"] != ["left→forward→right"]:
+        raise AssertionError("endpoint cancellation must stay bound to the preregistered sequence")
+    if swapped["maximum_hidden_intermediate_error"] != 2.0:
+        raise AssertionError("endpoint cancellation must retain its authored intermediate error")
+    if conditioned["endpoint_cancellation_sequence_count"] != 0:
+        raise AssertionError("exact rollouts must not be labeled as endpoint cancellation")
 
     report = {
         "experiment_id": "EXP-11-01",

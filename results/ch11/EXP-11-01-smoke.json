@@ -5,8 +5,11 @@
     "action_blind": {
       "action_sensitivity": 0.0,
       "counterfactual_vector_rmse": 0.9574271077563381,
+      "endpoint_cancellation_sequence_count": 0,
+      "endpoint_cancellation_sequence_ids": [],
       "left_right_separation": 0.0,
       "left_to_right_signed_separation": 0.0,
+      "maximum_hidden_intermediate_error": 0.0,
       "mean_unseen_sequence_endpoint_error": 1.3385214790248792,
       "one_step_frame_accuracy": 0.25,
       "one_step_state_rmse": 0.5863019699779287,
@@ -17,8 +20,11 @@
     "action_conditioned": {
       "action_sensitivity": 2.0,
       "counterfactual_vector_rmse": 0.0,
+      "endpoint_cancellation_sequence_count": 0,
+      "endpoint_cancellation_sequence_ids": [],
       "left_right_separation": 2.0,
       "left_to_right_signed_separation": 2.0,
+      "maximum_hidden_intermediate_error": 0.0,
       "mean_unseen_sequence_endpoint_error": 0.0,
       "one_step_frame_accuracy": 1.0,
       "one_step_state_rmse": 0.0,
@@ -29,8 +35,13 @@
     "left_right_swapped": {
       "action_sensitivity": 2.0,
       "counterfactual_vector_rmse": 1.632993161855452,
+      "endpoint_cancellation_sequence_count": 1,
+      "endpoint_cancellation_sequence_ids": [
+        "left→forward→right"
+      ],
       "left_right_separation": 2.0,
       "left_to_right_signed_separation": -2.0,
+      "maximum_hidden_intermediate_error": 2.0,
       "mean_unseen_sequence_endpoint_error": 2.0,
       "one_step_frame_accuracy": 0.5,
       "one_step_state_rmse": 1.0,

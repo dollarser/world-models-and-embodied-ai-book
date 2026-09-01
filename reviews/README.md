@@ -66,6 +66,7 @@
 - [第10章 probe、shift 与动作反事实审查](ch10-probe-shift-action-review-2026-09-01.md)
 - [第10章时间顺序与反转敏感度审查](ch10-temporal-order-review-2026-09-02.md)
 - [第11章动作指标与方向负对照审查](ch11-action-metric-review-2026-09-01.md)
+- [第11章 endpoint cancellation 与逐轨迹分母审查](ch11-endpoint-cancellation-review-2026-09-02.md)
 - [第12章可行动性证据审查](ch12-actionability-evidence-review-2026-09-01.md)
 - [第12章米制栅格与任务边界审查](ch12-metric-grid-and-task-boundary-review-2026-09-02.md)
 - [第14章生成动作预算与安全筛选审查](ch14-generative-budget-review-2026-09-01.md)

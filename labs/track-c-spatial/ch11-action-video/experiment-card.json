@@ -3,21 +3,22 @@
   "id": "EXP-11-01",
   "chapter": 11,
   "status": "smoke",
-  "claim_ids": ["CLAIM-11-02", "CLAIM-11-03", "CLAIM-11-07", "CLAIM-11-08"],
+  "claim_ids": ["CLAIM-11-02", "CLAIM-11-03", "CLAIM-11-07", "CLAIM-11-08", "CLAIM-11-11"],
   "claim_scope": [
     "an action-blind predictor can produce plausible average motion while failing same-state counterfactual sensitivity",
     "an action-conditioned transition table can compose individually observed actions into held-out sequences in the deterministic fixture",
     "non-zero action sensitivity does not establish that action semantics or counterfactual directions are correct",
-    "full-trajectory error and explicit sequence/transition denominators prevent endpoint-only reporting from hiding intermediate errors"
+    "full-trajectory error and explicit sequence/transition denominators prevent endpoint-only reporting from hiding intermediate errors",
+    "an action-label error can cancel at a sequence endpoint while remaining wrong at intermediate steps"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library learned transition-table, swapped-action negative control, and ASCII-frame fixture"
+    "config": "standard-library learned transition-table, swapped-action and endpoint-cancellation negative controls, and ASCII-frame fixture-v3"
   },
   "data": {
     "name": "procedural four-action grid-transition fixture",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -49,13 +50,17 @@
     {"name": "action_conditioned_unseen_sequence_endpoint_error", "value": 0.0, "unit": "grid", "split": "three-held-out-sequences"},
     {"name": "action_blind_unseen_sequence_trajectory_rmse", "value": 0.768295371441074, "unit": "grid", "split": "nine-held-out-transitions"},
     {"name": "left_right_swapped_unseen_sequence_trajectory_rmse", "value": 1.3333333333333333, "unit": "grid", "split": "nine-held-out-transitions"},
-    {"name": "action_conditioned_unseen_sequence_trajectory_rmse", "value": 0.0, "unit": "grid", "split": "nine-held-out-transitions"}
+    {"name": "action_conditioned_unseen_sequence_trajectory_rmse", "value": 0.0, "unit": "grid", "split": "nine-held-out-transitions"},
+    {"name": "left_right_swapped_endpoint_cancellation_sequence_count", "value": 1, "unit": "sequence", "split": "three-held-out-sequences"},
+    {"name": "left_right_swapped_maximum_hidden_intermediate_error", "value": 2.0, "unit": "grid", "split": "left-forward-right-endpoint-cancellation"},
+    {"name": "action_conditioned_endpoint_cancellation_sequence_count", "value": 0, "unit": "sequence", "split": "three-held-out-sequences"}
   ],
   "artifacts": ["results/ch11/EXP-11-01-smoke.json"],
   "limitations": [
     "discrete deterministic state transitions and ASCII frames rather than learned video pixels",
     "all individual actions are observed during training; only their sequences are held out",
     "the swapped-action negative control is a label permutation, not a sampled timing-offset process",
+    "the endpoint-cancellation count is exact for three authored sequences and does not estimate a real failure rate",
     "no stochastic actors, occlusion, appearance change, collision physics, or uncertainty"
   ]
 }
