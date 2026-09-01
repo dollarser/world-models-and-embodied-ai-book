@@ -27,6 +27,13 @@ def main() -> int:
     missingness = metrics["horizon_missingness"]
     if missingness["available_case_terminal_winner"] == missingness["fixed_denominator_terminal_winner"]:
         raise AssertionError("missing-rollout policy must reverse the terminal ranking")
+    probability = metrics["probability_metric_diagnostic"]
+    if not probability["one_bin_ece_tie"]:
+        raise AssertionError("coarse one-bin ECE must hide the forecast-quality difference")
+    if not probability["informative"]["brier_loss"] < probability["uniform_base_rate"]["brier_loss"]:
+        raise AssertionError("the informative forecast must win the authored Brier comparison")
+    if not probability["informative"]["two_bin_ece"] > probability["informative"]["one_bin_ece"]:
+        raise AssertionError("the registered binning must expose ECE sensitivity")
 
     report = {
         "experiment_id": "EXP-09-01",

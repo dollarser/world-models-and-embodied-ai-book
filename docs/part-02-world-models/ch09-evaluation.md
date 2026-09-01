@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-09-01`
-> 关联声明：`CLAIM-09-01`～`CLAIM-09-08`
-> 关联图表：`FIG-09-01` / `TAB-09-01` / `TAB-09-02`
+> 关联声明：`CLAIM-09-01`～`CLAIM-09-09`
+> 关联图表：`FIG-09-01` / `TAB-09-01` / `TAB-09-02` / `TAB-09-03`
 > 资源档位：S / M
 > GPU 状态：不需要
 
@@ -76,6 +76,38 @@ flowchart LR
 MSE、PSNR 和 SSIM 对局部像素误差敏感，便于定位模糊、漂移和曝光差异，但不直接判断动作是否正确。LPIPS 使用深层特征比较感知相似度，原论文通过人类感知判断校准特征距离；它仍然不是物理一致性或控制效用指标。FVD 比较真实与生成视频特征分布，适合评估一组视频的整体差异，但会受到特征提取器、样本量、分辨率和实现细节影响。
 
 因此，视频指标必须同时记录：实现与版本、特征网络、预处理、样本数、随机种子和置信区间。不同实现产生的同名分数不能自动横向比较。
+
+### 概率预测：校准误差不是完整质量分数
+
+世界模型可能输出碰撞、终止、接触或某状态转移的概率。此时只把概率阈值化成对/错，会丢掉置信度；只报告一个 calibration error，也可能把信息量和分箱选择藏起来。对二元结果 `y_i∈{0,1}` 与预测概率 `p_i`，两个常用 proper loss 是：
+
+\[
+\operatorname{Brier}=\frac{1}{N}\sum_i(p_i-y_i)^2,
+\qquad
+\operatorname{LogLoss}=-\frac{1}{N}\sum_i[y_i\log p_i+(1-y_i)\log(1-p_i)].
+\]
+
+[Gneiting 与 Raftery](https://sites.stat.washington.edu/raftery/Research/PDF/Gneiting2007jasa.pdf)将 proper scoring rule 定义为在期望意义上鼓励报告真实预测分布，并把概率预测目标表述为在 calibration 约束下追求 sharpness `[P]`。这不等于“某个有限测试表上分数最低就证明概率正确”；模型比较仍需共同样本、分层结果与不确定性。
+
+固定分箱的 Expected Calibration Error（ECE）常写为：
+
+\[
+\operatorname{ECE}=\sum_{b=1}^{B}\frac{|I_b|}{N}
+\left|\operatorname{mean}_{i\in I_b}(p_i)-\operatorname{mean}_{i\in I_b}(y_i)\right|.
+\]
+
+[Guo et al.](https://proceedings.mlr.press/v70/guo17a.html)使用分箱可靠性图与 ECE 研究神经网络校准 `[P]`。ECE 是指定分箱与样本上的诊断，不是 proper score；bin edge、空 bin、边界归属和样本数都属于协议。下面的 `EXP-09-01` v3 用四个手工结果 `1,1,0,0` 比较两组概率：
+
+| forecast | 概率 | 0.5 阈值准确率 | Brier ↓ | Log loss ↓ | 1-bin ECE | 2-bin ECE |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| uniform base rate | 0.5, 0.5, 0.5, 0.5 | 0.50 | 0.2500 | 0.6931 | 0.0000 | 0.0000 |
+| informative | 0.9, 0.9, 0.1, 0.1 | 1.00 | 0.0100 | 0.1054 | 0.0000 | 0.1000 |
+
+*TAB-09-03：粗分箱 ECE 负对照。单 bin 只比较整体均值 `0.5` 与整体事件率 `0.5`，因此两行都为零；所有结果均为作者构造。*
+
+uniform 行在这四例上只复述 base rate，预测方差为0；informative 行把正负例分开，预测方差为0.16。单 bin ECE 看不到这一差别；改成 `[0,0.5)` 与 `[0.5,1]` 两个预注册 bin 后，informative 行的经验 gap 为0.1。不能由此反过来宣称 uniform “更校准”或“更好”：四例不足以估计总体 calibration，而 ECE 单独不奖励有用的分辨率。合格报告应并列 proper score、reliability diagram/分箱定义、样本数和按 horizon/场景分桶，并在独立 calibration split 上选择任何温度或阈值，再到未参与选择的 final split 评估。
+
+`CLAIM-09-09`（result）：`EXP-09-01` v3 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
 
 ### one-step 与 multi-step
 
@@ -233,7 +265,7 @@ resources + experiment_ids + artifacts + limitations
 
 仓库中的 `specs/benchmark-card.schema.json` 是 Draft 2020-12 Schema；`benchmarks/BENCH-06-01.json`、`BENCH-09-01.json` 和 `BENCH-20-01.json` 分别覆盖 prior/posterior 误差、指标排序反转和闭环比例/Wilson 区间。严格检查还验证 claim/experiment 的章节归属、benchmark 与 experiment 双向引用、metric layer、ID 前缀、产物路径、系统名唯一性和下载量总和。它能阻止字段缺失和跨资产漂移，不能判断指标是否科学充分，也不能替代领域评审。
 
-`BENCH-09-01` v2 明确把 E1 的 12 个 one-step 转移、E2 action sensitivity、E4 的两个闭环 episode 和 6 条多步误差行分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值及缺失惩罚，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。它没有 uncertainty estimator，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构校准数据或风险曲线。
+`BENCH-09-01` v3 明确把 E1 的 12 个 one-step 转移、6 条多步误差行与4行二元概率表、E2 action sensitivity、E4 的两个闭环 episode 分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值、缺失惩罚与概率 bin edge，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。概率表只是评分机制 fixture，不是 learned uncertainty estimator、calibration split 或 OOD 总体，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构风险曲线。
 
 `CLAIM-09-07`（recommendation）：可审计比较应在运行前冻结 benchmark card，并把评测协议、单次运行来源和测量结果拆成可互相引用的资产；机器 Schema 只证明结构与追溯关系成立，不证明 benchmark 有外部效度。
 
@@ -244,6 +276,7 @@ resources + experiment_ids + artifacts + limitations
 | 类型 | 声明/结果 | 来源或实验 ID | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 本书结果 | one-step/闭环与缺失分母分别造成排序反转 | `EXP-09-01` | CPU smoke | 手工一维反例与预注册惩罚 |
+| 本书结果 | 单 bin ECE 同为0，但 Brier 为 `0.25/0.01` | `EXP-09-01` | CPU smoke | 四个手工二元结果；不估计总体校准 |
 | 外部事实 | WorldArena 分开评估感知与功能用途 | 官方仓库 | `[O,R1]` | 本书未运行 |
 | 外部案例 | WorldArena 2.0 扩展模态、用途与平台维度 | 论文/官方项目 | `[P/O,R0–R1]` | 接口与排行榜会变化 |
 | 外部案例 | KineBench 显式移除额外逆动力学模型（inverse dynamics model, IDM）的归因混淆 | arXiv:2607.19876 | `[P,R0]` | 本书未运行，仅限论文设置 |
@@ -258,7 +291,7 @@ resources + experiment_ids + artifacts + limitations
 
 ## 9.11 小结
 
-世界模型没有脱离用途的“最好指标”。感知质量回答生成内容是否像，干预测试回答模型是否响应动作，策略排序回答它能否比较决策，闭环评测才回答使用模型后真实任务是否改善。正确流程是从用途反推证据层级，并用反例、OOD 和模型利用测试主动寻找指标盲区。
+世界模型没有脱离用途的“最好指标”。感知质量回答生成内容是否像，概率评分要同时看 proper score、calibration 与分辨率，干预测试回答模型是否响应动作，策略排序回答它能否比较决策，闭环评测才回答使用模型后真实任务是否改善。正确流程是从用途反推证据层级，并用反例、OOD 和模型利用测试主动寻找指标盲区。
 
 ## 练习
 
@@ -268,6 +301,7 @@ resources + experiment_ids + artifacts + limitations
 4. **协议设计**：复制 `BENCH-09-01` 为一个抓取视频世界模型填写 benchmark card，分别给出 E1、E2 和 E4 的退出条件；若使用随机任务，说明 seed、group split 和置信区间方法。
 5. **自动驾驶迁移**：设计一个平均 ADE 很低却高风险的驾驶数据分布，说明需要增加哪些分桶指标。
 6. **反例审查**：解释为何“闭环成功率高”仍可能掩盖安全问题，并给出至少两个补充指标。
+7. **概率评分**：为同一组碰撞事件概率同时计算 Brier、log loss 与两种分箱 ECE；说明哪些设置必须在看结果前冻结，以及为什么 ECE=0 仍不充分。
 
 ## 自检要点
 
@@ -315,6 +349,13 @@ E1 可冻结对象/相机 group test split，要求多 horizon pose/keypoint err
 
 </details>
 
+<details>
+<summary>SELF-CHECK-09-07：概率质量不能压成一个 ECE</summary>
+
+先固定共同 event definition、样本总体、概率方向、bin edges、边界归属和空 bin 政策。Brier 与 log loss 在同一结果表上评价完整概率；log loss 对接近0/1的错误更敏感，不能事后裁剪而不登记。ECE 还要给 reliability diagram、每 bin 样本数与置信区间，并报告不同合理分箱或自适应估计的敏感性，但不能看完后只选最小值。`EXP-09-01` 的单 bin ECE=0 只说明整体 mean probability 等于 event rate；恒定 base-rate forecast 没有区分样本。概率经 calibration split 调温后，应在独立 final split 按 horizon、场景与严重度重新报告，并把概率质量与实际阈值决策、fallback 后果分开。
+
+</details>
+
 ## 延伸阅读
 
 - Yu et al., [How Should World Models Be Evaluated?](https://arxiv.org/abs/2606.15032)，`[A,R0]`，评测层级与声明错位；
@@ -322,6 +363,8 @@ E1 可冻结对象/相机 group test split，要求多 horizon pose/keypoint err
 - [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 与[官方项目页](https://v2.world-arena.ai/)，`[A/O,R0–R1]`，多模态、多用途和多平台评测案例；
 - [KineBench](https://arxiv.org/abs/2607.19876)，`[P,R0]`，避免额外 inverse dynamics model 混淆的闭环评测案例；
 - Geifman & El-Yaniv, [Selective Classification for Deep Neural Networks](https://arxiv.org/abs/1705.08500)，`[P]`，risk–coverage 基础；
+- Gneiting & Raftery, [Strictly Proper Scoring Rules, Prediction, and Estimation](https://sites.stat.washington.edu/raftery/Research/PDF/Gneiting2007jasa.pdf)，`[P]`，proper score、calibration 与 sharpness；
+- Guo et al., [On Calibration of Modern Neural Networks](https://proceedings.mlr.press/v70/guo17a.html)，`[P]`，reliability diagram、ECE 与神经网络校准；
 - Traub et al., [Overcoming Common Flaws in the Evaluation of Selective Classification Systems](https://arxiv.org/abs/2407.01032)，`[P]`，选择性评测常见指标缺陷；
 - Hansen & Wang, [Hallucination in World Models is Predictable and Preventable](https://arxiv.org/abs/2606.27326)，`[A,R0]`，特定设置下的幻觉量化案例；
 - Zhang et al., [The Unreasonable Effectiveness of Deep Features as a Perceptual Metric](https://arxiv.org/abs/1801.03924)，`[P]`，LPIPS；
@@ -344,6 +387,6 @@ E1 可冻结对象/相机 group test split，要求多 horizon pose/keypoint err
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
-- 已知限制：WorldArena 系列、KineBench 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；
+- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch09-probability-calibration-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
+- 已知限制：WorldArena 系列、KineBench 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；概率 fixture 只有四行作者构造结果，不能估计总体 calibration、真实事件概率、uncertainty 或安全性；
 - 下一步：用真实但可合法获取的小型数据试运行一张 `draft/frozen` benchmark card；当前无 GPU 阶段不伪造该结果。

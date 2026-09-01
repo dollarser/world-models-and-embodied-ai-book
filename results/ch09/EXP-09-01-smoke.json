@@ -30,7 +30,8 @@
         {"attempted_count": 3, "available_case_mean_error": 0.6, "available_count": 3, "coverage": 1.0, "fixed_denominator_mean_error": 0.6, "horizon": 3},
         {"attempted_count": 3, "available_case_mean_error": 0.8000000000000002, "available_count": 3, "coverage": 1.0, "fixed_denominator_mean_error": 0.8000000000000002, "horizon": 4}
       ]
-    }
+    },
+    "probability_metric_diagnostic": {"informative": {"brier_loss": 0.009999999999999998, "log_loss": 0.10536051565782628, "one_bin_ece": 0.0, "probability_variance": 0.16000000000000003, "threshold_accuracy_at_0_5": 1.0, "two_bin_ece": 0.09999999999999999}, "one_bin_ece_tie": true, "proper_score_winner": "informative", "scope": "four authored binary outcomes; fixed-bin ECE mechanics only, not population calibration or probabilistic world-model performance", "uniform_base_rate": {"brier_loss": 0.25, "log_loss": 0.6931471805599453, "one_bin_ece": 0.0, "probability_variance": 0.0, "threshold_accuracy_at_0_5": 0.5, "two_bin_ece": 0.0}}
   },
   "scope": "metric-ranking fixture; not learned world-model evaluation",
   "status": "smoke"

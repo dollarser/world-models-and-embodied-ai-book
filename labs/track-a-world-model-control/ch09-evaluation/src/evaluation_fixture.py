@@ -181,6 +181,123 @@ def missing_rollout_diagnostic() -> dict[str, object]:
     }
 
 
+def binary_probability_report(
+    outcomes: Sequence[bool],
+    probabilities: Sequence[float],
+    *,
+    bin_edges: Sequence[float],
+) -> dict[str, object]:
+    """Evaluate binary forecasts with proper losses and an explicit fixed-bin ECE."""
+    if isinstance(outcomes, (str, bytes)) or isinstance(probabilities, (str, bytes)):
+        raise ValueError("outcomes and probabilities must be non-empty sequences")
+    if isinstance(bin_edges, (str, bytes)):
+        raise ValueError("bin_edges must be a numeric sequence from zero to one")
+    try:
+        checked_outcomes = tuple(outcomes)
+        checked_probabilities = tuple(probabilities)
+        checked_edges = tuple(_finite_real(edge, "bin edge") for edge in bin_edges)
+    except TypeError as error:
+        raise ValueError("probability audit inputs must be sequences") from error
+    if not checked_outcomes or len(checked_outcomes) != len(checked_probabilities):
+        raise ValueError("outcomes and probabilities must have the same positive length")
+    if any(not isinstance(outcome, bool) for outcome in checked_outcomes):
+        raise ValueError("binary outcomes must be booleans")
+    checked_probabilities = tuple(
+        _finite_real(probability, "probability") for probability in checked_probabilities
+    )
+    if any(not 0.0 < probability < 1.0 for probability in checked_probabilities):
+        raise ValueError("probabilities must lie strictly between zero and one")
+    if (
+        len(checked_edges) < 2
+        or checked_edges[0] != 0.0
+        or checked_edges[-1] != 1.0
+        or any(left >= right for left, right in zip(checked_edges, checked_edges[1:]))
+    ):
+        raise ValueError("bin_edges must increase strictly from zero to one")
+
+    sample_count = len(checked_outcomes)
+    bins = []
+    calibration_error = 0.0
+    for index, (lower, upper) in enumerate(zip(checked_edges, checked_edges[1:])):
+        upper_inclusive = index == len(checked_edges) - 2
+        member_indices = tuple(
+            member_index
+            for member_index, probability in enumerate(checked_probabilities)
+            if lower <= probability < upper or (upper_inclusive and probability == upper)
+        )
+        if not member_indices:
+            continue
+        mean_probability = sum(checked_probabilities[i] for i in member_indices) / len(member_indices)
+        event_rate = sum(checked_outcomes[i] for i in member_indices) / len(member_indices)
+        absolute_gap = abs(mean_probability - event_rate)
+        calibration_error += len(member_indices) / sample_count * absolute_gap
+        bins.append({
+            "lower": lower,
+            "upper": upper,
+            "upper_inclusive": upper_inclusive,
+            "count": len(member_indices),
+            "mean_probability": mean_probability,
+            "event_rate": event_rate,
+            "absolute_gap": absolute_gap,
+        })
+
+    numeric_outcomes = tuple(float(outcome) for outcome in checked_outcomes)
+    mean_probability = sum(checked_probabilities) / sample_count
+    return {
+        "sample_count": sample_count,
+        "threshold_accuracy_at_0_5": sum(
+            (probability >= 0.5) == outcome
+            for probability, outcome in zip(checked_probabilities, checked_outcomes, strict=True)
+        ) / sample_count,
+        "brier_loss": sum(
+            (probability - outcome) ** 2
+            for probability, outcome in zip(checked_probabilities, numeric_outcomes, strict=True)
+        ) / sample_count,
+        "log_loss": -sum(
+            outcome * math.log(probability) + (1.0 - outcome) * math.log(1.0 - probability)
+            for probability, outcome in zip(checked_probabilities, numeric_outcomes, strict=True)
+        ) / sample_count,
+        "mean_probability": mean_probability,
+        "event_rate": sum(numeric_outcomes) / sample_count,
+        "probability_variance": sum(
+            (probability - mean_probability) ** 2 for probability in checked_probabilities
+        ) / sample_count,
+        "fixed_bin_ece": calibration_error,
+        "bin_edges": list(checked_edges),
+        "nonempty_bins": bins,
+    }
+
+
+def probability_metric_diagnostic() -> dict[str, object]:
+    """Expose why one coarse calibration error is not a complete forecast score."""
+    outcomes = (True, True, False, False)
+    forecasts = {
+        "uniform_base_rate": (0.5, 0.5, 0.5, 0.5),
+        "informative": (0.9, 0.9, 0.1, 0.1),
+    }
+    report = {}
+    for name, probabilities in forecasts.items():
+        one_bin = binary_probability_report(outcomes, probabilities, bin_edges=(0.0, 1.0))
+        two_bins = binary_probability_report(outcomes, probabilities, bin_edges=(0.0, 0.5, 1.0))
+        report[name] = {
+            "threshold_accuracy_at_0_5": one_bin["threshold_accuracy_at_0_5"],
+            "brier_loss": one_bin["brier_loss"],
+            "log_loss": one_bin["log_loss"],
+            "probability_variance": one_bin["probability_variance"],
+            "one_bin_ece": one_bin["fixed_bin_ece"],
+            "two_bin_ece": two_bins["fixed_bin_ece"],
+        }
+    return {
+        **report,
+        "proper_score_winner": "informative",
+        "one_bin_ece_tie": True,
+        "scope": (
+            "four authored binary outcomes; fixed-bin ECE mechanics only, not population "
+            "calibration or probabilistic world-model performance"
+        ),
+    }
+
+
 def evaluate() -> dict[str, object]:
     predictors = {
         "action_blind": action_blind,
@@ -197,4 +314,5 @@ def evaluate() -> dict[str, object]:
             "mean_final_distance": sum(float(item["final_distance"]) for item in outcomes) / len(outcomes),
         }
     report["horizon_missingness"] = missing_rollout_diagnostic()
+    report["probability_metric_diagnostic"] = probability_metric_diagnostic()
     return report

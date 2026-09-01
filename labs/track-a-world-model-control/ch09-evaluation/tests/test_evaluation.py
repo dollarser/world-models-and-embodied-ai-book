@@ -12,10 +12,12 @@ from evaluation_fixture import (  # noqa: E402
     action_blind,
     action_faithful_biased,
     action_sensitivity,
+    binary_probability_report,
     choose_action,
     evaluate,
     horizon_error_report,
     missing_rollout_diagnostic,
+    probability_metric_diagnostic,
     rmse,
     run_episode,
 )
@@ -79,6 +81,37 @@ class EvaluationFixtureTest(unittest.TestCase):
         for penalty in (-1.0, True, float("inf")):
             with self.subTest(penalty=penalty), self.assertRaises(ValueError):
                 horizon_error_report(((0.1,),), missing_penalty=penalty)
+
+    def test_coarse_ece_ties_forecasts_that_proper_scores_separate(self) -> None:
+        diagnostic = probability_metric_diagnostic()
+        uniform = diagnostic["uniform_base_rate"]
+        informative = diagnostic["informative"]
+        self.assertEqual(uniform["one_bin_ece"], 0.0)
+        self.assertEqual(informative["one_bin_ece"], 0.0)
+        self.assertLess(informative["brier_loss"], uniform["brier_loss"])
+        self.assertLess(informative["log_loss"], uniform["log_loss"])
+
+    def test_fixed_bin_ece_changes_with_registered_bins(self) -> None:
+        diagnostic = probability_metric_diagnostic()
+        informative = diagnostic["informative"]
+        self.assertAlmostEqual(informative["two_bin_ece"], 0.1)
+        self.assertGreater(informative["probability_variance"], 0.0)
+        self.assertEqual(diagnostic["uniform_base_rate"]["probability_variance"], 0.0)
+
+    def test_probability_report_rejects_invalid_contracts(self) -> None:
+        cases = (
+            ((), (), (0.0, 1.0)),
+            ((True,), (0.5, 0.5), (0.0, 1.0)),
+            ((1,), (0.5,), (0.0, 1.0)),
+            ((True,), (0.0,), (0.0, 1.0)),
+            ((True,), (float("nan"),), (0.0, 1.0)),
+            ((True,), (0.5,), (0.0, 0.5, 0.5, 1.0)),
+            ((True,), (0.5,), (0.1, 1.0)),
+        )
+        for outcomes, probabilities, edges in cases:
+            with self.subTest(outcomes=outcomes, probabilities=probabilities, edges=edges):
+                with self.assertRaises(ValueError):
+                    binary_probability_report(outcomes, probabilities, bin_edges=edges)
 
     def test_invalid_episode_and_metric_inputs_are_rejected(self) -> None:
         for kwargs in ({"start": float("nan")}, {"goal": True}, {"steps": 0}, {"steps": False}):
