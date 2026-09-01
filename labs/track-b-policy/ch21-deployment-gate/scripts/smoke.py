@@ -65,6 +65,14 @@ def main() -> int:
         raise AssertionError("the permissive threshold must increase fixture coverage")
     if selective["threshold_0_5"]["accepted_failure_rate"] >= selective["threshold_0_7"]["accepted_failure_rate"]:
         raise AssertionError("the permissive threshold must expose the fixture risk tradeoff")
+    severity_audit = metrics["severity_stratified_selective_audit"]
+    reject_high = severity_audit["reject_high_consequence_failure"]
+    reject_low = severity_audit["reject_low_consequence_failure"]
+    aggregate_metrics = ("coverage", "accepted_failure_rate", "failure_recall_by_rejection")
+    if any(reject_high[name] != reject_low[name] for name in aggregate_metrics):
+        raise AssertionError("severity comparison must preserve aggregate selective metrics")
+    if reject_high["accepted_failure_authored_weight"] >= reject_low["accepted_failure_authored_weight"]:
+        raise AssertionError("accepted authored consequence must expose the hidden severity difference")
     report = {
         "experiment_id": "EXP-21-01",
         "status": "smoke",

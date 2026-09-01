@@ -203,6 +203,27 @@
         "coverage": 0.666667,
         "failure_recall_by_rejection": 0.666667
       }
+    },
+    "severity_stratified_selective_audit": {
+      "reject_high_consequence_failure": {
+        "accepted_failure_authored_weight": 1.0,
+        "accepted_failure_ids": ["low-consequence-failure"],
+        "accepted_failure_rate": 0.25,
+        "authored_weight_recall_by_rejection": 0.909091,
+        "coverage": 0.666667,
+        "failure_recall_by_rejection": 0.5,
+        "total_failure_authored_weight": 11.0
+      },
+      "reject_low_consequence_failure": {
+        "accepted_failure_authored_weight": 10.0,
+        "accepted_failure_ids": ["high-consequence-failure"],
+        "accepted_failure_rate": 0.25,
+        "authored_weight_recall_by_rejection": 0.090909,
+        "coverage": 0.666667,
+        "failure_recall_by_rejection": 0.5,
+        "total_failure_authored_weight": 11.0
+      },
+      "weight_semantics": "hand-authored sensitivity-analysis proxy weight; not probability, injury, monetary loss, or validated real-world risk"
     }
   },
   "scope": "deadline and action-gate fixture; not real-time, safety, or deployment certification",

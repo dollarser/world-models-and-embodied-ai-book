@@ -24,7 +24,9 @@ from deployment_gate import (  # noqa: E402
     latency_summary,
     nearest_rank,
     reactivation_receipt_audit,
+    selective_consequence_metrics,
     selective_metrics,
+    severity_stratified_selective_audit,
     validate_reactivation_receipt,
 )
 
@@ -275,6 +277,34 @@ class DeploymentGateTests(unittest.TestCase):
         self.assertIsNone(selective_metrics(((0.1, False),), 0.0)["accepted_failure_rate"])
         with self.assertRaises(ValueError):
             selective_metrics(((float("nan"), False),), 0.5)
+
+    def test_equal_failure_counts_can_hide_different_authored_consequences(self):
+        audit = severity_stratified_selective_audit()
+        reject_high = audit["reject_high_consequence_failure"]
+        reject_low = audit["reject_low_consequence_failure"]
+        for metric in ("coverage", "accepted_failure_rate", "failure_recall_by_rejection"):
+            self.assertEqual(reject_high[metric], reject_low[metric])
+        self.assertEqual(reject_high["accepted_failure_authored_weight"], 1.0)
+        self.assertEqual(reject_low["accepted_failure_authored_weight"], 10.0)
+        self.assertEqual(reject_high["authored_weight_recall_by_rejection"], 0.909091)
+        self.assertEqual(reject_low["authored_weight_recall_by_rejection"], 0.090909)
+
+    def test_consequence_audit_rejects_ambiguous_inputs(self):
+        valid = (("case-a", False, 1.0), ("case-b", True, 2.0))
+        with self.assertRaises(ValueError):
+            selective_consequence_metrics(valid + (("case-b", True, 3.0),), ("case-a",))
+        with self.assertRaises(ValueError):
+            selective_consequence_metrics((("case-a", True, float("nan")),), ("case-a",))
+        with self.assertRaises(ValueError):
+            selective_consequence_metrics(valid, ("unknown",))
+
+    def test_evaluation_exposes_severity_stratified_negative_control(self):
+        audit = evaluate()["severity_stratified_selective_audit"]
+        self.assertIn("not probability", audit["weight_semantics"])
+        self.assertEqual(
+            audit["reject_high_consequence_failure"]["accepted_failure_ids"],
+            ("low-consequence-failure",),
+        )
 
     def test_evaluation_exposes_each_expected_failure(self):
         result = evaluate()

@@ -593,6 +593,80 @@ def selective_metrics(
     }
 
 
+def selective_consequence_metrics(
+    cases: tuple[tuple[str, bool, float], ...], accepted_case_ids: tuple[str, ...]
+) -> dict[str, object]:
+    """Audit authored failure-consequence weights without interpreting them as real risk."""
+    if not cases:
+        raise ValueError("at least one consequence-audit case is required")
+    case_ids = tuple(case_id for case_id, _, _ in cases)
+    if any(not isinstance(case_id, str) or not case_id for case_id in case_ids):
+        raise ValueError("case IDs must be non-empty strings")
+    if len(set(case_ids)) != len(case_ids):
+        raise ValueError("case IDs must be unique")
+    if any(
+        not isinstance(failed, bool) or not _finite_number(weight) or weight <= 0.0
+        for _, failed, weight in cases
+    ):
+        raise ValueError("cases require boolean failures and finite positive authored weights")
+    if (
+        not accepted_case_ids
+        or any(not isinstance(case_id, str) or not case_id for case_id in accepted_case_ids)
+        or len(set(accepted_case_ids)) != len(accepted_case_ids)
+        or not set(accepted_case_ids).issubset(case_ids)
+    ):
+        raise ValueError("accepted case IDs must be a non-empty unique subset of cases")
+
+    accepted_ids = set(accepted_case_ids)
+    accepted = tuple(case for case in cases if case[0] in accepted_ids)
+    failure_cases = tuple(case for case in cases if case[1])
+    accepted_failures = tuple(case for case in accepted if case[1])
+    rejected_failures = tuple(case for case in failure_cases if case[0] not in accepted_ids)
+    total_failure_weight = sum(weight for _, _, weight in failure_cases)
+    accepted_failure_weight = sum(weight for _, _, weight in accepted_failures)
+    rejected_failure_weight = sum(weight for _, _, weight in rejected_failures)
+    return {
+        "coverage": round(len(accepted) / len(cases), 6),
+        "accepted_failure_rate": round(len(accepted_failures) / len(accepted), 6),
+        "failure_recall_by_rejection": (
+            round(len(rejected_failures) / len(failure_cases), 6) if failure_cases else None
+        ),
+        "accepted_failure_authored_weight": round(accepted_failure_weight, 6),
+        "total_failure_authored_weight": round(total_failure_weight, 6),
+        "authored_weight_recall_by_rejection": (
+            round(rejected_failure_weight / total_failure_weight, 6)
+            if total_failure_weight
+            else None
+        ),
+        "accepted_failure_ids": tuple(case_id for case_id, _, _ in accepted_failures),
+    }
+
+
+def severity_stratified_selective_audit() -> dict[str, object]:
+    """Hold aggregate counts fixed while swapping which authored failure is accepted."""
+    cases = (
+        ("safe-a", False, 1.0),
+        ("safe-b", False, 1.0),
+        ("safe-c", False, 1.0),
+        ("safe-d", False, 1.0),
+        ("low-consequence-failure", True, 1.0),
+        ("high-consequence-failure", True, 10.0),
+    )
+    shared_safe = ("safe-a", "safe-b", "safe-c")
+    return {
+        "reject_high_consequence_failure": selective_consequence_metrics(
+            cases, shared_safe + ("low-consequence-failure",)
+        ),
+        "reject_low_consequence_failure": selective_consequence_metrics(
+            cases, shared_safe + ("high-consequence-failure",)
+        ),
+        "weight_semantics": (
+            "hand-authored sensitivity-analysis proxy weight; not probability, injury, monetary loss, "
+            "or validated real-world risk"
+        ),
+    }
+
+
 def gate(packet: ActionPacket, config: GateConfig) -> dict[str, object]:
     reasons = []
     if not _finite_number(packet.sensor_age_ms) or packet.sensor_age_ms < 0.0:
@@ -695,6 +769,7 @@ def evaluate() -> dict[str, object]:
             "threshold_0_5": selective_metrics(selective_cases, 0.5),
             "threshold_0_7": selective_metrics(selective_cases, 0.7),
         },
+        "severity_stratified_selective_audit": severity_stratified_selective_audit(),
         "fallback_is_profile_specific": {
             "manipulator": GateConfig(fallback="hold_position").fallback,
             "mobile_robot": GateConfig(fallback="controlled_stop").fallback,

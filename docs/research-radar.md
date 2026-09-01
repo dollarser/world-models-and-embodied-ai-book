@@ -114,7 +114,7 @@ A2World从action-to-video预训练出发，再分成history-aware的A2World-sim�
 - 第17章已有**新增策略** prospective split 的 S 档反例；仍缺 learned simulator 在独立训练 lineage、任务与初态上的真实 prospective ranking；
 - transition、state decoder、reward/judge、action grounding 已有第17章 S 档单故障归因账；仍缺 learned pipeline 上的组件校准、交互项和端到端误差预算；
 - 24 GB 单卡内真实可执行的最小配方，以及 checkpoint 冷启动下载、loader/权重兼容、磁盘、峰值显存和墙钟；
-- 机器人与自动驾驶中按场景严重度分桶的 model exploitation、uncertainty gate 和 fallback 后果；
+- 第21章已有手工敏感性分析代理权重的严重度负对照；仍缺 learned uncertainty gate 在机器人/自动驾驶真实场景、暴露量和 failure taxonomy 上的严重度标注，以及 fallback 闭环后果与 model exploitation 的联合审计；
 - 代码、权重、数据、benchmark 与许可证能否作为同一版本化研究对象被第三方取得。
 
 这些缺口决定后续优化顺序：优先补能改变结论的证据，不以更多模型名称替代更强实验设计。
