@@ -26,6 +26,7 @@
 - [第20章零事件 pseudo-replication 审查](ch20-zero-event-pseudoreplication-review-2026-09-02.md)
 - [第20章 checkpoint final-set reuse 与 selection bias 审查](ch20-checkpoint-selection-bias-review-2026-09-02.md)
 - [第20章 paired margins 与 joint outcome 审查](ch20-paired-margin-review-2026-09-02.md)
+- [第20章检验—效应区间—实用阈值审查](ch20-test-interval-equivalence-review-2026-09-02.md)
 - [第9章概率评分、ECE 分箱与校准审查](ch09-probability-calibration-review-2026-09-02.md)
 - [第21章运行时队列与降级状态审查](ch21-runtime-fallback-review-2026-09-01.md)
 - [第21章重新激活授权审查](ch21-reactivation-authorization-review-2026-09-01.md)

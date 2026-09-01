@@ -3,7 +3,7 @@
   "id": "EXP-20-01",
   "chapter": 20,
   "status": "smoke",
-  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10", "CLAIM-20-11", "CLAIM-20-12"],
+  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10", "CLAIM-20-11", "CLAIM-20-12", "CLAIM-20-13"],
   "benchmark_ids": ["BENCH-20-01"],
   "claim_scope": [
     "success rates are not directly comparable when task populations, success definitions, or denominators differ",
@@ -15,16 +15,17 @@
     "zero observed events retain a positive one-sided binomial risk upper bound under explicit independent-trial assumptions",
     "repeated members within authored route clusters do not create independent routes, and episode-event versus cluster-incidence bounds answer different estimands",
     "selecting a checkpoint on a final score reassigns that split to model selection; an untouched authored confirmation score can expose the resulting reuse gap without estimating expected selection bias",
-    "identical candidate and baseline marginal success rates do not determine their paired joint table, discordant-pair count, or a predeclared exact conditional McNemar diagnostic"
+    "identical candidate and baseline marginal success rates do not determine their paired joint table, discordant-pair count, or a predeclared exact conditional McNemar diagnostic",
+    "a non-rejected exact conditional null does not establish practical equivalence; a separately declared effect interval and practical-difference band answer different questions"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library fixed episode-table, paired-margin, checkpoint-selection, zero-event, pseudoreplication, and paired route-cluster protocol audit"
+    "config": "standard-library fixed episode-table, paired-margin effect-interval, checkpoint-selection, zero-event, pseudoreplication, and paired route-cluster protocol audit"
   },
   "data": {
     "name": "procedural episode, paired-route, paired-margin, checkpoint-selection, and zero-event pseudoreplication audit tables",
-    "version": "v9",
+    "version": "v10",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -81,7 +82,10 @@
     {"name": "high_concordance_discordant_pair_count", "value": 4, "unit": "count", "split": "high-concordance-twenty-pair-table"},
     {"name": "high_concordance_exact_conditional_two_sided_p", "value": 0.125, "unit": "probability", "split": "high-concordance-twenty-pair-table"},
     {"name": "more_discordant_discordant_pair_count", "value": 12, "unit": "count", "split": "more-discordant-twenty-pair-table"},
-    {"name": "more_discordant_exact_conditional_two_sided_p", "value": 0.387695, "unit": "probability", "split": "more-discordant-twenty-pair-table"}
+    {"name": "more_discordant_exact_conditional_two_sided_p", "value": 0.387695, "unit": "probability", "split": "more-discordant-twenty-pair-table"},
+    {"name": "paired_difference_hoeffding_95_lower", "value": -0.407361, "unit": "ratio_difference", "split": "both-twenty-pair-joint-tables"},
+    {"name": "paired_difference_hoeffding_95_upper", "value": 0.807361, "unit": "ratio_difference", "split": "both-twenty-pair-joint-tables"},
+    {"name": "paired_difference_interval_within_practical_band", "value": 0.0, "unit": "boolean", "split": "predeclared-minus-0.3-to-0.3-band"}
   ],
   "artifacts": ["results/ch20/EXP-20-01-smoke.json"],
   "limitations": [
@@ -89,7 +93,7 @@
     "Wilson intervals and zero-event upper bounds apply only to their explicitly declared independent Bernoulli units; episode-event and cluster-incidence probabilities are different estimands, not alternative corrections for one parameter",
     "the factorial effects are arithmetic contrasts on authored rows, not population causal-effect estimates",
     "the four-route exact bootstrap and percentile interval demonstrate mechanics but are too small and authored for calibrated population inference",
-    "the paired-margin exact conditional diagnostic has no effect-size interval, cluster or multiplicity correction, equivalence margin, or population-sampling claim",
+    "the paired-margin Hoeffding interval is a conservative independent-pair bounded-mean baseline, not an exact-compatible matched-binary interval, cluster or multiplicity correction, equivalence test, or population-sampling claim",
     "the four-checkpoint score table is deliberately authored and does not estimate expected selection bias, checkpoint quality, or model generalization",
     "does not estimate any real policy or benchmark performance",
     "the injected invalid-run case tests rejection only and does not estimate a technical failure rate"

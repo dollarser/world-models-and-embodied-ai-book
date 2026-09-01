@@ -16,6 +16,8 @@ from protocol_fixture import (  # noqa: E402
     exact_paired_cluster_bootstrap,
     evaluate_protocol,
     factorial_protocol_effects,
+    hoeffding_mean_interval,
+    hoeffding_required_samples,
     paired_margin_diagnostic,
     wilson_interval,
     zero_event_pseudoreplication_audit,
@@ -242,6 +244,45 @@ class ProtocolFixtureTests(unittest.TestCase):
         report = exact_mcnemar_report(tied)
         self.assertEqual(report["discordant_pair_count"], 0)
         self.assertEqual(report["exact_conditional_two_sided_p"], 1.0)
+
+    def test_paired_difference_interval_is_separate_from_mcnemar_p_value(self):
+        diagnostic = paired_margin_diagnostic()
+        high = diagnostic["high_concordance"]
+        more = diagnostic["more_discordant"]
+        expected = {
+            "sample_count": 20,
+            "mean": 0.2,
+            "radius": 0.607361,
+            "lower": -0.407361,
+            "upper": 0.807361,
+        }
+        self.assertEqual(high["paired_difference_hoeffding_95"], expected)
+        self.assertEqual(more["paired_difference_hoeffding_95"], expected)
+        self.assertNotEqual(
+            high["exact_conditional_two_sided_p"],
+            more["exact_conditional_two_sided_p"],
+        )
+
+    def test_twenty_pairs_do_not_fit_inside_predeclared_equivalence_band(self):
+        for report in paired_margin_diagnostic().values():
+            if isinstance(report, dict) and "interval_within_practical_equivalence_band" in report:
+                self.assertEqual(report["predeclared_practical_equivalence_margin"], 0.3)
+                self.assertFalse(report["interval_within_practical_equivalence_band"])
+                self.assertEqual(
+                    report["independent_pairs_sufficient_for_0_1_hoeffding_radius"], 738
+                )
+
+    def test_hoeffding_interval_rejects_invalid_contracts(self):
+        with self.assertRaises(ValueError):
+            hoeffding_mean_interval(())
+        with self.assertRaises(ValueError):
+            hoeffding_mean_interval((2.0,))
+        with self.assertRaises(TypeError):
+            hoeffding_mean_interval((True,))
+        with self.assertRaises(ValueError):
+            hoeffding_required_samples(0.0)
+        with self.assertRaises(ValueError):
+            hoeffding_required_samples(0.1, confidence=1.0)
 
     def test_exact_mcnemar_rejects_broken_pair_contracts(self):
         valid = {"pair_id": "one", "candidate_success": True, "baseline_success": False}

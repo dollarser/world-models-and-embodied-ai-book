@@ -47,6 +47,21 @@ def main() -> int:
         raise AssertionError("the four-discordant-pair exact diagnostic must remain fixed")
     if paired_margins["more_discordant"]["exact_conditional_two_sided_p"] != 0.387695:
         raise AssertionError("the twelve-discordant-pair exact diagnostic must remain fixed")
+    expected_effect_interval = {
+        "sample_count": 20,
+        "mean": 0.2,
+        "radius": 0.607361,
+        "lower": -0.407361,
+        "upper": 0.807361,
+    }
+    for report in (
+        paired_margins["high_concordance"],
+        paired_margins["more_discordant"],
+    ):
+        if report["paired_difference_hoeffding_95"] != expected_effect_interval:
+            raise AssertionError("the fixed paired-difference Hoeffding interval must remain exact")
+        if report["interval_within_practical_equivalence_band"]:
+            raise AssertionError("the conservative interval must not establish practical equivalence")
     if metrics["zero_event_upper_bounds_95"] != {
         "20_trials": 0.139108,
         "100_trials": 0.029513,

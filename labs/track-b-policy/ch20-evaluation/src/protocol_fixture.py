@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from itertools import product
-from math import comb, isfinite, sqrt
+from math import ceil, comb, isfinite, log, sqrt
 from typing import Sequence
 
 
@@ -122,6 +122,81 @@ def zero_event_upper_bound(trials: int, confidence: float = 0.95) -> float:
     return round(1.0 - alpha ** (1.0 / trials), 6)
 
 
+def hoeffding_mean_interval(
+    values: Sequence[float],
+    confidence: float = 0.95,
+    lower_bound: float = -1.0,
+    upper_bound: float = 1.0,
+) -> dict[str, float | int]:
+    """Return a fixed-n Hoeffding interval for an independent bounded mean."""
+    if isinstance(values, (str, bytes)) or not isinstance(values, Sequence) or not values:
+        raise ValueError("values must be a non-empty sequence")
+    for name, value in (
+        ("confidence", confidence),
+        ("lower_bound", lower_bound),
+        ("upper_bound", upper_bound),
+    ):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise TypeError(f"{name} must be a real number")
+        if not isfinite(value):
+            raise ValueError(f"{name} must be finite")
+    if not 0.0 < confidence < 1.0:
+        raise ValueError("confidence must lie strictly between zero and one")
+    if lower_bound >= upper_bound:
+        raise ValueError("lower_bound must be smaller than upper_bound")
+    checked_values = []
+    for value in values:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise TypeError("values must contain real numbers")
+        if not isfinite(value) or not lower_bound <= value <= upper_bound:
+            raise ValueError("values must be finite and lie within the declared bounds")
+        checked_values.append(float(value))
+
+    alpha = 1.0 - confidence
+    radius = (upper_bound - lower_bound) * sqrt(
+        log(2.0 / alpha) / (2.0 * len(checked_values))
+    )
+    mean = sum(checked_values) / len(checked_values)
+    return {
+        "sample_count": len(checked_values),
+        "mean": round(mean, 6),
+        "radius": round(radius, 6),
+        "lower": round(max(lower_bound, mean - radius), 6),
+        "upper": round(min(upper_bound, mean + radius), 6),
+    }
+
+
+def hoeffding_required_samples(
+    target_half_width: float,
+    confidence: float = 0.95,
+    lower_bound: float = -1.0,
+    upper_bound: float = 1.0,
+) -> int:
+    """Return the sufficient independent-sample count for a target Hoeffding radius."""
+    for name, value in (
+        ("target_half_width", target_half_width),
+        ("confidence", confidence),
+        ("lower_bound", lower_bound),
+        ("upper_bound", upper_bound),
+    ):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise TypeError(f"{name} must be a real number")
+        if not isfinite(value):
+            raise ValueError(f"{name} must be finite")
+    if target_half_width <= 0.0:
+        raise ValueError("target_half_width must be positive")
+    if not 0.0 < confidence < 1.0:
+        raise ValueError("confidence must lie strictly between zero and one")
+    if lower_bound >= upper_bound:
+        raise ValueError("lower_bound must be smaller than upper_bound")
+    alpha = 1.0 - confidence
+    return ceil(
+        (upper_bound - lower_bound) ** 2
+        * log(2.0 / alpha)
+        / (2.0 * target_half_width**2)
+    )
+
+
 def zero_event_pseudoreplication_audit(
     independent_clusters: int = 10,
     repeats_per_cluster: int = 10,
@@ -234,6 +309,7 @@ def exact_mcnemar_report(rows: Sequence[dict[str, object]]) -> dict[str, object]
         "baseline_only": 0,
         "both_failure": 0,
     }
+    paired_differences = []
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
             raise ValueError(f"paired row {index} must be a mapping")
@@ -245,6 +321,7 @@ def exact_mcnemar_report(rows: Sequence[dict[str, object]]) -> dict[str, object]
         if not isinstance(candidate, bool) or not isinstance(baseline, bool):
             raise ValueError(f"paired row {pair_id} success fields must be boolean")
         seen_pair_ids.add(pair_id)
+        paired_differences.append(float(int(candidate) - int(baseline)))
         if candidate and baseline:
             cell_counts["both_success"] += 1
         elif candidate:
@@ -270,6 +347,8 @@ def exact_mcnemar_report(rows: Sequence[dict[str, object]]) -> dict[str, object]
         ) / (2**discordant_count)
         exact_two_sided_p = min(1.0, 2 * lower_tail)
 
+    effect_interval = hoeffding_mean_interval(paired_differences)
+    practical_equivalence_margin = 0.3
     return {
         "pair_count": pair_count,
         "cell_counts": cell_counts,
@@ -278,13 +357,23 @@ def exact_mcnemar_report(rows: Sequence[dict[str, object]]) -> dict[str, object]
         "paired_difference": (candidate_successes - baseline_successes) / pair_count,
         "discordant_pair_count": discordant_count,
         "exact_conditional_two_sided_p": round(exact_two_sided_p, 6),
+        "paired_difference_hoeffding_95": effect_interval,
+        "predeclared_practical_equivalence_margin": practical_equivalence_margin,
+        "interval_within_practical_equivalence_band": (
+            effect_interval["lower"] >= -practical_equivalence_margin
+            and effect_interval["upper"] <= practical_equivalence_margin
+        ),
+        "independent_pairs_sufficient_for_0_1_hoeffding_radius": hoeffding_required_samples(
+            0.1
+        ),
         "null_conditioning": (
             "conditional on the observed discordant-pair count, candidate-only and "
             "baseline-only outcomes are equiprobable"
         ),
         "scope": (
-            "exact conditional matched-pair diagnostic; no multiplicity, cluster, "
-            "population-sampling, effect-size interval, equivalence, or safety claim"
+            "exact conditional matched-pair diagnostic plus a separate conservative "
+            "fixed-n Hoeffding effect interval; no cluster, multiplicity, specialized "
+            "matched-binary interval, equivalence-test, population, or safety claim"
         ),
     }
 

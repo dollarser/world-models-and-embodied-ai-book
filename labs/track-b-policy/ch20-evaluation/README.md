@@ -4,9 +4,9 @@
 
 完整协议另报告 `8 attempted / 8 valid / 7 terminated / 1 truncated / 0 invalid`：有效 timeout 留在失败分母，具名技术无效运行会阻止聚合，不能静默删除；双真结束标志分别计数但只贡献一个 attempted episode。该 fixture 属于 E0 协议/聚合合同测试，不是 E4 部署证据。
 
-v9 另含 10 对 candidate/baseline 结果，嵌套在 4 条重复数不均的 route 中。episode-micro 配对差为 `+0.3`，等 route macro 差为 `0.0`；代码枚举全部 `4^4=256` 个 route-level bootstrap replicate，得到手工 percentile 区间 `[-0.75,0.75]`。它还解析计算零观测事件在 `20/100/1000` 次独立暴露下的95%一侧二项上界 `13.9108%/2.9513%/0.2991%`，并增加 10 条 route×10 次 replay 的 pseudo-replication 负对照：假设 episode 独立时 per-episode 上界为 `2.9513%`，以 route 为独立单元时 per-new-route event-incidence 上界为 `25.8866%`。两者是不同 estimand，不能当作同一风险的窄/宽版本。
+v10 另含 10 对 candidate/baseline 结果，嵌套在 4 条重复数不均的 route 中。episode-micro 配对差为 `+0.3`，等 route macro 差为 `0.0`；代码枚举全部 `4^4=256` 个 route-level bootstrap replicate，得到手工 percentile 区间 `[-0.75,0.75]`。它还解析计算零观测事件在 `20/100/1000` 次独立暴露下的95%一侧二项上界 `13.9108%/2.9513%/0.2991%`，并增加 10 条 route×10 次 replay 的 pseudo-replication 负对照：假设 episode 独立时 per-episode 上界为 `2.9513%`，以 route 为独立单元时 per-new-route event-incidence 上界为 `25.8866%`。两者是不同 estimand，不能当作同一风险的窄/宽版本。
 
-v9 还固定四个 checkpoint 的 selection/final/confirmation 三列手工分数：按 selection split 预先选择 `checkpoint-a` 后，其 final 分数为 `0.50`；错误地看完 final 再挑 `checkpoint-d` 会报告 `0.75`，但该 checkpoint 在未触碰 confirmation split 上是 `0.50`，形成 `0.25` 的 authored reuse gap。另有两张20对 joint table：candidate/baseline 边际成功率都固定为 `0.6/0.4`，high-concordance 与 more-discordant 配对的 exact conditional two-sided McNemar 诊断分别为 `0.125/0.387695`。它只演示边际成功率无法恢复 joint pairing；不提供效应区间、cluster/multiplicity 修正或等效性判断。所有数值只演示统计与协议机制：不提供可靠 population coverage、有效样本量、策略显著性、等效或真实部署风险证据。
+v10 还固定四个 checkpoint 的 selection/final/confirmation 三列手工分数：按 selection split 预先选择 `checkpoint-a` 后，其 final 分数为 `0.50`；错误地看完 final 再挑 `checkpoint-d` 会报告 `0.75`，但该 checkpoint 在未触碰 confirmation split 上是 `0.50`，形成 `0.25` 的 authored reuse gap。另有两张20对 joint table：candidate/baseline 边际成功率都固定为 `0.6/0.4`，high-concordance 与 more-discordant 配对的 exact conditional two-sided McNemar 诊断分别为 `0.125/0.387695`；两表的独立-pair Hoeffding 95% 配对差区间均为 `[-0.407361,0.807361]`，未完全落入预注册教学差异带 `[-0.3,0.3]`。该保守区间不是 exact-compatible matched-binary interval、cluster/multiplicity 修正或等效性检验。所有数值只演示统计与协议机制：不提供可靠 population coverage、有效样本量、策略显著性、等效或真实部署风险证据。
 
 它没有运行 LIBERO、MetaDrive、CARLA 或真实机器人，不能作为任何模型的 benchmark。其用途是阻止脱离协议比较成功率。
 
