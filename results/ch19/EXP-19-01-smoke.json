@@ -9,7 +9,6 @@
       "terminal_state_error": 0.0
     },
     "calibration_candidate_count": 12,
-    "calibration_observation_mae": 0.0,
     "dynamics_calibrated_visual_uncalibrated_gap": {
       "observation_mae": 0.1625,
       "state_mae": 0.0,
@@ -21,10 +20,44 @@
       "state_mae": 0.6625,
       "terminal_state_error": 1.0
     },
-    "recovered_parameters": {
-      "action_delay_steps": 1,
-      "actuator_gain": 0.8,
-      "observation_scale": 1.25
+    "observation_only_alternative": {
+      "held_out_gap": {
+        "observation_mae": 0.0,
+        "state_mae": 0.1625,
+        "terminal_state_error": 0.25
+      },
+      "parameters": {
+        "action_delay_steps": 1,
+        "actuator_gain": 1.0,
+        "observation_scale": 1.0
+      }
+    },
+    "observation_only_calibration": {
+      "fit_error": 0.0,
+      "identifiable": false,
+      "minimizer_count": 2,
+      "minimizers": [
+        {
+          "action_delay_steps": 1,
+          "actuator_gain": 0.8,
+          "observation_scale": 1.25
+        },
+        {
+          "action_delay_steps": 1,
+          "actuator_gain": 1.0,
+          "observation_scale": 1.0
+        }
+      ]
+    },
+    "state_observation_calibration": {
+      "fit_error": 0.0,
+      "identifiable": true,
+      "minimizer_count": 1,
+      "recovered_parameters": {
+        "action_delay_steps": 1,
+        "actuator_gain": 0.8,
+        "observation_scale": 1.25
+      }
     },
     "target_held_out_rollout": {
       "applied_actions": [

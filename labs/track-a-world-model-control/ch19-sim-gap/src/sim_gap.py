@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import product
-from math import isfinite
+from math import isclose, isfinite
 
 
 def _is_finite_number(value: object) -> bool:
@@ -26,6 +26,18 @@ class SystemParams:
             raise ValueError("action delay must be non-negative")
         if not _is_finite_number(self.observation_scale) or self.observation_scale <= 0.0:
             raise ValueError("observation scale must be a finite positive number")
+
+
+@dataclass(frozen=True)
+class CalibrationResult:
+    selected: SystemParams
+    fit_error: float
+    candidate_count: int
+    minimizers: tuple[SystemParams, ...]
+
+    @property
+    def identifiable(self) -> bool:
+        return len(self.minimizers) == 1
 
 
 NOMINAL = SystemParams(actuator_gain=1.0, action_delay_steps=0, observation_scale=1.0)
@@ -65,6 +77,8 @@ def rollout(params: SystemParams, actions: tuple[float, ...]) -> dict[str, tuple
 def mean_absolute_error(first: tuple[float, ...], second: tuple[float, ...]) -> float:
     if len(first) != len(second) or not first:
         raise ValueError("trajectories must have the same non-zero length")
+    if any(not _is_finite_number(value) for value in (*first, *second)):
+        raise ValueError("trajectories must contain finite numbers")
     return sum(abs(a - b) for a, b in zip(first, second)) / len(first)
 
 
@@ -80,15 +94,29 @@ def compare(candidate: SystemParams, reference: SystemParams, actions: tuple[flo
     }
 
 
-def calibrate(observed: tuple[float, ...], actions: tuple[float, ...]) -> tuple[SystemParams, float, int]:
+def calibrate(
+    observed: tuple[float, ...],
+    actions: tuple[float, ...],
+    observed_states: tuple[float, ...] | None = None,
+) -> CalibrationResult:
+    if len(observed) != len(actions) or not observed:
+        raise ValueError("observations and actions must have the same non-zero length")
+    mean_absolute_error(observed, observed)
+    if observed_states is not None:
+        if len(observed_states) != len(actions):
+            raise ValueError("state anchors and actions must have the same length")
+        mean_absolute_error(observed_states, observed_states)
     candidates = tuple(
         SystemParams(gain, delay, scale)
         for gain, delay, scale in product((0.6, 0.8, 1.0), (0, 1), (1.0, 1.25))
     )
-    scored = [
-        (mean_absolute_error(rollout(candidate, actions)["observations"], observed), candidate)
-        for candidate in candidates
-    ]
+    scored = []
+    for candidate in candidates:
+        candidate_rollout = rollout(candidate, actions)
+        error = mean_absolute_error(candidate_rollout["observations"], observed)
+        if observed_states is not None:
+            error += mean_absolute_error(candidate_rollout["states"], observed_states)
+        scored.append((error, candidate))
     best_error, best = min(
         scored,
         key=lambda item: (
@@ -98,7 +126,12 @@ def calibrate(observed: tuple[float, ...], actions: tuple[float, ...]) -> tuple[
             item[1].observation_scale,
         ),
     )
-    return best, best_error, len(candidates)
+    minimizers = tuple(
+        candidate
+        for error, candidate in scored
+        if isclose(error, best_error, rel_tol=1e-12, abs_tol=1e-12)
+    )
+    return CalibrationResult(best, best_error, len(candidates), minimizers)
 
 
 def covers(
@@ -125,24 +158,48 @@ def rounded_comparison(values: dict[str, float]) -> dict[str, float]:
     return {key: round(value, 12) for key, value in values.items()}
 
 
+def params_dict(params: SystemParams) -> dict[str, float | int]:
+    return {
+        "actuator_gain": params.actuator_gain,
+        "action_delay_steps": params.action_delay_steps,
+        "observation_scale": params.observation_scale,
+    }
+
+
 def evaluate() -> dict[str, object]:
-    calibration_observations = rollout(TARGET, CALIBRATION_ACTIONS)["observations"]
-    calibrated, fit_error, candidate_count = calibrate(calibration_observations, CALIBRATION_ACTIONS)
+    calibration_rollout = rollout(TARGET, CALIBRATION_ACTIONS)
+    observation_only = calibrate(calibration_rollout["observations"], CALIBRATION_ACTIONS)
+    state_anchored = calibrate(
+        calibration_rollout["observations"],
+        CALIBRATION_ACTIONS,
+        observed_states=calibration_rollout["states"],
+    )
+    alternative = next(params for params in observation_only.minimizers if params != TARGET)
     nominal_gap = compare(NOMINAL, TARGET, HELD_OUT_ACTIONS)
-    calibrated_gap = compare(calibrated, TARGET, HELD_OUT_ACTIONS)
+    calibrated_gap = compare(state_anchored.selected, TARGET, HELD_OUT_ACTIONS)
     dynamics_only = SystemParams(
         actuator_gain=TARGET.actuator_gain,
         action_delay_steps=TARGET.action_delay_steps,
         observation_scale=NOMINAL.observation_scale,
     )
     return {
-        "calibration_candidate_count": candidate_count,
-        "recovered_parameters": {
-            "actuator_gain": calibrated.actuator_gain,
-            "action_delay_steps": calibrated.action_delay_steps,
-            "observation_scale": calibrated.observation_scale,
+        "calibration_candidate_count": observation_only.candidate_count,
+        "observation_only_calibration": {
+            "fit_error": round(observation_only.fit_error, 12),
+            "identifiable": observation_only.identifiable,
+            "minimizer_count": len(observation_only.minimizers),
+            "minimizers": tuple(params_dict(params) for params in observation_only.minimizers),
         },
-        "calibration_observation_mae": round(fit_error, 12),
+        "observation_only_alternative": {
+            "parameters": params_dict(alternative),
+            "held_out_gap": rounded_comparison(compare(alternative, TARGET, HELD_OUT_ACTIONS)),
+        },
+        "state_observation_calibration": {
+            "fit_error": round(state_anchored.fit_error, 12),
+            "identifiable": state_anchored.identifiable,
+            "minimizer_count": len(state_anchored.minimizers),
+            "recovered_parameters": params_dict(state_anchored.selected),
+        },
         "nominal_held_out_gap": rounded_comparison(nominal_gap),
         "dynamics_calibrated_visual_uncalibrated_gap": rounded_comparison(
             compare(dynamics_only, TARGET, HELD_OUT_ACTIONS)

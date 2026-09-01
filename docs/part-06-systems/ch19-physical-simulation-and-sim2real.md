@@ -1,9 +1,9 @@
 # 第19章 物理仿真、Real2Sim 与 Sim2Real
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-19-01`
-> 关联声明：`CLAIM-19-01`～`CLAIM-19-06`
+> 关联声明：`CLAIM-19-01`～`CLAIM-19-07`
 > 关联图表：`FIG-19-01` / `TAB-19-01` / `TAB-19-02`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
@@ -69,7 +69,7 @@ flowchart LR
     V --> C
 ```
 
-*FIG-19-01：Real2Sim2Real 的证据闭环。来源：本书原创，MIT，2026-08-31。真实回查可使用已有日志、影子模式或受控平台，不表示必须购买硬件。*
+*FIG-19-01：Real2Sim2Real 的证据闭环。来源：本书原创，MIT，2026-09-01。真实回查可使用已有日志、影子模式或受控平台，不表示必须购买硬件。*
 
 常见 gap 至少分六类：
 
@@ -95,7 +95,9 @@ flowchart LR
 
 *TAB-19-01：本书的仿真环境角色。许可和资源来自核查日官方仓库/文档，执行前仍需按具体版本复核。*
 
-[MuJoCo](https://github.com/google-deepmind/mujoco) 适合把控制、接触和系统辨识讲清楚；[MetaDrive](https://github.com/metadriverse/metadrive) 是本书自动驾驶 M 档默认入口，因为它提供程序化场景和状态、激光雷达、俯视图、RGB 等观测。官方给出的高帧率是特定设置下的上限，不应写成本书通用实测。
+[MuJoCo](https://github.com/google-deepmind/mujoco) 适合把控制、接触和系统辨识讲清楚；当前官方 Python 包还提供 [sysid toolbox](https://github.com/google-deepmind/mujoco/blob/main/python/mujoco/sysid/README.md)：用带 box constraint 的 nonlinear least squares、finite-difference Jacobian 和批量 rollout 拟合物理或测量参数，并可组合多个 `ModelSequences`、自定义 residual、time delay 与 confidence interval `[O,R1]`。工具能优化不等于参数必然可辨识；residual 对两个参数只依赖其乘积时，优化器仍会面对等价解。
+
+[MetaDrive](https://github.com/metadriverse/metadrive) 是本书自动驾驶 M 档默认入口，因为它提供程序化场景和状态、激光雷达、俯视图、RGB 等观测。官方给出的高帧率是特定设置下的上限，不应写成本书通用实测。
 
 [CARLA](https://github.com/carla-simulator/carla) 和 [Isaac Lab](https://github.com/isaac-sim/IsaacLab) 保留为高保真或高并行扩展。CARLA 官方当前建议 16 GB 以上 VRAM、32 GB RAM，这已超出“24 GB 单卡轻松入门”的表述，因此正文不把它设为默认。RoboCasa 的任务/厨房规模是官方项目能力，不等于本书已下载资产或复现实验。
 
@@ -110,6 +112,10 @@ w_t\,d\!\left(y_t,\hat y_t(\phi,a_{0:t})\right).
 
 `φ` 可以包含尺寸、质量、摩擦、执行器增益、动作延迟和传感器标定。权重 `w_t` 应反映任务与安全，而不是只让大量静止帧压低平均误差。校准集用于求参数；留出动作、初态和场景用于检验是否泛化。若在同一轨迹上同时拟合和报告，零误差没有说服力。
 
+还要区分两种问题：**结构可辨识性**问无限无噪数据下不同参数是否会产生相同输出；**实用可辨识性**问有限、带噪、激励不足的数据能否把它们稳定分开。换一条 held-out action 只能检验泛化，不能必然修复结构混淆。若观测始终只依赖 `scale×gain`，再丰富的动作也无法从该观测单独分离二者；需要独立 state/传感器标定、固定其中一个参数或改变测量方程。
+
+因此校准报告至少包含最优值之外的：等价/近等价解数量、Jacobian/rank 或 profile、参数相关性/置信区间、不同初值结果、residual 分桶，以及新增传感器或激励后的变化。窄置信区间也依赖模型和噪声假设，不能自动证明真实参数唯一。
+
 Real2Sim 不一定从手机扫描重建完整 3D。最小路径可以从已有日志、标定板、里程计、关节状态或台架响应估计少量参数。[RialTo](https://github.com/real-to-sim-to-real/RialToPolicyLearning) 展示了 real-to-sim-to-real 机器人学习工作流，但它是研究案例，不是对任意设备的通用配方。
 
 ## 19.5 域随机化：覆盖假设，而不是“随机越多越好”
@@ -121,11 +127,11 @@ Real2Sim 不一定从手机扫描重建完整 3D。最小路径可以从已有�
 - 是否有 nominal、单因素、组合扰动和 OOD 留出？
 - 过宽随机化是否让任务不可学，或制造目标世界不会出现的状态？
 
-经典“纹理、光照全随机”只覆盖视觉域的一部分。对控制任务，延迟、执行器、摩擦、负载和行为参与者往往同样关键。应先由系统辨识和测量建立中心与范围，再逐项扩展；不确定的参数可以更宽，但必须记录假设。
+经典“纹理、光照全随机”只覆盖视觉域的一部分。对控制任务，延迟、执行器、摩擦、负载和行为参与者往往同样关键。应先由系统辨识和测量建立中心与范围，再逐项扩展；不确定的参数可以更宽，但必须记录假设。fixture 的 `covers` 只检查独立区间与离散 delay：即使目标每一维都在边界内，若真实随机化使用相关分布、约束流形或零概率组合，也不能据此声称 joint support 已覆盖。
 
-## 19.6 EXP-19-01：校准正确，不等于仿真已经正确
+## 19.6 EXP-19-01：零校准误差也可能不可辨识
 
-S 档 fixture 用一个标量状态演示三类可分离参数：执行器增益、动作延迟和观测尺度。目标系统固定为 `gain=0.8`、`delay=1`、`scale=1.25`；12 个候选组合在校准动作上网格搜索，再在不同动作序列上验证。
+S 档 fixture 用一个标量状态演示执行器增益、动作延迟和观测尺度。目标系统固定为 `gain=0.8`、`delay=1`、`scale=1.25`；12 个候选组合在校准动作上网格搜索。关键是 observation 只依赖 `gain×scale`：目标的 `0.8×1.25` 与候选 `1.0×1.0` 相同，因此 observation-only 本来就无法分离二者。
 
 ```bash
 make ch19-test-local
@@ -136,18 +142,21 @@ make ch19-smoke
 | 条件 | state MAE | observation MAE | terminal error |
 | --- | ---: | ---: | ---: |
 | 名义参数 | 0.6625 | 0.6250 | 1.0000 |
+| observation-only 等价解 `(1.0,1,1.0)` | 0.1625 | 0.0000 | 0.2500 |
 | 只校准动力学/延迟，观测尺度仍错 | 0.0000 | 0.1625 | 0.0000 |
-| 三参数校准后，留出动作 | 0.0000 | 0.0000 | 0.0000 |
+| 加入 state anchor 后的唯一网格解 | 0.0000 | 0.0000 | 0.0000 |
 
-*TAB-19-02：`EXP-19-01` 的固定校准结果。零误差来自目标参数恰在离散搜索网格，不能外推到噪声、连续参数或真实系统。*
+*TAB-19-02：`EXP-19-01` 的留出动作结果。observation 一致不保证隐藏 state 或参数一致。*
 
 `CLAIM-19-02`（result）：名义参数在留出动作上的 state MAE 为 `0.6625`、observation MAE 为 `0.625`、终态误差为 `1.0`。
 
-`CLAIM-19-03`（result）：fixture 从 12 个候选中精确恢复三个预设参数，并在留出动作上得到零 gap；这只验证实现和“校准/留出分离”的接口，不证明网格搜索能处理真实动力学。
+`CLAIM-19-03`（result）：observation-only 网格搜索在 12 个候选中发现两个零误差 minimizer。非目标解 `(gain=1.0, delay=1, scale=1.0)` 在留出动作上仍有 observation MAE `0`，但 state MAE `0.1625`、终态误差 `0.25`；单靠更换动作序列没有解决乘积混淆。
+
+`CLAIM-19-07`（result）：加入校准 state anchor 后，网格中只剩目标参数一个 minimizer，并在留出动作上得到零 state/observation gap。该结果来自无噪目标参数恰在离散网格，不证明真实系统参数、连续优化或任意传感器组合可辨识。
 
 `CLAIM-19-04`（result）：手工窄随机化范围没有覆盖目标参数，手工宽范围覆盖了目标。它说明 support 应被显式检查，不比较随机化策略性能。
 
-结果文件为 `results/ch19/EXP-19-01-smoke.json`。测试还检查非法参数、一步延迟、校准/留出分离和观测—状态误差归因。
+结果文件为 `results/ch19/EXP-19-01-smoke.json`。测试还检查非法参数、一步延迟、等价 minimizer、state anchor、校准/留出分离和观测—状态误差归因。
 
 ## 19.7 MJX 与其他后端：速度不能抹掉语义差异
 
@@ -186,25 +195,26 @@ CARLA 用于高保真多相机、天气、城市资产和传感器管线扩展�
 
 | 类型 | 本章可以说什么 | 不能说什么 |
 | --- | --- | --- |
-| 本书结果 | 标量 fixture 的固定 gap、参数恢复和覆盖检查 | 真实动力学已辨识、Sim2Real 已成功 |
+| 本书结果 | 标量 fixture 的固定 gap、不可辨识反例、state anchor 与覆盖检查 | 真实动力学已辨识、Sim2Real 已成功 |
 | 官方事实 | 环境功能、版本路线和许可 | 本书已复现官方吞吐或任务结果 |
 | 计划验证 | MuJoCo/MetaDrive 的 M 档闭环 | 在没有运行记录时写成已完成 |
 | 高阶扩展 | CARLA/Isaac/MJX 的 GPU 工作流 | 把硬件与大型下载变成读者必需品 |
 
 ## 小结
 
-有效仿真从合同和 gap 分解开始，而不是从渲染质量开始。Real2Sim 用校准数据估参数，留出数据检验泛化；域随机化声明覆盖范围，Sim2Real 仍需独立锚点。环境选择服从问题与资源：机器人动力学优先 MuJoCo，驾驶默认 MetaDrive，高保真 CARLA/Isaac 和大规模 MJX 是可选扩展。
+有效仿真从合同、可辨识性和 gap 分解开始，而不是从渲染质量开始。Real2Sim 用校准数据约束参数，留出数据检验泛化，但零 residual 和 held-out observation 一致都不保证隐藏动力学唯一；域随机化还需声明联合支持，Sim2Real 仍需独立锚点。环境选择服从问题与资源：机器人动力学优先 MuJoCo，驾驶默认 MetaDrive，高保真 CARLA/Isaac 和大规模 MJX 是可选扩展。
 
 ## 练习
 
 1. **合同审计**：为一个差速底盘或自动驾驶转向接口写出状态、动作、频率、延迟、reset 和终止合同。
 2. **代码实验**：给 `EXP-19-01` 加入观测噪声，解释为什么不能再期待精确参数恢复。
-3. **辨识设计**：说明恒定动作为什么可能无法同时辨识增益与延迟，并设计更有信息量的动作序列。
+3. **辨识设计**：分别说明“激励不足导致 gain/delay 难分”与“gain×scale 结构混淆”的区别；前者设计新动作，后者设计新测量。
 4. **驾驶迁移**：列出 MetaDrive 到 CARLA 迁移时必须重新验证的五类语义，不比较无法对齐的成功率。
 
 ## 延伸阅读
 
 - [MuJoCo 官方仓库](https://github.com/google-deepmind/mujoco) 与 [MJX 文档](https://mujoco.readthedocs.io/en/stable/mjx.html)，`[O,R1]`；
+- [MuJoCo 官方 System Identification Toolbox](https://github.com/google-deepmind/mujoco/blob/main/python/mujoco/sysid/README.md)，`[O,R1]`；
 - [MetaDrive 官方仓库](https://github.com/metadriverse/metadrive) 与 [官方文档](https://metadrive-simulator.readthedocs.io/en/latest/)，`[O,R1]`；
 - [CARLA 官方仓库](https://github.com/carla-simulator/carla)，`[O,R1]`；
 - [Isaac Lab 官方仓库](https://github.com/isaac-sim/IsaacLab)，`[O,R1]`；
@@ -229,5 +239,5 @@ CARLA 用于高保真多相机、天气、城市资产和传感器管线扩展�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`；
+- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`；
 - 已知限制：只运行标准库标量 fixture；没有安装仿真器、下载资产、运行 GPU 或真实硬件。

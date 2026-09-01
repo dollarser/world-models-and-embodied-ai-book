@@ -3,10 +3,11 @@
   "id": "EXP-19-01",
   "chapter": 19,
   "status": "smoke",
-  "claim_ids": ["CLAIM-19-02", "CLAIM-19-03", "CLAIM-19-04"],
+  "claim_ids": ["CLAIM-19-02", "CLAIM-19-03", "CLAIM-19-04", "CLAIM-19-07"],
   "claim_scope": [
     "nominal dynamics, latency, and observation parameters can produce a measurable held-out rollout gap",
-    "a calibration fit must be checked on a separate action sequence",
+    "observation-only calibration exposes two zero-error gain/scale minimizers and remains ambiguous on a separate action sequence",
+    "adding an independent state anchor selects one target grid candidate in the deterministic fixture",
     "domain-randomization coverage depends on whether the target parameter vector lies inside the declared support"
   ],
   "code": {
@@ -16,7 +17,7 @@
   },
   "data": {
     "name": "procedural calibration and held-out action sequences",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -38,15 +39,20 @@
   "metrics": [
     {"name": "nominal_held_out_state_mae", "value": 0.6625, "unit": "state", "split": "held-out-actions"},
     {"name": "nominal_held_out_observation_mae", "value": 0.625, "unit": "observation", "split": "held-out-actions"},
-    {"name": "calibrated_held_out_state_mae", "value": 0.0, "unit": "state", "split": "held-out-actions"},
+    {"name": "observation_only_minimizer_count", "value": 2.0, "unit": "candidates", "split": "calibration-actions"},
+    {"name": "observation_equivalent_alternative_held_out_state_mae", "value": 0.1625, "unit": "state", "split": "held-out-actions"},
+    {"name": "observation_equivalent_alternative_held_out_observation_mae", "value": 0.0, "unit": "observation", "split": "held-out-actions"},
+    {"name": "state_anchored_minimizer_count", "value": 1.0, "unit": "candidates", "split": "calibration-actions"},
+    {"name": "state_anchored_held_out_state_mae", "value": 0.0, "unit": "state", "split": "held-out-actions"},
     {"name": "narrow_randomization_target_coverage", "value": 0.0, "unit": "boolean", "split": "declared-support"},
     {"name": "broad_randomization_target_coverage", "value": 1.0, "unit": "boolean", "split": "declared-support"}
   ],
   "artifacts": ["results/ch19/EXP-19-01-smoke.json"],
   "limitations": [
     "one-dimensional deterministic dynamics rather than rigid-body/contact simulation",
-    "target parameters are contained in a small hand-authored calibration grid",
+    "target parameters and one observation-equivalent alternative are contained in a small hand-authored calibration grid",
     "zero held-out error is a fixture property and not expected for real system identification",
-    "no images, contacts, stochasticity, policy learning, simulator, hardware, vehicle, or GPU"
+    "no images, contacts, stochasticity, continuous optimization, policy learning, simulator, hardware, vehicle, or GPU",
+    "state anchor is directly available in the fixture and does not establish which measurements are available on a real system"
   ]
 }
