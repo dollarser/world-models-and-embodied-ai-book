@@ -1,10 +1,10 @@
 # 第8章 在想象中学习：Dreamer 系列
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-08-01`
-> 关联声明：`CLAIM-08-01`～`CLAIM-08-07`
-> 关联图表：`FIG-08-01` / `TAB-08-01` / `TAB-08-02`
+> 关联声明：`CLAIM-08-01`～`CLAIM-08-08`
+> 关联图表：`FIG-08-01` / `TAB-08-01` / `TAB-08-02` / `TAB-08-03`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -30,7 +30,7 @@
 
 ### 学完后的可验证产出
 
-读者应能画出 real replay 与 latent imagination 的数据流，手算 λ-return，解释 continuation mask 的作用，区分 world-model loss、critic target、actor objective 和真实环境评测，并写出自动驾驶 imagined training 的独立验证门。
+读者应能画出 real replay 与 latent imagination 的数据流，手算 λ-return，解释 continuation mask 对 target 与 loss weight 的两种作用，区分 world-model loss、critic target、actor objective 和真实环境评测，并写出自动驾驶 imagined training 的独立验证门。
 
 ## 8.1 两个循环：真实数据学模型，模型内部学行为
 
@@ -151,6 +151,25 @@ make ch08-smoke
 
 这里没有矛盾：外部截断之后不能把下一 episode 的 reward 接到当前序列上，但若截断时保存了有效最终观测，仍可用该观测估计截断点的 value。若最终观测丢失，正确做法是把 target 标为不可构造并暴露数据问题，而不是猜成 terminal。
 
+### 8.5.1 Target 正确不等于 loss 权重正确
+
+continuation 有两个不同职责：一是进入 return 递推，阻止终止后的 reward 影响更早 target；二是形成每个 imagined step 的累计 survival weight，阻止终止后的伪状态继续贡献 actor/critic loss。若 $d_t$ 是第 $t$ 步之后的 discount/continuation，最小接口可写成
+
+\[
+w_0=1,\qquad w_t=\prod_{i=0}^{t-1}d_i\quad(t>0).
+\]
+
+终止 transition 自身仍可有训练信号，终止之后的伪 step 权重才应为 0。本书核查的 DreamerV3 作者实现快照 [`e3f0224`](https://github.com/danijar/dreamerv3/blob/e3f02248693a79dc8b0ebd62c93683888ddaccfe/dreamerv3/agent.py#L387-L421)同样由 continuation 的累积乘积形成 weight，并把它用于 policy/value loss；具体索引、discount 定义和 loss reduction 依版本而异，本书 fixture 只验证这个接口不变量。
+
+| 情形 | 每步 raw loss | 累积权重 | 加权贡献 | 总和 |
+| --- | --- | --- | --- | ---: |
+| 正确 mask | `[1,1,100]` | `[1,1,0]` | `[1,1,0]` | 2 |
+| 漏掉 mask | `[1,1,100]` | `[1,1,1]` | `[1,1,100]` | 102 |
+
+*TAB-08-03：`EXP-08-01` 的固定 loss-weighting 反例。100 是手工伪 loss，用于让错误可见；总和不是 Dreamer 训练曲线或性能指标。*
+
+`CLAIM-08-08`（result）：`EXP-08-01` v3 的三步手工序列中，正确累计权重把终止后 raw loss 100 的贡献降为 0，加权总和为 2；漏掉 continuation mask 时总和为 102，post-terminal leakage 为 100。这只验证非负标量 loss 与手工 discount 的累计加权合同，没有 actor/critic、梯度、learned continuation 或策略改进。
+
 运行产物为 `results/ch08/EXP-08-01-smoke.json`；实验卡明确记录了零下载、CPU、未用 GPU 和非训练边界。
 
 ## 8.6 从 Dreamer 到 DreamerV3
@@ -195,7 +214,7 @@ make ch08-smoke
 
 自动驾驶可从带时间同步、车辆状态和 control 的真实日志，或第19章 MetaDrive/CARLA rollout 学 world model。posterior start 应覆盖城市道路、不同速度、天气、交互密度和稀有事件，而不是只从直道常见帧启动。
 
-reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和舒适项；碰撞与硬约束不能被路线 reward 的尺度吞没。continuation 要区分碰撞终止、任务完成、日志截断、传感器缺失和 simulator timeout。否则本节的“终止后 +10 泄漏”会以更隐蔽的形式进入 critic。
+reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和舒适项；碰撞与硬约束不能被路线 reward 的尺度吞没。continuation 要区分碰撞终止、任务完成、日志截断、传感器缺失和 simulator timeout。否则本节的“终止后 +10 reward 泄漏”会进入 critic target，终止后的伪轨迹 loss 也可能继续污染 actor/critic objective；两条路径必须分别检查。
 
 一个可审计流程是：
 
@@ -211,7 +230,7 @@ reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和�
 
 | 档位 | 路径 | 当前状态 | 证据要求 |
 | --- | --- | --- | --- |
-| S | 本章标准库 λ-return fixture | 已运行 | 12 个单元测试、宿主与 Docker smoke、精确 JSON |
+| S | 本章标准库 λ-return fixture | 已运行 | 15 个单元测试、宿主与 Docker smoke、精确 JSON |
 | M | DreamerV3 debug/微型环境接口检查 | 可选、待运行 | CPU/Docker 优先；上游已警告 debug 不会学好模型 |
 | L1 | 小环境的缩小配置训练，目标 24 GB 单卡以内 | 可选、待验证 | 实测峰值 VRAM、墙钟、seed、return gap 与失败 |
 | L2 | 最多 2×80 GB 的 Dreamer 4 社区研究性审计 | 非必需、待验证 | 锁 commit/许可/数据；不得冒充作者实现或通用复现 |
@@ -230,6 +249,7 @@ Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中�
 2. 同时注入 reward +1 和 continuation 泄漏，判断两种 gap 是否线性相加。
 3. 为一个移动机器人写 terminated、truncated、timeout、sensor-drop 的 truth table。
 4. 为自动驾驶 cut-in 场景设计 train/validation/closed-loop 三组互斥 seed 和五项指标。
+5. 给定 discount `[0.9,0.9,0]`，手算三个 step 的累计 loss weight；再解释为什么不能只检查 λ-return target。
 
 ## 延伸阅读
 
@@ -248,5 +268,5 @@ Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-d-review.md`；
-- 已知限制：只有解析 target 和手工反例，没有 world model、actor/critic 更新、上游 checkpoint、仿真、GPU 或真实闭环。
+- 审查记录路径：`reviews/ch08-imagined-loss-weight-review-2026-09-01.md`；
+- 已知限制：只有解析 target、累计 survival weight 和手工反例，没有 world model、actor/critic 更新、梯度、learned continuation、上游 checkpoint、仿真、GPU 或真实闭环。

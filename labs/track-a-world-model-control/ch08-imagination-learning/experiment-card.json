@@ -3,21 +3,22 @@
   "id": "EXP-08-01",
   "chapter": 8,
   "status": "smoke",
-  "claim_ids": ["CLAIM-08-02", "CLAIM-08-03", "CLAIM-08-04", "CLAIM-08-07"],
+  "claim_ids": ["CLAIM-08-02", "CLAIM-08-03", "CLAIM-08-04", "CLAIM-08-07", "CLAIM-08-08"],
   "claim_scope": [
     "lambda changes the fixed finite-horizon critic targets when bootstrap values are imperfect",
     "a fixed imagined terminal-reward error propagates to every earlier full-return target",
     "a continuation mask prevents a post-terminal reward from leaking into earlier targets",
-    "a valid truncated transition keeps value bootstrap while a natural terminal transition closes it"
+    "a valid truncated transition keeps value bootstrap while a natural terminal transition closes it",
+    "cumulative survival weights remove post-terminal steps from an imagined actor or critic objective"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library analytic lambda-return fixture"
+    "config": "standard-library v3 analytic lambda-return, continuation, and loss-weighting fixture"
   },
   "data": {
-    "name": "hand-authored reward, discount, continuation, and value sequences",
-    "version": "v2",
+    "name": "hand-authored reward, discount, continuation, value, and per-step loss sequences",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -42,13 +43,15 @@
     {"name": "lambda_1_start_target", "value": 1.0, "unit": "return", "split": "reference"},
     {"name": "biased_reward_start_target_gap", "value": 1.0, "unit": "return", "split": "biased-model"},
     {"name": "missing_continuation_mask_leakage_gap", "value": 10.0, "unit": "return", "split": "terminal-mask"},
-    {"name": "collapsed_truncation_bootstrap_loss", "value": 4.0, "unit": "return", "split": "episode-end-semantics"}
+    {"name": "collapsed_truncation_bootstrap_loss", "value": 4.0, "unit": "return", "split": "episode-end-semantics"},
+    {"name": "post_terminal_loss_leakage", "value": 100.0, "unit": "loss contribution", "split": "imagined-loss-weighting"}
   ],
   "artifacts": ["results/ch08/EXP-08-01-smoke.json"],
   "limitations": [
     "hand-authored scalar rewards and values rather than a learned world model or critic",
     "no gradients, actor update, replay buffer, neural network, simulator, or environment interaction",
     "the biased reward and collapsed-done cases are constructed counterexamples rather than measured model errors",
+    "cumulative weights use hand-authored discounts and non-negative scalar losses rather than a specific Dreamer implementation's indexing, normalization, reduction, gradients, or learned continuation",
     "no Dreamer checkpoint, benchmark, GPU, robot, or vehicle"
   ]
 }

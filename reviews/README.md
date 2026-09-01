@@ -38,5 +38,6 @@
 - [第1章反馈、时延与动作权限边界审查](ch01-feedback-boundary-review-2026-09-01.md)
 - [第2章 state aliasing 与任务相关状态审查](ch02-state-aliasing-review-2026-09-01.md)
 - [第3章时间对齐与运动补偿边界审查](ch03-temporal-alignment-review-2026-09-01.md)
+- [第8章 imagined loss 累计权重审查](ch08-imagined-loss-weight-review-2026-09-01.md)
 
 `reviewed` 只表示正文和当前可执行路径通过内容、代码、一致性与教学审查，不自动表示 GPU、大数据或上游完整复现已经完成。

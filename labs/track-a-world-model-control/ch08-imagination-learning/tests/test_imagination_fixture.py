@@ -7,7 +7,13 @@ import unittest
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from imagination_fixture import bootstrap_discounts, evaluate, lambda_returns  # noqa: E402
+from imagination_fixture import (  # noqa: E402
+    bootstrap_discounts,
+    cumulative_loss_weights,
+    evaluate,
+    lambda_returns,
+    weighted_loss_audit,
+)
 
 
 class ImaginationFixtureTests(unittest.TestCase):
@@ -53,6 +59,20 @@ class ImaginationFixtureTests(unittest.TestCase):
     def test_missing_next_observation_is_not_silently_treated_as_terminal(self):
         with self.assertRaises(ValueError):
             bootstrap_discounts((False,), (True,), (False,))
+
+    def test_cumulative_weights_stop_after_terminal_transition(self):
+        self.assertEqual(cumulative_loss_weights((1.0, 0.0, 0.0)), (1.0, 1.0, 0.0))
+
+    def test_missing_mask_leaks_post_terminal_loss_into_objective(self):
+        result = evaluate()["imagined_loss_weighting"]
+        self.assertEqual(result["correct_mask"]["weighted_contributions"], (1.0, 1.0, 0.0))
+        self.assertEqual(result["missing_mask"]["weighted_contributions"], (1.0, 1.0, 100.0))
+        self.assertEqual(result["post_terminal_loss_leakage"], 100.0)
+
+    def test_loss_weighting_rejects_bad_sequences_and_losses(self):
+        for args in (((1.0,), (1.0, 0.0)), ((-1.0,), (1.0,)), ((1.0,), (1.1,))):
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                weighted_loss_audit(*args)
 
     def test_end_contract_rejects_bad_lengths_types_and_gamma(self):
         invalid_cases = (

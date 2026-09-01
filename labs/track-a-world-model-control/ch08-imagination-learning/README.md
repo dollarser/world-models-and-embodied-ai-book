@@ -1,6 +1,6 @@
 # EXP-08-01：imagined λ-return 与 continuation smoke
 
-解析型序列用于检查 λ-return、终止掩码，以及 imagined reward 偏差如何进入 critic target。单步结束语义反例进一步从 `terminated/truncated` 构造 bootstrap discount：有效截断保留下一状态 value，自然终止关闭 bootstrap；下一观测无效时拒绝构造 target。
+解析型序列用于检查 λ-return、终止掩码，以及 imagined reward 偏差如何进入 critic target。单步结束语义反例进一步从 `terminated/truncated` 构造 bootstrap discount：有效截断保留下一状态 value，自然终止关闭 bootstrap；下一观测无效时拒绝构造 target。累积 survival-weight 反例再检查终止后的伪 loss 是否仍被 actor/critic objective 计入。
 
 ```bash
 make ch08-test-local

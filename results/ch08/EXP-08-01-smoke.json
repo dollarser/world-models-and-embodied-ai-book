@@ -26,6 +26,22 @@
       "truncation_bootstrap_loss": 4.0,
       "truncation_target": 5.0
     },
+    "imagined_loss_weighting": {
+      "correct_mask": {
+        "cumulative_weights": [1.0, 1.0, 0.0],
+        "raw_losses": [1.0, 1.0, 100.0],
+        "weighted_contributions": [1.0, 1.0, 0.0],
+        "weighted_loss_sum": 2.0
+      },
+      "missing_mask": {
+        "cumulative_weights": [1.0, 1.0, 1.0],
+        "raw_losses": [1.0, 1.0, 100.0],
+        "weighted_contributions": [1.0, 1.0, 100.0],
+        "weighted_loss_sum": 102.0
+      },
+      "post_terminal_loss_leakage": 100.0,
+      "scope": "hand-authored per-step losses and cumulative survival weights; not an actor or critic update"
+    },
     "lambda_targets": {
       "lambda_0": [
         0.4,
@@ -57,6 +73,6 @@
       "start_target_gap": 1.0
     }
   },
-  "scope": "analytic lambda-return and continuation fixture; not Dreamer training or policy improvement",
+  "scope": "analytic lambda-return, continuation, and imagined-loss weighting fixture; not Dreamer training or policy improvement",
   "status": "smoke"
 }

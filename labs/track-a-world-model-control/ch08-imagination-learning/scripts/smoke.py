@@ -24,10 +24,12 @@ def main() -> int:
         raise AssertionError("the fixture must expose post-terminal reward leakage")
     if metrics["episode_end_semantics"]["truncation_bootstrap_loss"] != 4.0:
         raise AssertionError("collapsing truncation into done must expose lost bootstrap value")
+    if metrics["imagined_loss_weighting"]["post_terminal_loss_leakage"] != 100.0:
+        raise AssertionError("the continuation mask must remove post-terminal loss contribution")
     report = {
         "experiment_id": "EXP-08-01",
         "status": "smoke",
-        "scope": "analytic lambda-return and continuation fixture; not Dreamer training or policy improvement",
+        "scope": "analytic lambda-return, continuation, and imagined-loss weighting fixture; not Dreamer training or policy improvement",
         "metrics": metrics,
         "gpu_verified": False,
     }

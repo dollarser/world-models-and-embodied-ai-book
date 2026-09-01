@@ -95,6 +95,44 @@ def lambda_returns(
     return tuple(targets)
 
 
+def cumulative_loss_weights(discounts: Sequence[float]) -> tuple[float, ...]:
+    """Weight each imagined step by survival up to that step.
+
+    discounts[t] gates the transition after step t. Therefore the loss at the
+    first step has weight 1, and the loss at step t receives the product of all
+    earlier discounts. This is an interface fixture, not an exact reproduction
+    of any Dreamer implementation's reduction or normalization.
+    """
+
+    discounts_ = _finite_sequence("discounts", discounts)
+    if any(discount < 0.0 or discount > 1.0 for discount in discounts_):
+        raise ValueError("discounts must lie in [0, 1]")
+    weights = [1.0]
+    for discount in discounts_[:-1]:
+        weights.append(weights[-1] * discount)
+    return tuple(round(weight, 12) for weight in weights)
+
+
+def weighted_loss_audit(
+    losses: Sequence[float], discounts: Sequence[float]
+) -> dict[str, object]:
+    """Expose post-terminal loss that survives an incorrect continuation mask."""
+
+    losses_ = _finite_sequence("losses", losses)
+    weights = cumulative_loss_weights(discounts)
+    if len(losses_) != len(weights):
+        raise ValueError("losses and discounts must have equal lengths")
+    if any(loss < 0.0 for loss in losses_):
+        raise ValueError("losses must be non-negative")
+    contributions = tuple(round(loss * weight, 12) for loss, weight in zip(losses_, weights))
+    return {
+        "raw_losses": losses_,
+        "cumulative_weights": weights,
+        "weighted_contributions": contributions,
+        "weighted_loss_sum": round(sum(contributions), 12),
+    }
+
+
 def evaluate() -> dict[str, object]:
     rewards = (0.0, 0.0, 1.0)
     discounts = (1.0, 1.0, 0.0)
@@ -112,6 +150,8 @@ def evaluate() -> dict[str, object]:
     terminal_target = lambda_returns((1.0,), terminal_discount, (4.0,), 0.0)
     truncation_target = lambda_returns((1.0,), truncation_discount, (4.0,), 0.0)
     collapsed_done_target = lambda_returns((1.0,), (0.0,), (4.0,), 0.0)
+    correct_loss_weighting = weighted_loss_audit((1.0, 1.0, 100.0), (1.0, 0.0, 0.0))
+    missing_mask_loss_weighting = weighted_loss_audit((1.0, 1.0, 100.0), (1.0, 1.0, 0.0))
 
     return {
         "lambda_targets": {
@@ -139,5 +179,15 @@ def evaluate() -> dict[str, object]:
             "truncation_target": truncation_target[0],
             "collapsed_done_target": collapsed_done_target[0],
             "truncation_bootstrap_loss": round(truncation_target[0] - collapsed_done_target[0], 12),
+        },
+        "imagined_loss_weighting": {
+            "correct_mask": correct_loss_weighting,
+            "missing_mask": missing_mask_loss_weighting,
+            "post_terminal_loss_leakage": round(
+                missing_mask_loss_weighting["weighted_loss_sum"]
+                - correct_loss_weighting["weighted_loss_sum"],
+                12,
+            ),
+            "scope": "hand-authored per-step losses and cumulative survival weights; not an actor or critic update",
         },
     }
