@@ -10,7 +10,7 @@
 
 | 命令 | 环境 | 检查范围 | 失败等级 |
 | --- | --- | --- | --- |
-| `make check-local` | 宿主标准库 | 文件、JSON、链接、manifest、PRD 22 章 S 档—实验卡映射与可选 M/L 路径、声明/图表双向登记、`fact`/`inference` 证据登记、关键 `recommendation` 适用性登记、Mermaid 无障碍元数据、标题层级、章节教学/接口区段、读者关键术语、`result`—实验卡绑定/定义句边界与 22 组 smoke—结果精确一致性 | `BLOCK` |
+| `make check-local` | 宿主标准库 | 文件、JSON、链接、manifest、PRD 22 章 S 档—实验卡映射与可选 M/L 路径、22 个实验资产包、声明/图表双向登记、`fact`/`inference` 证据登记、关键 `recommendation` 适用性登记、Mermaid 无障碍元数据、标题层级、章节教学/接口区段、读者关键术语、`result`—实验卡绑定/定义句边界与 22 组 smoke—结果精确一致性 | `BLOCK` |
 | `make check-strict` | Docker | JSON Schema、manifest、实验卡/benchmark card 条件与跨资产规则 | `BLOCK` |
 | `make check` | 宿主 + Docker | 依次执行 local 与 strict | `BLOCK` |
 | `make docs-build` | Docker | MkDocs 严格构建、导航、Markdown 扩展 | `BLOCK` |
@@ -24,6 +24,7 @@
 | --- | --- | --- |
 | 基础检查 | 自动 `BLOCK` | `make check` 返回 0 |
 | PRD 实验档位 | 自动 + 人工 `BLOCK` | 每章以 manifest 登记的 `EXP-NN-01` 标明已交付 S 档，并另列可选待验证 M/L 路径；不得用无档位“实验”把未运行训练或仿真写成当前交付 |
+| 实验资产包 | 自动 + 人工 `BLOCK` | 每个 manifest 实验恰有一个实验卡、README、可测试源码、smoke 入口、测试和存在的结果 artifact；训练/config/独立评测入口按适用性添加，不创建 no-op 资产 |
 | 文档构建 | 自动 `BLOCK` | `make docs-build` 返回 0 且无 warning |
 | 章节模板 | 自动 + 人工 `BLOCK` | “本章契约、小结、练习、延伸阅读、验收记录”使用独立 H2；第1–21章有“下一章接口”，第22章有“全书出口”；非适用项明确说明而非静默删除 |
 | 读者术语 | 自动 + 人工 `BLOCK` | 高频缩写同时出现在作者术语基线与读者术语表；定义说明作用域和不能单独证明的结论 |

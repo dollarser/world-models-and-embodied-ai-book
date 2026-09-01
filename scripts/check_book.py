@@ -443,6 +443,52 @@ def check_critical_recommendation_contract(
     return errors
 
 
+def check_experiment_asset_contract(
+    manifest_experiment_ids: set[str], card_paths: list[Path], root: Path = ROOT
+) -> list[str]:
+    """Require every manifest experiment to have one runnable, documented S-tier asset package."""
+
+    errors: list[str] = []
+    cards: list[tuple[Path, dict[str, object]]] = []
+    for card_path in card_paths:
+        try:
+            card = json.loads(card_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(card, dict):
+            cards.append((card_path, card))
+
+    card_ids = [card.get("id") for _, card in cards if isinstance(card.get("id"), str)]
+    duplicates = sorted({experiment_id for experiment_id in card_ids if card_ids.count(experiment_id) > 1})
+    for experiment_id in duplicates:
+        errors.append(f"experiment asset contract contains duplicate card: {experiment_id}")
+    registered_card_ids = set(card_ids)
+    for experiment_id in sorted(manifest_experiment_ids - registered_card_ids):
+        errors.append(f"manifest experiment has no asset package: {experiment_id}")
+    for experiment_id in sorted(registered_card_ids - manifest_experiment_ids):
+        errors.append(f"experiment asset package is not registered in manifest: {experiment_id}")
+
+    for card_path, card in cards:
+        experiment_id = card.get("id", "<missing>")
+        lab_root = card_path.parent
+        required_files = (lab_root / "README.md", lab_root / "scripts/smoke.py")
+        for required_path in required_files:
+            if not required_path.is_file():
+                errors.append(
+                    f"experiment {experiment_id} asset package is missing {required_path.relative_to(lab_root)}"
+                )
+        if not any((lab_root / "src").glob("*.py")):
+            errors.append(f"experiment {experiment_id} asset package has no testable src/*.py module")
+        if not any((lab_root / "tests").glob("test_*.py")):
+            errors.append(f"experiment {experiment_id} asset package has no tests/test_*.py")
+        artifacts = card.get("artifacts")
+        if isinstance(artifacts, list):
+            for artifact in artifacts:
+                if isinstance(artifact, str) and not (root / artifact).is_file():
+                    errors.append(f"experiment {experiment_id} references missing result artifact: {artifact}")
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -510,6 +556,25 @@ def check_manifest() -> list[str]:
     if len(experiment_ids) != len(set(experiment_ids)):
         errors.append("manifest contains duplicate experiment IDs")
     return errors
+
+
+def check_experiment_assets() -> list[str]:
+    manifest_path = ROOT / "specs/book-manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    experiment_ids = {
+        experiment_id
+        for chapter in manifest.get("chapters", [])
+        if isinstance(chapter, dict)
+        for experiment_id in chapter.get("experiments", [])
+        if isinstance(experiment_id, str)
+    }
+    return check_experiment_asset_contract(
+        experiment_ids,
+        list(ROOT.glob("labs/**/experiment-card.json")),
+    )
 
 
 def check_markdown_links() -> list[str]:
@@ -667,6 +732,7 @@ def main() -> int:
         check_required()
         + check_json()
         + check_manifest()
+        + check_experiment_assets()
         + check_markdown_links()
         + check_prd_chapters()
         + check_glossary_files()
@@ -680,7 +746,8 @@ def main() -> int:
         return 1
     print(
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
-        "heading hierarchy, chapter teaching sections, reader terminology, fact/inference evidence, critical "
+        "experiment asset packages, heading hierarchy, chapter teaching sections, reader terminology, "
+        "fact/inference evidence, critical "
         "recommendation policy, manifest, "
         "local links, 22-chapter PRD tier mapping"
     )

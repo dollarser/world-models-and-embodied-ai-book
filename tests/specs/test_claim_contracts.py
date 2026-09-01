@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 
 from scripts.check_book import (
@@ -7,6 +9,7 @@ from scripts.check_book import (
     check_claim_contract,
     check_critical_recommendation_contract,
     check_fact_evidence_contract,
+    check_experiment_asset_contract,
     check_figure_contract,
     check_glossary_contract,
     check_heading_hierarchy,
@@ -337,6 +340,48 @@ class PrdExperimentTierContractTest(unittest.TestCase):
         self.assertTrue(any("unregistered experiment" in item for item in errors))
         self.assertTrue(any("no optional pending M/L" in item for item in errors))
         self.assertTrue(any("un-tiered experiment" in item for item in errors))
+
+
+class ExperimentAssetContractTest(unittest.TestCase):
+    def test_accepts_minimal_runnable_asset_package(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            lab = root / "labs/example"
+            (lab / "src").mkdir(parents=True)
+            (lab / "scripts").mkdir()
+            (lab / "tests").mkdir()
+            (root / "results/ch01").mkdir(parents=True)
+            (lab / "README.md").write_text("scope", encoding="utf-8")
+            (lab / "src/fixture.py").write_text("VALUE = 1\n", encoding="utf-8")
+            (lab / "scripts/smoke.py").write_text("print('{}')\n", encoding="utf-8")
+            (lab / "tests/test_fixture.py").write_text("def test_fixture(): pass\n", encoding="utf-8")
+            (root / "results/ch01/result.json").write_text("{}\n", encoding="utf-8")
+            card = lab / "experiment-card.json"
+            card.write_text(
+                '{"id":"EXP-01-01","artifacts":["results/ch01/result.json"]}\n',
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                [],
+                check_experiment_asset_contract({"EXP-01-01"}, [card], root),
+            )
+
+    def test_rejects_stale_incomplete_asset_package(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            lab = root / "labs/example"
+            lab.mkdir(parents=True)
+            card = lab / "experiment-card.json"
+            card.write_text(
+                '{"id":"EXP-01-02","artifacts":["results/ch01/missing.json"]}\n',
+                encoding="utf-8",
+            )
+            errors = check_experiment_asset_contract({"EXP-01-01"}, [card], root)
+            self.assertTrue(any("no asset package" in item for item in errors))
+            self.assertTrue(any("not registered" in item for item in errors))
+            self.assertTrue(any("missing README.md" in item for item in errors))
+            self.assertTrue(any("no testable src" in item for item in errors))
+            self.assertTrue(any("missing result artifact" in item for item in errors))
 
 
 if __name__ == "__main__":
