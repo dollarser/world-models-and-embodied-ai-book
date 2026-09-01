@@ -44,7 +44,7 @@
 
 所有 `fact` 还必须在 `specs/fact-evidence.json` 登记证据基类、来源成熟度、核查日期适用的证据锚点和支持边界。登记范围与正文 `fact` 集合双向相等：本书定义或当前仓库合同可以使用本地锚点；论文、官方资产和供应商声明必须使用外部锚点。供应商声明只能登记为 `vendor_statement` / `V`，不能因进入登记表而升级为独立验证。凡 `official_asset` 使用 GitHub 源码或 README 支持实现事实，锚点必须是含完整 40 位 commit SHA 的 `blob/tree/commit` URL；`main`、`master`、仓库首页和仅写核查日期的浮动链接不能作为该事实的机器证据。
 
-所有 `inference` 必须在 `specs/inference-evidence.json` 明确登记至少两个前提、证据锚点、一个会削弱结论的反例/反证条件，以及适用范围。登记集与正文 `inference` 集合双向相等。推断不能只复述作者偏好；若没有可审查的前提或反证条件，应改为 `recommendation`。
+所有 `inference` 必须在 `specs/inference-evidence.json` 明确登记至少两个前提、证据锚点、一个会削弱结论的反例/反证条件，以及适用范围。登记集与正文 `inference` 集合双向相等；若锚点使用 GitHub 实现证据，必须锁到含完整 40 位 commit 的不可变 URL，仓库首页不能支撑版本化前提。推断不能只复述作者偏好；若没有可审查的前提或反证条件，应改为 `recommendation`。
 
 `recommendation` 是作者选择，不因写成“必须”就升级为事实。凡会改变资源升级、数据纳入、评测发布、运行激活或安全关键执行的关键建议，必须在 `specs/critical-recommendations.json` 登记：何时适用、要求动作、失败时的替代/停止路径，以及它没有授予的权限。登记表只覆盖高后果建议，不要求把全部教学偏好机械化；正文建议仍是规范语义的唯一来源，登记项必须指向当前存在且类型为 `recommendation` 的声明。
 

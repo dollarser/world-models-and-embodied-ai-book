@@ -91,7 +91,7 @@
       ],
       "anchors": [
         "docs/part-05-fusion/ch18-vla-post-training-and-wam.md",
-        "https://github.com/H-EmbodVis/SimWAM"
+        "https://github.com/H-EmbodVis/SimWAM/blob/68b426c162827cb7701396895dbb3572d29f3420/src/simwam/models/wan22/simwam.py"
       ],
       "counterexample": "A WAM can support planning when its deployed interface actually exposes and validates these components, even if its architecture or authors use a different taxonomy name.",
       "scope_note": "The inference classifies capability by observable interfaces and validation, not by model name, marketing category, or the mere presence of video and action tokens."

@@ -570,6 +570,11 @@ def check_inference_evidence_contract(
         if not isinstance(anchors, list) or not anchors or any(not isinstance(item, str) for item in anchors):
             errors.append(f"inference evidence {claim_id} must have string anchors")
         else:
+            for anchor in (item for item in anchors if item.startswith("https://github.com/")):
+                if pinned_github_commit(anchor) is None:
+                    errors.append(
+                        f"inference evidence {claim_id} GitHub anchor must pin a 40-character commit: {anchor}"
+                    )
             for anchor in (item for item in anchors if "://" not in item):
                 local_path = anchor.split("#", 1)[0]
                 if not local_path or not (root / local_path).is_file():

@@ -3,7 +3,7 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-18-01`
-> 关联声明：`CLAIM-18-01`～`CLAIM-18-08`
+> 关联声明：`CLAIM-18-01`～`CLAIM-18-09`
 > 关联图表：`FIG-18-01` / `TAB-18-01` / `TAB-18-02` / `TAB-18-03` / `TAB-18-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
@@ -143,13 +143,13 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 这一路线继承第8章 imagined learning，却把 policy 扩展到大视觉—语言—动作模型，常用生成视频、VLM verifier 或目标参考构造 reward。
 
 - [VLA-RFT](https://arxiv.org/abs/2510.00406)用数据驱动 world simulator 预测动作条件视觉未来，并从目标参考构造 trajectory-level 学习信号 `[A,R0]`；
-- [World-Gymnast](https://arxiv.org/abs/2602.02454)让 VLA 在 action-conditioned video world model 中 rollout，再由 VLM 给任务完成 reward；其[作者仓库](https://github.com/world-gymnast/world-gymnast)公开 OpenVLA-OFT 训练入口 `[A/O,R1]`；
+- [World-Gymnast](https://arxiv.org/abs/2602.02454)让 VLA 在 action-conditioned video world model 中 rollout，再由 VLM 给任务完成 reward；其[训练脚本快照 `59c83a6`](https://github.com/world-gymnast/world-gymnast/blob/59c83a6e121fc1e099b39a4d6e01421cf1aa55c7/examples/run_openvla_oft_rl_worldgym.sh)公开 OpenVLA-OFT 入口 `[A/O,R1]`；
 - [WoVR](https://arxiv.org/abs/2602.13977)不假设 world model 完美，而用可控动作条件模型、Keyframe-Initialized Rollouts 与 world-model/policy co-evolution 缩短有效误差链 `[A,R0]`。
-- [WMPO](https://github.com/WM-PO/WMPO)让 policy 与像素 world model 交替生成 imagined trajectory，再由 VideoMAE reward model 评分并更新 policy `[A/O,R1]`。官方仓库把 SFT policy、task-specific world model、reward model 和最终 policy 分成独立 checkpoint，正说明“on-policy in world model”仍依赖多模型版本合同。
+- [WMPO README 快照 `c836d74`](https://github.com/WM-PO/WMPO/blob/c836d74ec6f4525c93fe980d54d0ca870118615a/README.md)描述 policy 与像素 world model 交替生成 imagined trajectory，再由 VideoMAE reward model 评分并更新 policy `[A/O,R1]`。该快照把 SFT policy、task-specific world model、reward model 和最终 policy 分成独立 checkpoint，正说明“on-policy in world model”仍依赖多模型版本合同。
 
-这些 2025–2026 工作属于快速变化的方法簇，论文结果是上游证据，不是本书实测。三者即使都叫 world-model RL，也不共享 simulator、reward、policy backbone、rollout horizon 或真实回查协议，不能直接横比摘要成功率。
+这些 2025–2026 工作属于快速变化的方法簇，论文结果是上游证据，不是本书实测。它们即使都叫 world-model RL，也不共享 simulator、reward、policy backbone、rollout horizon 或真实回查协议，不能直接横比摘要成功率。
 
-最低审计矩阵是：SFT baseline、reward reweight baseline、物理 simulator RL、learned simulator RL，以及相同最终 policy 在独立环境的闭环评测。还要报告 model-only return、外部 return、策略排序、hallucination、VLM/reward-model confusion matrix、OOD 和迭代后 simulator gap。World-Gymnast 的公开 JSON 还把 `partial_credit_criteria` 作为数据字段，意味着 reward rubric 本身也要锁定版本，不能只保存一个最终标量。
+最低审计矩阵是：SFT baseline、reward reweight baseline、物理 simulator RL、learned simulator RL，以及相同最终 policy 在独立环境的闭环评测。还要报告 model-only return、外部 return、策略排序、hallucination、VLM/reward-model confusion matrix、OOD 和迭代后 simulator gap。World-Gymnast 的[固定 README](https://github.com/world-gymnast/world-gymnast/blob/59c83a6e121fc1e099b39a4d6e01421cf1aa55c7/README.md)还把 `partial_credit_criteria` 作为数据字段，意味着 reward rubric 本身也要锁定版本，不能只保存一个最终标量。
 
 ## 18.6 长时序不是把短时策略重复更多次
 
@@ -169,7 +169,7 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 
 ## 18.7 World-Action Model：按接口分，不按名字分
 
-截至核查日，WAM 仍是研究趋势标签而非统一标准。[World Models to World Action Models 教程与资源库](https://github.com/clearlab-sustech/WorldModelSurvey)给出一组有用分类，本书将其改写为可审计接口：
+截至核查日，WAM 仍是研究趋势标签而非统一标准。[World Models to World Action Models 教程快照 `8ae8d6a`](https://github.com/clearlab-sustech/WorldModelSurvey/blob/8ae8d6ad916728059559ae99417b8aacdaf22301/README.md)给出一组有用分类，本书将其改写为可审计接口：
 
 | 路径 | 训练/推理接口 | 是否天然可 rollout | 关键检查 |
 | --- | --- | --- | --- |
@@ -180,7 +180,9 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 
 *TAB-18-04：World-Action Model 的四类实现路径。联合预测不自动得到 planner、critic 或 simulator。*
 
-[SimWAM 作者仓库](https://github.com/H-EmbodVis/SimWAM)是自动驾驶中的第四类案例：当前公开实现用 isolated attention mask 让 action token 与 future-video token 互不可见，两类 expert 不共享权重，部署时丢弃视频分支并走 action-only 路径 `[O,R1]`。这恰好说明 WAM 可以在部署时不生成或读取预测未来；其视频分支是训练信号，不能仅凭名称声称在线 planner 在 imagined future 上比较候选。
+[SimWAM README 快照 `68b426c`](https://github.com/H-EmbodVis/SimWAM/blob/68b426c162827cb7701396895dbb3572d29f3420/README.md)把它描述为自动驾驶中的第四类案例；其[固定源码](https://github.com/H-EmbodVis/SimWAM/blob/68b426c162827cb7701396895dbb3572d29f3420/src/simwam/models/wan22/simwam.py)构造 isolated attention mask，使 action token 可读取 action token 和当前首帧 video token、不能读取其余 future-video token。README 还说明两类 expert 不共享权重，推理时省略显式未来帧生成并走 action-only 路径 `[O,R1]`。这恰好说明 WAM 可以在部署时不生成或读取预测未来；其视频分支是训练信号，不能仅凭名称声称在线 planner 在 imagined future 上比较候选。
+
+`CLAIM-18-09`（fact）：在 SimWAM 官方快照 `68b426c` 中，源码 attention mask 只开放 action→action 与 action→当前首帧 video token，README 把部署接口描述为不显式生成未来帧的直接轨迹预测；这只证明该版本的接口和作者说明，不证明视频辅助训练带来因果收益、上游分数已复现或该模型可作交互 simulator。
 
 2026 年的 WAM 分类本身仍在演化：本章沿用“未来如何连接动作”的四接口轴；另一些当前 survey 使用 render-and-decode、latent-only、video-generation-free 等推理 substrate。两种分类可以交叉，不应把 taxonomy 名称当能力声明。工程卡仍应直接登记：动作是否条件化未来、未来是否递归、推理是否解码视频、action head 是否能看未来 token，以及 reward/termination 是否存在。
 
@@ -192,7 +194,7 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 
 reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预和最小风险状态。碰撞/越界属于硬 gate，不应仅作为可被路线进度抵消的负 reward。episode-level “到达终点”会像 `EXP-18-01` 一样压低失败轨迹中的正确避险和恢复动作，需要 phase/progress 与事件级标注。
 
-[WorldRFT](https://arxiv.org/abs/2512.19133)是 latent world model、分层规划和 reinforcement fine-tuning 的驾驶案例 `[A,R0]`；[SimWAM](https://github.com/H-EmbodVis/SimWAM)则代表 future-prediction auxiliary + action-only inference。两者都只能作为架构证据，不能把上游 nuScenes/NAVSIM 数字当作本书或道路部署结果。
+[WorldRFT](https://arxiv.org/abs/2512.19133)是 latent world model、分层规划和 reinforcement fine-tuning 的驾驶案例 `[A,R0]`；[SimWAM 快照 `68b426c`](https://github.com/H-EmbodVis/SimWAM/tree/68b426c162827cb7701396895dbb3572d29f3420)则代表 future-prediction auxiliary + action-only inference。两者都只能作为架构证据，不能把上游 nuScenes/NAVSIM 数字当作本书或道路部署结果。
 
 `CLAIM-18-06`（recommendation）：驾驶 policy 的后训练更新必须在未用于 policy/world-model/reward 训练的闭环路线和 seed 上复核碰撞、路线、干预、规则、舒适与尾部风险，并通过第21章执行网关；learned simulator reward 或 open-loop score 不能授权车辆控制。
 
@@ -205,7 +207,7 @@ reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预�
 | L1 | 小 policy/adapter 的短步后训练 | 可选、待验证 | 目标 24 GB 单卡；先测峰值 VRAM、墙钟和外部 return |
 | L2 | learned-world-model + VLA 对照 | 非必需、待验证 | 最多 2×80 GB；超限则只做论文/接口审计 |
 
-当前无 GPU，M/L1/L2 均未运行。RIPT-VLA 作者仓库的 OpenVLA-OFT 示例建议至少 3 GPU，超出本书最多双卡的默认范围，因此不能直接成为核心复现；只有经实测缩小且不削弱比较合同的配方才能进入 L1/L2。World-Gymnast、VLA-RFT、WoVR 的 world model + policy 完整栈也未证明落入 24 GB 单卡。WMPO 官方 README 标注完整 checkpoint 约 `364 GiB`、数据约 `530 GiB`，因此默认禁止整包下载；即使只选单任务资产，也必须先列出文件清单、字节数、缓存路径与许可。
+当前无 GPU，M/L1/L2 均未运行。RIPT-VLA 作者仓库的 OpenVLA-OFT 示例建议至少 3 GPU，超出本书最多双卡的默认范围，因此不能直接成为核心复现；只有经实测缩小且不削弱比较合同的配方才能进入 L1/L2。World-Gymnast 的固定脚本默认 `NUM_GPUS=4`、开启在线 W&B，并主动清理当前用户 Hugging Face 模块缓存和匹配的 `/tmp` 缓存；它只能在审查后复制到一次性 Docker 环境，关闭未授权网络记录并使用显式缓存挂载，不能在宿主机原样运行。VLA-RFT、WoVR 的 world model + policy 完整栈也未证明落入 24 GB 单卡。[WMPO 固定 README](https://github.com/WM-PO/WMPO/blob/c836d74ec6f4525c93fe980d54d0ca870118615a/README.md)标注完整 checkpoint 约 `364 GiB`、数据约 `530 GiB`，因此默认禁止整包下载；即使只选单任务资产，也必须先列出文件清单、字节数、缓存路径与许可。
 
 本章不要求购买硬件。S 档原创代码、数据和图表为 MIT；RIPT-VLA、World-Gymnast、LIBERO、OpenVLA-OFT、world model、checkpoint 和生成数据各有独立许可与来源要求，运行前必须锁定 commit 和资产条款。
 
@@ -268,13 +270,13 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 
 ## 延伸阅读
 
-- Tan et al., [RIPT-VLA](https://arxiv.org/abs/2505.17016) 与[作者代码](https://github.com/Ariostgx/ript-vla)；
+- Tan et al., [RIPT-VLA](https://arxiv.org/abs/2505.17016) 与[作者代码快照 `440990e`](https://github.com/Ariostgx/ript-vla/tree/440990e8864e12e4578b490ff6359e4f2c49ae3e)；
 - Li et al., [VLA-RFT](https://arxiv.org/abs/2510.00406)；
-- Sharma et al., [World-Gymnast](https://arxiv.org/abs/2602.02454) 与[作者代码](https://github.com/world-gymnast/world-gymnast)；
-- Zhu et al., [WMPO 官方代码、数据与 checkpoint](https://github.com/WM-PO/WMPO)；
+- Sharma et al., [World-Gymnast](https://arxiv.org/abs/2602.02454) 与[作者代码快照 `59c83a6`](https://github.com/world-gymnast/world-gymnast/tree/59c83a6e121fc1e099b39a4d6e01421cf1aa55c7)；
+- Zhu et al., [WMPO 官方代码、数据与 checkpoint 快照 `c836d74`](https://github.com/WM-PO/WMPO/tree/c836d74ec6f4525c93fe980d54d0ca870118615a)；
 - Jiang et al., [WoVR](https://arxiv.org/abs/2602.13977)；
-- Zhang et al., [From World Models to World Action Models](https://github.com/clearlab-sustech/WorldModelSurvey)；
-- [SimWAM 作者仓库](https://github.com/H-EmbodVis/SimWAM)与 [WorldRFT](https://arxiv.org/abs/2512.19133)。
+- Zhang et al., [From World Models to World Action Models 快照 `8ae8d6a`](https://github.com/clearlab-sustech/WorldModelSurvey/tree/8ae8d6ad916728059559ae99417b8aacdaf22301)；
+- [SimWAM 作者仓库快照 `68b426c`](https://github.com/H-EmbodVis/SimWAM/tree/68b426c162827cb7701396895dbb3572d29f3420)与 [WorldRFT](https://arxiv.org/abs/2512.19133)。
 
 ## 下一章接口
 
@@ -286,5 +288,5 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`、`reviews/ch18-wam-implementation-snapshot-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：只有离线标量重加权，没有 VLA/RL/world-model 训练、LIBERO、物理仿真、GPU、机器人或车辆。

@@ -411,6 +411,46 @@ class InferenceEvidenceContractTest(unittest.TestCase):
         }
         self.assertEqual([], check_inference_evidence_contract({"CLAIM-17-04"}, registry))
 
+    def test_rejects_floating_github_inference_anchor(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-18-05",
+                    "premises": [
+                        "Planning requires candidate-dependent consequences and a comparison rule.",
+                        "Interactive simulation requires recursive state and termination semantics.",
+                    ],
+                    "anchors": ["https://github.com/example/project"],
+                    "counterexample": "A validated deployed interface could expose every required component despite using another taxonomy.",
+                    "scope_note": "The inference classifies observable capability and does not reject a separately validated implementation.",
+                }
+            ],
+        }
+        errors = check_inference_evidence_contract({"CLAIM-18-05"}, registry)
+        self.assertTrue(any("40-character commit" in item for item in errors))
+
+    def test_accepts_commit_pinned_github_inference_anchor(self) -> None:
+        commit = "0123456789abcdef0123456789abcdef01234567"
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-18-05",
+                    "premises": [
+                        "Planning requires candidate-dependent consequences and a comparison rule.",
+                        "Interactive simulation requires recursive state and termination semantics.",
+                    ],
+                    "anchors": [f"https://github.com/example/project/blob/{commit}/model.py"],
+                    "counterexample": "A validated deployed interface could expose every required component despite using another taxonomy.",
+                    "scope_note": "The inference classifies observable capability and does not reject a separately validated implementation.",
+                }
+            ],
+        }
+        self.assertEqual([], check_inference_evidence_contract({"CLAIM-18-05"}, registry))
+
     def test_rejects_missing_and_stale_inference_entries(self) -> None:
         registry = {
             "version": 1,

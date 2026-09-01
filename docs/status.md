@@ -2,20 +2,20 @@
 
 | 资产 | 状态 | 已验证 | 待验证 |
 | --- | --- | --- | --- |
-| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、63 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；182 条声明及全部 `FIG/TAB` 双向登记，28 条 `fact` 与 8 条 `inference` 均有证据合同，91 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
+| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、65 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；183 条声明及全部 `FIG/TAB` 双向登记，29 条 `fact` 与 8 条 `inference` 均有证据合同，91 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
 | 批次 B：第13、14、15、20章 | `reviewed` | 第13–15章在批次 B 通过；第20章由批次 D 关闭第17/19章一致性门 | 上游策略、仿真、真实数据和 GPU 未运行 |
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
 | 批次 D：第8、16、17、18、20、21章 | `reviewed` | 六章四类审查通过；40 个单元测试；imagined target—后训练—评测—部署合同闭合 | Dreamer/VLA/world model、仿真、真实系统和 GPU 未运行 |
 | 全书终审：第1、5、7、22章 | `reviewed` | 四章内容、代码、一致性和教学审查通过；29 个单元测试；记录见 `reviews/final-book-review.md` | GPU、大数据、真实仿真与硬件限制保持未验证 |
-| 快速演进来源审查 | `reviewed` | 第4、9–19、21章一手来源分批复核；支持正式 `fact` 的 GitHub 官方资产、研究雷达官方仓库及当前读者文档的具体 GitHub 文件/目录均锁完整 commit；原有14个 `blob/tree main/master` 浮动链接清零，新增全书回归门禁；本轮同时收窄 GR00T、Cosmos loader、RIPT-VLA 与异步时间元数据的实现边界 | 仓库落地页仍只作发现入口；其他外部页面、论文修订、供应商能力和目标环境需周期复核，锁定源码不等于执行或独立验证 |
+| 快速演进来源审查 | `reviewed` | 第4、9–19、21章一手来源分批复核；支持正式 `fact`、`inference` 前提的 GitHub 实现、研究雷达官方仓库及当前读者文档的具体 GitHub 文件/目录均锁完整 commit；原有14个 `blob/tree main/master` 浮动链接清零；第18章新增 World-Gymnast、WMPO、WAM taxonomy 与 SimWAM 实现快照 | 仓库落地页仍只作发现入口；其他外部页面、论文修订、供应商能力和目标环境需周期复核，锁定源码不等于执行或独立验证 |
 | 快速演进研究雷达 | `reviewed` | 12 张一手来源活页卡按问题、章节、source revision、资产开放度、复现状态、资源路径、范围边界和复核触发器登记；V-JEPA 2.1、Cosmos 3、POBAX 与 A2World 仓库已锁不可变 commit；新增XEWorld受控跨本体反例、Riemann-1.0统一WAM监测项，A2World双用途证据设计已进入第17章 | 当前只完成论文/官方资产审计和无下载预检；模型、权重、数据、GPU、仿真与真实系统均未运行，扩展仓库仍按需逐批锁定 |
 | 编辑结构与图表无障碍审查 | `reviewed` | 29个编译页面均自动验证中文语言、device-width viewport、唯一main/H1和图片alt；28个正文页面验证有效skip link，短404页明确豁免；22章标题不越级；23张Mermaid图保留`accTitle/accDescr` | 浏览器控制接口当前不可用；深浅色、窄屏、缩放、键盘焦点顺序与屏幕阅读器朗读仍需人工巡检，不由DOM门禁替代 |
 | 术语与章节接口审查 | `reviewed` | 15 个读者关键缩写/指标同时进入作者基线与读者术语表；6 章合并标题拆为独立教学/接口区段；22 章结构契约自动检查 | 自动覆盖只保证关键项存在，不能替代逐段术语语义、译名偏好和跨学科读者测试 |
 | 贯穿案例与概念递进审查 | `reviewed` | 杯子操作与施工改道两个固定任务串联22章；对 observation/state/action/prediction/horizon/success/uncertainty 给出逐层证据升级表，并提供无3D经验与自动驾驶阅读路径 | 贯穿任务是教学索引，不是共享数据集或端到端实验；仍需真实读者测试跳转密度与理解负担 |
 | 练习与自学出口审查 | `reviewed` | 22 章 116 道练习均有折叠式同编号自检要点；manifest 登记全章覆盖，门禁拒绝缺失、重复、跨章、顺序错位、未闭合和过短答案 | 自检是最低合格要点，不是开放题唯一答案或真实实验替代品；仍需真实读者测试难度与歧义 |
-| 事实声明来源审查 | `reviewed` | 28 条 `fact` 与机器证据登记双向相等；GitHub `official_asset` 全部使用 40 位 commit URL；区分论文、官方资产、供应商声明、本书定义、仓库合同和数学恒等式 | 不可变 URL 只固定被审查内容，不证明来源蕴含、独立复现或当前上游默认行为；仍需周期性人工复核 |
-| 推断链与结果解释审查 | `reviewed` | 8 条 `inference` 登记双前提、锚点、反例和范围；1 条采样偏好改为 `recommendation`；91 条 `result` 定义句均有不可外推边界 | 结构化前提不能自动证明推理有效；机制解释与外部效度仍需领域审稿和更强实验 |
+| 事实声明来源审查 | `reviewed` | 29 条 `fact` 与机器证据登记双向相等；GitHub `official_asset` 全部使用 40 位 commit URL；区分论文、官方资产、供应商声明、本书定义、仓库合同和数学恒等式 | 不可变 URL 只固定被审查内容，不证明来源蕴含、独立复现或当前上游默认行为；仍需周期性人工复核 |
+| 推断链与结果解释审查 | `reviewed` | 8 条 `inference` 登记双前提、锚点、反例和范围；GitHub 实现前提必须锁完整 commit；1 条采样偏好改为 `recommendation`；91 条 `result` 定义句均有不可外推边界 | 结构化前提不能自动证明推理有效；机制解释与外部效度仍需领域审稿和更强实验 |
 | 关键建议适用性审查 | `reviewed` | 24 条资源升级、数据纳入、评测发布、运行激活或安全执行建议登记 trigger、动作、fallback/stop 与未授权事项；8 条正文补齐失败路径 | 自动规则不能保证高后果建议选择已穷尽，也不构成硬件、数据、机器人或车辆授权 |
 | PRD 实验档位一致性审查 | `reviewed` | 22 章逐一绑定当前 S 档 `EXP-NN-01`，并把训练、真实数据、checkpoint 与仿真拆为可选待验证 M/L 路径；当前仓库树与脚本名已同步 | 只证明设计—交付映射正确，不表示任何 M/L 路径已经运行或资源可复现 |
 | 实验资产最小合同审查 | `reviewed` | 22 个 manifest 实验与实验卡双向一致，并具有 README、可测试 `src`、smoke、测试和存在的结果 artifact；解析 fixture 不再被要求伪造训练/config 步骤 | 资产完整和 S 档通过不证明训练、外部数据、仿真或目标硬件可复现 |
@@ -53,7 +53,7 @@
 | EXP-16-01 | `smoke` | 12 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0，3/3 合同错误拒绝且语义变化改变 fingerprint | 两维手工动作；fingerprint 不是安全签名，不是 learned transfer 性能 |
 | 第17章 世界模型帮助策略的五种方式 | `reviewed` | 五类非互斥用途、代理评测三段误差、model exploitation、coverage 外拒绝与 coverage 内错误负对照；A2World 案例要求共享先验的 simulator/policy 分支独立验收，并区分论文架构与当前 world-model/A2World-sim 代码发布 | learned world model、A2World-policy、真实仿真器、上游 checkpoint 与 GPU 均未运行；上游全量微调示例超出默认资源档位 |
 | EXP-17-01 | `smoke` | 12 个单元测试；8/9 转移一致仍造成错排；gate 对 support 外错误把 regret 1.85→0，对同一 support 内错误不拒绝且 regret 保持 1.85 | 手工 corridor 与 authored support 声明，不是 learned OOD、coverage quality 或 simulator 性能 |
-| 第18章 VLA 后训练与 WAM | `reviewed` | 五类后训练、RLOO 退化/重采样分母、联合轨迹支持、长时层级/记忆、WAM 四类接口、自动驾驶正文与四类审查 | VLA/RL/world model、LIBERO、仿真、GPU 和硬件未运行 |
+| 第18章 VLA 后训练与 WAM | `reviewed` | 五类后训练、RLOO 退化/重采样分母、联合轨迹支持、长时层级/记忆、WAM 四类接口；SimWAM attention/deployment 源码边界与 World-Gymnast/WMPO 资源预检已锁定，自动驾驶正文与四类审查通过 | VLA/RL/world model、LIBERO、仿真、GPU 和硬件未运行；World-Gymnast 默认四卡且含宿主缓存清理，WMPO 整包资产禁止默认下载 |
 | EXP-18-01 | `smoke` | 11 个单元测试；reward target/ESS/recovery；marginal gate 错收未见组合；全同 reward 零 LOO 信号 | 四条标量轨迹与手工阈值，不是 offline RL、learned support 或 policy 改进 |
 | 第19章 物理仿真、Real2Sim 与 Sim2Real | `reviewed` | 仿真合同、gap 分解、结构/实用可辨识性、MuJoCo sysid、联合随机化边界、自动驾驶正文与四类审查 | MuJoCo/MetaDrive/CARLA/Isaac、真实系统、资产和 GPU 均未运行 |
 | EXP-19-01 | `smoke` | 10 个单元测试；observation-only 有 2 个零误差解；等价解隐藏 state MAE 0.1625；state anchor 后唯一 | 标量无噪网格，不是物理仿真、真实参数辨识或 Sim2Real 性能 |

@@ -209,6 +209,16 @@
       "scope_note": "The paper defines simulator and policy adaptations from one pretrained prior, while the pinned repository scopes its current code release to the world-model/A2World-sim side; neither source proves book reproduction or equal asset availability."
     },
     {
+      "claim_id": "CLAIM-18-09",
+      "basis": "official_asset",
+      "maturity": ["O"],
+      "anchors": [
+        "https://github.com/H-EmbodVis/SimWAM/blob/68b426c162827cb7701396895dbb3572d29f3420/README.md",
+        "https://github.com/H-EmbodVis/SimWAM/blob/68b426c162827cb7701396895dbb3572d29f3420/src/simwam/models/wan22/simwam.py"
+      ],
+      "scope_note": "The pinned source exposes the action attention mask and the README's action-only inference description; it does not establish causal benefit from video supervision, reproduce reported scores, or provide an interactive simulator interface."
+    },
+    {
       "claim_id": "CLAIM-19-01",
       "basis": "official_asset",
       "maturity": ["O"],
