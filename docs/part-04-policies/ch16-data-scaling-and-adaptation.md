@@ -267,6 +267,45 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 4. **适配选择**：分别为“新夹爪”“新相机”“新语言域”选择 action head、LoRA 或部分解冻，并说明证据。
 5. **自动驾驶迁移**：把方向盘角、曲率和轨迹三种日志映射到统一合同，列出不可逆信息。
 
+## 自检要点
+
+跨本体训练必须先解决记录身份与动作语义，再研究 mixture 和迁移。Shape、字段名或文件格式相同都不能替代 adapter 的可逆性与版本绑定。
+
+<details>
+<summary>SELF-CHECK-16-01：单位改变必须更新 fingerprint</summary>
+
+`arm_b` 原来用厘米，scale-to-meter 为0.01；改成毫米后应为0.001。同一个 raw `2.0` 会从0.02 m变成0.002 m，语义已变化十倍。旧 fingerprint 却声称记录仍按厘米 adapter 生成，继续算误差会得到数值正常但身份虚假的结果，且无法判断应重解码还是数据被污染。正确做法是生成新 adapter fingerprint/schema revision，迁移或重新导出有来源记录；不能根据数值范围猜单位。当前 fixture 正是用 stale fingerprint 拒绝阻断这种静默错配。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-16-02：等数据集与温度权重</summary>
+
+等数据集权重忽略 episode 数量，三者均为 `1/3`，再在各数据集内部采 episode。温度方案可预注册 `w_i∝n_i^α`；取 `α=0.5`（等价于 size temperature T=2）时，`sqrt(100):sqrt(1000):sqrt(10000)=10:31.62:100`，归一化约为 `0.0706,0.2233,0.7061`。作对照，α=1 的按规模权重约为 `0.0090,0.0901,0.9009`，α=0 回到等数据集。还应报告有效步/任务权重和重复率；episode 数不同不等于质量或多样性不同。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-16-03：三个本体的迁移矩阵</summary>
+
+对 A/B/C，最小表包含单独训练 `A→A,B→B,C→C`；两两 mixture `AB→A/B, AC→A/C, BC→B/C`；全量 `ABC→A/B/C`；leave-one-out `AB→C, AC→B, BC→A`。LOO 行还必须拆成 zero-shot 与固定少量目标数据的 few-shot adapter，不能混称泛化。每格冻结总 update/样本或另报 compute-matched 与 data-added 两套协议，使用相同目标 test、seed、成功/安全区间和成本，并含 full mixture without embodiment tag 负对照。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-16-04：适配权限的选择</summary>
+
+新夹爪但相机/任务相近时先用新 schema adapter/action head，证据是共享表征 probe 正常、旧动作头语义不兼容；新相机带来明显视觉统计/视角偏移时优先部分解冻视觉顶部层（或先做输入 adapter），用冻结主干失败且视觉适配改善 shift split 支持；新语言域、视觉与动作不变时可先在语言相关线性层用 LoRA，以 paraphrase/新术语 held-out 任务验证。三者只是起始假设：都应与更小/更大权限消融、遗忘、资源和闭环结果比较，失败时升级而非把方法名当证据。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-16-05：驾驶日志到统一轨迹合同</summary>
+
+可统一为 ego frame、固定未来时间戳的 `(x,y,yaw,v)` 轨迹及可选 `(curvature,acceleration)`，并保存车辆参数和原始字段。方向盘角先经符号、零偏、转向比/非线性得到前轮角，再在低侧偏 bicycle 假设下用 `κ=tan(δ)/L`；曲率配合速度和初态积分成轨迹；已有轨迹则重采样到共同时间网格。转换不可逆：方向盘力矩、间隙/顺从、轮胎侧偏、低层 controller 和执行延迟会丢失；曲率不能在未知车型/滑移下唯一恢复方向盘角；轨迹也不能唯一恢复产生它的控制、路面扰动或驾驶意图。故需保存 raw log 与有损标记，无法校准的车队使用专用 head。
+
+</details>
+
 ## 延伸阅读
 
 - Open X-Embodiment Collaboration, [论文](https://arxiv.org/abs/2310.08864)与[官方仓库快照 `9eeb68b`](https://github.com/google-deepmind/open_x_embodiment/tree/9eeb68b989efbcf474e8fb9019e01d02b962a604)，`[P/O,R1]`；
@@ -295,6 +334,6 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`；
+- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载真实数据、训练 adapter/VLA、运行仿真或 GPU；
 - 下一步：在可用 GPU/真实数据时执行迁移矩阵；当前证据保持 S 档 reviewed。
