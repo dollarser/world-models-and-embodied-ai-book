@@ -19,14 +19,75 @@ class TargetParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
         self.targets: list[str] = []
+        self.html_languages: list[str] = []
+        self.viewport_count = 0
+        self.main_count = 0
+        self.h1_count = 0
+        self.ids: set[str] = set()
+        self.skip_targets: list[str] = []
+        self.images_without_alt = 0
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        element_id = attributes.get("id")
+        if element_id:
+            self.ids.add(element_id)
+        if tag == "html" and attributes.get("lang"):
+            self.html_languages.append(attributes["lang"])
+        if tag == "meta" and attributes.get("name") == "viewport":
+            content = attributes.get("content", "")
+            if "width=device-width" in content:
+                self.viewport_count += 1
+        if tag == "main":
+            self.main_count += 1
+        if tag == "h1":
+            self.h1_count += 1
+        if tag == "a" and "md-skip" in attributes.get("class", "").split():
+            href = attributes.get("href")
+            if href:
+                self.skip_targets.append(href)
+        if tag == "img" and not attributes.get("alt"):
+            self.images_without_alt += 1
+
         relevant = {"a": "href", "img": "src", "link": "href", "script": "src"}.get(tag)
         if relevant is None:
             return
         for name, value in attrs:
             if name == relevant and value:
                 self.targets.append(value)
+
+
+def check_page_semantics(
+    source: Path,
+    text: str,
+    *,
+    require_skip_link: bool = True,
+) -> list[str]:
+    """Check reader-facing language, landmarks, skip navigation and image alternatives."""
+
+    parser = TargetParser()
+    parser.feed(text)
+    label = source.as_posix()
+    errors: list[str] = []
+    if parser.html_languages != ["zh"]:
+        errors.append(f"generated page must declare exactly one zh language: {label}")
+    if parser.viewport_count != 1:
+        errors.append(f"generated page must have one device-width viewport: {label}")
+    if parser.main_count != 1:
+        errors.append(f"generated page must have exactly one main landmark: {label}")
+    if parser.h1_count != 1:
+        errors.append(f"generated page must have exactly one H1: {label}")
+    if require_skip_link and len(parser.skip_targets) != 1:
+        errors.append(f"generated content page must have exactly one skip link: {label}")
+    elif parser.skip_targets:
+        skip = urlsplit(parser.skip_targets[0])
+        if not skip.fragment or unquote(skip.fragment) not in parser.ids:
+            errors.append(f"generated skip link has no local target: {label} -> {parser.skip_targets[0]}")
+    if parser.images_without_alt:
+        errors.append(
+            f"generated page has {parser.images_without_alt} image(s) without non-empty alt text: {label}"
+        )
+    return errors
 
 
 def local_target(source: Path, raw_target: str) -> Path | None:
@@ -96,8 +157,16 @@ def main() -> int:
 
     checked_targets = 0
     for source in html_pages:
+        source_text = source.read_text(encoding="utf-8")
+        errors.extend(
+            check_page_semantics(
+                source.relative_to(ROOT),
+                source_text,
+                require_skip_link=source.name != "404.html",
+            )
+        )
         parser = TargetParser()
-        parser.feed(source.read_text(encoding="utf-8"))
+        parser.feed(source_text)
         for raw_target in parser.targets:
             target = local_target(source, raw_target)
             if target is None:
@@ -123,7 +192,7 @@ def main() -> int:
         f"site checks passed: {len(html_pages)} HTML page(s), "
         f"22 compiled chapter(s), {accessible_mermaid} accessible Mermaid diagram(s), "
         f"{compiled_self_checks} foldable exercise self-check(s), "
-        f"{checked_targets} internal target(s)"
+        f"{checked_targets} internal target(s), semantic accessibility contract"
     )
     return 0
 

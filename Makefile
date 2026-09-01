@@ -43,6 +43,7 @@ docs-preview: docs-build
 	python3 scripts/serve_book.py
 
 docs-preview-check: docs-build
+	python3 -m unittest tests.test_check_site
 	python3 scripts/check_site.py
 	python3 scripts/serve_book.py --check
 

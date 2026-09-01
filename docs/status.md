@@ -10,7 +10,7 @@
 | 全书终审：第1、5、7、22章 | `reviewed` | 四章内容、代码、一致性和教学审查通过；29 个单元测试；记录见 `reviews/final-book-review.md` | GPU、大数据、真实仿真与硬件限制保持未验证 |
 | 快速演进来源审查 | `reviewed` | 第9–12、15、18–21章一手来源复核；第12章按 ICCV/AAAI/ICLR 2025 一手会议资料区分 current estimation、future forecasting、action-conditioned world model 与 4D generation；支持正式 `fact` 的 8 个 GitHub 官方仓库锁定完整 commit，并由门禁拒绝浮动源码锚点 | 其他扩展案例链接尚未全部归档；供应商能力和目标环境均未独立验证 |
 | 快速演进研究雷达 | `reviewed` | 12 张一手来源活页卡按问题、章节、source revision、资产开放度、复现状态、资源路径、范围边界和复核触发器登记；V-JEPA 2.1、Cosmos 3、POBAX 与 A2World 仓库已锁不可变 commit；新增XEWorld受控跨本体反例、Riemann-1.0统一WAM监测项与A2World双用途开源接口审计 | 当前只完成论文/官方资产审计和无下载预检；模型、权重、数据、GPU、仿真与真实系统均未运行，扩展仓库仍按需逐批锁定 |
-| 编辑结构与图表无障碍审查 | `reviewed` | 22 章单一 H1、标题不越级；23 张 Mermaid 图加入 `accTitle/accDescr` 并在编译产物保留；未发现 100 字以上整段跨章重复 | 深浅色、窄屏、缩放、键盘与屏幕阅读器仍需人工巡检 |
+| 编辑结构与图表无障碍审查 | `reviewed` | 29个编译页面均自动验证中文语言、device-width viewport、唯一main/H1和图片alt；28个正文页面验证有效skip link，短404页明确豁免；22章标题不越级；23张Mermaid图保留`accTitle/accDescr` | 浏览器控制接口当前不可用；深浅色、窄屏、缩放、键盘焦点顺序与屏幕阅读器朗读仍需人工巡检，不由DOM门禁替代 |
 | 术语与章节接口审查 | `reviewed` | 15 个读者关键缩写/指标同时进入作者基线与读者术语表；6 章合并标题拆为独立教学/接口区段；22 章结构契约自动检查 | 自动覆盖只保证关键项存在，不能替代逐段术语语义、译名偏好和跨学科读者测试 |
 | 贯穿案例与概念递进审查 | `reviewed` | 杯子操作与施工改道两个固定任务串联22章；对 observation/state/action/prediction/horizon/success/uncertainty 给出逐层证据升级表，并提供无3D经验与自动驾驶阅读路径 | 贯穿任务是教学索引，不是共享数据集或端到端实验；仍需真实读者测试跳转密度与理解负担 |
 | 练习与自学出口审查 | `reviewed` | 22 章 116 道练习均有折叠式同编号自检要点；manifest 登记全章覆盖，门禁拒绝缺失、重复、跨章、顺序错位、未闭合和过短答案 | 自检是最低合格要点，不是开放题唯一答案或真实实验替代品；仍需真实读者测试难度与歧义 |

@@ -14,7 +14,7 @@
 | `make check-strict` | Docker | JSON Schema、manifest、实验卡/benchmark card 条件与跨资产规则 | `BLOCK` |
 | `make check` | 宿主 + Docker | 依次执行 local 与 strict | `BLOCK` |
 | `make docs-build` | Docker | MkDocs 严格构建、导航、Markdown 扩展 | `BLOCK` |
-| `make docs-preview-check` | Docker + 宿主标准库 | 严格构建后检查 22 章产物、内部 href/src、Mermaid 无障碍元数据、已登记折叠式练习自检的 ID/顺序与容器保留，以及预览入口 | `BLOCK`，发布候选必跑 |
+| `make docs-preview-check` | Docker + 宿主标准库 | 严格构建后检查 22 章产物、内部 href/src、全站中文页面语言/device-width viewport/唯一main/H1/图片alt、除短404页外的正文skip-link目标、Mermaid 无障碍元数据、已登记折叠式练习自检的 ID/顺序与容器保留，以及预览入口 | `BLOCK`，发布候选必跑 |
 | `make chNN-smoke` | Docker/CPU | 章节最小数据流、指标与测试 | `BLOCK`，仅针对已实现章节 |
 | `make smoke-all` | Docker/CPU | 依次运行 22 章单元测试与固定 smoke | `BLOCK`，发布候选必跑 |
 
