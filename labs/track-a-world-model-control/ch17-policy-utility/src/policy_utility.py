@@ -48,6 +48,7 @@ ATTRIBUTION_FAULTS = (
     "state_decoder",
     "outcome_scorer",
 )
+DECISION_FAULTS = ("critical_shortcut", "unvisited_wait")
 
 
 def transition(state: State, action: str, learned: bool) -> tuple[State, float]:
@@ -82,6 +83,35 @@ def rollout(actions: tuple[str, ...], learned: bool) -> dict[str, object]:
     return {
         "return": round(total_return, 12),
         "final_position": state.position,
+        "terminal": state.terminal,
+        "executed_steps": len(executed_actions),
+    }
+
+
+def transition_with_fault(state: State, action: str, fault: str) -> tuple[State, float]:
+    """Inject one of two equally frequent transition faults at different queries."""
+    if fault not in DECISION_FAULTS:
+        raise ValueError("unknown decision-utility fault")
+    true_next = transition(state, action, learned=False)
+    if fault == "critical_shortcut" and state.position == 0 and action == "shortcut":
+        return State(GOAL_POSITION, "goal"), 1.0
+    if fault == "unvisited_wait" and state.position == 3 and action == "wait":
+        return State(GOAL_POSITION, "goal"), 1.0
+    return true_next
+
+
+def rollout_with_fault(actions: tuple[str, ...], fault: str) -> dict[str, object]:
+    state = State()
+    total_return = 0.0
+    executed_actions = []
+    for action in actions:
+        state, reward = transition_with_fault(state, action, fault)
+        total_return += reward
+        executed_actions.append(action)
+        if state.terminal != "running":
+            break
+    return {
+        "return": round(total_return, 12),
         "terminal": state.terminal,
         "executed_steps": len(executed_actions),
     }
@@ -218,6 +248,59 @@ def transition_agreement() -> dict[str, object]:
         "matching_count": matching,
         "accuracy": matching / len(cases),
         "mismatches": mismatches,
+    }
+
+
+def decision_fault_allocation_audit() -> dict[str, object]:
+    """Hold uniform transition accuracy fixed while moving the sole model error."""
+    cases = [
+        (State(position), action)
+        for position in range(GOAL_POSITION)
+        for action in ("advance", "wait")
+    ]
+    cases.append((State(), "shortcut"))
+    candidate_queries = []
+    for actions in POLICIES.values():
+        state = State()
+        for action in actions:
+            candidate_queries.append((state.position, action))
+            state, _ = transition(state, action, learned=False)
+            if state.terminal != "running":
+                break
+
+    true_returns = policy_returns(learned=False)
+    true_best = max(true_returns, key=true_returns.get)  # type: ignore[arg-type]
+    scenarios = {}
+    for fault in DECISION_FAULTS:
+        mismatches = [
+            {"position": state.position, "action": action}
+            for state, action in cases
+            if transition_with_fault(state, action, fault)
+            != transition(state, action, learned=False)
+        ]
+        model_returns = {
+            name: float(rollout_with_fault(actions, fault)["return"])
+            for name, actions in POLICIES.items()
+        }
+        selected = max(model_returns, key=model_returns.get)  # type: ignore[arg-type]
+        mismatch_query = (mismatches[0]["position"], mismatches[0]["action"])
+        scenarios[fault] = {
+            "uniform_transition_accuracy": (len(cases) - len(mismatches)) / len(cases),
+            "mismatches": mismatches,
+            "candidate_panel_visit_count": candidate_queries.count(mismatch_query),
+            "model_returns": model_returns,
+            "selected_policy": selected,
+            "selected_policy_true_terminal": rollout(POLICIES[selected], learned=False)["terminal"],
+            "model_exploitation_regret": round(true_returns[true_best] - true_returns[selected], 12),
+        }
+    return {
+        "case_count": len(cases),
+        "scenarios": scenarios,
+        "equal_uniform_accuracy": (
+            scenarios["critical_shortcut"]["uniform_transition_accuracy"]
+            == scenarios["unvisited_wait"]["uniform_transition_accuracy"]
+        ),
+        "scope": "two single-fault authored models on one fixed candidate-policy panel",
     }
 
 
@@ -407,4 +490,5 @@ def evaluate() -> dict[str, object]:
         "transition_agreement": agreement,
         "component_attribution_audit": component_attribution_audit(),
         "prospective_policy_ranking_audit": prospective_policy_ranking_audit(),
+        "decision_fault_allocation_audit": decision_fault_allocation_audit(),
     }

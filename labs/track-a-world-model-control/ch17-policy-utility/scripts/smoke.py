@@ -47,6 +47,13 @@ def main() -> int:
         raise AssertionError("the disjoint prospective policy must expose the ranking failure")
     if prospective["prospective_model_exploitation_regret"] != 1.85:
         raise AssertionError("the prospective policy failure must preserve the fixed true regret")
+    allocation = metrics["decision_fault_allocation_audit"]
+    if not allocation["equal_uniform_accuracy"]:
+        raise AssertionError("both single-fault models must preserve the same uniform accuracy")
+    if allocation["scenarios"]["critical_shortcut"]["model_exploitation_regret"] != 1.85:
+        raise AssertionError("the candidate-reachable fault must preserve exploitation regret")
+    if allocation["scenarios"]["unvisited_wait"]["model_exploitation_regret"] != 0.0:
+        raise AssertionError("the unvisited fault must preserve the true policy choice")
 
     report = {
         "experiment_id": "EXP-17-01",

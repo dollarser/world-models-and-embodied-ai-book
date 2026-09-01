@@ -86,6 +86,7 @@
 - [第17章双用途世界模型审查](ch17-dual-use-world-model-review-2026-09-02.md)
 - [第17章代理评测组件归因审查](ch17-component-attribution-review-2026-09-02.md)
 - [第17章 prospective policy ranking 审查](ch17-prospective-policy-ranking-review-2026-09-02.md)
+- [第17章等准确率错误位置审查](ch17-equal-accuracy-error-location-review-2026-09-02.md)
 - [第18章联合支持审查](ch18-joint-support-review-2026-09-01.md)
 - [第18章 dynamic rejection 分布审查](ch18-dynamic-rejection-distribution-review-2026-09-02.md)
 - [第18章 WAM 实现快照审查](ch18-wam-implementation-snapshot-review-2026-09-02.md)

@@ -3,6 +3,31 @@
   "gpu_verified": false,
   "metrics": {
     "component_attribution_audit": {"equivalent_end_to_end_scores": true, "observationally_equivalent_failure_group": ["transition_model", "state_decoder", "outcome_scorer"], "phantom_shortcut_localization_traces": {"outcome_scorer": {"commanded_actions": ["shortcut"], "decoded_terminal": "collision", "grounded_actions": ["shortcut"], "predicted_terminal": "collision", "proxy_score": 1.0}, "state_decoder": {"commanded_actions": ["shortcut"], "decoded_terminal": "goal", "grounded_actions": ["shortcut"], "predicted_terminal": "collision", "proxy_score": 1.0}, "transition_model": {"commanded_actions": ["shortcut"], "decoded_terminal": "goal", "grounded_actions": ["shortcut"], "predicted_terminal": "goal", "proxy_score": 1.0}}, "scenario_count": 5, "scenarios": {"action_grounding": {"model_exploitation_regret": 1.05, "proxy_scores": {"idle": -0.2, "phantom_shortcut": -1.0, "safe_route": -1.0}, "selected_policy": "idle", "selected_policy_true_terminal": "running", "spearman_rank_correlation": 0.0}, "oracle": {"model_exploitation_regret": 0.0, "proxy_scores": {"idle": -0.2, "phantom_shortcut": -1.0, "safe_route": 0.85}, "selected_policy": "safe_route", "selected_policy_true_terminal": "goal", "spearman_rank_correlation": 1.0}, "outcome_scorer": {"model_exploitation_regret": 1.85, "proxy_scores": {"idle": -0.2, "phantom_shortcut": 1.0, "safe_route": 0.85}, "selected_policy": "phantom_shortcut", "selected_policy_true_terminal": "collision", "spearman_rank_correlation": -0.5}, "state_decoder": {"model_exploitation_regret": 1.85, "proxy_scores": {"idle": -0.2, "phantom_shortcut": 1.0, "safe_route": 0.85}, "selected_policy": "phantom_shortcut", "selected_policy_true_terminal": "collision", "spearman_rank_correlation": -0.5}, "transition_model": {"model_exploitation_regret": 1.85, "proxy_scores": {"idle": -0.2, "phantom_shortcut": 1.0, "safe_route": 0.85}, "selected_policy": "phantom_shortcut", "selected_policy_true_terminal": "collision", "spearman_rank_correlation": -0.5}}, "scope": "single-fault deterministic component ledger; intermediate traces localize faults but do not estimate field rates"},
+    "decision_fault_allocation_audit": {
+      "case_count": 9,
+      "equal_uniform_accuracy": true,
+      "scenarios": {
+        "critical_shortcut": {
+          "candidate_panel_visit_count": 1,
+          "mismatches": [{"action": "shortcut", "position": 0}],
+          "model_exploitation_regret": 1.85,
+          "model_returns": {"idle": -0.2, "phantom_shortcut": 1.0, "safe_route": 0.85},
+          "selected_policy": "phantom_shortcut",
+          "selected_policy_true_terminal": "collision",
+          "uniform_transition_accuracy": 0.8888888888888888
+        },
+        "unvisited_wait": {
+          "candidate_panel_visit_count": 0,
+          "mismatches": [{"action": "wait", "position": 3}],
+          "model_exploitation_regret": 0.0,
+          "model_returns": {"idle": -0.2, "phantom_shortcut": -1.0, "safe_route": 0.85},
+          "selected_policy": "safe_route",
+          "selected_policy_true_terminal": "goal",
+          "uniform_transition_accuracy": 0.8888888888888888
+        }
+      },
+      "scope": "two single-fault authored models on one fixed candidate-policy panel"
+    },
     "learned_model_returns": {
       "idle": -0.2,
       "phantom_shortcut": 1.0,

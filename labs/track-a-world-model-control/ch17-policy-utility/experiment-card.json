@@ -3,7 +3,7 @@
   "id": "EXP-17-01",
   "chapter": 17,
   "status": "smoke",
-  "claim_ids": ["CLAIM-17-02", "CLAIM-17-03", "CLAIM-17-07", "CLAIM-17-08", "CLAIM-17-10", "CLAIM-17-11"],
+  "claim_ids": ["CLAIM-17-02", "CLAIM-17-03", "CLAIM-17-07", "CLAIM-17-08", "CLAIM-17-10", "CLAIM-17-11", "CLAIM-17-12"],
   "claim_scope": [
     "high average transition agreement can coexist with a decision-critical model error",
     "a planner can exploit one optimistic model error and reverse the true policy ranking",
@@ -11,16 +11,17 @@
     "an explicit observed-support gate rejects the unsupported shortcut in this fixture and changes the selected policy",
     "the same gate accepts the erroneous shortcut and preserves exploitation regret when that state-action is authored as covered",
     "distinct transition, state-decoder, and outcome-scorer faults can be observationally equivalent at the final proxy-score interface",
-    "perfect retrospective ranking on a frozen two-policy panel does not guarantee ranking of a disjoint policy introduced after calibration"
+    "perfect retrospective ranking on a frozen two-policy panel does not guarantee ranking of a disjoint policy introduced after calibration",
+    "two models with the same uniform transition accuracy can have different policy-selection regret when their sole error occurs at a candidate-reachable versus currently unvisited query"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library corridor transition, policy-ranking, prospective policy split, support-gate, and four-component attribution fixture"
+    "config": "standard-library v6 corridor transition, equal-accuracy fault allocation, policy-ranking, prospective split, support-gate, and four-component attribution fixture"
   },
   "data": {
     "name": "procedural safe-route and phantom-shortcut transitions",
-    "version": "v5",
+    "version": "v6",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -55,7 +56,10 @@
     {"name": "retrospective_calibration_spearman", "value": 1.0, "unit": "correlation", "split": "two-calibration-policies"},
     {"name": "retrospective_calibration_maximum_return_gap", "value": 0.0, "unit": "return", "split": "two-calibration-policies"},
     {"name": "prospective_spearman_after_held_out_policy", "value": -0.5, "unit": "correlation", "split": "two-calibration-plus-one-held-out-policy"},
-    {"name": "prospective_held_out_policy_exploitation_regret", "value": 1.85, "unit": "return", "split": "two-calibration-plus-one-held-out-policy"}
+    {"name": "prospective_held_out_policy_exploitation_regret", "value": 1.85, "unit": "return", "split": "two-calibration-plus-one-held-out-policy"},
+    {"name": "equal_accuracy_fault_model_count", "value": 2, "unit": "count", "split": "nine-transition-authored-panel"},
+    {"name": "candidate_reachable_fault_exploitation_regret", "value": 1.85, "unit": "return", "split": "critical-shortcut-fault"},
+    {"name": "current_panel_unvisited_fault_exploitation_regret", "value": 0.0, "unit": "return", "split": "position-three-wait-fault"}
   ],
   "artifacts": ["results/ch17/EXP-17-01-smoke.json"],
   "limitations": [
@@ -68,6 +72,7 @@
     "component scenarios inject one deterministic fault at a time and do not estimate prevalence, interactions, independence, or an additive error budget",
     "the state decoder is represented by a terminal-label interface rather than learned pose, depth, or event extraction",
     "the prospective panel contains only one authored held-out policy and does not estimate generalization across learned policy families, checkpoints, tasks, or initial-state shifts",
-    "a two-policy Spearman value is a fragile ordering check rather than a calibrated correlation estimate"
+    "a two-policy Spearman value is a fragile ordering check rather than a calibrated correlation estimate",
+    "the unvisited wait fault is unvisited only by this fixed candidate panel and can become decision-critical under another policy, initial state, or planner"
   ]
 }

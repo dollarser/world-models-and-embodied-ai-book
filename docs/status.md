@@ -2,7 +2,7 @@
 
 | 资产 | 状态 | 已验证 | 待验证 |
 | --- | --- | --- | --- |
-| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、68 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；211 条声明及全部 `FIG/TAB` 双向登记，29 条 `fact` 与 8 条 `inference` 均有证据合同，119 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项；全部 Markdown 审查记录必须可从审查索引发现 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
+| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、68 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；212 条声明及全部 `FIG/TAB` 双向登记，29 条 `fact` 与 8 条 `inference` 均有证据合同，120 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项；全部 Markdown 审查记录必须可从审查索引发现 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
 | 批次 B：第13、14、15、20章 | `reviewed` | 第13–15章在批次 B 通过；第20章由批次 D 关闭第17/19章一致性门 | 上游策略、仿真、真实数据和 GPU 未运行 |
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
@@ -13,9 +13,9 @@
 | 编辑结构与图表无障碍审查 | `reviewed` | 29个编译页面均自动验证中文语言、device-width viewport、唯一main/H1和图片alt；28个正文页面验证有效skip link，短404页明确豁免；22章标题不越级；23张Mermaid图保留`accTitle/accDescr` | 浏览器控制接口当前不可用；深浅色、窄屏、缩放、键盘焦点顺序与屏幕阅读器朗读仍需人工巡检，不由DOM门禁替代 |
 | 术语与章节接口审查 | `reviewed` | 15 个读者关键缩写/指标同时进入作者基线与读者术语表；6 章合并标题拆为独立教学/接口区段；22 章结构契约自动检查 | 自动覆盖只保证关键项存在，不能替代逐段术语语义、译名偏好和跨学科读者测试 |
 | 贯穿案例与概念递进审查 | `reviewed` | 杯子操作与施工改道两个固定任务串联22章；对 observation/state/action/prediction/horizon/success/uncertainty 给出逐层证据升级表，并提供无3D经验与自动驾驶阅读路径 | 贯穿任务是教学索引，不是共享数据集或端到端实验；仍需真实读者测试跳转密度与理解负担 |
-| 练习与自学出口审查 | `reviewed` | 22 章 141 道练习均有折叠式同编号自检要点；全部容器启用 Markdown-in-HTML，编译门禁拒绝原始反引号残留；manifest 登记全章覆盖，源码门禁拒绝缺失、重复、跨章、顺序错位、未闭合和过短答案 | 自检是最低合格要点，不是开放题唯一答案或真实实验替代品；仍需真实读者测试难度、歧义与真实屏幕阅读器体验 |
+| 练习与自学出口审查 | `reviewed` | 22 章 142 道练习均有折叠式同编号自检要点；全部容器启用 Markdown-in-HTML，编译门禁拒绝原始反引号残留；manifest 登记全章覆盖，源码门禁拒绝缺失、重复、跨章、顺序错位、未闭合和过短答案 | 自检是最低合格要点，不是开放题唯一答案或真实实验替代品；仍需真实读者测试难度、歧义与真实屏幕阅读器体验 |
 | 事实声明来源审查 | `reviewed` | 29 条 `fact` 与机器证据登记双向相等；GitHub `official_asset` 全部使用 40 位 commit URL；区分论文、官方资产、供应商声明、本书定义、仓库合同和数学恒等式 | 不可变 URL 只固定被审查内容，不证明来源蕴含、独立复现或当前上游默认行为；仍需周期性人工复核 |
-| 推断链与结果解释审查 | `reviewed` | 8 条 `inference` 登记双前提、锚点、反例和范围；GitHub 实现前提必须锁完整 commit；1 条采样偏好改为 `recommendation`；119 条 `result` 定义句均有不可外推边界 | 结构化前提不能自动证明推理有效；机制解释与外部效度仍需领域审稿和更强实验 |
+| 推断链与结果解释审查 | `reviewed` | 8 条 `inference` 登记双前提、锚点、反例和范围；GitHub 实现前提必须锁完整 commit；1 条采样偏好改为 `recommendation`；120 条 `result` 定义句均有不可外推边界 | 结构化前提不能自动证明推理有效；机制解释与外部效度仍需领域审稿和更强实验 |
 | 关键建议适用性审查 | `reviewed` | 24 条资源升级、数据纳入、评测发布、运行激活或安全执行建议登记 trigger、动作、fallback/stop 与未授权事项；8 条正文补齐失败路径 | 自动规则不能保证高后果建议选择已穷尽，也不构成硬件、数据、机器人或车辆授权 |
 | PRD 实验档位一致性审查 | `reviewed` | 22 章逐一绑定当前 S 档 `EXP-NN-01`，并把训练、真实数据、checkpoint 与仿真拆为可选待验证 M/L 路径；当前仓库树与脚本名已同步 | 只证明设计—交付映射正确，不表示任何 M/L 路径已经运行或资源可复现 |
 | 实验资产最小合同审查 | `reviewed` | 22 个 manifest 实验与实验卡双向一致，并具有 README、可测试 `src`、smoke、测试和存在的结果 artifact；解析 fixture 不再被要求伪造训练/config 步骤 | 资产完整和 S 档通过不证明训练、外部数据、仿真或目标硬件可复现 |
@@ -51,8 +51,8 @@
 | EXP-15-01 | `smoke` | 23 个单元测试；三类动作头统一 schema，14/14 错误包被拒绝；合法 `(42,43,44)` 与首槽正确但重复/跳步 timetable 分离，另覆盖 horizon 越权、墙钟新鲜但 step 错位、replay、乱序、clock 与字段顺序；第15/21章共同导入唯一 `mobile-base-v1` 定义 | 手工单会话移动底盘 packet、教学逐字段变化限值和整数调度槽，不是 VLA、真实队列/底盘参数、时钟同步、网络安全或功能安全性能 |
 | 第16章 数据规模化与跨本体适配 | `reviewed` | mixture 的目标权重—采样单位—raw transition—有效 action window 暴露、四类动作统一路线、版本化 adapter/统计量、seen/few-shot/zero-shot 迁移矩阵，以及 XEWorld 的本体留出、四轴归因与适配遗忘案例；OFT/LoRA/蒸馏、跨车队正文与四类审查 | XEWorld 只审计论文协议；真实数据、padding/mask、过滤后 token、模型、learned adapter、迁移实验与 GPU 均未运行 |
 | EXP-16-01 | `smoke` | 19 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0，3/3 合同错误拒绝；dataset/episode/transition-uniform 的 long 来源暴露为50%/75%/85.7143%；三步 drop-tail 后6/6合格窗口均来自 long | 两维手工动作与解析来源/窗口计数；stride-one/drop-tail 不是实际 loader、gradient exposure、learned transfer 或数据质量证据 |
-| 第17章 世界模型帮助策略的五种方式 | `reviewed` | 五类非互斥用途、代理评测四段归因账、prospective policy split、model exploitation、coverage 外拒绝与 coverage 内错误负对照；A2World 案例要求共享先验的 simulator/policy 分支独立验收 | learned world model、真实新策略、A2World-policy、真实仿真器、上游 checkpoint 与 GPU 均未运行；上游全量微调示例超出默认资源档位 |
-| EXP-17-01 | `smoke` | 19 个单元测试；两策略 calibration 的 `ρ=1/gap=0` 在加入 held-out shortcut 后变为 `ρ=-0.5/regret=1.85`；另覆盖 support gate 与四段归因不可辨识反例 | 三个手工策略、authored split/support 与单故障组件注入，不是 learned policy 泛化率、故障率、可加总误差预算或 simulator 性能 |
+| 第17章 世界模型帮助策略的五种方式 | `reviewed` | 五类非互斥用途、等准确率错误位置—候选访问—决策后果、代理评测四段归因账、prospective policy split、model exploitation、coverage 外拒绝与 coverage 内错误负对照；A2World 案例要求共享先验的 simulator/policy 分支独立验收 | learned world model、真实 occupancy/query 分布、真实新策略、A2World-policy、真实仿真器、上游 checkpoint 与 GPU 均未运行；上游全量微调示例超出默认资源档位 |
+| EXP-17-01 | `smoke` | 23 个单元测试；两个均为8/9正确的单故障模型因错误位于当前候选访问1/0次的 query 而产生1.85/0 regret；两策略 calibration 的 `ρ=1/gap=0` 在加入 held-out shortcut 后变为 `ρ=-0.5/regret=1.85`；另覆盖 support gate 与四段归因不可辨识反例 | 三个手工策略、固定初态、authored split/support/错误位置与单故障组件注入，不是 learned policy 泛化率、occupancy、故障率、可加总误差预算或 simulator 性能 |
 | 第18章 VLA 后训练与 WAM | `reviewed` | 五类后训练、RLOO 退化与 dynamic rejection 的 attempted/rejected/used 分母、联合轨迹支持、长时层级/记忆、WAM 四类接口；SimWAM attention/deployment 源码边界与 World-Gymnast/WMPO 资源预检已锁定，自动驾驶正文与四类审查通过 | VLA/RL/world model、LIBERO、仿真、GPU 和硬件未运行；World-Gymnast 默认四卡且含宿主缓存清理，WMPO 整包资产禁止默认下载 |
 | EXP-18-01 | `smoke` | 14 个单元测试；reward target/ESS/recovery；marginal gate 错收未见组合；全同 reward 零 LOO 信号；dynamic rejection 改变 used context 分布 | 四条标量轨迹和四个手工 context 组，不是 offline RL、learned support、真实采样率或 policy 改进 |
 | 第19章 物理仿真、Real2Sim 与 Sim2Real | `reviewed` | 仿真合同、gap 分解、结构/实用可辨识性、MuJoCo sysid、联合随机化边界、自动驾驶正文与四类审查 | MuJoCo/MetaDrive/CARLA/Isaac、真实系统、资产和 GPU 均未运行 |
@@ -63,6 +63,6 @@
 | EXP-21-01 | `smoke` | 36 个单元测试；mean 45 ms 掩盖尾部；同 miss rate 的 burst 长度 2/1；两个静态合法物理动作的线速度单步变化 0.2 通过/0.4 拒绝；schema/单位/频率/ack/session/boot 错配 fail closed；首次 command8 后完全重试返回缓存回执且记录仍为1，payload 冲突、倒序与 epoch 错配独立拒绝，显式新 epoch 才接受 command0；8 步 schedule 有 1 stale/1 underflow；相同失败计数下接受 authored weight 1/10；健康/授权/生命周期/receipt 负对照 | 手工 latency/packet/物理单位动作/epoch/回执/score/代理权重/chunk/状态与授权；内存 ledger 不是 durable transaction、崩溃恢复、并发原子性、可信 ack、物理 exactly-once、真实动力学、实时、OOD、MRM 完成、认证授权、完整性或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、三分区 × 四身份数据隔离、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、真实数据/媒体、仿真、GPU、机器人、车辆与部署均未运行；未发现未知近重复 |
 | EXP-22-01 | `smoke` | 23 个单元测试；完整包 12 个 split identity set/5 段 trace/5 个 artifact binding/2 个 failure injection/0 issue，无效包 23 个具名 issue，四类 train–eval 重叠、缺段、错误依赖、评测未冻结与缺失安全网关均被拒绝 | metadata 图检查，不读取媒体、发现未知近重复或验证 artifact 内容、科学正确性与安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、研究雷达、贯穿案例阅读地图、22 张实验卡、3 张 benchmark card、404 个章节单元测试、22 组结果精确比对、29 个 HTML/23 张可访问 Mermaid 图/141 个已渲染 Markdown 的折叠式练习自检/1161 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸、深浅色、键盘与屏幕阅读器巡检仍待人工确认，自动 DOM 检查不替代视觉与辅助技术验收 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、研究雷达、贯穿案例阅读地图、22 张实验卡、3 张 benchmark card、408 个章节单元测试、22 组结果精确比对、29 个 HTML/23 张可访问 Mermaid 图/142 个已渲染 Markdown 的折叠式练习自检/1161 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸、深浅色、键盘与屏幕阅读器巡检仍待人工确认，自动 DOM 检查不替代视觉与辅助技术验收 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

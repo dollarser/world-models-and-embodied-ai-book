@@ -11,6 +11,7 @@ from policy_utility import (  # noqa: E402
     POLICIES,
     State,
     component_attribution_audit,
+    decision_fault_allocation_audit,
     evaluate,
     policy_returns,
     prospective_policy_ranking_audit,
@@ -21,6 +22,7 @@ from policy_utility import (  # noqa: E402
     support_issues,
     transition,
     transition_agreement,
+    transition_with_fault,
     proxy_evaluation_scenario,
 )
 
@@ -186,6 +188,31 @@ class PolicyUtilityTests(unittest.TestCase):
         for calibration, held_out in invalid:
             with self.subTest(calibration=calibration, held_out=held_out), self.assertRaises(ValueError):
                 prospective_policy_ranking_audit(calibration, held_out)  # type: ignore[arg-type]
+
+    def test_equal_accuracy_faults_have_different_decision_consequences(self):
+        scenarios = decision_fault_allocation_audit()["scenarios"]
+        critical = scenarios["critical_shortcut"]
+        unvisited = scenarios["unvisited_wait"]
+        self.assertEqual(critical["uniform_transition_accuracy"], 8 / 9)
+        self.assertEqual(unvisited["uniform_transition_accuracy"], 8 / 9)
+        self.assertEqual(critical["model_exploitation_regret"], 1.85)
+        self.assertEqual(unvisited["model_exploitation_regret"], 0.0)
+
+    def test_fault_queries_have_different_candidate_panel_visitation(self):
+        scenarios = decision_fault_allocation_audit()["scenarios"]
+        self.assertEqual(scenarios["critical_shortcut"]["candidate_panel_visit_count"], 1)
+        self.assertEqual(scenarios["unvisited_wait"]["candidate_panel_visit_count"], 0)
+
+    def test_unvisited_fault_preserves_true_policy_selection(self):
+        scenario = decision_fault_allocation_audit()["scenarios"]["unvisited_wait"]
+        self.assertEqual(scenario["selected_policy"], "safe_route")
+        self.assertEqual(scenario["selected_policy_true_terminal"], "goal")
+
+    def test_unknown_decision_fault_is_rejected(self):
+        with self.assertRaises(ValueError):
+            transition_with_fault(State(), "wait", "unknown")
+        with self.assertRaises(ValueError):
+            transition_with_fault(State(3, "collision"), "wait", "unvisited_wait")
 
 
 if __name__ == "__main__":
