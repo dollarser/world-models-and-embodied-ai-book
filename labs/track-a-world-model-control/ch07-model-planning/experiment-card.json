@@ -3,11 +3,12 @@
   "id": "EXP-07-01",
   "chapter": 7,
   "status": "smoke",
-  "claim_ids": ["CLAIM-07-02", "CLAIM-07-03", "CLAIM-07-04"],
+  "claim_ids": ["CLAIM-07-02", "CLAIM-07-03", "CLAIM-07-04", "CLAIM-07-07"],
   "claim_scope": [
     "finite planning horizon can change the first action in a fixed delayed-reward MDP",
     "a terminal value can extend a one-step planner in the same fixture",
-    "replanning after an observed disturbance can outperform executing the stale suffix"
+    "replanning after an observed disturbance can outperform executing the stale suffix",
+    "expected return, empirical lower-tail return, and a fixed chance constraint can rank the same hand-authored actions differently"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -16,7 +17,7 @@
   },
   "data": {
     "name": "procedural delayed-reward MDP and observation labels",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -40,7 +41,10 @@
     {"name": "horizon_3_return", "value": 0.8, "unit": "return", "split": "nominal"},
     {"name": "open_loop_disturbed_return", "value": -0.2, "unit": "return", "split": "fixed-disturbance"},
     {"name": "receding_horizon_disturbed_return", "value": 0.7, "unit": "return", "split": "fixed-disturbance"},
-    {"name": "fixed_value_bellman_gap", "value": 0.0, "unit": "backup", "split": "label-surrogate"}
+    {"name": "fixed_value_bellman_gap", "value": 0.0, "unit": "backup", "split": "label-surrogate"},
+    {"name": "risky_mean_return", "value": 0.8, "unit": "return", "split": "five-scenario-risk"},
+    {"name": "risky_worst_20_percent_return", "value": -2.0, "unit": "return", "split": "five-scenario-risk"},
+    {"name": "risky_failure_probability", "value": 0.2, "unit": "ratio", "split": "five-scenario-risk"}
   ],
   "artifacts": ["results/ch07/EXP-07-01-smoke.json"],
   "limitations": [
@@ -48,6 +52,7 @@
     "exhaustive enumeration rather than CEM, MCTS, or continuous optimization",
     "hand-authored exact terminal values",
     "value-equivalence check covers one value function and does not establish universal equivalence",
+    "five equally weighted hand-authored outcomes do not estimate real tail probabilities or safety",
     "no simulator, neural network, policy learning, GPU, robot, or vehicle"
   ]
 }

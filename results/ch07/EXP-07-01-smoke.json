@@ -44,12 +44,35 @@
       "return": 0.7,
       "terminated": true
     },
+    "risk_objective_fixture": {
+      "actions": {
+        "risky": {
+          "failure_probability": 0.2,
+          "mean_return": 0.8,
+          "scenario_count": 5,
+          "worst_20_percent_return": -2.0
+        },
+        "steady": {
+          "failure_probability": 0.0,
+          "mean_return": 0.6,
+          "scenario_count": 5,
+          "worst_20_percent_return": 0.6
+        }
+      },
+      "chance_constraint_max_failure_probability": 0.1,
+      "chance_feasible_actions": [
+        "steady"
+      ],
+      "mean_selected_action": "risky",
+      "scenario_semantics": "five equally weighted fixed return outcomes per action",
+      "worst_20_percent_selected_action": "steady"
+    },
     "value_equivalence_fixture": {
       "max_bellman_backup_gap": 0.0,
       "observation_match_rate": 0.0,
       "scope": "one fixed transition/reward model and one value function"
     }
   },
-  "scope": "enumerated delayed-reward planning fixture; not learned-model or CEM performance",
+  "scope": "enumerated delayed-reward and five-scenario risk fixtures; not learned-model, probability, safety, or CEM performance",
   "status": "smoke"
 }

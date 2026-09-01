@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from itertools import product
-from math import isfinite
+from math import ceil, isfinite
 
 
 ACTIONS = ("advance", "harvest")
 TRUE_OBSERVATIONS = {0: "red-start", 1: "blue-middle", 2: "gold-goal"}
 SURROGATE_OBSERVATIONS = {0: "latent-a", 1: "latent-b", 2: "latent-c"}
+RISK_SCENARIO_RETURNS = {
+    "steady": (0.6, 0.6, 0.6, 0.6, 0.6),
+    "risky": (1.5, 1.5, 1.5, 1.5, -2.0),
+}
 
 
 def transition(state: int, action: str) -> tuple[int, float, bool]:
@@ -92,6 +96,56 @@ def bellman_backup(state: int, values: dict[int, float]) -> float:
     return max(candidates)
 
 
+def empirical_lower_tail_mean(values: tuple[float, ...], tail_fraction: float) -> float:
+    """Average the lowest-return empirical tail; higher values are preferred."""
+
+    if not values or any(
+        isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value)
+        for value in values
+    ):
+        raise ValueError("values must be a non-empty tuple of finite numbers")
+    if (
+        isinstance(tail_fraction, bool)
+        or not isinstance(tail_fraction, (int, float))
+        or not isfinite(tail_fraction)
+        or not 0.0 < tail_fraction <= 1.0
+    ):
+        raise ValueError("tail_fraction must be finite and in (0, 1]")
+    tail_count = ceil(len(values) * tail_fraction)
+    return round(sum(sorted(values)[:tail_count]) / tail_count, 12)
+
+
+def evaluate_risk_objectives() -> dict[str, object]:
+    """Compare expected return, lower-tail return, and a fixed chance constraint."""
+
+    tail_fraction = 0.2
+    failure_threshold = 0.0
+    maximum_failure_probability = 0.1
+    summaries = {}
+    for action, outcomes in RISK_SCENARIO_RETURNS.items():
+        summaries[action] = {
+            "scenario_count": len(outcomes),
+            "mean_return": round(sum(outcomes) / len(outcomes), 12),
+            "worst_20_percent_return": empirical_lower_tail_mean(outcomes, tail_fraction),
+            "failure_probability": sum(value < failure_threshold for value in outcomes) / len(outcomes),
+        }
+    mean_selected = max(summaries, key=lambda action: summaries[action]["mean_return"])
+    tail_selected = max(summaries, key=lambda action: summaries[action]["worst_20_percent_return"])
+    chance_feasible = [
+        action
+        for action, summary in summaries.items()
+        if summary["failure_probability"] <= maximum_failure_probability
+    ]
+    return {
+        "actions": summaries,
+        "mean_selected_action": mean_selected,
+        "worst_20_percent_selected_action": tail_selected,
+        "chance_constraint_max_failure_probability": maximum_failure_probability,
+        "chance_feasible_actions": sorted(chance_feasible),
+        "scenario_semantics": "five equally weighted fixed return outcomes per action",
+    }
+
+
 def evaluate() -> dict[str, object]:
     short = plan(0, 1)
     long = plan(0, 3)
@@ -115,4 +169,5 @@ def evaluate() -> dict[str, object]:
             ),
             "scope": "one fixed transition/reward model and one value function",
         },
+        "risk_objective_fixture": evaluate_risk_objectives(),
     }

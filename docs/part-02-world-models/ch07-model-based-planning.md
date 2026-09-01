@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-08-31
 > 关联实验：`EXP-07-01`
-> 关联声明：`CLAIM-07-01`～`CLAIM-07-06`
-> 关联图表：`FIG-07-01` / `TAB-07-01` / `TAB-07-02`
+> 关联声明：`CLAIM-07-01`～`CLAIM-07-07`
+> 关联图表：`FIG-07-01` / `TAB-07-01` / `TAB-07-02` / `TAB-07-03`
 > 资源档位：S / M
 > GPU 状态：待验证
 
@@ -144,7 +144,34 @@ fixture 另给同一三个状态两套完全不同的观测标签，因此观测
 
 这不能证明 surrogate 对新 reward、风险函数、policy、state aliasing 或 OOD 动作等价。
 
-## 7.8 模型误差、不确定性与 policy exploitation
+## 7.8 随机 rollout：平均最优不等于尾部可接受
+
+随机模型不能只回答“一条预测轨迹是什么”，还要声明**对什么随机量采样、怎样跨时间保持样本身份、用什么风险函数聚合**。最常见的三类不确定来源是：当前 belief 的状态不确定性、环境本身的 aleatoric 随机性，以及模型/参数的 epistemic 不确定性。把三者混成一个未命名的 Gaussian 噪声，规划器便无法知道它是在处理可观测噪声、真实多未来，还是数据覆盖不足。
+
+[PETS](https://papers.nips.cc/paper_files/paper/2018/file/3de568f8597b94bda53149c7d7f5958c-Paper.pdf)用 probabilistic ensemble 与 trajectory sampling 展示了粒子化传播接口 `[P,R1]`：每个候选动作序列需要多个未来样本，不能先把下一状态压成均值再递推。实现时还要审查 ensemble 身份：若成员代表一套可能的固定动力学参数，通常应让同一粒子在整条轨迹中保持该假设；每步任意切换成员会构造现实中未必存在的混合动力学。若成员只是对每步 predictive mixture 的数值近似，则重采样可以有不同语义。两种做法没有脱离建模假设的通用胜者，实验卡必须写清。
+
+期望回报只关心平均数：
+
+\[
+J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
+\]
+
+安全或高代价任务还可能关心失败概率、最坏场景、return 的经验下尾均值，或 cost 的 CVaR。下尾比例为 `α` 时，可把等权样本从低到高排序后，对最差 `ceil(αN)` 个 return 求平均；数值越高越好。文献也直接把 CVaR 优化用于随机动力系统与机器人 MPC，例如 Wang et al. 的[风险敏感随机搜索 MPC](https://proceedings.mlr.press/v144/wang21b.html) `[P,R1]`。但风险度量不是安全证明：有限粒子会漏掉稀有事件，模型共同偏差会让所有粒子一起乐观，事后挑 `α` 或阈值还会产生评测泄漏。
+
+`EXP-07-01` 增加两个固定动作、每个五个等权 return 的解析反例：
+
+| 动作 | 五场景 return | 均值 | 最差 20% 均值 | `P(return < 0)` | 在 `P(failure)≤0.1` 下 |
+| --- | --- | ---: | ---: | ---: | --- |
+| steady | 0.6, 0.6, 0.6, 0.6, 0.6 | 0.6 | 0.6 | 0.0 | 可行 |
+| risky | 1.5, 1.5, 1.5, 1.5, -2.0 | 0.8 | -2.0 | 0.2 | 不可行 |
+
+*TAB-07-03：固定五场景风险目标反例。来源：本书原创，MIT，2026-09-01。场景概率是手工设定，不代表真实机器人或驾驶事件频率。*
+
+`CLAIM-07-07`（result）：在五个等权手工场景中，期望回报选择 risky（0.8 > 0.6），经验最差 20% 均值和失败概率上限 0.1 都选择 steady；该固定排序反例只证明聚合目标会改变动作选择，不估计真实尾部概率、不证明 CVaR 校准或系统安全。
+
+这个表还揭示三个容易漏报的实验字段：场景/粒子如何生成，风险阈值在什么 split 上冻结，以及“没有采到失败”时分母是多少。驾驶中的碰撞、越界和不可恢复状态通常应作为独立约束或网关事件，不能只乘一个小权重后被路线进度抵消。
+
+## 7.9 模型误差、不确定性与 policy exploitation
 
 规划器主动选择模型最乐观的候选，因此平均 one-step error 很低仍可能错。最低检查包括候选分布上的 transition/reward/termination gap、model-vs-real return、策略排序、OOD、ensemble 分歧和安全事件漏检。
 
@@ -152,7 +179,7 @@ fixture 另给同一三个状态两套完全不同的观测标签，因此观测
 
 `CLAIM-07-05`（recommendation）：报告 learned-model planning 时必须把“优化器没找到好序列”“模型把坏序列评高”“value 错”“执行/状态估计错”分开，而不是统称规划失败。
 
-## 7.9 自动驾驶正文：候选轨迹不是控制授权
+## 7.10 自动驾驶正文：候选轨迹不是控制授权
 
 驾驶规划可在 vehicle/map frame 生成转向—加速度序列或轨迹，用模型预测 occupancy、碰撞、路线、舒适和规则代价。每条候选必须携带 horizon、步长、动作范围、模型版本和风险分解。
 
@@ -160,7 +187,7 @@ fixture 另给同一三个状态两套完全不同的观测标签，因此观测
 
 `CLAIM-07-06`（recommendation）：自动驾驶 learned planner 的候选轨迹必须再经车辆动力学、道路边界、occupancy、碰撞、控制限幅和最小风险层检查；模型预测的高 return 不能直接下发执行器。
 
-## 7.10 资源、许可与证据边界
+## 7.11 资源、许可与证据边界
 
 S 档 `EXP-07-01` 使用标准库、CPU、零下载。M 档可在第19章的 MuJoCo/MetaDrive 小任务上比较 random shooting、CEM 和无规划 policy，默认目标 24 GB 单卡以内；必须报告候选预算、规划墙钟、model/real return gap 和 seed。当前未运行，状态为 `pending`。
 
@@ -176,6 +203,7 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 2. 将穷举替换为固定 seed random shooting，画预算—最优值曲线。
 3. 注入 reward model 偏差，区分优化失败和模型失败。
 4. 为车辆急刹与绕行写一个含舒适/碰撞硬约束的候选表。
+5. 把 `TAB-07-03` 的 risky 失败值从 -2 改为不同数值，分别找出均值、最差 20% 均值和 chance constraint 改变选择的临界点；说明哪类改变属于偏好，哪类属于概率模型。
 
 ## 延伸阅读
 
@@ -183,6 +211,8 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 - [MuZero 官方介绍](https://deepmind.google/blog/muzero-mastering-go-chess-shogi-and-atari-without-rules/)；
 - [The Value Equivalence Principle](https://arxiv.org/abs/2011.03506)；
 - [TD-MPC2 官方仓库](https://github.com/nicklashansen/tdmpc2)。
+- Chua et al., [PETS：probabilistic ensemble 与 trajectory sampling](https://papers.nips.cc/paper_files/paper/2018/file/3de568f8597b94bda53149c7d7f5958c-Paper.pdf)；
+- Wang et al., [Adaptive Risk Sensitive Model Predictive Control with Stochastic Search](https://proceedings.mlr.press/v144/wang21b.html)。
 
 ## 下一章接口
 
@@ -195,4 +225,4 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 - 一致性审查：通过；
 - 教学审查：通过；
 - 审查记录路径：`reviews/final-book-review.md`；
-- 已知限制：穷举已知三状态规则，没有 learned model、CEM/MCTS、仿真、GPU 或真实闭环。
+- 已知限制：穷举已知三状态规则和五个手工风险场景，没有 learned model、CEM/MCTS、概率校准、仿真、GPU 或真实闭环。

@@ -22,10 +22,12 @@ def main() -> int:
         raise AssertionError("replanning must recover in the fixed disturbance fixture")
     if metrics["value_equivalence_fixture"]["max_bellman_backup_gap"] != 0.0:
         raise AssertionError("the surrogate labels must preserve the fixed Bellman backups")
+    if metrics["risk_objective_fixture"]["mean_selected_action"] == metrics["risk_objective_fixture"]["worst_20_percent_selected_action"]:
+        raise AssertionError("the fixture must expose mean-return and lower-tail ranking disagreement")
     report = {
         "experiment_id": "EXP-07-01",
         "status": "smoke",
-        "scope": "enumerated delayed-reward planning fixture; not learned-model or CEM performance",
+        "scope": "enumerated delayed-reward and five-scenario risk fixtures; not learned-model, probability, safety, or CEM performance",
         "metrics": metrics,
         "gpu_verified": False,
     }

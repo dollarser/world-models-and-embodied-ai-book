@@ -29,5 +29,6 @@
 - [全书事实声明来源追溯审查](fact-source-traceability-review-2026-09-01.md)
 - [全书推断链与结果解释审查](inference-result-explanation-review-2026-09-01.md)
 - [全书关键建议适用性审查](critical-recommendation-review-2026-09-01.md)
+- [第7章随机传播与风险目标审查](ch07-stochastic-risk-planning-review-2026-09-01.md)
 
 `reviewed` 只表示正文和当前可执行路径通过内容、代码、一致性与教学审查，不自动表示 GPU、大数据或上游完整复现已经完成。

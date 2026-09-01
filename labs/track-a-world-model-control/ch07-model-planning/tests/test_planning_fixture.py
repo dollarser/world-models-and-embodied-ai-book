@@ -8,7 +8,9 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from planning_fixture import (  # noqa: E402
     bellman_backup,
+    empirical_lower_tail_mean,
     evaluate,
+    evaluate_risk_objectives,
     execute_with_disturbance,
     plan,
     rollout,
@@ -58,6 +60,26 @@ class ModelPlanningTests(unittest.TestCase):
             plan(0, 0)
         with self.assertRaises(ValueError):
             bellman_backup(0, {0: 0.0})
+
+    def test_mean_return_and_lower_tail_select_different_actions(self):
+        result = evaluate_risk_objectives()
+        self.assertEqual(result["mean_selected_action"], "risky")
+        self.assertEqual(result["worst_20_percent_selected_action"], "steady")
+        self.assertEqual(result["actions"]["risky"]["mean_return"], 0.8)
+        self.assertEqual(result["actions"]["risky"]["worst_20_percent_return"], -2.0)
+
+    def test_chance_constraint_rejects_the_risky_action(self):
+        result = evaluate_risk_objectives()
+        self.assertEqual(result["chance_feasible_actions"], ["steady"])
+        self.assertEqual(result["actions"]["risky"]["failure_probability"], 0.2)
+
+    def test_tail_metric_rejects_invalid_inputs(self):
+        with self.assertRaises(ValueError):
+            empirical_lower_tail_mean((), 0.2)
+        with self.assertRaises(ValueError):
+            empirical_lower_tail_mean((1.0, float("nan")), 0.2)
+        with self.assertRaises(ValueError):
+            empirical_lower_tail_mean((1.0,), True)
 
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@
 
 ## 3. 代码审查
 
-终审当时四章共 29 个单元测试、全书 136 个。2026-09-01 后续增强分别为第20章增加 3 个统计边界测试、第5章增加 3 个生成分布诊断测试、第21章增加 2 个 uncertainty gate/risk–coverage 测试、第4章增加 8 个时序数据合同测试、第4/8/20章增加 11 个结束语义与分母测试、第22章增加 3 个跨章 trace 测试、第13章增加 6 个执行时域/时间集成测试、第6章增加 6 个 KL 路由/free-nats 诊断与输入合同测试、第9章增加 6 个 action sensitivity/长时缺失分母与输入合同测试、第2章增加 6 个三态能力蕴含与元数据合同测试、第10章增加 7 个 ID/shift probe、动作反事实与输入合同测试、第11章增加 6 个动作方向、轨迹分母与输入合同测试、第3章增加 4 个 optical/body 轴、z-depth/range 和输入合同测试、第12章增加 6 个动态证据、footprint、新鲜度与输入合同测试、第14章增加 7 个候选—batch 预算、安全筛选与输入合同测试、第15章增加 6 个执行时域、命令顺序、clock 与字段身份测试、第16章增加 3 个 adapter schema fingerprint、陈旧合同与输入类型测试、第17章增加 4 个平均秩 Spearman、support gate、状态与分数输入合同测试、第18章增加 4 个联合轨迹支持、RLOO 退化与输入阈值测试，第19章增加 2 个参数不可辨识、state anchor 与输入测量测试，第20章增加 2 个 factorial protocol interaction 测试，第21章增加 5 个 deadline burst、async schedule 与 fallback hysteresis 测试，第22章增加 8 个 artifact identity、selection split、评测冻结、安全门与资源档位测试，以及第3章再增加 2 个 proper rotation 与变换链组合测试；当前全书为 256 个，详见对应的日期审查记录。`check_results.py` 逐章执行 smoke，并与实验卡登记的 22 个结果 JSON 做结构和值精确比较；实验卡只声明解析/手工 fixture 的结果。
+终审当时四章共 29 个单元测试、全书 136 个。2026-09-01 后续增强分别为第20章增加 3 个统计边界测试、第5章增加 3 个生成分布诊断测试、第21章增加 2 个 uncertainty gate/risk–coverage 测试、第4章增加 8 个时序数据合同测试、第4/8/20章增加 11 个结束语义与分母测试、第22章增加 3 个跨章 trace 测试、第13章增加 6 个执行时域/时间集成测试、第6章增加 6 个 KL 路由/free-nats 诊断与输入合同测试、第9章增加 6 个 action sensitivity/长时缺失分母与输入合同测试、第2章增加 6 个三态能力蕴含与元数据合同测试、第10章增加 7 个 ID/shift probe、动作反事实与输入合同测试、第11章增加 6 个动作方向、轨迹分母与输入合同测试、第3章增加 4 个 optical/body 轴、z-depth/range 和输入合同测试、第12章增加 6 个动态证据、footprint、新鲜度与输入合同测试、第14章增加 7 个候选—batch 预算、安全筛选与输入合同测试、第15章增加 6 个执行时域、命令顺序、clock 与字段身份测试、第16章增加 3 个 adapter schema fingerprint、陈旧合同与输入类型测试、第17章增加 4 个平均秩 Spearman、support gate、状态与分数输入合同测试、第18章增加 4 个联合轨迹支持、RLOO 退化与输入阈值测试，第19章增加 2 个参数不可辨识、state anchor 与输入测量测试，第20章增加 2 个 factorial protocol interaction 测试，第21章增加 5 个 deadline burst、async schedule 与 fallback hysteresis 测试，第22章增加 8 个 artifact identity、selection split、评测冻结、安全门与资源档位测试，第3章再增加 2 个 proper rotation 与变换链组合测试，并为第7章增加 3 个均值/下尾/chance constraint 测试；当前全书为 259 个，详见对应的日期审查记录。`check_results.py` 逐章执行 smoke，并与实验卡登记的 22 个结果 JSON 做结构和值精确比较；实验卡只声明解析/手工 fixture 的结果。
 
 终审修复两类输入合同，但固定指标未改变：
 
@@ -55,4 +55,4 @@ git diff --check
 - M/L1/L2 没有 GPU/数据/仿真/硬件实测，章节不能升级为 `reproducible`；
 - S 档均为教学 fixture，不代表上游模型性能、样本效率、闭环安全或部署能力；
 - 外部案例会漂移，需要按核查日期维护研究雷达；
-- 2026-09-01 已补充回环静态服务器并打开严格编译产物的应用内浏览器面板；当前累计 27 个 HTML、22 章页面和 994 个内部目标通过自动检查。真正上线仍需选定托管平台，并人工确认截图式多尺寸和可访问性视觉巡检。
+- 2026-09-01 已补充回环静态服务器并打开严格编译产物的应用内浏览器面板；当前累计 27 个 HTML、22 章页面和 1009 个内部目标通过自动检查。真正上线仍需选定托管平台，并人工确认截图式多尺寸和可访问性视觉巡检。
