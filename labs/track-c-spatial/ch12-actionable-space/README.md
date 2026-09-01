@@ -4,7 +4,9 @@
 
 - 可达 free cell 与障碍邻接形成的 approach affordance；
 - 一格坐标偏移对 occupied IoU 的影响；
-- 把 unknown 当 free 如何造成动态路径“假安全”。
+- 把 unknown 当 free 如何造成动态路径“假安全”；
+- 动态回波离开后，旧格在没有清空射线时为何回到 `unknown`；
+- 点中心线、带 footprint 的扫掠区域和过期观测为何给出不同路径判定。
 
 ```bash
 make ch12-test-local

@@ -3,12 +3,26 @@
   "gpu_verified": false,
   "metrics": {
     "approach_affordance_count": 1,
+    "centerline_point_path_safe": true,
+    "centerline_radius_one_footprint_report": {
+      "checked_cell_count": 15,
+      "occupied_cell_count": 1,
+      "out_of_bounds_cell_count": 0,
+      "path_step_count": 3,
+      "safe": false,
+      "unknown_cell_count": 6
+    },
+    "dynamic_old_cell_with_clearing_evidence": "free",
+    "dynamic_old_cell_without_clearing_evidence": "unknown",
     "dynamic_path_safe_after_update": false,
     "dynamic_path_safe_binary_unknown_as_free": true,
     "dynamic_path_safe_tristate_before_update": false,
+    "expired_cell_count": 1,
+    "fresh_free_path_safe": true,
     "occluded_cell_is_unknown": true,
     "one_cell_shift_occupied_iou": 0.0,
     "reachable_free_count": 8,
+    "stale_free_path_safe": false,
     "state_counts": {
       "free": 10,
       "occupied": 3,

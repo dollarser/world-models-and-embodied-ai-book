@@ -24,6 +24,14 @@ def main() -> int:
         raise AssertionError("binary absent-is-free baseline must expose false safety")
     if metrics["dynamic_path_safe_after_update"]:
         raise AssertionError("updated dynamic occupancy must reject the collision path")
+    if metrics["dynamic_old_cell_without_clearing_evidence"] != "unknown":
+        raise AssertionError("a departed return must not make its old cell free without clearing evidence")
+    if metrics["dynamic_old_cell_with_clearing_evidence"] != "free":
+        raise AssertionError("explicit clearing evidence must be able to mark the old cell free")
+    if not metrics["centerline_point_path_safe"] or metrics["centerline_radius_one_footprint_report"]["safe"]:
+        raise AssertionError("the fixture must expose point-centerline versus footprint safety")
+    if not metrics["fresh_free_path_safe"] or metrics["stale_free_path_safe"]:
+        raise AssertionError("expired free-space evidence must conservatively block the path")
 
     report = {
         "experiment_id": "EXP-12-01",

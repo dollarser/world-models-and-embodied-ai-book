@@ -31,7 +31,7 @@
 | 第11章 动作条件视频世界模型 | `reviewed` | 四类审查通过；动作敏感度单位/方向、固定分母 rollout、开源代际与 renderer/simulator/planner 边界 | 视频训练、checkpoint、仿真和 GPU 未运行 |
 | EXP-11-01 | `smoke` | 12 个单元测试；动作盲敏感度归零、左右交换负对照、3 序列/9 转移全轨迹诊断 | 确定性网格和 ASCII 帧，不是视频、因果或规划性能 |
 | 第12章 可行动的空间表征 | `reviewed` | 3D 零基础入口、三态 occupancy、动态空间、affordance、自动驾驶正文与四类审查 | 真实 RGB-D/驾驶数据、学习模型、仿真和 GPU 均未运行 |
-| EXP-12-01 | `smoke` | 7 个单元测试；遮挡未知、坐标偏移、越界与动态路径假安全 | 2D 无噪声射线格子，不是 occupancy 网络或安全证明 |
+| EXP-12-01 | `smoke` | 13 个单元测试；遮挡未知、动态清空证据、footprint、观测过期、坐标偏移与输入合同 | 2D 无噪声射线格子和方形 footprint，不是 occupancy 网络、连续碰撞或安全证明 |
 | 第13章 模仿学习与动作分块 | `reviewed` | 误差累积、prediction/execution horizon、temporal ensemble 降抖—滞后反例、可执行 chunk 合同、自动驾驶安全时域及四类审查 | LeRobot BC/ACT 与 24GB GPU 验证 |
 | EXP-13-01 | `smoke` | 10 个单元测试；0.02 动作偏差积分为 0.40；固定预测时域的 policy query—延迟权衡；时间集成稳态误差 0.001、突变误差 0.754 | 手工标量 fixture，不是策略性能或 ACT 误差率 |
 | 第14章 生成动作 | `reviewed` | 多峰动作、diffusion/flow 最小桥接、采样预算、自动驾驶安全筛选及四类审查 | Push-T/LIBERO、学习策略、GPU 和真实时延均未运行 |
@@ -52,6 +52,6 @@
 | EXP-21-01 | `smoke` | 9 个单元测试；mean 45 ms 掩盖 150 ms 尾部，六类异常分别拒绝；两个阈值展示 coverage—failure 取舍 | 手工 latency/packet/score/label，不是实时、OOD 或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 12 个单元测试；完整包 5 段 trace/0 issue，无效包 16 个具名 issue，缺段与错误依赖被拒绝 | metadata 图检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、207 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、213 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。
