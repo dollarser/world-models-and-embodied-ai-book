@@ -40,6 +40,13 @@ def main() -> int:
         raise AssertionError("unequal route replication must separate episode-micro and cluster-macro estimands")
     if clustered["cluster_bootstrap_95"] != {"lower": -0.75, "upper": 0.75}:
         raise AssertionError("the exact route-level bootstrap interval must remain deterministic")
+    paired_margins = metrics["paired_margin_diagnostic"]
+    if not paired_margins["marginal_rates_equal_across_tables"]:
+        raise AssertionError("the pairing negative control must hold both marginal rates fixed")
+    if paired_margins["high_concordance"]["exact_conditional_two_sided_p"] != 0.125:
+        raise AssertionError("the four-discordant-pair exact diagnostic must remain fixed")
+    if paired_margins["more_discordant"]["exact_conditional_two_sided_p"] != 0.387695:
+        raise AssertionError("the twelve-discordant-pair exact diagnostic must remain fixed")
     if metrics["zero_event_upper_bounds_95"] != {
         "20_trials": 0.139108,
         "100_trials": 0.029513,

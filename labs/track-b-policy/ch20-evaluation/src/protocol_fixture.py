@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from itertools import product
-from math import isfinite, sqrt
+from math import comb, isfinite, sqrt
 from typing import Sequence
 
 
@@ -38,6 +38,39 @@ PAIRED_CLUSTER_ROWS = (
     {"pair_id": "route-b-4", "cluster": "route-b", "candidate_success": True, "baseline_success": False},
     {"pair_id": "route-c-1", "cluster": "route-c", "candidate_success": False, "baseline_success": True},
     {"pair_id": "route-d-1", "cluster": "route-d", "candidate_success": True, "baseline_success": True},
+)
+
+
+def _paired_rows_from_cells(
+    prefix: str,
+    both_success: int,
+    candidate_only: int,
+    baseline_only: int,
+    both_failure: int,
+) -> tuple[dict[str, object], ...]:
+    """Expand a named paired-binary 2x2 table into auditable row identities."""
+    cells = (
+        ("both-success", True, True, both_success),
+        ("candidate-only", True, False, candidate_only),
+        ("baseline-only", False, True, baseline_only),
+        ("both-failure", False, False, both_failure),
+    )
+    return tuple(
+        {
+            "pair_id": f"{prefix}-{cell_name}-{index}",
+            "candidate_success": candidate,
+            "baseline_success": baseline,
+        }
+        for cell_name, candidate, baseline, count in cells
+        for index in range(1, count + 1)
+    )
+
+
+PAIRED_MARGIN_HIGH_CONCORDANCE_ROWS = _paired_rows_from_cells(
+    "high-concordance", 8, 4, 0, 8
+)
+PAIRED_MARGIN_MORE_DISCORDANT_ROWS = _paired_rows_from_cells(
+    "more-discordant", 4, 8, 4, 4
 )
 
 
@@ -187,6 +220,93 @@ def _linear_quantile(values: Sequence[float], probability: float) -> float:
     upper_index = min(lower_index + 1, len(ordered) - 1)
     weight = position - lower_index
     return ordered[lower_index] + weight * (ordered[upper_index] - ordered[lower_index])
+
+
+def exact_mcnemar_report(rows: Sequence[dict[str, object]]) -> dict[str, object]:
+    """Report an exact conditional McNemar diagnostic for paired binary outcomes."""
+    if isinstance(rows, (str, bytes)) or not isinstance(rows, Sequence) or not rows:
+        raise ValueError("paired rows must be a non-empty sequence")
+
+    seen_pair_ids: set[str] = set()
+    cell_counts = {
+        "both_success": 0,
+        "candidate_only": 0,
+        "baseline_only": 0,
+        "both_failure": 0,
+    }
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise ValueError(f"paired row {index} must be a mapping")
+        pair_id = row.get("pair_id")
+        if not isinstance(pair_id, str) or not pair_id or pair_id in seen_pair_ids:
+            raise ValueError("pair_id values must be non-empty and unique")
+        candidate = row.get("candidate_success")
+        baseline = row.get("baseline_success")
+        if not isinstance(candidate, bool) or not isinstance(baseline, bool):
+            raise ValueError(f"paired row {pair_id} success fields must be boolean")
+        seen_pair_ids.add(pair_id)
+        if candidate and baseline:
+            cell_counts["both_success"] += 1
+        elif candidate:
+            cell_counts["candidate_only"] += 1
+        elif baseline:
+            cell_counts["baseline_only"] += 1
+        else:
+            cell_counts["both_failure"] += 1
+
+    pair_count = len(rows)
+    candidate_successes = cell_counts["both_success"] + cell_counts["candidate_only"]
+    baseline_successes = cell_counts["both_success"] + cell_counts["baseline_only"]
+    discordant_count = cell_counts["candidate_only"] + cell_counts["baseline_only"]
+    smaller_discordant_count = min(
+        cell_counts["candidate_only"], cell_counts["baseline_only"]
+    )
+    if discordant_count == 0:
+        exact_two_sided_p = 1.0
+    else:
+        lower_tail = sum(
+            comb(discordant_count, successes)
+            for successes in range(smaller_discordant_count + 1)
+        ) / (2**discordant_count)
+        exact_two_sided_p = min(1.0, 2 * lower_tail)
+
+    return {
+        "pair_count": pair_count,
+        "cell_counts": cell_counts,
+        "candidate_success_rate": candidate_successes / pair_count,
+        "baseline_success_rate": baseline_successes / pair_count,
+        "paired_difference": (candidate_successes - baseline_successes) / pair_count,
+        "discordant_pair_count": discordant_count,
+        "exact_conditional_two_sided_p": round(exact_two_sided_p, 6),
+        "null_conditioning": (
+            "conditional on the observed discordant-pair count, candidate-only and "
+            "baseline-only outcomes are equiprobable"
+        ),
+        "scope": (
+            "exact conditional matched-pair diagnostic; no multiplicity, cluster, "
+            "population-sampling, effect-size interval, equivalence, or safety claim"
+        ),
+    }
+
+
+def paired_margin_diagnostic() -> dict[str, object]:
+    """Hold marginal success rates fixed while changing the paired joint table."""
+    high_concordance = exact_mcnemar_report(PAIRED_MARGIN_HIGH_CONCORDANCE_ROWS)
+    more_discordant = exact_mcnemar_report(PAIRED_MARGIN_MORE_DISCORDANT_ROWS)
+    return {
+        "high_concordance": high_concordance,
+        "more_discordant": more_discordant,
+        "marginal_rates_equal_across_tables": (
+            high_concordance["candidate_success_rate"]
+            == more_discordant["candidate_success_rate"]
+            and high_concordance["baseline_success_rate"]
+            == more_discordant["baseline_success_rate"]
+        ),
+        "scope": (
+            "two authored 20-pair tables with identical marginal rates; pairing changes "
+            "the discordant count and exact conditional diagnostic, not the point difference"
+        ),
+    }
 
 
 def exact_paired_cluster_bootstrap(
@@ -389,6 +509,7 @@ def evaluate() -> dict[str, object]:
     metrics["comparability_warnings"] = comparability_warnings(left, right)
     metrics["factorial_protocol_effects"] = factorial_protocol_effects()
     metrics["paired_cluster_comparison"] = exact_paired_cluster_bootstrap()
+    metrics["paired_margin_diagnostic"] = paired_margin_diagnostic()
     metrics["zero_event_upper_bounds_95"] = {
         f"{trials}_trials": zero_event_upper_bound(trials)
         for trials in (20, 100, 1000)

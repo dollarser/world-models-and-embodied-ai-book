@@ -12,9 +12,11 @@ from protocol_fixture import (  # noqa: E402
     audit_episode_rows,
     checkpoint_selection_audit,
     comparability_warnings,
+    exact_mcnemar_report,
     exact_paired_cluster_bootstrap,
     evaluate_protocol,
     factorial_protocol_effects,
+    paired_margin_diagnostic,
     wilson_interval,
     zero_event_pseudoreplication_audit,
     zero_event_upper_bound,
@@ -217,6 +219,38 @@ class ProtocolFixtureTests(unittest.TestCase):
             exact_paired_cluster_bootstrap(confidence=1.0)
         with self.assertRaisesRegex(ValueError, "max_exact_resamples"):
             exact_paired_cluster_bootstrap(max_exact_resamples=100)
+
+    def test_identical_margins_can_hide_different_pairing_uncertainty(self):
+        diagnostic = paired_margin_diagnostic()
+        high = diagnostic["high_concordance"]
+        more = diagnostic["more_discordant"]
+        self.assertTrue(diagnostic["marginal_rates_equal_across_tables"])
+        for report in (high, more):
+            self.assertEqual(report["candidate_success_rate"], 0.6)
+            self.assertEqual(report["baseline_success_rate"], 0.4)
+            self.assertEqual(report["paired_difference"], 0.2)
+        self.assertEqual(high["discordant_pair_count"], 4)
+        self.assertEqual(more["discordant_pair_count"], 12)
+        self.assertEqual(high["exact_conditional_two_sided_p"], 0.125)
+        self.assertEqual(more["exact_conditional_two_sided_p"], 0.387695)
+
+    def test_exact_mcnemar_uses_only_discordant_direction_counts(self):
+        tied = (
+            {"pair_id": "a", "candidate_success": True, "baseline_success": True},
+            {"pair_id": "b", "candidate_success": False, "baseline_success": False},
+        )
+        report = exact_mcnemar_report(tied)
+        self.assertEqual(report["discordant_pair_count"], 0)
+        self.assertEqual(report["exact_conditional_two_sided_p"], 1.0)
+
+    def test_exact_mcnemar_rejects_broken_pair_contracts(self):
+        valid = {"pair_id": "one", "candidate_success": True, "baseline_success": False}
+        with self.assertRaisesRegex(ValueError, "unique"):
+            exact_mcnemar_report((valid, dict(valid)))
+        with self.assertRaisesRegex(ValueError, "boolean"):
+            exact_mcnemar_report((dict(valid, candidate_success=1),))
+        with self.assertRaises(ValueError):
+            exact_mcnemar_report(())
 
 
 if __name__ == "__main__":

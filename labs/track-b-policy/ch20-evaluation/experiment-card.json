@@ -3,7 +3,7 @@
   "id": "EXP-20-01",
   "chapter": 20,
   "status": "smoke",
-  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10", "CLAIM-20-11"],
+  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10", "CLAIM-20-11", "CLAIM-20-12"],
   "benchmark_ids": ["BENCH-20-01"],
   "claim_scope": [
     "success rates are not directly comparable when task populations, success definitions, or denominators differ",
@@ -14,16 +14,17 @@
     "paired route-level analysis can separate episode-micro and equal-route-macro estimands while preserving within-pair comparisons",
     "zero observed events retain a positive one-sided binomial risk upper bound under explicit independent-trial assumptions",
     "repeated members within authored route clusters do not create independent routes, and episode-event versus cluster-incidence bounds answer different estimands",
-    "selecting a checkpoint on a final score reassigns that split to model selection; an untouched authored confirmation score can expose the resulting reuse gap without estimating expected selection bias"
+    "selecting a checkpoint on a final score reassigns that split to model selection; an untouched authored confirmation score can expose the resulting reuse gap without estimating expected selection bias",
+    "identical candidate and baseline marginal success rates do not determine their paired joint table, discordant-pair count, or a predeclared exact conditional McNemar diagnostic"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library fixed episode-table, checkpoint-selection, zero-event, pseudoreplication, and paired route-cluster protocol audit"
+    "config": "standard-library fixed episode-table, paired-margin, checkpoint-selection, zero-event, pseudoreplication, and paired route-cluster protocol audit"
   },
   "data": {
-    "name": "procedural episode, paired-route, checkpoint-selection, and zero-event pseudoreplication audit tables",
-    "version": "v8",
+    "name": "procedural episode, paired-route, paired-margin, checkpoint-selection, and zero-event pseudoreplication audit tables",
+    "version": "v9",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -73,7 +74,14 @@
     {"name": "selection_selected_final_score", "value": 0.5, "unit": "ratio", "split": "selection-chosen-checkpoint-on-final"},
     {"name": "test_reuse_reported_final_score", "value": 0.75, "unit": "ratio", "split": "final-set-chosen-checkpoint-on-reused-final"},
     {"name": "test_reuse_confirmation_score", "value": 0.5, "unit": "ratio", "split": "final-set-chosen-checkpoint-on-untouched-confirmation"},
-    {"name": "test_reuse_authored_optimism_gap", "value": 0.25, "unit": "ratio_difference", "split": "reused-final-minus-untouched-confirmation"}
+    {"name": "test_reuse_authored_optimism_gap", "value": 0.25, "unit": "ratio_difference", "split": "reused-final-minus-untouched-confirmation"},
+    {"name": "paired_margin_candidate_success_rate", "value": 0.6, "unit": "ratio", "split": "both-twenty-pair-joint-tables"},
+    {"name": "paired_margin_baseline_success_rate", "value": 0.4, "unit": "ratio", "split": "both-twenty-pair-joint-tables"},
+    {"name": "paired_margin_success_difference", "value": 0.2, "unit": "ratio_difference", "split": "both-twenty-pair-joint-tables"},
+    {"name": "high_concordance_discordant_pair_count", "value": 4, "unit": "count", "split": "high-concordance-twenty-pair-table"},
+    {"name": "high_concordance_exact_conditional_two_sided_p", "value": 0.125, "unit": "probability", "split": "high-concordance-twenty-pair-table"},
+    {"name": "more_discordant_discordant_pair_count", "value": 12, "unit": "count", "split": "more-discordant-twenty-pair-table"},
+    {"name": "more_discordant_exact_conditional_two_sided_p", "value": 0.387695, "unit": "probability", "split": "more-discordant-twenty-pair-table"}
   ],
   "artifacts": ["results/ch20/EXP-20-01-smoke.json"],
   "limitations": [
@@ -81,6 +89,7 @@
     "Wilson intervals and zero-event upper bounds apply only to their explicitly declared independent Bernoulli units; episode-event and cluster-incidence probabilities are different estimands, not alternative corrections for one parameter",
     "the factorial effects are arithmetic contrasts on authored rows, not population causal-effect estimates",
     "the four-route exact bootstrap and percentile interval demonstrate mechanics but are too small and authored for calibrated population inference",
+    "the paired-margin exact conditional diagnostic has no effect-size interval, cluster or multiplicity correction, equivalence margin, or population-sampling claim",
     "the four-checkpoint score table is deliberately authored and does not estimate expected selection bias, checkpoint quality, or model generalization",
     "does not estimate any real policy or benchmark performance",
     "the injected invalid-run case tests rejection only and does not estimate a technical failure rate"
