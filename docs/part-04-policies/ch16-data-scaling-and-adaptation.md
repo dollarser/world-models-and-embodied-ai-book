@@ -116,7 +116,7 @@ canonical schema 至少包含字段名称/顺序、frame、单位、时间定义
 
 *TAB-16-02：四种“统一动作”路径。它们可以组合，但不能互相替代。*
 
-[Octo](https://github.com/octo-models/octo/blob/main/octo/data/dataset.py) 的官方数据管线会标准化各数据集、把动作/本体状态 pad 到最大维度，并保留 normalization mask 与 dataset name；这说明固定 tensor 只是装载接口，mask 和来源身份仍是模型输入合同 `[O,R1]`。[Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T/blob/main/gr00t/data/stats.py) 当前实现则把 embodiment tag、relative/absolute 表示、字段格式、delta indices 和关联 state key 哈希为统计量 fingerprint，避免配置变化后静默复用旧缓存 `[O,R1]`。learned action tokenizer 可以进一步共享表示，但其 decoder 仍要还原到具体本体动作，token reconstruction 或 perplexity 不能替代闭环成功率。
+[Octo 数据管线快照 `241fb35`](https://github.com/octo-models/octo/blob/241fb3514b7c40957a86d869fecb7c7fc353f540/octo/data/dataset.py)会标准化各数据集、把动作/本体状态 pad 到最大维度，并保留 normalization mask 与 dataset name；这说明固定 tensor 只是装载接口，mask 和来源身份仍是模型输入合同 `[O,R1]`。[Isaac-GR00T 统计量快照 `51d4c89`](https://github.com/NVIDIA/Isaac-GR00T/blob/51d4c89f72fda44cbf77285c6a8114b52676b8a1/gr00t/data/stats.py)对 relative-action 统计缓存把 embodiment tag、representation/type、format、action/state delta indices 和关联 state key 纳入 fingerprint，避免这些配置变化后静默复用旧缓存 `[O,R1]`；这不表示同一机制自动覆盖所有 absolute-action 统计路径。learned action tokenizer 可以进一步共享表示，但其 decoder 仍要还原到具体本体动作，token reconstruction 或 perplexity 不能替代闭环成功率。
 
 ## 16.4 归一化也属于动作协议
 
@@ -128,7 +128,7 @@ canonical schema 至少包含字段名称/顺序、frame、单位、时间定义
 
 `μ,σ` 在本书受控评测中必须只由训练 split 计算，并与 dataset revision、split hash、embodiment、字段顺序、absolute/delta 配置和 action horizon 一起保存。某些上游管线会发布全数据统计或随 checkpoint 附带统计量，使用时必须记录其统计范围，不能默认它等于本书的训练切分。全局统计可能让大范围本体支配小范围本体；逐本体统计提高数值可比性，却要求推理时知道正确 embodiment。min/max 对异常值敏感，quantile clipping 会改变可达范围，也必须记录。
 
-[openpi](https://github.com/Physical-Intelligence/openpi/blob/main/docs/norm_stats.md) 明确要求目标数据遵守预训练 action-space 定义，并建议在“复用已有本体统计”与“为新数据重算统计”之间做实证比较；[LeRobot](https://github.com/huggingface/lerobot/blob/main/src/lerobot/processor/normalize_processor.py) 的 processor 则允许 checkpoint stats、dataset stats 或显式 override `[O,R1]`。因此 normalization asset 不是可随意替换的数值文件，而是模型—数据—动作 schema 的版本化依赖。
+[openpi normalization 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/docs/norm_stats.md)明确要求目标数据遵守预训练 action-space 定义，并建议在“复用已有本体统计”与“为新数据重算统计”之间做实证比较；[LeRobot processor 快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/processor/normalize_processor.py)则允许 checkpoint stats、dataset stats 或显式 override `[O,R1]`。因此 normalization asset 不是可随意替换的数值文件，而是模型—数据—动作 schema 的版本化依赖。
 
 不能把训练数据归一化后的 `[-1,1]` 当物理安全范围。反归一化后仍要通过第15章的 frame、单位、bounds 和时效网关。
 
@@ -216,7 +216,7 @@ make ch16-smoke
 
 *TAB-16-04：适配权限阶梯。先用最小可证实的修改，不代表永远不能 full fine-tune。*
 
-[OpenVLA-OFT](https://github.com/moojink/openvla-oft) 研究动作解码、连续 action chunk、proprioception 和 fine-tuning 目标的组合 `[A/O,R1]`。其上游结果说明适配配方会显著影响指定 benchmark，不证明 OFT 对所有 VLA、本体和数据都优。官方 README 当前给出约 16–18 GB 推理、27–80 GB 训练范围；这是上游配置说明，本书未实测。
+[OpenVLA-OFT README 快照 `e4287e9`](https://github.com/moojink/openvla-oft/blob/e4287e94541f459edc4feabc4e181f537cd569a8/README.md)研究动作解码、连续 action chunk、proprioception 和 fine-tuning 目标的组合 `[A/O,R1]`。其上游结果说明适配配方会显著影响指定 benchmark，不证明 OFT 对所有 VLA、本体和数据都优。该快照给出约 16–18 GB 推理、27–80 GB 训练范围；这是上游配置说明，本书未实测。
 
 LoRA 只减少可训练参数和优化器状态，不一定让 activation、输入视频或 action horizon 的显存变小到同样比例。量化可以降低权重显存，但可能改变 kernel、延迟和数值；梯度 checkpoint 降显存会增加计算。每种优化都要在目标硬件实测峰值显存、P50/P95、吞吐和闭环 outcome。
 
@@ -330,11 +330,11 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 - Open X-Embodiment Collaboration, [论文](https://arxiv.org/abs/2310.08864)与[官方仓库快照 `9eeb68b`](https://github.com/google-deepmind/open_x_embodiment/tree/9eeb68b989efbcf474e8fb9019e01d02b962a604)，`[P/O,R1]`；
 - Khazatsky et al., [DROID](https://arxiv.org/abs/2403.12945) 与[项目页](https://droid-dataset.github.io/)，`[P/O,R1]`；
 - Hugging Face, [LeRobot Dataset v3 文档快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/lerobot-dataset-v3.mdx)，`[O,R1]`；
-- Octo Model Team, [Octo 数据标准化与 mixture 管线](https://github.com/octo-models/octo/blob/main/octo/data/dataset.py)，`[O,R1]`；
-- NVIDIA, [Isaac-GR00T 数据配置](https://github.com/NVIDIA/Isaac-GR00T/blob/main/getting_started/data_config.md)与[统计量 fingerprint 实现](https://github.com/NVIDIA/Isaac-GR00T/blob/main/gr00t/data/stats.py)，`[O,R1]`；
-- Physical Intelligence, [openpi normalization statistics](https://github.com/Physical-Intelligence/openpi/blob/main/docs/norm_stats.md)，`[O,R1]`；
+- Octo Model Team, [Octo 数据标准化与 mixture 管线快照 `241fb35`](https://github.com/octo-models/octo/blob/241fb3514b7c40957a86d869fecb7c7fc353f540/octo/data/dataset.py)，`[O,R1]`；
+- NVIDIA, [Isaac-GR00T 数据配置快照 `51d4c89`](https://github.com/NVIDIA/Isaac-GR00T/blob/51d4c89f72fda44cbf77285c6a8114b52676b8a1/getting_started/data_config.md)与[统计量 fingerprint 实现](https://github.com/NVIDIA/Isaac-GR00T/blob/51d4c89f72fda44cbf77285c6a8114b52676b8a1/gr00t/data/stats.py)，`[O,R1]`；
+- Physical Intelligence, [openpi normalization statistics 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/docs/norm_stats.md)，`[O,R1]`；
 - Chen et al., [XEWorld v1 论文](https://arxiv.org/html/2608.05799v1)，`[A,R0]`；协议进入正文，作者模型结果未由本书复现；
-- Kim et al., [OpenVLA-OFT](https://arxiv.org/abs/2502.19645) 与[官方代码](https://github.com/moojink/openvla-oft)，`[A/O,R1]`；
+- Kim et al., [OpenVLA-OFT](https://arxiv.org/abs/2502.19645) 与[官方 README 快照 `e4287e9`](https://github.com/moojink/openvla-oft/blob/e4287e94541f459edc4feabc4e181f537cd569a8/README.md)，`[A/O,R1]`；
 - Hu et al., [LoRA](https://arxiv.org/abs/2106.09685)，`[P]`。
 
 ## 下一章接口
@@ -354,6 +354,6 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`、`reviews/ch16-held-out-embodiment-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`、`reviews/ch16-held-out-embodiment-review-2026-09-02.md`、`reviews/ch16-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载真实数据、训练 adapter/VLA、运行仿真或 GPU；
 - 下一步：只在 XEWorld 或等价测试床公开版本化代码、资产、split 与指标实现后，先做无下载预检，再经用户确认执行迁移矩阵；当前证据保持 S 档 reviewed。

@@ -8,7 +8,7 @@
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
 | 批次 D：第8、16、17、18、20、21章 | `reviewed` | 六章四类审查通过；40 个单元测试；imagined target—后训练—评测—部署合同闭合 | Dreamer/VLA/world model、仿真、真实系统和 GPU 未运行 |
 | 全书终审：第1、5、7、22章 | `reviewed` | 四章内容、代码、一致性和教学审查通过；29 个单元测试；记录见 `reviews/final-book-review.md` | GPU、大数据、真实仿真与硬件限制保持未验证 |
-| 快速演进来源审查 | `reviewed` | 第9–12、15、18–21章一手来源复核；第12章按 ICCV/AAAI/ICLR 2025 一手会议资料区分 current estimation、future forecasting、action-conditioned world model 与 4D generation；支持正式 `fact` 的 8 个 GitHub 官方仓库锁定完整 commit，并由门禁拒绝浮动源码锚点 | 其他扩展案例链接尚未全部归档；供应商能力和目标环境均未独立验证 |
+| 快速演进来源审查 | `reviewed` | 第9–12、15、16、18–21章一手来源复核；第12章按 ICCV/AAAI/ICLR 2025 一手会议资料区分 current estimation、future forecasting、action-conditioned world model 与 4D generation；支持正式 `fact` 的 8 个 GitHub 官方仓库锁定完整 commit，第16章 Octo、GR00T、openpi、LeRobot 与 OpenVLA-OFT 实现说明也锁到已核验 commit；门禁拒绝事实登记中的浮动源码锚点 | 其他扩展案例链接尚未全部归档；供应商能力和目标环境均未独立验证 |
 | 快速演进研究雷达 | `reviewed` | 12 张一手来源活页卡按问题、章节、source revision、资产开放度、复现状态、资源路径、范围边界和复核触发器登记；V-JEPA 2.1、Cosmos 3、POBAX 与 A2World 仓库已锁不可变 commit；新增XEWorld受控跨本体反例、Riemann-1.0统一WAM监测项与A2World双用途开源接口审计 | 当前只完成论文/官方资产审计和无下载预检；模型、权重、数据、GPU、仿真与真实系统均未运行，扩展仓库仍按需逐批锁定 |
 | 编辑结构与图表无障碍审查 | `reviewed` | 29个编译页面均自动验证中文语言、device-width viewport、唯一main/H1和图片alt；28个正文页面验证有效skip link，短404页明确豁免；22章标题不越级；23张Mermaid图保留`accTitle/accDescr` | 浏览器控制接口当前不可用；深浅色、窄屏、缩放、键盘焦点顺序与屏幕阅读器朗读仍需人工巡检，不由DOM门禁替代 |
 | 术语与章节接口审查 | `reviewed` | 15 个读者关键缩写/指标同时进入作者基线与读者术语表；6 章合并标题拆为独立教学/接口区段；22 章结构契约自动检查 | 自动覆盖只保证关键项存在，不能替代逐段术语语义、译名偏好和跨学科读者测试 |
