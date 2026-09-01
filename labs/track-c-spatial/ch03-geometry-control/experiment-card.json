@@ -3,19 +3,21 @@
   "id": "EXP-03-01",
   "chapter": 3,
   "status": "smoke",
-  "claim_ids": ["CLAIM-03-02", "CLAIM-03-03"],
+  "claim_ids": ["CLAIM-03-02", "CLAIM-03-03", "CLAIM-03-06", "CLAIM-03-07"],
   "claim_scope": [
     "pinhole back-projection and explicit frame transforms can be validated by an exact projection round trip",
-    "observation feedback can reduce fixed actuator-bias error in the deterministic planar-arm fixture"
+    "observation feedback can reduce fixed actuator-bias error in the deterministic planar-arm fixture",
+    "camera optical axes must be explicitly rotated into body axes even when pixel projection round trips exactly",
+    "optical-axis z-depth and Euclidean ray range are not interchangeable away from the principal point"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library RGB-D and two-link planar-arm fixtures"
+    "config": "standard-library RGB-D, optical-to-body transform, and two-link planar-arm fixtures"
   },
   "data": {
     "name": "procedural three-pixel RGB-D and planar-arm fixture",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -38,12 +40,16 @@
     {"name": "max_reprojection_error", "value": 0.0, "unit": "pixel", "split": "three-pixel-fixture"},
     {"name": "depth_unit_fault_scale_ratio", "value": 1000.0, "unit": "ratio", "split": "three-pixel-fixture"},
     {"name": "extrinsic_fault_mean_shift", "value": 0.1, "unit": "metre", "split": "three-pixel-fixture"},
+    {"name": "max_transform_roundtrip_error", "value": 8.673617379884035e-18, "unit": "metre", "split": "three-point-optical-body"},
+    {"name": "identity_axis_mapping_mean_error", "value": 2.3571816972636253, "unit": "metre", "split": "three-point-optical-body"},
+    {"name": "off_axis_z_depth_to_range_ratio", "value": 1.4142135623730951, "unit": "ratio", "split": "normalized-off-axis-ray"},
     {"name": "open_loop_endpoint_error", "value": 0.12594964573326087, "unit": "metre", "split": "planar-arm-fixture"},
     {"name": "feedback_endpoint_error", "value": 0.019049255190981548, "unit": "metre", "split": "planar-arm-fixture"}
   ],
   "artifacts": ["results/ch03/EXP-03-01-smoke.json"],
   "limitations": [
-    "three exact pinhole samples without lens distortion or missing depth",
+    "three exact pinhole samples plus one synthetic off-axis ray without lens distortion or missing depth",
+    "fixed orthonormal optical-to-body rotation rather than estimated calibration",
     "kinematic planar arm without contact, inertia, saturation, or timing jitter",
     "demonstrates interface checks rather than real sensor or controller performance"
   ]

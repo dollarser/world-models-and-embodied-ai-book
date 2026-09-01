@@ -9,12 +9,16 @@
       "open_loop_q1_error_rad": 0.09999999999999998
     },
     "geometry": {
-      "body_points_m": [[0.48, -0.01, 2.2], [0.5, 0.0, 1.2], [0.52, 0.01, 2.2]],
+      "body_points_m": [[2.5, 0.02, 0.21000000000000002], [1.5, 0.0, 0.2], [2.5, -0.02, 0.19]],
       "camera_points_m": [[-0.02, -0.01, 2.0], [0.0, 0.0, 1.0], [0.02, 0.01, 2.0]],
       "depth_unit_fault_scale_ratio": 1000.0,
-      "extrinsic_fault_mean_shift_m": 0.09999999999999998,
+      "extrinsic_fault_mean_shift_m": 0.10000000000000009,
+      "identity_axis_mapping_mean_error_m": 2.3571816972636253,
       "max_reprojection_error_px": 0.0,
-      "occupied_bev_cells": [[1, -1], [2, 0]],
+      "max_transform_roundtrip_error_m": 8.673617379884035e-18,
+      "occupied_bev_cells": [[6, 0], [10, -1], [10, 0]],
+      "off_axis_z_depth_to_range_ratio": 1.4142135623730951,
+      "optical_forward_axis_in_body": [1.0, 0.0, 0.0],
       "point_count": 3
     }
   },
