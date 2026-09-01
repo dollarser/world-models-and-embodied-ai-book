@@ -3,7 +3,7 @@
   "id": "EXP-20-01",
   "chapter": 20,
   "status": "smoke",
-  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10"],
+  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10", "CLAIM-20-11"],
   "benchmark_ids": ["BENCH-20-01"],
   "claim_scope": [
     "success rates are not directly comparable when task populations, success definitions, or denominators differ",
@@ -13,16 +13,17 @@
     "a factorial protocol audit can expose interaction and prevent warning labels from being misread as additive causal effects",
     "paired route-level analysis can separate episode-micro and equal-route-macro estimands while preserving within-pair comparisons",
     "zero observed events retain a positive one-sided binomial risk upper bound under explicit independent-trial assumptions",
-    "repeated members within authored route clusters do not create independent routes, and episode-event versus cluster-incidence bounds answer different estimands"
+    "repeated members within authored route clusters do not create independent routes, and episode-event versus cluster-incidence bounds answer different estimands",
+    "selecting a checkpoint on a final score reassigns that split to model selection; an untouched authored confirmation score can expose the resulting reuse gap without estimating expected selection bias"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library fixed episode-table, zero-event and pseudoreplication bounds, and paired route-cluster protocol audit"
+    "config": "standard-library fixed episode-table, checkpoint-selection, zero-event, pseudoreplication, and paired route-cluster protocol audit"
   },
   "data": {
-    "name": "procedural episode, paired-route, and zero-event pseudoreplication audit tables",
-    "version": "v7",
+    "name": "procedural episode, paired-route, checkpoint-selection, and zero-event pseudoreplication audit tables",
+    "version": "v8",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -68,7 +69,11 @@
     {"name": "zero_event_100_trial_upper_95", "value": 0.029513, "unit": "ratio", "split": "zero-observed-events"},
     {"name": "zero_event_1000_trial_upper_95", "value": 0.002991, "unit": "ratio", "split": "zero-observed-events"},
     {"name": "pseudoreplication_episode_iid_upper_95", "value": 0.029513, "unit": "ratio", "split": "ten-routes-times-ten-replays"},
-    {"name": "pseudoreplication_cluster_incidence_upper_95", "value": 0.258866, "unit": "ratio", "split": "ten-independent-route-clusters"}
+    {"name": "pseudoreplication_cluster_incidence_upper_95", "value": 0.258866, "unit": "ratio", "split": "ten-independent-route-clusters"},
+    {"name": "selection_selected_final_score", "value": 0.5, "unit": "ratio", "split": "selection-chosen-checkpoint-on-final"},
+    {"name": "test_reuse_reported_final_score", "value": 0.75, "unit": "ratio", "split": "final-set-chosen-checkpoint-on-reused-final"},
+    {"name": "test_reuse_confirmation_score", "value": 0.5, "unit": "ratio", "split": "final-set-chosen-checkpoint-on-untouched-confirmation"},
+    {"name": "test_reuse_authored_optimism_gap", "value": 0.25, "unit": "ratio_difference", "split": "reused-final-minus-untouched-confirmation"}
   ],
   "artifacts": ["results/ch20/EXP-20-01-smoke.json"],
   "limitations": [
@@ -76,6 +81,7 @@
     "Wilson intervals and zero-event upper bounds apply only to their explicitly declared independent Bernoulli units; episode-event and cluster-incidence probabilities are different estimands, not alternative corrections for one parameter",
     "the factorial effects are arithmetic contrasts on authored rows, not population causal-effect estimates",
     "the four-route exact bootstrap and percentile interval demonstrate mechanics but are too small and authored for calibrated population inference",
+    "the four-checkpoint score table is deliberately authored and does not estimate expected selection bias, checkpoint quality, or model generalization",
     "does not estimate any real policy or benchmark performance",
     "the injected invalid-run case tests rejection only and does not estimate a technical failure rate"
   ]

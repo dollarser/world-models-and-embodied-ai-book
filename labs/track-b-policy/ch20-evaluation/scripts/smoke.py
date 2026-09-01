@@ -53,6 +53,13 @@ def main() -> int:
         raise AssertionError("ten independent clusters must retain their distinct cluster-incidence bound")
     if not pseudoreplication["estimands_are_different"]:
         raise AssertionError("episode and cluster event probabilities must not be treated as one estimand")
+    selection = metrics["checkpoint_selection_audit"]
+    if selection["selection_split_selected_checkpoint"] != "checkpoint-a":
+        raise AssertionError("checkpoint selection must be frozen on the selection split")
+    if selection["test_reuse_selected_checkpoint"] != "checkpoint-d":
+        raise AssertionError("the negative control must expose final-set-driven checkpoint selection")
+    if selection["test_reuse_authored_optimism_gap"] != 0.25:
+        raise AssertionError("the untouched confirmation score must expose the authored reuse gap")
 
     report = {
         "experiment_id": "EXP-20-01",

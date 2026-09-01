@@ -341,8 +341,8 @@ VALID_DRIVING_PACKAGE = {
         "independent_evaluation": {
             "chapter": 20,
             "artifact": "BENCH-20-01",
-            "revision": "fixture-v7",
-            "decision": "freeze route population, safety-aware success, timeout policy, valid denominator, and independent-unit plus zero-event estimand assumptions",
+            "revision": "fixture-v8",
+            "decision": "freeze selection/final/confirmation roles, route population, safety-aware success, timeout policy, valid denominator, and independent-unit plus zero-event estimand assumptions",
             "depends_on": ["input_contract", "method_contract"],
         },
         "deployment_or_safety_gate": {

@@ -41,6 +41,14 @@ PAIRED_CLUSTER_ROWS = (
 )
 
 
+CHECKPOINT_SELECTION_ROWS = (
+    {"checkpoint": "checkpoint-a", "selection_score": 0.80, "final_score": 0.50, "confirmation_score": 0.51},
+    {"checkpoint": "checkpoint-b", "selection_score": 0.70, "final_score": 0.55, "confirmation_score": 0.49},
+    {"checkpoint": "checkpoint-c", "selection_score": 0.60, "final_score": 0.60, "confirmation_score": 0.50},
+    {"checkpoint": "checkpoint-d", "selection_score": 0.50, "final_score": 0.75, "confirmation_score": 0.50},
+)
+
+
 def wilson_interval(successes: int, trials: int, z: float = 1.959963984540054) -> dict[str, float]:
     """Return a two-sided Wilson score interval for a binomial proportion."""
     if isinstance(successes, bool) or isinstance(trials, bool):
@@ -116,6 +124,58 @@ def zero_event_pseudoreplication_audit(
         "scope": (
             "authored zero-event replication audit; repeated members do not establish "
             "episode independence, and changing repeat count also changes the cluster outcome"
+        ),
+    }
+
+
+def checkpoint_selection_audit(
+    rows: Sequence[dict[str, object]] = CHECKPOINT_SELECTION_ROWS,
+) -> dict[str, object]:
+    """Contrast frozen selection with the invalid practice of selecting on a final set."""
+    if isinstance(rows, (str, bytes)) or not isinstance(rows, Sequence) or len(rows) < 2:
+        raise ValueError("checkpoint rows must be a sequence with at least two entries")
+
+    validated = []
+    seen_checkpoints = set()
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise ValueError(f"checkpoint row {index} must be a mapping")
+        checkpoint = row.get("checkpoint")
+        if not isinstance(checkpoint, str) or not checkpoint or checkpoint in seen_checkpoints:
+            raise ValueError("checkpoint values must be non-empty and unique")
+        seen_checkpoints.add(checkpoint)
+        validated_row = {"checkpoint": checkpoint}
+        for field in ("selection_score", "final_score", "confirmation_score"):
+            score = row.get(field)
+            if isinstance(score, bool) or not isinstance(score, (int, float)):
+                raise TypeError(f"{field} must be a real number")
+            if not isfinite(score) or not 0.0 <= score <= 1.0:
+                raise ValueError(f"{field} must be finite and lie in [0, 1]")
+            validated_row[field] = float(score)
+        validated.append(validated_row)
+
+    def unique_max(field: str) -> dict[str, object]:
+        best_value = max(row[field] for row in validated)
+        winners = [row for row in validated if row[field] == best_value]
+        if len(winners) != 1:
+            raise ValueError(f"{field} maximum must identify exactly one checkpoint")
+        return winners[0]
+
+    selected_before_final = unique_max("selection_score")
+    selected_by_reusing_final = unique_max("final_score")
+    reused_final = selected_by_reusing_final["final_score"]
+    confirmation = selected_by_reusing_final["confirmation_score"]
+    return {
+        "selection_split_selected_checkpoint": selected_before_final["checkpoint"],
+        "selection_selected_final_score": selected_before_final["final_score"],
+        "test_reuse_selected_checkpoint": selected_by_reusing_final["checkpoint"],
+        "test_reuse_reported_final_score": reused_final,
+        "test_reuse_confirmation_score": confirmation,
+        "test_reuse_authored_optimism_gap": round(reused_final - confirmation, 6),
+        "split_roles_are_distinct": True,
+        "scope": (
+            "authored checkpoint-score table; demonstrates data-role leakage only and does "
+            "not estimate expected selection bias or model generalization"
         ),
     }
 
@@ -334,4 +394,5 @@ def evaluate() -> dict[str, object]:
         for trials in (20, 100, 1000)
     }
     metrics["zero_event_pseudoreplication_audit"] = zero_event_pseudoreplication_audit()
+    metrics["checkpoint_selection_audit"] = checkpoint_selection_audit()
     return metrics

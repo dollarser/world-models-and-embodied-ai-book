@@ -164,7 +164,7 @@ make ch22-smoke
 | --- | --- | --- | --- | --- |
 | input contract | 第4章 `EXP-04-01` | group/source/content/near-duplicate 身份、时间戳、mask 与 episode end 是否可用于 target/评测 | 数据审计结果与失败代码 | 泄漏、缺帧或结束语义不清时不训练 |
 | method contract | 第8章 `EXP-08-01` | timeout 是否保留 bootstrap，terminal 是否阻止 reward 泄漏 | λ-return、continuation 与截断反例 | target 不可构造时修数据，不把缺失猜成 terminal |
-| independent evaluation | 第20章 `BENCH-20-01` | 固定 route/seed、成功定义、timeout 与有效分母后，replanning 是否改善 outcome | route/collision/intervention、Wilson 区间、零事件上界与 episode accounting | protocol 不同或技术无效运行时不排行；零事件不写成零风险 |
+| independent evaluation | 第20章 `BENCH-20-01` | 先按 selection split 冻结 checkpoint，再固定 route/seed、成功定义、timeout 与有效分母，replanning 是否改善 outcome | split-role audit、route/collision/intervention、Wilson 区间、零事件上界与 episode accounting | final 参与选择、protocol 不同或技术无效运行时不排行；零事件不写成零风险 |
 | deployment/safety gate | 第21章 `EXP-21-01` | action 是否新鲜、按时、有限、在界内且 uncertainty 可接受 | allow/fallback、原因计数、P95/deadline miss | 触发 profile-specific fallback，不执行旧 action suffix |
 | evidence package | 本章 `EXP-22-01` | 上述问题、artifact、依赖、失败和限制能否由第三方追踪 | 五段 trace、digest binding、0/23 issue 对照 | 缺一段即缩小声明或停止交付 |
 

@@ -7,8 +7,10 @@ LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from protocol_fixture import (  # noqa: E402
+    CHECKPOINT_SELECTION_ROWS,
     EPISODES,
     audit_episode_rows,
+    checkpoint_selection_audit,
     comparability_warnings,
     exact_paired_cluster_bootstrap,
     evaluate_protocol,
@@ -155,6 +157,35 @@ class ProtocolFixtureTests(unittest.TestCase):
                     zero_event_pseudoreplication_audit(clusters, repeats)
         with self.assertRaises(TypeError):
             zero_event_pseudoreplication_audit(True, 10)
+
+    def test_checkpoint_selection_keeps_final_set_out_of_selection(self):
+        audit = checkpoint_selection_audit()
+        self.assertEqual(audit["selection_split_selected_checkpoint"], "checkpoint-a")
+        self.assertEqual(audit["selection_selected_final_score"], 0.5)
+        self.assertTrue(audit["split_roles_are_distinct"])
+
+    def test_final_set_reuse_exposes_an_authored_confirmation_gap(self):
+        audit = checkpoint_selection_audit()
+        self.assertEqual(audit["test_reuse_selected_checkpoint"], "checkpoint-d")
+        self.assertEqual(audit["test_reuse_reported_final_score"], 0.75)
+        self.assertEqual(audit["test_reuse_confirmation_score"], 0.5)
+        self.assertEqual(audit["test_reuse_authored_optimism_gap"], 0.25)
+
+    def test_checkpoint_selection_rejects_ambiguous_or_invalid_rows(self):
+        duplicate = (*CHECKPOINT_SELECTION_ROWS, dict(CHECKPOINT_SELECTION_ROWS[0]))
+        with self.assertRaisesRegex(ValueError, "unique"):
+            checkpoint_selection_audit(duplicate)
+        tied = tuple(
+            dict(row, final_score=0.75) if row["checkpoint"] == "checkpoint-c" else row
+            for row in CHECKPOINT_SELECTION_ROWS
+        )
+        with self.assertRaisesRegex(ValueError, "exactly one"):
+            checkpoint_selection_audit(tied)
+        for bad_value in (True, float("nan"), 1.1):
+            malformed = (dict(CHECKPOINT_SELECTION_ROWS[0], selection_score=bad_value), *CHECKPOINT_SELECTION_ROWS[1:])
+            with self.subTest(bad_value=bad_value):
+                with self.assertRaises((TypeError, ValueError)):
+                    checkpoint_selection_audit(malformed)
 
     def test_cluster_macro_and_episode_micro_answer_different_estimands(self):
         result = exact_paired_cluster_bootstrap()
