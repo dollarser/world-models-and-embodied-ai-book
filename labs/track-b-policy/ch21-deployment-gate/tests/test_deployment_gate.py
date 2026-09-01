@@ -224,9 +224,9 @@ class DeploymentGateTests(unittest.TestCase):
     def test_stale_late_and_expired_packets_are_rejected(self):
         config = GateConfig()
         fixtures = (
-            (ActionPacket(120.0, 25.0, (0.2,), 2, 5, 0.2, "fixture-v1"), "stale_observation"),
-            (ActionPacket(20.0, 80.0, (0.2,), 2, 5, 0.2, "fixture-v1"), "deadline_miss"),
-            (ActionPacket(20.0, 25.0, (0.2,), 5, 5, 0.2, "fixture-v1"), "action_chunk_expired"),
+            (ActionPacket(120.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1"), "stale_observation"),
+            (ActionPacket(20.0, 80.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1"), "deadline_miss"),
+            (ActionPacket(20.0, 25.0, (0.2, -0.1), 5, 5, 0.2, "fixture-v1"), "action_chunk_expired"),
         )
         for packet, reason in fixtures:
             with self.subTest(reason=reason):
@@ -234,16 +234,23 @@ class DeploymentGateTests(unittest.TestCase):
 
     def test_invalid_and_out_of_bounds_actions_are_rejected(self):
         config = GateConfig()
-        invalid = gate(ActionPacket(20.0, 25.0, (float("nan"),), 2, 5, 0.2, "fixture-v1"), config)
-        bounded = gate(ActionPacket(20.0, 25.0, (1.2,), 2, 5, 0.2, "fixture-v1"), config)
+        invalid = gate(ActionPacket(20.0, 25.0, (float("nan"), 0.0), 2, 5, 0.2, "fixture-v1"), config)
+        bounded = gate(ActionPacket(20.0, 25.0, (1.2, 0.0), 2, 5, 0.2, "fixture-v1"), config)
         self.assertIn("invalid_action", invalid["reasons"])
-        self.assertIn("action_out_of_bounds", bounded["reasons"])
+        self.assertIn("action_out_of_bounds:linear_velocity", bounded["reasons"])
 
     def test_legal_endpoints_can_still_violate_the_transition_limit(self):
         audit = action_transition_audit()
         self.assertTrue(audit["legal_endpoint_jump"]["static_endpoint_within_bounds"])
         self.assertFalse(audit["legal_endpoint_jump"]["allowed"])
-        self.assertEqual(audit["legal_endpoint_jump"]["reasons"], ["action_delta_exceeded"])
+        self.assertEqual(
+            audit["legal_endpoint_jump"]["reasons"],
+            ["action_delta_exceeded:linear_velocity"],
+        )
+        self.assertEqual(
+            audit["legal_endpoint_jump"]["absolute_delta_by_field"],
+            {"linear_velocity": 0.4, "yaw_rate": 0.1},
+        )
 
     def test_smooth_transition_is_allowed_with_bound_prior_state(self):
         audit = action_transition_audit()
@@ -252,7 +259,7 @@ class DeploymentGateTests(unittest.TestCase):
 
     def test_transition_gate_fails_closed_without_adjacent_applied_history(self):
         packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")
-        config = GateConfig(max_action_delta_per_step=0.25)
+        config = GateConfig(enforce_action_transition=True)
         self.assertEqual(gate(packet, config)["reasons"], ["missing_previous_applied_action"])
         stale = gate(
             packet,
@@ -264,16 +271,43 @@ class DeploymentGateTests(unittest.TestCase):
     def test_transition_gate_rejects_ambiguous_config_and_history(self):
         packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")
         with self.assertRaises(ValueError):
-            GateConfig(max_action_delta_per_step=float("nan"))
+            GateConfig(enforce_action_transition=1)  # type: ignore[arg-type]
         decision = gate(
             packet,
-            GateConfig(max_action_delta_per_step=0.25),
+            GateConfig(enforce_action_transition=True),
             previous_applied_action=AppliedAction((0.0,), applied_step=1),
         )
         self.assertIn("action_shape_mismatch", decision["reasons"])
 
+    def test_transition_gate_binds_schema_units_rate_and_ack(self):
+        cases = action_transition_audit()["identity_negative_controls"]
+        self.assertEqual(cases["current_schema"]["reasons"], ["schema_mismatch"])
+        self.assertEqual(cases["previous_units"]["reasons"], ["previous_unit_mismatch"])
+        self.assertEqual(
+            cases["previous_control_rate"]["reasons"],
+            ["previous_control_rate_mismatch"],
+        )
+        self.assertEqual(cases["previous_ack"]["reasons"], ["invalid_applied_action_ack"])
+
+    def test_current_packet_identity_is_checked_without_transition_history(self):
+        packet = ActionPacket(
+            20.0,
+            25.0,
+            (0.2, -0.1),
+            2,
+            5,
+            0.2,
+            "fixture-v1",
+            frame_id="camera",
+            control_hz=20.0,
+        )
+        self.assertEqual(
+            gate(packet, GateConfig())["reasons"],
+            ["frame_mismatch", "control_rate_mismatch"],
+        )
+
     def test_fallback_is_not_hard_coded(self):
-        packet = ActionPacket(120.0, 25.0, (0.2,), 2, 5, 0.2, "fixture-v1")
+        packet = ActionPacket(120.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")
         decision = gate(packet, GateConfig(fallback="request_minimum_risk_maneuver"))
         self.assertEqual(decision["selected_mode"], "request_minimum_risk_maneuver")
 
@@ -289,13 +323,13 @@ class DeploymentGateTests(unittest.TestCase):
 
     def test_uncertainty_score_has_distinct_gate_reasons(self):
         uncertain = gate(
-            ActionPacket(20.0, 25.0, (0.2,), 2, 5, 0.9, "fixture-v1"), GateConfig()
+            ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.9, "fixture-v1"), GateConfig()
         )
         invalid = gate(
-            ActionPacket(20.0, 25.0, (0.2,), 2, 5, float("nan"), "fixture-v1"), GateConfig()
+            ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, float("nan"), "fixture-v1"), GateConfig()
         )
         mismatch = gate(
-            ActionPacket(20.0, 25.0, (0.2,), 2, 5, 0.2, "old-v0"), GateConfig()
+            ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "old-v0"), GateConfig()
         )
         self.assertEqual(uncertain["reasons"], ["uncertainty_exceeds_limit"])
         self.assertEqual(invalid["reasons"], ["invalid_uncertainty_score"])

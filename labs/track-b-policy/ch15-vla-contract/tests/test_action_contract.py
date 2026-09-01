@@ -17,6 +17,17 @@ from action_contract import (  # noqa: E402
 
 
 class ActionContractTests(unittest.TestCase):
+    def test_shared_schema_exposes_physical_units_and_per_step_limits(self):
+        self.assertEqual(MOBILE_BASE_SCHEMA.schema_id, "mobile-base-v1")
+        self.assertEqual(
+            tuple((field.name, field.unit) for field in MOBILE_BASE_SCHEMA.fields),
+            (("linear_velocity", "m/s"), ("yaw_rate", "rad/s")),
+        )
+        self.assertEqual(
+            tuple(field.maximum_delta_per_step for field in MOBILE_BASE_SCHEMA.fields),
+            (0.25, 0.25),
+        )
+
     def test_continuous_action_uses_schema_limits(self):
         decoded = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
         self.assertAlmostEqual(decoded[0], 0.3)

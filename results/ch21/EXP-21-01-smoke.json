@@ -3,12 +3,24 @@
   "gpu_verified": false,
   "metrics": {
     "action_transition_audit": {
-      "legal_endpoint_jump": {"action": [0.8, -0.8], "allowed": false, "maximum_absolute_delta": 0.8, "reasons": ["action_delta_exceeded"], "selected_mode": "hold_position", "static_endpoint_within_bounds": true},
-      "max_action_delta_per_step": 0.25,
-      "missing_history": {"allowed": false, "reasons": ["missing_previous_applied_action"], "selected_mode": "hold_position"},
-      "previous_applied_action": [0.0, 0.0],
-      "scope": "hand-authored consecutive normalized action vectors and step IDs; not units, actuator acknowledgement, dynamics, acceleration, jerk, tracking, feasibility, or safety evidence",
-      "smooth_transition": {"action": [0.2, -0.1], "allowed": true, "maximum_absolute_delta": 0.2, "reasons": [], "selected_mode": "policy_action", "static_endpoint_within_bounds": true}
+      "acknowledged_command_id": 7,
+      "field_contracts": {
+        "linear_velocity": {"maximum":0.5,"maximum_delta_per_step":0.25,"minimum":-0.5,"unit":"m/s"},
+        "yaw_rate": {"maximum":1,"maximum_delta_per_step":0.25,"minimum":-1,"unit":"rad/s"}
+      },
+      "identity_negative_controls": {
+        "current_schema": {"allowed":false,"reasons":["schema_mismatch"],"selected_mode":"hold_position"},
+        "previous_ack": {"allowed":false,"reasons":["invalid_applied_action_ack"],"selected_mode":"hold_position"},
+        "previous_control_rate": {"allowed":false,"reasons":["previous_control_rate_mismatch"],"selected_mode":"hold_position"},
+        "previous_units": {"allowed":false,"reasons":["previous_unit_mismatch"],"selected_mode":"hold_position"}
+      },
+      "legal_endpoint_jump": {"absolute_delta_by_field":{"linear_velocity":0.4,"yaw_rate":0.1},"action":[0.4,-0.1],"allowed":false,"reasons":["action_delta_exceeded:linear_velocity"],"selected_mode":"hold_position","static_endpoint_within_bounds":true},
+      "missing_history": {"allowed":false,"reasons":["missing_previous_applied_action"],"selected_mode":"hold_position"},
+      "previous_applied_action": [0,0],
+      "previous_command_id": 7,
+      "schema_id": "mobile-base-v1",
+      "scope": "hand-authored physical-unit action vectors, identity fields, command acknowledgement, and step IDs; not authenticated acknowledgement, dynamics, acceleration, jerk, tracking, feasibility, or safety evidence",
+      "smooth_transition": {"absolute_delta_by_field":{"linear_velocity":0.2,"yaw_rate":0.1},"action":[0.2,-0.1],"allowed":true,"reasons":[],"selected_mode":"policy_action","static_endpoint_within_bounds":true}
     },
     "allowed_count": 1,
     "async_schedule": {
@@ -65,7 +77,7 @@
       "out_of_bounds": {
         "allowed": false,
         "reasons": [
-          "action_out_of_bounds"
+          "action_out_of_bounds:linear_velocity"
         ],
         "selected_mode": "hold_position"
       },
@@ -194,7 +206,7 @@
     },
     "reason_counts": {
       "action_chunk_expired": 1,
-      "action_out_of_bounds": 1,
+      "action_out_of_bounds:linear_velocity": 1,
       "deadline_miss": 1,
       "invalid_action": 1,
       "stale_observation": 1,

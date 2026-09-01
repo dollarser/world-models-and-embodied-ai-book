@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from math import ceil, isfinite
+from pathlib import Path
+import sys
+
+
+SHARED_ROOT = Path(__file__).resolve().parents[3] / "shared"
+sys.path.insert(0, str(SHARED_ROOT))
+
+from action_schema import ActionSchema, MOBILE_BASE_SCHEMA  # noqa: E402
 
 
 def _finite_number(value: object) -> bool:
@@ -14,8 +22,8 @@ def _finite_number(value: object) -> bool:
 class GateConfig:
     deadline_ms: float = 50.0
     max_sensor_age_ms: float = 100.0
-    max_abs_action: float = 1.0
-    max_action_delta_per_step: float | None = None
+    action_schema: ActionSchema = MOBILE_BASE_SCHEMA
+    enforce_action_transition: bool = False
     max_uncertainty_score: float = 0.7
     uncertainty_revision: str = "fixture-v1"
     fallback: str = "hold_position"
@@ -24,15 +32,13 @@ class GateConfig:
         for name, value in (
             ("deadline_ms", self.deadline_ms),
             ("max_sensor_age_ms", self.max_sensor_age_ms),
-            ("max_abs_action", self.max_abs_action),
         ):
             if not _finite_number(value) or value <= 0.0:
                 raise ValueError(f"{name} must be a finite positive number")
-        if self.max_action_delta_per_step is not None and (
-            not _finite_number(self.max_action_delta_per_step)
-            or self.max_action_delta_per_step <= 0.0
-        ):
-            raise ValueError("max_action_delta_per_step must be None or a finite positive number")
+        if not isinstance(self.action_schema, ActionSchema):
+            raise ValueError("action_schema must be an ActionSchema")
+        if not isinstance(self.enforce_action_transition, bool):
+            raise ValueError("enforce_action_transition must be boolean")
         if (
             not _finite_number(self.max_uncertainty_score)
             or not 0.0 <= self.max_uncertainty_score <= 1.0
@@ -53,6 +59,13 @@ class ActionPacket:
     valid_until_step: int
     uncertainty_score: float
     uncertainty_revision: str
+    command_id: int = 8
+    schema_id: str = MOBILE_BASE_SCHEMA.schema_id
+    frame_id: str = MOBILE_BASE_SCHEMA.frame_id
+    field_names: tuple[str, ...] = tuple(field.name for field in MOBILE_BASE_SCHEMA.fields)
+    units: tuple[str, ...] = tuple(field.unit for field in MOBILE_BASE_SCHEMA.fields)
+    control_hz: float = MOBILE_BASE_SCHEMA.control_hz
+    clock_id: str = MOBILE_BASE_SCHEMA.clock_id
 
 
 @dataclass(frozen=True)
@@ -61,6 +74,14 @@ class AppliedAction:
 
     action: tuple[float, ...]
     applied_step: int
+    command_id: int = 7
+    acknowledged_command_id: int = 7
+    schema_id: str = MOBILE_BASE_SCHEMA.schema_id
+    frame_id: str = MOBILE_BASE_SCHEMA.frame_id
+    field_names: tuple[str, ...] = tuple(field.name for field in MOBILE_BASE_SCHEMA.fields)
+    units: tuple[str, ...] = tuple(field.unit for field in MOBILE_BASE_SCHEMA.fields)
+    control_hz: float = MOBILE_BASE_SCHEMA.control_hz
+    clock_id: str = MOBILE_BASE_SCHEMA.clock_id
 
 
 @dataclass(frozen=True)
@@ -688,6 +709,7 @@ def gate(
     previous_applied_action: AppliedAction | None = None,
 ) -> dict[str, object]:
     reasons = []
+    schema = config.action_schema
     if not _finite_number(packet.sensor_age_ms) or packet.sensor_age_ms < 0.0:
         reasons.append("invalid_sensor_age")
     elif packet.sensor_age_ms > config.max_sensor_age_ms:
@@ -698,17 +720,64 @@ def gate(
     elif packet.pipeline_latency_ms > config.deadline_ms:
         reasons.append("deadline_miss")
 
+    expected_field_names = tuple(field.name for field in schema.fields)
+    expected_units = tuple(field.unit for field in schema.fields)
+    if packet.schema_id != schema.schema_id:
+        reasons.append("schema_mismatch")
+    if packet.frame_id != schema.frame_id:
+        reasons.append("frame_mismatch")
+    if packet.field_names != expected_field_names:
+        reasons.append("field_order_mismatch")
+    if packet.units != expected_units:
+        reasons.append("unit_mismatch")
+    if packet.control_hz != schema.control_hz:
+        reasons.append("control_rate_mismatch")
+    if packet.clock_id != schema.clock_id:
+        reasons.append("clock_mismatch")
+    if isinstance(packet.command_id, bool) or not isinstance(packet.command_id, int) or packet.command_id < 0:
+        reasons.append("invalid_command_id")
+
     if not packet.action or any(not _finite_number(value) for value in packet.action):
         reasons.append("invalid_action")
-    elif any(abs(value) > config.max_abs_action for value in packet.action):
-        reasons.append("action_out_of_bounds")
+    elif len(packet.action) != len(schema.fields):
+        reasons.append("action_dimension_mismatch")
+    else:
+        for value, field in zip(packet.action, schema.fields):
+            if not field.minimum <= value <= field.maximum:
+                reasons.append(f"action_out_of_bounds:{field.name}")
 
-    if config.max_action_delta_per_step is not None:
+    if config.enforce_action_transition:
         if previous_applied_action is None:
             reasons.append("missing_previous_applied_action")
         elif not isinstance(previous_applied_action, AppliedAction):
             reasons.append("invalid_previous_applied_action")
         else:
+            if previous_applied_action.schema_id != schema.schema_id:
+                reasons.append("previous_schema_mismatch")
+            if previous_applied_action.frame_id != schema.frame_id:
+                reasons.append("previous_frame_mismatch")
+            if previous_applied_action.field_names != expected_field_names:
+                reasons.append("previous_field_order_mismatch")
+            if previous_applied_action.units != expected_units:
+                reasons.append("previous_unit_mismatch")
+            if previous_applied_action.control_hz != schema.control_hz:
+                reasons.append("previous_control_rate_mismatch")
+            if previous_applied_action.clock_id != schema.clock_id:
+                reasons.append("previous_clock_mismatch")
+            if (
+                isinstance(previous_applied_action.command_id, bool)
+                or not isinstance(previous_applied_action.command_id, int)
+                or previous_applied_action.command_id < 0
+                or previous_applied_action.acknowledged_command_id
+                != previous_applied_action.command_id
+            ):
+                reasons.append("invalid_applied_action_ack")
+            elif (
+                not isinstance(packet.command_id, bool)
+                and isinstance(packet.command_id, int)
+                and previous_applied_action.command_id >= packet.command_id
+            ):
+                reasons.append("previous_command_not_before_current")
             previous_action_valid = bool(previous_applied_action.action) and all(
                 _finite_number(value) for value in previous_applied_action.action
             )
@@ -716,11 +785,12 @@ def gate(
                 reasons.append("invalid_previous_applied_action")
             elif len(previous_applied_action.action) != len(packet.action):
                 reasons.append("action_shape_mismatch")
-            elif any(
-                abs(current - previous) > config.max_action_delta_per_step
-                for current, previous in zip(packet.action, previous_applied_action.action)
-            ):
-                reasons.append("action_delta_exceeded")
+            else:
+                for current, previous, field in zip(
+                    packet.action, previous_applied_action.action, schema.fields
+                ):
+                    if abs(current - previous) > field.maximum_delta_per_step:
+                        reasons.append(f"action_delta_exceeded:{field.name}")
 
             if (
                 isinstance(previous_applied_action.applied_step, bool)
@@ -761,7 +831,7 @@ def gate(
 def action_transition_audit() -> dict[str, object]:
     """Show why legal action endpoints do not establish a legal one-step transition."""
 
-    config = GateConfig(max_action_delta_per_step=0.25)
+    config = GateConfig(enforce_action_transition=True)
     previous = AppliedAction((0.0, 0.0), applied_step=1)
     common = {
         "sensor_age_ms": 20.0,
@@ -772,33 +842,71 @@ def action_transition_audit() -> dict[str, object]:
         "uncertainty_revision": "fixture-v1",
     }
     smooth_packet = ActionPacket(action=(0.2, -0.1), **common)
-    jump_packet = ActionPacket(action=(0.8, -0.8), **common)
+    jump_packet = ActionPacket(action=(0.4, -0.1), **common)
     smooth = gate(smooth_packet, config, previous_applied_action=previous)
     jump = gate(jump_packet, config, previous_applied_action=previous)
     missing_history = gate(jump_packet, config)
+    identity_negative_controls = {
+        "current_schema": gate(
+            replace(smooth_packet, schema_id="mobile-base-v0"),
+            config,
+            previous_applied_action=previous,
+        ),
+        "previous_units": gate(
+            smooth_packet,
+            config,
+            previous_applied_action=replace(previous, units=("km/h", "deg/s")),
+        ),
+        "previous_control_rate": gate(
+            smooth_packet,
+            config,
+            previous_applied_action=replace(previous, control_hz=20.0),
+        ),
+        "previous_ack": gate(
+            smooth_packet,
+            config,
+            previous_applied_action=replace(previous, acknowledged_command_id=6),
+        ),
+    }
 
     def transition_record(packet: ActionPacket, decision: dict[str, object]) -> dict[str, object]:
         return {
             "action": packet.action,
             "static_endpoint_within_bounds": all(
-                abs(value) <= config.max_abs_action for value in packet.action
+                field.minimum <= value <= field.maximum
+                for value, field in zip(packet.action, config.action_schema.fields)
             ),
-            "maximum_absolute_delta": max(
-                abs(current - prior)
-                for current, prior in zip(packet.action, previous.action)
-            ),
+            "absolute_delta_by_field": {
+                field.name: round(abs(current - prior), 6)
+                for current, prior, field in zip(
+                    packet.action, previous.action, config.action_schema.fields
+                )
+            },
             **decision,
         }
 
     return {
-        "max_action_delta_per_step": config.max_action_delta_per_step,
+        "schema_id": config.action_schema.schema_id,
+        "field_contracts": {
+            field.name: {
+                "unit": field.unit,
+                "minimum": field.minimum,
+                "maximum": field.maximum,
+                "maximum_delta_per_step": field.maximum_delta_per_step,
+            }
+            for field in config.action_schema.fields
+        },
         "previous_applied_action": previous.action,
+        "previous_command_id": previous.command_id,
+        "acknowledged_command_id": previous.acknowledged_command_id,
         "smooth_transition": transition_record(smooth_packet, smooth),
         "legal_endpoint_jump": transition_record(jump_packet, jump),
         "missing_history": missing_history,
+        "identity_negative_controls": identity_negative_controls,
         "scope": (
-            "hand-authored consecutive normalized action vectors and step IDs; not units, actuator "
-            "acknowledgement, dynamics, acceleration, jerk, tracking, feasibility, or safety evidence"
+            "hand-authored physical-unit action vectors, identity fields, command acknowledgement, and "
+            "step IDs; not authenticated acknowledgement, dynamics, acceleration, jerk, tracking, "
+            "feasibility, or safety evidence"
         ),
     }
 
@@ -826,7 +934,7 @@ def evaluate() -> dict[str, object]:
             "stale_observation",
             "deadline_miss",
             "invalid_action",
-            "action_out_of_bounds",
+            "action_out_of_bounds:linear_velocity",
             "action_chunk_expired",
             "uncertainty_exceeds_limit",
         )

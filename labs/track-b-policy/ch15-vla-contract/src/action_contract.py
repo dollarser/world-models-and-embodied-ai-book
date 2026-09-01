@@ -2,43 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from pathlib import Path
+import sys
 
+SHARED_ROOT = Path(__file__).resolve().parents[3] / "shared"
+sys.path.insert(0, str(SHARED_ROOT))
 
-@dataclass(frozen=True)
-class ActionField:
-    name: str
-    unit: str
-    minimum: float
-    maximum: float
-
-
-@dataclass(frozen=True)
-class ActionSchema:
-    schema_id: str
-    frame_id: str
-    fields: tuple[ActionField, ...]
-    control_hz: float
-    prediction_horizon: int
-    execution_horizon: int
-    max_age_ms: int
-    clock_id: str
-
-
-MOBILE_BASE_SCHEMA = ActionSchema(
-    schema_id="mobile-base-v1",
-    frame_id="base_link",
-    fields=(
-        ActionField("linear_velocity", "m/s", -0.5, 0.5),
-        ActionField("yaw_rate", "rad/s", -1.0, 1.0),
-    ),
-    control_hz=10.0,
-    prediction_horizon=3,
-    execution_horizon=1,
-    max_age_ms=100,
-    clock_id="control_monotonic_ms",
-)
+from action_schema import ActionField, ActionSchema, MOBILE_BASE_SCHEMA  # noqa: E402,F401
 
 EXECUTABLE_SOURCES = {"continuous", "discrete_tokens", "flow_chunk"}
 

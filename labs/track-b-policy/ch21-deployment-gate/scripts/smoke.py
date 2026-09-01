@@ -78,10 +78,21 @@ def main() -> int:
         raise AssertionError("the bounded smooth transition must pass the authored transition gate")
     if transition["legal_endpoint_jump"]["allowed"]:
         raise AssertionError("static endpoint bounds must not bypass the authored transition limit")
-    if transition["legal_endpoint_jump"]["reasons"] != ["action_delta_exceeded"]:
+    if transition["legal_endpoint_jump"]["reasons"] != [
+        "action_delta_exceeded:linear_velocity"
+    ]:
         raise AssertionError("the legal-endpoint jump must retain its distinct reason code")
     if transition["missing_history"]["reasons"] != ["missing_previous_applied_action"]:
         raise AssertionError("an enabled transition limit must fail closed without applied history")
+    identity_cases = transition["identity_negative_controls"]
+    expected_identity_reasons = {
+        "current_schema": ["schema_mismatch"],
+        "previous_units": ["previous_unit_mismatch"],
+        "previous_control_rate": ["previous_control_rate_mismatch"],
+        "previous_ack": ["invalid_applied_action_ack"],
+    }
+    if any(identity_cases[name]["reasons"] != reasons for name, reasons in expected_identity_reasons.items()):
+        raise AssertionError("schema, unit, rate, and acknowledgement controls must remain distinct")
     report = {
         "experiment_id": "EXP-21-01",
         "status": "smoke",

@@ -144,7 +144,9 @@ VLA 可能在内部表示物体、因果或未来，但 probe 读得出状态不
 
 ## 15.6 EXP-15-01：统一动作合同与执行网关
 
-S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测最多 3 步但每次最多执行 1 步、命令最大年龄 100 ms，并要求单调 `command_id`、共同的 `control_monotonic_ms` clock，以及与当前调度槽一致的 `observation_timestep` 和 `first_action_timestep`。
+S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测最多 3 步但每次最多执行 1 步、命令最大年龄 100 ms，并要求单调 `command_id`、共同的 `control_monotonic_ms` clock，以及与当前调度槽一致的 `observation_timestep` 和 `first_action_timestep`。该 schema 现在只有一个可执行定义 `labs/shared/action_schema.py`；第15章负责生成/packet 合同，第21章直接导入同一对象做部署范围、逐字段变化与前序身份检查，不再复制第二份常量。
+
+共享字段还登记教学单步变化上限：线速度 `0.25 m/s/step`、角速度 `0.25 rad/s/step`。它们只为第21章状态化负对照提供带量纲接口，不是某个真实底盘的数据手册、加速度/jerk 上限或安全参数。
 
 同一归一化动作 `(0.6,-0.4)` 经过：
 
