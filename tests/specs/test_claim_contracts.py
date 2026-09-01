@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.check_book import check_claim_contract
+from scripts.check_book import check_claim_contract, check_figure_contract
 
 
 class ClaimContractTest(unittest.TestCase):
@@ -51,6 +51,19 @@ class ClaimContractTest(unittest.TestCase):
         text = "`CLAIM-06-01`（result）：fixture output\n"
         errors = check_claim_contract(6, ["CLAIM-06-01"], text, set())
         self.assertTrue(any("not bound by a registered experiment card" in item for item in errors))
+
+
+class FigureContractTest(unittest.TestCase):
+    def test_accepts_registered_in_chapter_ids(self) -> None:
+        text = "`FIG-15-01` / `TAB-15-01`\n*TAB-15-01: caption*\n"
+        self.assertEqual([], check_figure_contract(15, ["FIG-15-01", "TAB-15-01"], text))
+
+    def test_rejects_unregistered_missing_and_foreign_ids(self) -> None:
+        text = "`FIG-15-01` / `TAB-14-01`\n"
+        errors = check_figure_contract(15, ["FIG-15-01", "TAB-15-02"], text)
+        self.assertTrue(any("does not contain registered" in item for item in errors))
+        self.assertTrue(any("contains unregistered" in item for item in errors))
+        self.assertTrue(any("invalid or foreign" in item for item in errors))
 
 
 if __name__ == "__main__":

@@ -160,9 +160,9 @@ make ch09-smoke
 
 本书当前没有下载其数据、运行官方命令或核对排行榜结果，因此不能标记为 `R2` 或本书复现。使用时还应锁定仓库 commit、测试集发布日期、RoboTwin 版本、所选 track 与外部模型/API；不能把 v1、后续版本或在线 Arena 的覆盖范围混成一个稳定结论。
 
-2026 年的 [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 又把范围扩展到更多生成模态、功能用途和平台。这里最值得吸收的不是“项目更新了”，而是评测对象必须写成 `模型版本 × 输入输出模态 × 下游用途 × 执行平台 × 协议版本`；只写 WorldArena 分数已经不足以定位证据。官方站点与服务接口仍在快速演进，本书仅把论文与官方项目页作为 `[P/O,R0–R1]` 设计案例，不抄录可能漂移的排行榜数字。
+2026 年的 [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 又把范围扩展到更多生成模态、功能用途和平台。这里最值得吸收的不是“项目更新了”，而是评测对象必须写成 `模型版本 × 输入输出模态 × 下游用途 × 执行平台 × 协议版本`；只写 WorldArena 分数已经不足以定位证据。截至 2026-09-01，arXiv 一手元数据只显示 2026-05-18 提交的 v1，没有列出已接收场次，因此论文按 `[A]` 而不是 `[P]`；官方项目资产另记 `[O,R1]`。本书不抄录可能漂移的排行榜数字。
 
-[KineBench](https://arxiv.org/abs/2607.19876) 则从另一侧暴露闭环归因问题：若评测需要额外 inverse dynamics model 把生成状态转回动作，最终结果会同时包含世界模型和逆动力学模型的误差。该论文提出直接以运动学落地的闭环协议，并报告 ManiSkill3 任务上的多个泛化分组；本书只核对论文而未运行资产，记为 `[P,R0]`。`CLAIM-09-05`（inference）：闭环评测应把额外控制器、逆动力学模型和动作落地层登记为独立组件；否则不能把端到端成败全部归因于被测世界模型。本书尚未运行 KineBench，也不把论文中的任务数或结果当作本书测量。
+[KineBench](https://arxiv.org/abs/2607.19876) 则从另一侧暴露闭环归因问题：若评测需要额外 inverse dynamics model 把生成状态转回动作，最终结果会同时包含世界模型和逆动力学模型的误差。该论文提出直接以运动学落地的闭环协议，并报告 ManiSkill3 任务上的多个泛化分组；arXiv 元数据明确标注已接收 ECCV 2026，本书只核对论文而未运行资产，因此记为 `[P,R0]`。`CLAIM-09-05`（inference）：闭环评测应把额外控制器、逆动力学模型和动作落地层登记为独立组件；否则不能把端到端成败全部归因于被测世界模型。本书尚未运行 KineBench，也不把论文中的任务数或结果当作本书测量。
 
 ## 9.7 幻觉、覆盖缺口与模型利用
 
@@ -269,7 +269,7 @@ resources + experiment_ids + artifacts + limitations
 
 - Yu et al., [How Should World Models Be Evaluated?](https://arxiv.org/abs/2606.15032)，`[A,R0]`，评测层级与声明错位；
 - Shang et al., [WorldArena 官方仓库](https://github.com/tsinghua-fib-lab/WorldArena)，`[O,R1]`，感知与功能评测案例；
-- [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 与[官方项目页](https://v2.world-arena.ai/)，`[P/O,R0–R1]`，多模态、多用途和多平台评测案例；
+- [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 与[官方项目页](https://v2.world-arena.ai/)，`[A/O,R0–R1]`，多模态、多用途和多平台评测案例；
 - [KineBench](https://arxiv.org/abs/2607.19876)，`[P,R0]`，避免额外 inverse dynamics model 混淆的闭环评测案例；
 - Geifman & El-Yaniv, [Selective Classification for Deep Neural Networks](https://arxiv.org/abs/1705.08500)，`[P]`，risk–coverage 基础；
 - Traub et al., [Overcoming Common Flaws in the Evaluation of Selective Classification Systems](https://arxiv.org/abs/2407.01032)，`[P]`，选择性评测常见指标缺陷；
@@ -294,6 +294,6 @@ resources + experiment_ids + artifacts + limitations
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`；
-- 已知限制：WorldArena 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；
+- 审查记录路径：`reviews/batch-a-review.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
+- 已知限制：WorldArena 系列、KineBench 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；
 - 下一步：用真实但可合法获取的小型数据试运行一张 `draft/frozen` benchmark card；当前无 GPU 阶段不伪造该结果。

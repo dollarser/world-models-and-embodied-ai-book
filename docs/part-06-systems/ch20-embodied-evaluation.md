@@ -108,7 +108,7 @@ flowchart TB
 
 [SimplerEnv 官方仓库](https://github.com/simpler-env/SimplerEnv)把仿真定位为真机评测的补充而非替代，提供 Visual Matching 与 Variant Aggregation 两类 real-to-sim 设置，并用 MMRV 与 Pearson correlation 检查仿真排序是否对应真实表现。这里的关键不是“相关性高”这一口号，而是相关性本身也需要在具名任务、策略集合和真机参照上重新估计；换一批 policy 或任务，结论不能自动继承。
 
-2025 年的 [RoboArena](https://arxiv.org/abs/2506.18123)选择另一条路线：跨七个机构在 DROID 平台上执行 600 余次真实机器人两两比较，评测者可选择本地任务与环境，但使用 double-blind policy pair，再聚合偏好得到排序。这表明扩大真实性并不等于强行统一全部场景；也可以冻结配对、盲法、评测者和聚合模型，把站点差异作为分层因素。该工作是 `[O,R0]` 文献案例，本书没有连接其评测网络。
+2025 年的 [RoboArena](https://arxiv.org/abs/2506.18123)选择另一条路线：跨七个机构在 DROID 平台上执行 600 余次真实机器人两两比较，评测者可选择本地任务与环境，但使用 double-blind policy pair，再聚合偏好得到排序。这表明扩大真实性并不等于强行统一全部场景；也可以冻结配对、盲法、评测者和聚合模型，把站点差异作为分层因素。arXiv 元数据截至核查日未列出已接收场次，因此论文按 `[A,R0]`，不能因其同时有官方项目页就把论文成熟度写成 `[O]`；本书没有连接其评测网络。
 
 本书默认通用仿真选择为：机器人动力学优先 MuJoCo 或已有官方评测接口的轻量任务环境；驾驶闭环优先 MetaDrive，CARLA 作为高保真扩展。第19章已锁定这一分工；它们均不是完成 S 档正文的前提。
 
@@ -229,7 +229,7 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 - [LIBERO 官方仓库](https://github.com/Lifelong-Robot-Learning/LIBERO)，`[O,R1]`，终身机器人学习 benchmark；
 - NIST, [Binomial Proportion](https://itl.nist.gov/div898/handbook/prc/section2/prc241.htm)，`[O]`，Wilson/Agresti–Coull 小样本区间建议；
 - [SimplerEnv 官方项目](https://simpler-env.github.io/)，`[O,R0]`，真实到仿真的策略评测案例，尚未运行；
-- Atreya et al., [RoboArena](https://arxiv.org/abs/2506.18123)，`[O,R0]`，分布式 double-blind 真机两两评测，尚未连接；
+- Atreya et al., [RoboArena](https://arxiv.org/abs/2506.18123)，`[A,R0]`，分布式 double-blind 真机两两评测，尚未连接；
 - [RoboCasa 官方项目](https://robocasa.ai/)，`[O,R0]`，日常任务仿真环境，尚未运行；
 - [MetaDrive 官方文档](https://metadriverse.github.io/metadrive/)，`[O,R0]`，第19章已锁定为驾驶默认闭环环境，当前尚未运行；
 - [CARLA Leaderboard 2.1 评测规则](https://leaderboard.carla.org/evaluation_v2_1/)，`[O,R0]`，路线得分、违规与按公里事件；高保真扩展，非默认必需路径。
@@ -251,5 +251,5 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch20-evaluation-validity-review-2026-09-01.md`；
+- 审查记录路径：`reviews/ch20-evaluation-validity-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
 - 已知限制：未运行 LIBERO、SimplerEnv、RoboArena、MetaDrive、CARLA 或真实硬件；Wilson 区间只覆盖独立二项比例，不替代分层/相关 episode 的统计设计；2×2 格只是协议算术反事实；无效运行反例只验证拒绝路径，没有估计真实 reset/logging 故障率。

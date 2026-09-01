@@ -3,7 +3,7 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-11-01`
-> 关联声明：`CLAIM-11-01`～`CLAIM-11-09`
+> 关联声明：`CLAIM-11-01`～`CLAIM-11-10`
 > 关联图表：`FIG-11-01` / `TAB-11-01` / `TAB-11-02` / `TAB-11-03` / `TAB-11-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
@@ -203,11 +203,18 @@ make ch11-smoke
 | DIAMOND | 游戏像素/环境未来 | 离散游戏动作、imagination 中训练 agent | 代码、checkpoint、逐游戏/seed 结果 | ROM 另行授权；不是机器人/驾驶 |
 | V-JEPA 2-AC | latent future | 机器人动作、图像目标规划 | 代码、action-conditioned checkpoint、示例 | 不输出可观看视频；本书未运行 |
 | Cosmos-Predict2.5 | 视频 future | 2B robot/action-cond 等专用模型 | Apache-2.0 代码、Open Model License 权重、推理/后训练文档 | 仓库已转有限维护并建议迁移 Cosmos 3；资源未测 |
+| Cosmos 3 Generator | vision/sound/action 等统一序列 | 多模态生成、未来预测与 action 输出 | 当前官方仓库、模型报告、推理/后训练配方 | 统一接口不证明 action-state、3D 或物理一致性；资源未测 |
 | Cosmos-Drive-Dreams | 多视角 RGB/LiDAR 合成数据 | HD map、3D box、LiDAR 等空间条件 | pipeline、权重、toolkit、合成数据 | 场景条件生成不自动等于 ego-action 闭环 simulator |
 
 *TAB-11-04：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*
 
 `CLAIM-11-09`（fact）：Cosmos-Predict2.5 官方仓库列有 2B robot/action-cond 模型及推理、后训练路径，但截至核查日已声明只做有限维护并建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
+
+[Cosmos 3 官方仓库](https://github.com/NVIDIA/cosmos)把 Generator 描述为可联合处理或生成 text、vision、sound 与 action 的 omnimodal world model，并公开推理和 post-training 入口；同一 README 也明确列出长时一致性、action-state consistency、3D 结构和物理合理性等限制。这里按 `[O,R1]` 记录“公开接口与资产存在”，不把官方的能力概述升级为独立效果验证。
+
+`CLAIM-11-10`（fact）：Cosmos 3 官方接口已将 action 纳入统一生成输入输出，同时仍明确列出 action-state、3D 与物理一致性限制。
+
+迁移代际时仍应重新登记输入输出模态、运行后端、checkpoint、许可与失败边界，不能沿用 2.5 的实验卡。
 
 本书当前不下载 checkpoint，不执行其训练或试玩。若后续作为 M/L1 实验，必须锁定 commit、模型代际、环境 ROM/数据权利、checkpoint 许可、GPU、采样步数、真实 FPS 定义和自由 rollout horizon。论文速度不能直接换算当前设备性能；2B 参数也不能直接推出 24 GB 可行。
 
@@ -294,7 +301,7 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - Wayve, [GAIA-2 技术报告](https://arxiv.org/abs/2503.20523) 与 [GAIA-4 官方页面](https://wayve.ai/thinking/gaia-4/)，`[A/V,R0/R1]`；
 - Waymo, [Waymo World Model 官方博客](https://waymo.com/blog/2026/02/the-waymo-world-model-a-new-frontier-for-autonomous-driving-simulation/)，`[V,R0]`；
 - Meta FAIR, [V-JEPA 2-AC 官方仓库](https://github.com/facebookresearch/vjepa2)，`[O,R1]`，latent 动作条件路线。
-- NVIDIA, [Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5) 与 [Cosmos-Drive-Dreams](https://github.com/nv-tlabs/Cosmos-Drive-Dreams)，`[O,R1]`，机器人动作条件视频与驾驶条件合成数据的不同接口。
+- NVIDIA, [Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5)、[Cosmos 3](https://github.com/NVIDIA/cosmos) 与 [Cosmos-Drive-Dreams](https://github.com/nv-tlabs/Cosmos-Drive-Dreams)，`[O,R1]`，不同代际的统一生成、机器人动作条件视频与驾驶条件合成数据接口。
 
 ## 下一章接口
 
@@ -313,6 +320,6 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`；
+- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
 - 已知限制：没有训练视频模型、下载 checkpoint、运行仿真或验证任何闭源案例；
 - 下一步：视频训练与仿真验证保持待办；Cosmos/DIAMOND 等上游资产只完成一手资料核验，未下载或运行。

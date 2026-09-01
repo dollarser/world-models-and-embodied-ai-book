@@ -239,5 +239,5 @@ CARLA 用于高保真多相机、天气、城市资产和传感器管线扩展�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`；
+- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
 - 已知限制：只运行标准库标量 fixture；没有安装仿真器、下载资产、运行 GPU 或真实硬件。

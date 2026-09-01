@@ -10,7 +10,7 @@
 
 | 命令 | 环境 | 检查范围 | 失败等级 |
 | --- | --- | --- | --- |
-| `make check-local` | 宿主标准库 | 文件、JSON、链接、manifest、声明双向登记、`result`—实验卡绑定与 22 组 smoke—结果精确一致性 | `BLOCK` |
+| `make check-local` | 宿主标准库 | 文件、JSON、链接、manifest、声明/图表双向登记、`result`—实验卡绑定与 22 组 smoke—结果精确一致性 | `BLOCK` |
 | `make check-strict` | Docker | JSON Schema、manifest、实验卡/benchmark card 条件与跨资产规则 | `BLOCK` |
 | `make check` | 宿主 + Docker | 依次执行 local 与 strict | `BLOCK` |
 | `make docs-build` | Docker | MkDocs 严格构建、导航、Markdown 扩展 | `BLOCK` |
@@ -26,6 +26,8 @@
 | 文档构建 | 自动 `BLOCK` | `make docs-build` 返回 0 且无 warning |
 | 章节模板 | 自动 + 人工 `BLOCK` | 必备章节存在，非适用项明确说明而非静默删除 |
 | 声明追溯 | 自动 + 人工 `BLOCK` | `CLAIM` 定义与 manifest 双向相等、类型规范、章节归属正确；每个 `result` 由同章实验卡反向绑定，外部报告数字不冒充本书结果 |
+| 来源成熟度 | 人工 `BLOCK` | `P` 有已接收/发表的一手元数据；只有 arXiv、项目页或投稿状态时标为 `A`，官方资产 `O` 不替论文成熟度 |
+| 图表追溯 | 自动 + 人工 `BLOCK` | 正文 `FIG/TAB` 与 manifest 双向相等、章节归属正确；caption、来源、许可和解释边界完整 |
 | 大文件与密钥 | 自动 `BLOCK` | 不含数据、权重、缓存、密钥和敏感日志 |
 | 生成资产 | 自动 `BLOCK` | 能由记录的命令重新产生 |
 

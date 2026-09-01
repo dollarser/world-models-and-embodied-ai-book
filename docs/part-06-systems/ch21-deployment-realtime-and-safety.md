@@ -263,5 +263,5 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`；
+- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
 - 已知限制：没有测量真实墙钟、调度器、网络、模型、uncertainty estimator、ROS、机器人、车辆或 GPU；异步 schedule 与状态机均为离散合同，不验证执行器可达性、MRM 完成或安全认证。

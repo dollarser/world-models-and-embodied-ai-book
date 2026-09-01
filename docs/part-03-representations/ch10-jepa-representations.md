@@ -257,6 +257,6 @@ JEPA 把预测目标从像素移到表示空间，使模型可以忽略部分不
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch10-probe-shift-action-review-2026-09-01.md`；
+- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch10-probe-shift-action-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
 - 已知限制：没有下载或运行任何 I-JEPA/V-JEPA checkpoint，也没有第一人称或驾驶数据；
 - 下一步：官方 ViT-B 微型推理仍待可用 GPU；其 24 GB 推理占用、macOS/Docker 解码路径与真实视频 probe 均保持待验证。

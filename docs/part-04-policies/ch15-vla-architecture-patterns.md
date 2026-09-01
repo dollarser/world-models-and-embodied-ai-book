@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-15-01`
-> 关联声明：`CLAIM-15-01`～`CLAIM-15-08`
-> 关联图表：`FIG-15-01` / `TAB-15-01`～`TAB-15-03`
+> 关联声明：`CLAIM-15-01`～`CLAIM-15-09`
+> 关联图表：`FIG-15-01` / `TAB-15-01`～`TAB-15-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -109,7 +109,18 @@ flowchart LR
 
 双系统通常让较慢的视觉语言模块解释场景和任务，让较快 action expert 生成连续控制。它可以缓存语义前缀、异步刷新动作块，也可以端到端联合训练。所谓 System 2 不保证形式化推理，System 1 也不保证硬实时。
 
-[Isaac GR00T](https://github.com/NVIDIA/Isaac-GR00T) 的当前主分支在核查日标为 N1.7，官方 README 描述 VLM 主干加 flow-matching DiT action head、相对末端动作和 LeRobot 数据接口，并公开 Apache-2.0 代码/权重说明 `[O,R1]`。当前主分支说明 action dimension 已扩至 132、模型 action horizon 已从 16 扩至 40，rollout 参数也从 `action-horizon` 改名为 `execution-horizon`，正好说明“预测多少”和“执行多少”不能混用。相关 checkpoint、分支和文档可能保留不同 horizon，运行时应读模型配置而不是复制本文数字。本书未独立验证其 GA、性能或硬件声明。
+[Isaac GR00T](https://github.com/NVIDIA/Isaac-GR00T) 的当前主分支在核查日标为 N1.7，官方 README 描述 VLM 主干加 flow-matching DiT action head、相对末端动作和 LeRobot 数据接口，并公开 Apache-2.0 代码/权重说明 `[O,R1]`。当前主分支说明 action dimension 已扩至 132、模型最大 action horizon 已从 16 扩至 40，rollout 参数也从 `action-horizon` 改名为 `execution-horizon`。但官方 [`data_config.md`](https://github.com/NVIDIA/Isaac-GR00T/blob/main/getting_started/data_config.md) 的示例仍使用 16 步 `delta_indices`，并要求改变窗口后重新生成逐步统计；这不是矛盾结果，而是不同合同层。
+
+| 层 | GR00T N1.7 当前例子 | 必须锁定的问题 |
+| --- | --- | --- |
+| 模型容量 | 主配置 `action_horizon=40`、最大 action dimension 132 | checkpoint 实际允许的最大 `T,D` 是多少 |
+| 数据/模态窗口 | embodiment 的 `delta_indices` 可采用 16 步等配置 | 样本取哪些未来步，统计是否按同一窗口重算 |
+| policy 输出 | `T` 由训练配置和 modality config 决定 | 当前 checkpoint 实际返回多少步，字段/单位是什么 |
+| rollout 执行 | `execution-horizon` 选择本次消费的 prefix | 何时重规划、剩余 chunk 如何失效或融合 |
+
+*TAB-15-04：模型最大 horizon、数据窗口、实际输出和执行窗口是四个相关但不同的量。数字来自核查日的官方 N1.7 README、模型配置与入门文档；本书未运行 checkpoint。*
+
+`CLAIM-15-09`（recommendation）：VLA 实验卡必须分别记录模型最大 action horizon、数据 `delta_indices`、checkpoint 实际输出 horizon 与 rollout execution horizon；不得从其中一个数字推断另外三个，改变数据窗口后还要重算与其时间维一致的归一化统计。
 
 双系统仍需要明确：慢模块多久刷新一次、快模块在指令变化时何时失效、chunk 缓存如何中断、两个模块使用哪一个时间戳，以及安全控制器是否拥有更高优先级。异步并不自动更安全：旧响应可能晚到，网络可能重复传送，同一 chunk 可能被执行两次。客户端至少要比较单调 `command_id`、共同 clock、观测/动作 timestep 和有效期；新指令、急停或 schema revision 变化应原子地使旧队列失效。
 
@@ -281,6 +292,6 @@ VLA 把视觉语言知识连接到动作，但真正可执行的系统还需要�
 - 代码审查：通过；
 - 一致性审查：通过（已与第10/12/13/14/16/17章及第20/21章合同对齐）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch15-command-integrity-review-2026-09-01.md`；
+- 审查记录路径：`reviews/ch15-command-integrity-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
 - 已知限制：没有下载或运行任何 VLA、VLM API、机器人、仿真或 GPU；
 - 下一步：可沿第17章核对世界模型与 VLA 的组合边界，再用第20、21章完成评测与部署证据检查。

@@ -241,5 +241,5 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`；
+- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
 - 已知限制：只有离线标量重加权，没有 VLA/RL/world-model 训练、LIBERO、物理仿真、GPU、机器人或车辆。

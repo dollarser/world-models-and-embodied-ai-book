@@ -39,6 +39,7 @@ CLAIM_DEFINITION_PATTERN = re.compile(
 )
 CLAIM_ID_PATTERN = re.compile(r"^CLAIM-(\d{2})-(\d{2})$")
 ALLOWED_CLAIM_TYPES = {"fact", "result", "inference", "recommendation", "unverified"}
+FIGURE_ID_PATTERN = re.compile(r"\b((?:FIG|TAB)-(\d{2})-(\d{2}))\b")
 
 
 def check_required() -> list[str]:
@@ -114,6 +115,26 @@ def check_claim_contract(
     return errors
 
 
+def check_figure_contract(chapter_number: int, registered_figures: object, document_text: str) -> list[str]:
+    """Check that every in-chapter FIG/TAB identifier is registered and owned by the chapter."""
+
+    if not isinstance(registered_figures, list) or any(not isinstance(item, str) for item in registered_figures):
+        return [f"chapter {chapter_number} manifest figures must be a list of strings"]
+
+    errors: list[str] = []
+    registered_set = set(registered_figures)
+    document_ids = {match.group(1) for match in FIGURE_ID_PATTERN.finditer(document_text)}
+    for figure_id in sorted(registered_set - document_ids):
+        errors.append(f"chapter {chapter_number} document does not contain registered figure/table: {figure_id}")
+    for figure_id in sorted(document_ids - registered_set):
+        errors.append(f"chapter {chapter_number} document contains unregistered figure/table: {figure_id}")
+    for figure_id in sorted(registered_set | document_ids):
+        match = FIGURE_ID_PATTERN.fullmatch(figure_id)
+        if match is None or int(match.group(2)) != chapter_number:
+            errors.append(f"chapter {chapter_number} has invalid or foreign figure/table ID: {figure_id}")
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -165,9 +186,8 @@ def check_manifest() -> list[str]:
                 errors.extend(
                     check_claim_contract(number, chapter.get("claims", []), document_text, bound_claims)
                 )
-            for figure_id in chapter.get("figures", []):
-                if figure_id not in document_text:
-                    errors.append(f"chapter {number} document does not contain registered figure/table: {figure_id}")
+            if isinstance(number, int):
+                errors.extend(check_figure_contract(number, chapter.get("figures", []), document_text))
             if manifest_phase in {"reviewed", "reproducible", "published"}:
                 for review_name in ("内容审查", "代码审查", "一致性审查", "教学审查"):
                     if f"- {review_name}：通过" not in document_text:
@@ -211,7 +231,10 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
-    print("book checks passed: required files, JSON, bidirectional claim contracts, manifest, local links, 22-chapter PRD")
+    print(
+        "book checks passed: required files, JSON, bidirectional claim/figure contracts, "
+        "manifest, local links, 22-chapter PRD"
+    )
     return 0
 
 
