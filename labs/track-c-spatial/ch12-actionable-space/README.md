@@ -4,6 +4,7 @@
 
 - 可达 free cell 与障碍邻接形成的 approach affordance；
 - 一格坐标偏移对 occupied IoU 的影响；
+- 全域 all-unknown 与 observed-mask all-free 为何能取得超过 70% accuracy，却仍漏掉全部 occupied；
 - 把 unknown 当 free 如何造成动态路径“假安全”；
 - 动态回波离开后，旧格在没有清空射线时为何回到 `unknown`；
 - 米制点怎样按 `origin / resolution / axis order / half-open boundary` 映射到 cell，以及负坐标使用 `int()` 截断为何会被误收进第 0 格；

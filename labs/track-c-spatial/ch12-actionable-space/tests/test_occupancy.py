@@ -15,6 +15,7 @@ from occupancy_fixture import (  # noqa: E402
     expire_stale_observations,
     grid_boundary_report,
     occupied_iou,
+    occupancy_metric_report,
     path_is_safe,
     path_risk_report,
     shifted_occupied,
@@ -135,6 +136,41 @@ class ActionableOccupancyTests(unittest.TestCase):
     def test_future_observation_timestamp_is_rejected(self):
         with self.assertRaises(ValueError):
             expire_stale_observations(build_occupancy(), {(3, 2): 4}, current_step=3, max_age_steps=2)
+
+    def test_majority_unknown_accuracy_can_hide_every_occupied_cell(self):
+        grid = build_occupancy()
+        prediction = {cell: "unknown" for cell in grid}
+        report = occupancy_metric_report(grid, prediction)
+        self.assertEqual(report["evaluated_cell_count"], 49)
+        self.assertEqual(report["correct_cell_count"], 36)
+        self.assertGreater(report["accuracy"], 0.7)
+        self.assertEqual(report["occupied_recall"], 0.0)
+        self.assertEqual(report["occupied_iou"], 0.0)
+
+    def test_observed_mask_all_free_accuracy_still_misses_obstacles(self):
+        grid = build_occupancy()
+        observed = {cell for cell, status in grid.items() if status != "unknown"}
+        report = occupancy_metric_report(grid, {cell: "free" for cell in grid}, observed)
+        self.assertEqual(report["evaluated_cell_count"], 13)
+        self.assertEqual(report["omitted_cell_count"], 36)
+        self.assertEqual(report["correct_cell_count"], 10)
+        self.assertGreater(report["accuracy"], 0.75)
+        self.assertEqual(report["occupied_recall"], 0.0)
+        self.assertEqual(report["occupied_iou"], 0.0)
+
+    def test_occupancy_metric_denominator_is_explicit(self):
+        grid = build_occupancy()
+        perfect = occupancy_metric_report(grid, dict(grid), set(grid))
+        self.assertEqual(perfect["evaluated_cell_count"], 49)
+        self.assertEqual(perfect["accuracy"], 1.0)
+        self.assertEqual(perfect["occupied_recall"], 1.0)
+
+    def test_invalid_occupancy_metric_masks_are_rejected(self):
+        grid = build_occupancy()
+        with self.assertRaises(ValueError):
+            occupancy_metric_report(grid, dict(grid), set())
+        with self.assertRaises(ValueError):
+            occupancy_metric_report(grid, dict(grid), {(7, 7)})
 
 
 if __name__ == "__main__":

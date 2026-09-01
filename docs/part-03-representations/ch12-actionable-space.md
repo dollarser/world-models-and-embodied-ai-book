@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-12-01`
-> 关联声明：`CLAIM-12-01`～`CLAIM-12-11`
-> 关联图表：`FIG-12-01` / `FIG-12-02` / `TAB-12-01`～`TAB-12-06`
+> 关联声明：`CLAIM-12-01`～`CLAIM-12-12`
+> 关联图表：`FIG-12-01` / `FIG-12-02` / `TAB-12-01`～`TAB-12-07`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -179,6 +179,19 @@ make ch12-smoke
 
 `CLAIM-12-04`（result）：把 unknown 当 free 会把测试路径判为安全；三态保守查询在更新前因未知拒绝，在动态目标进入路径后因占用拒绝。这个手工例子只验证接口语义，不估计真实误报率。
 
+### 12.7.1 overall accuracy 会奖励错误的多数类
+
+三态地图有36个 unknown、10个 free 和3个 occupied。若在全49格上预测全 unknown，正确36格；若 benchmark 只在13个 observed cell 上计分并预测全 free，正确10格。两个错误 predictor 的 overall accuracy 都超过70%，却漏掉全部 occupied：
+
+| 计分域 / predictor | 分母 | accuracy | occupied recall | occupied IoU | 被 mask 排除 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 全49格 / all-unknown | 49 | 73.47% | 0% | 0% | 0格 |
+| 仅 observed / all-free | 13 | 76.92% | 0% | 0% | 36格 unknown |
+
+*TAB-12-07：`EXP-12-01` v5 的类别与 mask 负对照。两个 predictor 均为手写多数类诊断，不是 learned baseline；评测 mask 排除 unknown 只改变计分分母，不改变规划地图中的 unknown 语义。*
+
+`CLAIM-12-12`（result）：`EXP-12-01` v5 中，all-unknown 在全域取得36/49即73.47% accuracy，observed-only all-free 取得10/13即76.92%，但两者 occupied recall 与 IoU 都为0。该固定三射线网格只证明 overall accuracy 可能掩盖稀少 occupied，不估计真实数据类别比例、模型性能或碰撞风险。
+
 | 可行动性诊断 | 固定结果 | 分母/解释 |
 | --- | ---: | --- |
 | 旧目标格，无清空证据 / 有清空证据 | unknown / free | 动态位置变化不等于看见其背景 |
@@ -209,13 +222,13 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 | 只查 waypoint | 2 | 2 | 0 | safe |
 | 栅格化连接段 | 2 | 3 | 1 | unsafe |
 
-*TAB-12-04：`EXP-12-01` v4 保留的稀疏 waypoint 反例。第二行只修复整数栅格上的跳格，不是连续时间、连续姿态或车辆动力学碰撞检测。*
+*TAB-12-04：`EXP-12-01` v5 保留的稀疏 waypoint 反例。第二行只修复整数栅格上的跳格，不是连续时间、连续姿态或车辆动力学碰撞检测。*
 
-`CLAIM-12-10`（result）：`EXP-12-01` v4 保留的稀疏路径 `(3,3)→(3,5)` 只检查两个 waypoint 时没有命中 occupied，因允许 unknown 而误判 safe；Bresenham 段栅格化检查三个中心格并检出一个中间 occupied，判为 unsafe。这只验证固定二维整数格的离散路径合同，不证明 continuous collision、转弯扫掠、动态可达性或真实车辆安全。
+`CLAIM-12-10`（result）：`EXP-12-01` v5 保留的稀疏路径 `(3,3)→(3,5)` 只检查两个 waypoint 时没有命中 occupied，因允许 unknown 而误判 safe；Bresenham 段栅格化检查三个中心格并检出一个中间 occupied，判为 unsafe。这只验证固定二维整数格的离散路径合同，不证明 continuous collision、转弯扫掠、动态可达性或真实车辆安全。
 
 ### 12.7.2 栅格边界也需要负对照
 
-`EXP-12-01` v4 固定 `origin=(0,0) m`、`resolution=0.5 m` 和 `7×7` 半开栅格。格 `(1,0)` 的中心 `(0.75,0.25) m` 可精确往返；另外两例专门检查有限地图边界：
+`EXP-12-01` v5 固定 `origin=(0,0) m`、`resolution=0.5 m` 和 `7×7` 半开栅格。格 `(1,0)` 的中心 `(0.75,0.25) m` 可精确往返；另外两例专门检查有限地图边界：
 
 | 米制点 | floor cell / 是否在界内 | 向 0 截断 baseline | 正确解释 |
 | --- | --- | --- | --- |
@@ -223,9 +236,9 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 | `(-0.01,0.25) m` | `(-1,0)` / 否 | `(0,0)` / 是 | 截断产生假纳入 |
 | `(3.5,0.25) m` | `(7,0)` / 否 | `(7,0)` / 否 | 半开上边界在格外 |
 
-*TAB-12-05：`EXP-12-01` v4 的米制点—栅格边界负对照。它验证本书固定索引合同，不代表任何外部地图实现。*
+*TAB-12-05：`EXP-12-01` v5 的米制点—栅格边界负对照。它验证本书固定索引合同，不代表任何外部地图实现。*
 
-`CLAIM-12-11`（result）：`EXP-12-01` v4 中，原点左侧 `0.01 m` 的点经 floor 映射到越界 cell `(-1,0)`，而向 0 截断会错误映射到界内 `(0,0)`；`3.5 m` 的上边界映射到 `(7,0)` 并被拒绝。这只验证固定 `0.5 m`、`7×7` 半开栅格的边界合同，不证明 ROS/Nav2、连续碰撞或真实定位行为。
+`CLAIM-12-11`（result）：`EXP-12-01` v5 中，原点左侧 `0.01 m` 的点经 floor 映射到越界 cell `(-1,0)`，而向 0 截断会错误映射到界内 `(0,0)`；`3.5 m` 的上边界映射到 `(7,0)` 并被拒绝。这只验证固定 `0.5 m`、`7×7` 半开栅格的边界合同，不证明 ROS/Nav2、连续碰撞或真实定位行为。
 
 ## 12.8 自动驾驶正文：BEV occupancy、flow 与安全时域
 
@@ -304,6 +317,7 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 5. **自动驾驶迁移**：设计遮挡车辆切入的 occupancy-flow fixture，分别报告 IoU 和碰撞。
 6. **路径离散化**：把两个 waypoint 的间距依次改为 1、2、4 格，比较 waypoint-only、Bresenham 与更细连续碰撞器各自能支持什么结论。
 7. **边界规则**：分别用 floor、round 和向 0 截断把 `(-0.01,0.25) m` 映射到 0.5 m 栅格，解释哪个结果符合半开区间；再检查恰好位于上边界的点。
+8. **指标审计**：解释 observed mask、unknown 规划语义和 occupied recall 为什么必须分别报告。
 
 ## 自检要点
 
@@ -358,6 +372,13 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-12-08：计分 mask 与规划 unknown</summary>
+
+Observed mask 回答“哪些 cell 进入当前 benchmark 分母”，unknown 则回答“规划器对哪些空间缺少自由/占用证据”，二者属于不同接口。当前 fixture 的 observed-only 分母为13，排除36个 unknown；all-free 在其中命中10个 free，accuracy 为10/13，但三个 occupied 全漏，recall/IoU 都为0。最低报告应同时列全域与 masked 分母、free/occupied/unknown support、逐类 precision/recall/IoU、距离/遮挡分桶，以及规划 swept-footprint 冲突。被评测 mask 排除的 cell 在规划地图中仍应保留 unknown，除非另有清空证据；不能把“不计分”改写成“可通行”。
+
+</details>
+
 ## 延伸阅读
 
 - Tian et al., [Occ3D](https://arxiv.org/abs/2304.14365) 与[官方仓库](https://github.com/Tsinghua-MARS-Lab/Occ3D)，`[A/O,R1]`；
@@ -388,6 +409,6 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch12-metric-grid-and-task-boundary-review-2026-09-02.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch12-occupancy-class-mask-review-2026-09-02.md`、`reviews/ch12-metric-grid-and-task-boundary-review-2026-09-02.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：固定 0.5 m fixture 未验证任意十进制分辨率的浮点边界；未训练 3D/occupancy 模型，Bresenham 不是 supercover 或 continuous collision checking，未下载真实数据，未运行仿真或 GPU；
 - 下一步：在真实 RGB-D/驾驶数据上加入标定噪声、连续 swept volume、姿态插值与动态 occupancy；当前接口已与第3、4、9、10、11、15、19章核对。

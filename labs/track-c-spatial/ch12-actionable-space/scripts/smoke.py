@@ -39,11 +39,20 @@ def main() -> int:
         raise AssertionError("floor indexing must expose the negative-edge truncation false inclusion")
     if boundary["upper_edge_in_bounds"]:
         raise AssertionError("the upper edge of a half-open finite grid must be out of bounds")
+    metric_audit = metrics["occupancy_metric_audit"]
+    all_unknown = metric_audit["all_domain_all_unknown"]
+    observed_all_free = metric_audit["observed_only_all_free"]
+    if all_unknown["correct_cell_count"] != 36 or all_unknown["occupied_recall"] != 0.0:
+        raise AssertionError("majority unknown accuracy must not hide its zero occupied recall")
+    if observed_all_free["correct_cell_count"] != 10 or observed_all_free["evaluated_cell_count"] != 13:
+        raise AssertionError("observed-mask all-free denominator must remain 10/13")
+    if observed_all_free["occupied_iou"] != 0.0:
+        raise AssertionError("all-free prediction must miss every occupied cell")
 
     report = {
         "experiment_id": "EXP-12-01",
         "status": "smoke",
-        "scope": "tri-state ray grid, metric-to-cell boundary contract, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
+        "scope": "tri-state ray grid, metric-to-cell boundary, class-sensitive metric, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
         "metrics": metrics,
         "gpu_verified": False,
     }

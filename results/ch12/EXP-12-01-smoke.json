@@ -63,6 +63,31 @@
       "upper_edge_in_bounds": false
     },
     "occluded_cell_is_unknown": true,
+    "occupancy_metric_audit": {
+      "all_domain_all_unknown": {
+        "accuracy": 0.7346938775510204,
+        "correct_cell_count": 36,
+        "evaluated_cell_count": 49,
+        "occupied_iou": 0.0,
+        "occupied_recall": 0.0,
+        "omitted_cell_count": 0,
+        "predicted_occupied_count": 0,
+        "total_cell_count": 49,
+        "truth_occupied_count": 3
+      },
+      "observed_only_all_free": {
+        "accuracy": 0.7692307692307693,
+        "correct_cell_count": 10,
+        "evaluated_cell_count": 13,
+        "occupied_iou": 0.0,
+        "occupied_recall": 0.0,
+        "omitted_cell_count": 36,
+        "predicted_occupied_count": 0,
+        "total_cell_count": 49,
+        "truth_occupied_count": 3
+      },
+      "planning_scope": "evaluation masks may exclude unknown cells; a planner must retain their unknown state"
+    },
     "one_cell_shift_occupied_iou": 0.0,
     "reachable_free_count": 8,
     "sparse_segment_report": {
@@ -94,6 +119,6 @@
       "unknown": 36
     }
   },
-  "scope": "tri-state ray grid, metric-to-cell boundary contract, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
+  "scope": "tri-state ray grid, metric-to-cell boundary, class-sensitive metric, rasterized path, and actionability fixture; not continuous collision checking or learned 3D perception",
   "status": "smoke"
 }

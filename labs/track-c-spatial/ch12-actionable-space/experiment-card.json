@@ -3,7 +3,7 @@
   "id": "EXP-12-01",
   "chapter": 12,
   "status": "smoke",
-  "claim_ids": ["CLAIM-12-02", "CLAIM-12-03", "CLAIM-12-04", "CLAIM-12-07", "CLAIM-12-08", "CLAIM-12-09", "CLAIM-12-10", "CLAIM-12-11"],
+  "claim_ids": ["CLAIM-12-02", "CLAIM-12-03", "CLAIM-12-04", "CLAIM-12-07", "CLAIM-12-08", "CLAIM-12-09", "CLAIM-12-10", "CLAIM-12-11", "CLAIM-12-12"],
   "claim_scope": [
     "cells behind a depth return remain unknown rather than observed free in the ray-grid fixture",
     "a one-cell coordinate shift can destroy occupied-cell alignment",
@@ -12,16 +12,17 @@
     "a free point centerline can become unsafe after sweeping a nonzero footprint",
     "expired free-space evidence returns to unknown and blocks a conservative path",
     "rasterizing the segments between sparse waypoints can expose an intermediate occupied cell that waypoint-only checking misses",
-    "half-open metric-to-cell indexing with floor rejects a point just below the map origin that truncation would falsely include in cell zero"
+    "half-open metric-to-cell indexing with floor rejects a point just below the map origin that truncation would falsely include in cell zero",
+    "overall occupancy accuracy can remain above seventy percent while a majority-class predictor misses every occupied cell, under both full-domain and observed-only denominators"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library v4 tri-state ray grid, half-open metric indexing, segment rasterization, evidence aging, and footprint actionability fixture"
+    "config": "standard-library v5 tri-state ray grid, half-open metric indexing, class-sensitive occupancy metrics, segment rasterization, evidence aging, and footprint actionability fixture"
   },
   "data": {
     "name": "procedural three-ray seven-by-seven BEV fixture",
-    "version": "v4",
+    "version": "v5",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -53,7 +54,12 @@
     {"name": "sparse_segment_rasterized_safe", "value": 0.0, "unit": "boolean", "split": "path-segment-validation"},
     {"name": "negative_edge_floor_in_bounds", "value": 0.0, "unit": "boolean", "split": "metric-grid-boundary"},
     {"name": "negative_edge_truncation_in_bounds", "value": 1.0, "unit": "boolean", "split": "metric-grid-boundary"},
-    {"name": "upper_edge_in_bounds", "value": 0.0, "unit": "boolean", "split": "metric-grid-boundary"}
+    {"name": "upper_edge_in_bounds", "value": 0.0, "unit": "boolean", "split": "metric-grid-boundary"},
+    {"name": "all_domain_all_unknown_accuracy", "value": 0.7346938775510204, "unit": "ratio", "split": "49-cell-full-domain"},
+    {"name": "all_domain_all_unknown_occupied_recall", "value": 0.0, "unit": "ratio", "split": "49-cell-full-domain"},
+    {"name": "observed_only_all_free_accuracy", "value": 0.7692307692307693, "unit": "ratio", "split": "13-cell-observed-mask"},
+    {"name": "observed_only_all_free_occupied_recall", "value": 0.0, "unit": "ratio", "split": "13-cell-observed-mask"},
+    {"name": "observed_only_omitted_unknown_cell_count", "value": 36, "unit": "cell", "split": "13-cell-observed-mask"}
   ],
   "artifacts": ["results/ch12/EXP-12-01-smoke.json"],
   "limitations": [
@@ -61,6 +67,7 @@
     "hand-defined dynamic update, square footprint, and approach affordance rather than learned prediction",
     "Bresenham interpolation over integer center cells rather than supercover, continuous pose interpolation, continuous collision checking, or dynamics",
     "fixed binary-exact 0.5 m half-open grid contract rather than arbitrary decimal-resolution floating-point behavior or a ROS/Nav2 map implementation",
+    "the all-unknown and all-free predictors are authored majority-class diagnostics, not learned baselines or population estimates",
     "no height, semantics, velocity uncertainty, continuous swept volume, or real calibration"
   ]
 }

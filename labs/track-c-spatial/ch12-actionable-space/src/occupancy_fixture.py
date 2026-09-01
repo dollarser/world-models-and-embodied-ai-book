@@ -288,6 +288,36 @@ def occupied_iou(first: set[Cell], second: set[Cell]) -> float:
     return len(first & second) / len(union) if union else 1.0
 
 
+def occupancy_metric_report(
+    truth: dict[Cell, str],
+    prediction: dict[Cell, str],
+    evaluated_cells: set[Cell] | None = None,
+) -> dict[str, int | float]:
+    """Report class-sensitive occupancy metrics on an explicit denominator."""
+    _validate_grid(truth)
+    _validate_grid(prediction)
+    if set(truth) != set(prediction):
+        raise ValueError("truth and prediction must cover identical cells")
+    cells = set(truth) if evaluated_cells is None else evaluated_cells
+    if not isinstance(cells, set) or not cells or not cells <= set(truth):
+        raise ValueError("evaluated_cells must be a non-empty in-grid set")
+    truth_occupied = {cell for cell in cells if truth[cell] == "occupied"}
+    predicted_occupied = {cell for cell in cells if prediction[cell] == "occupied"}
+    true_positive = len(truth_occupied & predicted_occupied)
+    occupied_union = truth_occupied | predicted_occupied
+    return {
+        "total_cell_count": len(truth),
+        "evaluated_cell_count": len(cells),
+        "omitted_cell_count": len(truth) - len(cells),
+        "correct_cell_count": sum(truth[cell] == prediction[cell] for cell in cells),
+        "accuracy": sum(truth[cell] == prediction[cell] for cell in cells) / len(cells),
+        "truth_occupied_count": len(truth_occupied),
+        "predicted_occupied_count": len(predicted_occupied),
+        "occupied_recall": true_positive / len(truth_occupied) if truth_occupied else 1.0,
+        "occupied_iou": true_positive / len(occupied_union) if occupied_union else 1.0,
+    }
+
+
 def shifted_occupied(grid: dict[Cell, str], dx: int = 1, dy: int = 0) -> set[Cell]:
     return {
         (x + dx, y + dy)
@@ -354,6 +384,9 @@ def evaluate() -> dict[str, object]:
     sparse_segment_report = path_risk_report(
         grid, sparse_waypoints, unknown_is_free=True, interpolate_segments=True
     )
+    all_unknown_prediction = {cell: "unknown" for cell in grid}
+    all_free_prediction = {cell: "free" for cell in grid}
+    observed_cells = {cell for cell, status in grid.items() if status != "unknown"}
     return {
         "state_counts": counts,
         "occluded_cell_is_unknown": grid[(3, 5)] == "unknown",
@@ -373,4 +406,13 @@ def evaluate() -> dict[str, object]:
         "sparse_waypoint_only_report": sparse_waypoint_only_report,
         "sparse_segment_report": sparse_segment_report,
         "grid_boundary_report": grid_boundary_report(),
+        "occupancy_metric_audit": {
+            "all_domain_all_unknown": occupancy_metric_report(grid, all_unknown_prediction),
+            "observed_only_all_free": occupancy_metric_report(
+                grid, all_free_prediction, observed_cells
+            ),
+            "planning_scope": (
+                "evaluation masks may exclude unknown cells; a planner must retain their unknown state"
+            ),
+        },
     }
