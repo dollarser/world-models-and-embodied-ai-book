@@ -23,6 +23,13 @@ REQUIRED_ARTIFACT_PRODUCERS = {
 }
 DRIVING_METRICS = {"route_completion", "collision_rate", "intervention_rate"}
 ALLOWED_TIERS = {"S", "M", "L1", "L2"}
+SPLIT_IDENTITY_FIELDS = {
+    "group_ids": "group",
+    "source_asset_ids": "source_asset",
+    "content_fingerprints": "content_fingerprint",
+    "similarity_cluster_ids": "similarity_cluster",
+}
+SPLIT_PAIRS = (("train", "eval"), ("selection", "eval"), ("train", "selection"))
 CLAIM_ID_PATTERN = re.compile(r"^CLAIM-[0-9]{2}-[0-9]{2}$")
 TRACE_ARTIFACT_PATTERN = re.compile(r"^(?:EXP|BENCH)-([0-9]{2})-[0-9]{2}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
@@ -96,18 +103,23 @@ def audit_project(package: object) -> list[str]:
         issues.append("private_data_without_authorization")
 
     split = _dict(package.get("split"))
-    train_groups = _strict_string_set(split.get("train_groups"))
-    selection_groups = _strict_string_set(split.get("selection_groups"))
-    eval_groups = _strict_string_set(split.get("eval_groups"))
-    if train_groups is None or selection_groups is None or eval_groups is None:
-        issues.append("missing_group_split")
-    else:
-        if train_groups & eval_groups:
-            issues.append("train_eval_group_overlap")
-        if selection_groups & eval_groups:
-            issues.append("selection_eval_group_overlap")
-        if train_groups & selection_groups:
-            issues.append("train_selection_group_overlap")
+    split_identities: dict[str, dict[str, set[str]]] = {}
+    for split_name in ("train", "selection", "eval"):
+        partition = _dict(split.get(split_name))
+        split_identities[split_name] = {}
+        for field in SPLIT_IDENTITY_FIELDS:
+            values = _strict_string_set(partition.get(field))
+            if values is None:
+                issues.append(f"missing_split_identity:{split_name}:{field}")
+            else:
+                split_identities[split_name][field] = values
+
+    for left_split, right_split in SPLIT_PAIRS:
+        for field, issue_label in SPLIT_IDENTITY_FIELDS.items():
+            left_values = split_identities[left_split].get(field)
+            right_values = split_identities[right_split].get(field)
+            if left_values is not None and right_values is not None and left_values & right_values:
+                issues.append(f"{left_split}_{right_split}_{issue_label}_overlap")
 
     artifacts = _dict(package.get("artifacts"))
     artifact_payloads = _dict(package.get("artifact_payloads"))
@@ -240,8 +252,8 @@ def audit_project(package: object) -> list[str]:
 
 
 VALID_ARTIFACT_PAYLOADS = {
-    "experiment-card.json": "fixture experiment card v3",
-    "results.json": "fixture structured result v3",
+    "experiment-card.json": "fixture experiment card v4",
+    "results.json": "fixture structured result v4",
     "failures.md": "stale_observation -> stale_observation\nfixed_disturbance -> route_failure",
     "commands/reproduce.txt": "make ch22-smoke",
     "model-card.md": "fixture model card: no model, no vehicle",
@@ -254,9 +266,27 @@ VALID_DRIVING_PACKAGE = {
     "domain": "automatic_driving",
     "data": {"classification": "fixture", "license": "MIT", "authorized": True},
     "split": {
-        "train_groups": ["route-a", "route-b"],
-        "selection_groups": ["route-selection"],
-        "eval_groups": ["route-c"],
+        "train": {
+            "group_ids": ["route-a", "route-b"],
+            "source_asset_ids": ["raw-log-a", "raw-log-b"],
+            "content_fingerprints": [
+                "sha256:1ff0f379169d12474fb99e11470ed7357024591663a8b9a2d9531ee2d9949239",
+                "sha256:1b394a54e6887abaf7ecc7ba24ea7e36882897b800e75c1525df1d36cfdd36be",
+            ],
+            "similarity_cluster_ids": ["cluster-a", "cluster-b"],
+        },
+        "selection": {
+            "group_ids": ["route-selection"],
+            "source_asset_ids": ["raw-log-selection"],
+            "content_fingerprints": ["sha256:7c9ce945996e3f31d5da5dc5b0f737a41f045f506464d92dbc3228fdf1fca02c"],
+            "similarity_cluster_ids": ["cluster-selection"],
+        },
+        "eval": {
+            "group_ids": ["route-c"],
+            "source_asset_ids": ["raw-log-c"],
+            "content_fingerprints": ["sha256:c93aa394c014604f31954bee646795c9feec39c6cf0a73d1836aef3e0a66b822"],
+            "similarity_cluster_ids": ["cluster-c"],
+        },
     },
     "artifacts": {
         "experiment_card": _artifact_binding(
@@ -297,35 +327,35 @@ VALID_DRIVING_PACKAGE = {
         "input_contract": {
             "chapter": 4,
             "artifact": "EXP-04-01",
-            "revision": "fixture-v3",
-            "decision": "validate episode boundaries, timestamps, masks, and route split before targets",
+            "revision": "fixture-v4",
+            "decision": "validate episode boundaries, timestamps, masks, and four-dimensional split identity before targets",
             "depends_on": [],
         },
         "method_contract": {
             "chapter": 8,
             "artifact": "EXP-08-01",
-            "revision": "fixture-v2",
+            "revision": "fixture-v3",
             "decision": "construct continuation-aware value targets without collapsing truncation into terminal",
             "depends_on": ["input_contract"],
         },
         "independent_evaluation": {
             "chapter": 20,
             "artifact": "BENCH-20-01",
-            "revision": "fixture-v4",
+            "revision": "fixture-v5",
             "decision": "freeze route population, safety-aware success, timeout policy, and valid denominator",
             "depends_on": ["input_contract", "method_contract"],
         },
         "deployment_or_safety_gate": {
             "chapter": 21,
             "artifact": "EXP-21-01",
-            "revision": "fixture-v3",
+            "revision": "fixture-v6",
             "decision": "reject stale, late, uncertain, or out-of-bounds actions with a profile-specific fallback",
             "depends_on": ["input_contract", "method_contract"],
         },
         "evidence_package": {
             "chapter": 22,
             "artifact": "EXP-22-01",
-            "revision": "fixture-v3",
+            "revision": "fixture-v4",
             "decision": "bind question, artifacts, failures, resources, evaluation, and limitations into one audit",
             "depends_on": [
                 "input_contract",
@@ -362,9 +392,24 @@ INVALID_DRIVING_PACKAGE = {
     "domain": "automatic_driving",
     "data": {"classification": "private", "license": "", "authorized": False},
     "split": {
-        "train_groups": ["same-route"],
-        "selection_groups": ["same-selection"],
-        "eval_groups": ["same-route"],
+        "train": {
+            "group_ids": ["same-route"],
+            "source_asset_ids": ["same-raw-log"],
+            "content_fingerprints": ["sha256:1150ac400725ba2c47d6e45c1f26d4769d0b77165833e812a7f0832c800885aa"],
+            "similarity_cluster_ids": ["same-cluster"],
+        },
+        "selection": {
+            "group_ids": ["selection-route"],
+            "source_asset_ids": ["selection-raw-log"],
+            "content_fingerprints": ["sha256:d993043cc1b9417c84f6b5130fa6b58f192d1bc8d30d33ed34a15ff2a1099e4f"],
+            "similarity_cluster_ids": ["selection-cluster"],
+        },
+        "eval": {
+            "group_ids": ["same-route"],
+            "source_asset_ids": ["same-raw-log"],
+            "content_fingerprints": ["sha256:1150ac400725ba2c47d6e45c1f26d4769d0b77165833e812a7f0832c800885aa"],
+            "similarity_cluster_ids": ["same-cluster"],
+        },
     },
     "artifacts": {
         "experiment_card": _artifact_binding(
@@ -402,6 +447,7 @@ def evaluate() -> dict[str, object]:
         "required_artifact_count": len(REQUIRED_ARTIFACTS),
         "driving_metric_count": len(DRIVING_METRICS),
         "required_trace_stage_count": len(TRACE_STAGE_RULES),
+        "split_identity_dimension_count": len(SPLIT_IDENTITY_FIELDS),
         "verified_artifact_binding_count": len(REQUIRED_ARTIFACTS),
         "verified_failure_injection_count": len(VALID_DRIVING_PACKAGE["failure_injections"]),
     }

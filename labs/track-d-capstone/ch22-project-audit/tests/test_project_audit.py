@@ -29,7 +29,7 @@ class ProjectAuditTests(unittest.TestCase):
     def test_invalid_project_exposes_all_fixed_issues(self):
         result = evaluate()["invalid_package"]
         self.assertFalse(result["accepted"])
-        self.assertEqual(result["issue_count"], 20)
+        self.assertEqual(result["issue_count"], 23)
 
     def test_valid_project_has_five_stage_traceability(self):
         self.assertEqual(evaluate()["required_trace_stage_count"], 5)
@@ -68,8 +68,42 @@ class ProjectAuditTests(unittest.TestCase):
 
     def test_selection_eval_overlap_is_rejected(self):
         package = copy.deepcopy(VALID_DRIVING_PACKAGE)
-        package["split"]["selection_groups"] = ["route-c"]
+        package["split"]["selection"]["group_ids"] = ["route-c"]
         self.assertIn("selection_eval_group_overlap", audit_project(package))
+
+    def test_non_group_identity_overlaps_are_rejected_with_distinct_groups(self):
+        fields_and_codes = {
+            "source_asset_ids": "train_eval_source_asset_overlap",
+            "content_fingerprints": "train_eval_content_fingerprint_overlap",
+            "similarity_cluster_ids": "train_eval_similarity_cluster_overlap",
+        }
+        for field, expected_code in fields_and_codes.items():
+            package = copy.deepcopy(VALID_DRIVING_PACKAGE)
+            package["split"]["eval"][field] = [package["split"]["train"][field][0]]
+            with self.subTest(field=field):
+                issues = audit_project(package)
+                self.assertIn(expected_code, issues)
+                self.assertNotIn("train_eval_group_overlap", issues)
+
+    def test_identity_overlap_checks_cover_selection_boundaries(self):
+        for left, right, expected_code in (
+            ("train", "selection", "train_selection_source_asset_overlap"),
+            ("selection", "eval", "selection_eval_source_asset_overlap"),
+        ):
+            package = copy.deepcopy(VALID_DRIVING_PACKAGE)
+            package["split"][right]["source_asset_ids"] = package["split"][left]["source_asset_ids"][:1]
+            with self.subTest(left=left, right=right):
+                self.assertIn(expected_code, audit_project(package))
+
+    def test_split_identity_sets_must_be_nonempty_unique_strings(self):
+        for invalid_values in ([], ["duplicate", "duplicate"], [""]):
+            package = copy.deepcopy(VALID_DRIVING_PACKAGE)
+            package["split"]["selection"]["content_fingerprints"] = invalid_values
+            with self.subTest(invalid_values=invalid_values):
+                self.assertIn(
+                    "missing_split_identity:selection:content_fingerprints",
+                    audit_project(package),
+                )
 
     def test_missing_required_artifacts_are_named(self):
         issues = audit_project(INVALID_DRIVING_PACKAGE)

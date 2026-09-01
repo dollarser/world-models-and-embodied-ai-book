@@ -3,20 +3,21 @@
   "id": "EXP-22-01",
   "chapter": 22,
   "status": "smoke",
-  "claim_ids": ["CLAIM-22-02", "CLAIM-22-07", "CLAIM-22-08"],
+  "claim_ids": ["CLAIM-22-02", "CLAIM-22-07", "CLAIM-22-08", "CLAIM-22-10"],
   "claim_scope": [
-    "a complete fixed driving project package passes the fixture audit while an intentionally invalid package triggers twenty named contract issues",
+    "a complete fixed driving project package passes the fixture audit while an intentionally invalid package triggers twenty-three named contract issues",
     "a five-stage cross-chapter evidence trace is accepted only when every stage has a chapter-matching artifact identifier, revision, decision, and frozen dependency set",
-    "five in-memory artifact payloads are accepted only when URI, SHA-256 digest, producer stage, and exact claim binding agree"
+    "five in-memory artifact payloads are accepted only when URI, SHA-256 digest, producer stage, and exact claim binding agree",
+    "train selection and evaluation partitions must each declare group source-asset exact-content and authored near-duplicate-cluster identities and reject cross-partition overlap"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library v3 project-package, artifact-binding, and five-stage traceability audit fixture"
+    "config": "standard-library v4 project-package, four-dimensional split-identity, artifact-binding, and five-stage traceability audit fixture"
   },
   "data": {
     "name": "two hand-authored in-memory project package fixtures",
-    "version": "v3",
+    "version": "v4",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -37,10 +38,11 @@
   },
   "metrics": [
     {"name": "valid_package_issue_count", "value": 0, "unit": "issues", "split": "valid"},
-    {"name": "invalid_package_issue_count", "value": 20, "unit": "issues", "split": "invalid"},
+    {"name": "invalid_package_issue_count", "value": 23, "unit": "issues", "split": "invalid"},
     {"name": "required_artifact_count", "value": 5, "unit": "artifacts", "split": "contract"},
     {"name": "required_driving_metric_count", "value": 3, "unit": "metrics", "split": "contract"},
     {"name": "required_trace_stage_count", "value": 5, "unit": "stages", "split": "contract"},
+    {"name": "split_identity_dimension_count", "value": 4, "unit": "dimensions", "split": "contract"},
     {"name": "verified_artifact_binding_count", "value": 5, "unit": "artifacts", "split": "valid"},
     {"name": "verified_failure_injection_count", "value": 2, "unit": "injections", "split": "valid"}
   ],
@@ -48,6 +50,8 @@
   "limitations": [
     "in-memory dictionaries and fixed text payloads rather than a real project directory or reproduction run",
     "digest and dependency checks detect fixture drift but do not establish scientific correctness, semantic validity, privacy, licensing, or safety",
+    "declared split identities do not discover unregistered semantic near duplicates or prove statistical independence",
+    "trace revisions are authored metadata and this in-memory audit does not resolve upstream experiment cards to confirm them",
     "the resource policy encodes this book's limits rather than universal hardware requirements",
     "no model, dataset, training, simulator, GPU, robot, vehicle, or deployment"
   ]

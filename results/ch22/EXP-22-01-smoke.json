@@ -5,13 +5,16 @@
     "driving_metric_count": 3,
     "invalid_package": {
       "accepted": false,
-      "issue_count": 20,
+      "issue_count": 23,
       "issues": [
         "missing_research_question",
         "missing_claim_id",
         "missing_data_license",
         "private_data_without_authorization",
         "train_eval_group_overlap",
+        "train_eval_source_asset_overlap",
+        "train_eval_content_fingerprint_overlap",
+        "train_eval_similarity_cluster_overlap",
         "invalid_artifact_binding:experiment_card",
         "missing_result",
         "missing_failure_record",
@@ -31,6 +34,7 @@
     },
     "required_artifact_count": 5,
     "required_trace_stage_count": 5,
+    "split_identity_dimension_count": 4,
     "valid_package": {
       "accepted": true,
       "issue_count": 0,
