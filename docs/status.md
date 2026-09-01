@@ -2,7 +2,7 @@
 
 | 资产 | 状态 | 已验证 | 待验证 |
 | --- | --- | --- | --- |
-| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、61 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；180 条声明及全部 `FIG/TAB` 双向登记，26 条 `fact` 与 8 条 `inference` 均有证据合同，91 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
+| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、61 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；181 条声明及全部 `FIG/TAB` 双向登记，27 条 `fact` 与 8 条 `inference` 均有证据合同，91 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
 | 批次 B：第13、14、15、20章 | `reviewed` | 第13–15章在批次 B 通过；第20章由批次 D 关闭第17/19章一致性门 | 上游策略、仿真、真实数据和 GPU 未运行 |
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
@@ -14,7 +14,7 @@
 | 术语与章节接口审查 | `reviewed` | 15 个读者关键缩写/指标同时进入作者基线与读者术语表；6 章合并标题拆为独立教学/接口区段；22 章结构契约自动检查 | 自动覆盖只保证关键项存在，不能替代逐段术语语义、译名偏好和跨学科读者测试 |
 | 贯穿案例与概念递进审查 | `reviewed` | 杯子操作与施工改道两个固定任务串联22章；对 observation/state/action/prediction/horizon/success/uncertainty 给出逐层证据升级表，并提供无3D经验与自动驾驶阅读路径 | 贯穿任务是教学索引，不是共享数据集或端到端实验；仍需真实读者测试跳转密度与理解负担 |
 | 练习与自学出口审查 | `reviewed` | 22 章 116 道练习均有折叠式同编号自检要点；manifest 登记全章覆盖，门禁拒绝缺失、重复、跨章、顺序错位、未闭合和过短答案 | 自检是最低合格要点，不是开放题唯一答案或真实实验替代品；仍需真实读者测试难度与歧义 |
-| 事实声明来源审查 | `reviewed` | 26 条 `fact` 与机器证据登记双向相等；GitHub `official_asset` 全部使用 40 位 commit URL；区分论文、官方资产、供应商声明、本书定义、仓库合同和数学恒等式 | 不可变 URL 只固定被审查内容，不证明来源蕴含、独立复现或当前上游默认行为；仍需周期性人工复核 |
+| 事实声明来源审查 | `reviewed` | 27 条 `fact` 与机器证据登记双向相等；GitHub `official_asset` 全部使用 40 位 commit URL；区分论文、官方资产、供应商声明、本书定义、仓库合同和数学恒等式 | 不可变 URL 只固定被审查内容，不证明来源蕴含、独立复现或当前上游默认行为；仍需周期性人工复核 |
 | 推断链与结果解释审查 | `reviewed` | 8 条 `inference` 登记双前提、锚点、反例和范围；1 条采样偏好改为 `recommendation`；91 条 `result` 定义句均有不可外推边界 | 结构化前提不能自动证明推理有效；机制解释与外部效度仍需领域审稿和更强实验 |
 | 关键建议适用性审查 | `reviewed` | 24 条资源升级、数据纳入、评测发布、运行激活或安全执行建议登记 trigger、动作、fallback/stop 与未授权事项；8 条正文补齐失败路径 | 自动规则不能保证高后果建议选择已穷尽，也不构成硬件、数据、机器人或车辆授权 |
 | PRD 实验档位一致性审查 | `reviewed` | 22 章逐一绑定当前 S 档 `EXP-NN-01`，并把训练、真实数据、checkpoint 与仿真拆为可选待验证 M/L 路径；当前仓库树与脚本名已同步 | 只证明设计—交付映射正确，不表示任何 M/L 路径已经运行或资源可复现 |
@@ -49,7 +49,7 @@
 | EXP-14-01 | `smoke` | 14 个单元测试；条件均值、候选—batch 预算、安全筛选、fallback 与输入合同 | 解析双峰、抽象 forward 和手工门禁，不是方法、时延或安全性能比较 |
 | 第15章 VLA 架构模式 | `reviewed` | action token/FAST/连续 expert/双系统、模型容量—数据窗口—输出—执行四层 horizon、异步命令身份、VLM 边界与自动驾驶分层 | VLA checkpoint、VLM API、认证、机器人、仿真和 GPU 均未运行 |
 | EXP-15-01 | `smoke` | 15 个单元测试；三类动作头统一 schema，10/10 错误包被拒绝，覆盖 horizon 越权、replay、乱序、clock 与字段顺序 | 手工单会话移动底盘 packet，不是 VLA、网络安全或功能安全性能 |
-| 第16章 数据规模化与跨本体适配 | `reviewed` | mixture、四类动作统一路线、版本化 adapter/统计量、seen/few-shot/zero-shot 迁移矩阵、OFT/LoRA/蒸馏、跨车队正文与四类审查 | 真实数据、learned adapter、迁移实验与 GPU 均未运行 |
+| 第16章 数据规模化与跨本体适配 | `reviewed` | mixture、四类动作统一路线、版本化 adapter/统计量、seen/few-shot/zero-shot 迁移矩阵，以及 XEWorld 的本体留出、四轴归因与适配遗忘案例；OFT/LoRA/蒸馏、跨车队正文与四类审查 | XEWorld 只审计论文协议；真实数据、模型、learned adapter、迁移实验与 GPU 均未运行 |
 | EXP-16-01 | `smoke` | 12 个单元测试；raw pooling MAE 0.28375，schema-aware 为 0，3/3 合同错误拒绝且语义变化改变 fingerprint | 两维手工动作；fingerprint 不是安全签名，不是 learned transfer 性能 |
 | 第17章 世界模型帮助策略的五种方式 | `reviewed` | 五类非互斥用途、代理评测三段误差、model exploitation、coverage 外拒绝与 coverage 内错误负对照、自动驾驶四角色正文及四类审查 | learned world model、真实仿真器、上游 checkpoint 与 GPU 均未运行 |
 | EXP-17-01 | `smoke` | 12 个单元测试；8/9 转移一致仍造成错排；gate 对 support 外错误把 regret 1.85→0，对同一 support 内错误不拒绝且 regret 保持 1.85 | 手工 corridor 与 authored support 声明，不是 learned OOD、coverage quality 或 simulator 性能 |

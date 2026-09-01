@@ -1,9 +1,9 @@
 # 第16章 数据规模化、跨本体迁移与高效适配
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-16-01`
-> 关联声明：`CLAIM-16-01`～`CLAIM-16-07`
+> 关联声明：`CLAIM-16-01`～`CLAIM-16-08`
 > 关联图表：`FIG-16-01` / `TAB-16-01` / `TAB-16-02` / `TAB-16-03` / `TAB-16-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
@@ -185,6 +185,24 @@ make ch16-smoke
 
 `CLAIM-16-05`（recommendation）：跨本体训练应以“目标单独训练”为基线，用固定预算的来源×目标迁移矩阵报告正/负迁移；只有混合模型分数或总体平均无法定位贡献。
 
+### 16.6.1 把“未见本体”变成受控隔离变量
+
+只把某个机器人数据集从训练列表中删掉，仍可能让场景、物体、相机或任务随机器人一起变化，因而无法判断失败来自外观、本体结构、运动学还是物体交互。[XEWorld v1](https://arxiv.org/html/2608.05799v1)提供了一个更严格的协议案例：测试床包含五种双臂机器人和 25 个操作任务；主设置用三种机器人训练、两种机器人留出，另做 leave-one-embodiment-out。对于相同任务和随机种子，论文声明场景布局、物体位姿、光照与相机配置在机器人之间保持相同，再分别报告四类维度：视觉质量、机器人形态、机器人运动学和物体动力学 `[A,R0]`。
+
+这个设计的价值不在于再增加一个总分，而在于把“换机器人”拆成可反驳的问题。论文作者在其所测世界模型上报告：跨本体表现与视觉相似度的关系强于与可达工作空间距离的关系；pixel-space action 优于数值关节位姿；未对齐的静态、多视角或 articulation cue 收益有限，而逐帧时间对齐的 render cue 收益更大；少量目标本体数据适配能改善目标表现，却会损伤已见机器人的表现。它们是 `arXiv:2608.05799v1` 的作者结果，不是本书实验，也不是“向量动作必然失败”或“所有世界模型只看外观”的普遍定理。
+
+把该协议迁移到本书或其他项目时，最小审计应同时满足：
+
+1. 留出的是完整目标硬件身份，而不只是数据集名称；
+2. task、scene、camera、seed 和评测预算成对固定，并记录不能固定的物理差异；
+3. 视觉相似度与运动学/形态距离分别报告，不用一个聚合距离掩盖归因；
+4. few-shot 后同时报告目标本体收益和已见本体遗忘；
+5. 标明动作是物理量、关节量、pixel-grounded cue 还是其他表示，并验证其时间对齐与可执行映射。
+
+仿真中“同一场景参数”只加强内部归因，不自动获得真实机器人外部效度。若没有版本化代码、资产、split 与指标实现，本书可以采用上述审计结构，但不能声称复现 XEWorld 的数值结论。
+
+`CLAIM-16-08`（fact）：XEWorld v1 在五种双臂机器人和 25 个操作任务上定义了 held-out-embodiment 协议，并把视觉质量、机器人形态、运动学与物体动力学分开报告；这一事实只描述论文协议，不证明其作者结论已由本书复现或适用于所有世界模型。
+
 ## 16.7 从 action head 到 full fine-tune：逐级扩大权限
 
 | 适配方式 | 训练范围 | 适用情况 | 主要风险 |
@@ -252,6 +270,7 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 | 开放生态 | Open X-Embodiment RLDS mixture | 论文/官方仓库 | `[P/O,R1]` | 本书未下载或运行 |
 | 开放数据 | DROID 分布式操作数据 | 论文/官方项目 | `[P/O,R1]` | 本书未下载或审计 |
 | 数据格式 | LeRobot Dataset v3 | 官方文档 | `[O,R1]` | 版本会漂移 |
+| 诊断基准 | XEWorld held-out-embodiment 协议 | arXiv v1 | `[A,R0]` | 协议已审计；代码、数据、模型和作者结果均未复现 |
 | 适配案例 | OpenVLA-OFT | 论文/官方仓库 | `[A/O,R1]` | 上游结果，本书未运行 |
 | 未验证 | 24 GB 内 adapter/SmolVLA 适配 | 后续 M/L1 | planned | 数据、GPU、迁移待测 |
 
@@ -314,6 +333,7 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 - Octo Model Team, [Octo 数据标准化与 mixture 管线](https://github.com/octo-models/octo/blob/main/octo/data/dataset.py)，`[O,R1]`；
 - NVIDIA, [Isaac-GR00T 数据配置](https://github.com/NVIDIA/Isaac-GR00T/blob/main/getting_started/data_config.md)与[统计量 fingerprint 实现](https://github.com/NVIDIA/Isaac-GR00T/blob/main/gr00t/data/stats.py)，`[O,R1]`；
 - Physical Intelligence, [openpi normalization statistics](https://github.com/Physical-Intelligence/openpi/blob/main/docs/norm_stats.md)，`[O,R1]`；
+- Chen et al., [XEWorld v1 论文](https://arxiv.org/html/2608.05799v1)，`[A,R0]`；协议进入正文，作者模型结果未由本书复现；
 - Kim et al., [OpenVLA-OFT](https://arxiv.org/abs/2502.19645) 与[官方代码](https://github.com/moojink/openvla-oft)，`[A/O,R1]`；
 - Hu et al., [LoRA](https://arxiv.org/abs/2106.09685)，`[P]`。
 
@@ -334,6 +354,6 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`、`reviews/ch16-held-out-embodiment-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载真实数据、训练 adapter/VLA、运行仿真或 GPU；
-- 下一步：在可用 GPU/真实数据时执行迁移矩阵；当前证据保持 S 档 reviewed。
+- 下一步：只在 XEWorld 或等价测试床公开版本化代码、资产、split 与指标实现后，先做无下载预检，再经用户确认执行迁移矩阵；当前证据保持 S 档 reviewed。

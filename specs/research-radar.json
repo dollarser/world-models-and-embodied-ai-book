@@ -250,7 +250,7 @@
       "id": "RADAR-2026-08",
       "title": "XEWorld Held-Out-Embodiment World-Model Testbed",
       "chapters": [11, 16, 17, 20],
-      "book_action": "body_candidate",
+      "book_action": "case_card",
       "problem": "Test whether an action-conditioned world model transfers physical dynamics to a visually unseen robot rather than matching familiar appearance patterns.",
       "why_it_matters": "It turns the book's cross-embodiment warning into a controlled held-out-robot protocol with separate visual, morphology, kinematic and temporal evidence.",
       "sources": [
@@ -263,7 +263,7 @@
       ],
       "assets": {"code": "unknown", "weights": "unknown", "data": "unknown"},
       "reproduction": "R0",
-      "resource_path": "S tier audits the held-out-embodiment design and failure taxonomy. Running its reference models or few-shot adaptation remains optional and has no measured 24 GB path in this book.",
+      "resource_path": "The S-tier protocol audit is integrated into Chapter 16. Running its reference models or few-shot adaptation remains optional and has no measured 24 GB path in this book.",
       "scope_boundary": "The paper's reported visual-similarity bias, need for grounded cues and adaptation forgetting apply to its tested models and protocol; they are not an impossibility theorem for every representation or robot.",
       "review_triggers": [
         "Official code, data splits and metric implementations become publicly versioned.",
