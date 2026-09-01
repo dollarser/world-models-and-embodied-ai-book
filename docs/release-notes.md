@@ -25,7 +25,7 @@ make docs-preview-check
 git diff --check
 ```
 
-这些命令验证共 166 个章节单元测试、标准库 fixture、输入合同、22 组 smoke—结果 JSON 精确一致性、实验卡/benchmark card/manifest Schema、源码链接、导航、严格站点构建和生成站点内部资源。当前站点还提供面向读者的可检索术语表。每章都完成内容、代码、一致性和教学审查，机器可读状态为 `reviewed`。第4、8、20章进一步贯通 `terminated/truncated`、value bootstrap 与评测分母：有效 timeout 不再被误删，技术无效运行不能静默进入或离开聚合；同一步双真时保留两种结束原因，并由自然终止关闭 bootstrap。第22章再用五段证据 trace 把输入、方法、独立评测、安全门和交付包连接成机器可审计依赖图。
+这些命令验证共 172 个章节单元测试、标准库 fixture、输入合同、22 组 smoke—结果 JSON 精确一致性、实验卡/benchmark card/manifest Schema、源码链接、导航、严格站点构建和生成站点内部资源。当前站点还提供面向读者的可检索术语表。每章都完成内容、代码、一致性和教学审查，机器可读状态为 `reviewed`。第4、8、20章进一步贯通 `terminated/truncated`、value bootstrap 与评测分母：有效 timeout 不再被误删，技术无效运行不能静默进入或离开聚合；同一步双真时保留两种结束原因，并由自然终止关闭 bootstrap。第13章区分预测/执行时域与时间集成，第22章再用五段证据 trace 把输入、方法、独立评测、安全门和交付包连接成机器可审计依赖图。
 
 ## 没有验证什么
 
