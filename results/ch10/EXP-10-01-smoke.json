@@ -3,13 +3,48 @@
   "gpu_verified": false,
   "metrics": {
     "action_interface": {
-      "action_blind": {"action_sensitivity": 0.0, "counterfactual_transition_rmse": 1.0, "current_state_probe_rmse": 0.0},
-      "action_conditioned": {"action_sensitivity": 2.0, "counterfactual_transition_rmse": 0.0, "current_state_probe_rmse": 0.0}
+      "action_blind": {
+        "action_sensitivity": 0.0,
+        "counterfactual_transition_rmse": 1.0,
+        "current_state_probe_rmse": 0.0
+      },
+      "action_conditioned": {
+        "action_sensitivity": 2.0,
+        "counterfactual_transition_rmse": 0.0,
+        "current_state_probe_rmse": 0.0
+      }
     },
-    "appearance": {"in_distribution_probe_accuracy": 1.0, "reconstruction_mse": 1.25, "shifted_probe_accuracy": 0.0, "shifted_task_rmse": 3.1622776601683795},
-    "collapsed": {"in_distribution_probe_accuracy": 0.5, "reconstruction_mse": 126.25, "shifted_probe_accuracy": 0.5, "shifted_task_rmse": 1.5811388300841898},
-    "task_predictive": {"in_distribution_probe_accuracy": 1.0, "reconstruction_mse": 125.0, "shifted_probe_accuracy": 1.0, "shifted_task_rmse": 0.0}
+    "appearance": {
+      "in_distribution_probe_accuracy": 1.0,
+      "reconstruction_mse": 1.25,
+      "shifted_probe_accuracy": 0.0,
+      "shifted_task_rmse": 3.1622776601683795
+    },
+    "collapsed": {
+      "in_distribution_probe_accuracy": 0.5,
+      "reconstruction_mse": 126.25,
+      "shifted_probe_accuracy": 0.5,
+      "shifted_task_rmse": 1.5811388300841898
+    },
+    "task_predictive": {
+      "in_distribution_probe_accuracy": 1.0,
+      "reconstruction_mse": 125.0,
+      "shifted_probe_accuracy": 1.0,
+      "shifted_task_rmse": 0.0
+    },
+    "temporal_interface": {
+      "middle_frame": {
+        "current_state_probe_rmse": 0.0,
+        "reversal_sensitivity": 0.0,
+        "temporal_direction_accuracy": 0.5
+      },
+      "ordered_delta": {
+        "current_state_probe_rmse": 0.0,
+        "reversal_sensitivity": 4.0,
+        "temporal_direction_accuracy": 1.0
+      }
+    }
   },
-  "scope": "hand-designed representation shift and action-interface diagnostics; not V-JEPA inference",
+  "scope": "hand-designed representation shift, action-interface, and temporal-order diagnostics; not V-JEPA inference",
   "status": "smoke"
 }

@@ -3,21 +3,22 @@
   "id": "EXP-10-01",
   "chapter": 10,
   "status": "smoke",
-  "claim_ids": ["CLAIM-10-02", "CLAIM-10-03", "CLAIM-10-06", "CLAIM-10-07"],
+  "claim_ids": ["CLAIM-10-02", "CLAIM-10-03", "CLAIM-10-06", "CLAIM-10-07", "CLAIM-10-08"],
   "claim_scope": [
     "low reconstruction error need not imply that a representation retains the task variable under nuisance shift",
     "a collapsed-representation negative control can detect an uninformative probing protocol",
     "an in-distribution probe can reward a nuisance shortcut that fails under a locked correlation shift",
-    "exact current-state readout does not imply that a predictor uses candidate actions correctly"
+    "exact current-state readout does not imply that a predictor uses candidate actions correctly",
+    "exact middle-state readout does not imply that a video representation preserves temporal direction or changes under reversal"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library hand-designed representation, shifted-probe, and action-interface fixture"
+    "config": "standard-library hand-designed representation, shifted-probe, action-interface, and temporal-order fixture-v3"
   },
   "data": {
     "name": "procedural task-and-texture representation fixture",
-    "version": "v2",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -49,13 +50,20 @@
     {"name": "action_blind_counterfactual_transition_rmse", "value": 1.0, "unit": "state", "split": "counterfactual-action-fixture"},
     {"name": "action_conditioned_counterfactual_transition_rmse", "value": 0.0, "unit": "state", "split": "counterfactual-action-fixture"},
     {"name": "action_blind_action_sensitivity", "value": 0.0, "unit": "state", "split": "counterfactual-action-fixture"},
-    {"name": "action_conditioned_action_sensitivity", "value": 2.0, "unit": "state", "split": "counterfactual-action-fixture"}
+    {"name": "action_conditioned_action_sensitivity", "value": 2.0, "unit": "state", "split": "counterfactual-action-fixture"},
+    {"name": "middle_frame_current_state_probe_rmse", "value": 0.0, "unit": "state", "split": "temporal-order-fixture"},
+    {"name": "ordered_delta_current_state_probe_rmse", "value": 0.0, "unit": "state", "split": "temporal-order-fixture"},
+    {"name": "middle_frame_temporal_direction_accuracy", "value": 0.5, "unit": "ratio", "split": "balanced-temporal-order-fixture"},
+    {"name": "ordered_delta_temporal_direction_accuracy", "value": 1.0, "unit": "ratio", "split": "balanced-temporal-order-fixture"},
+    {"name": "middle_frame_reversal_sensitivity", "value": 0.0, "unit": "state", "split": "temporal-reversal-fixture"},
+    {"name": "ordered_delta_reversal_sensitivity", "value": 4.0, "unit": "state", "split": "temporal-reversal-fixture"}
   ],
   "artifacts": ["results/ch10/EXP-10-01-smoke.json"],
   "limitations": [
     "hand-designed scalar representations rather than learned image or video encoders",
     "four train, four held-out ID, four shifted, and eight transition samples without statistical uncertainty",
     "action interfaces and exact transition rule are hand-authored rather than learned",
+    "temporal interfaces use eight authored three-scalar clips rather than decoded video or learned features",
     "demonstrates metric non-equivalence, not relative performance of JEPA models"
   ]
 }

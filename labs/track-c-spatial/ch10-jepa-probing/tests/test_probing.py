@@ -14,6 +14,8 @@ from probing_fixture import (  # noqa: E402
     predict_next_state,
     probe_accuracy,
     reconstruction_mse,
+    temporal_features,
+    temporal_interface_metrics,
 )
 
 
@@ -68,6 +70,28 @@ class ProbingFixtureTests(unittest.TestCase):
             predict_next_state(0.0, 1.0, "unknown")
         with self.assertRaises(ValueError):
             predict_next_state(float("nan"), 1.0, "action_conditioned")
+
+    def test_both_temporal_interfaces_retain_the_middle_state(self):
+        self.assertEqual(temporal_interface_metrics("middle_frame")["current_state_probe_rmse"], 0.0)
+        self.assertEqual(temporal_interface_metrics("ordered_delta")["current_state_probe_rmse"], 0.0)
+
+    def test_middle_frame_readout_cannot_recover_time_direction(self):
+        middle = temporal_interface_metrics("middle_frame")
+        ordered = temporal_interface_metrics("ordered_delta")
+        self.assertEqual(middle["temporal_direction_accuracy"], 0.5)
+        self.assertEqual(ordered["temporal_direction_accuracy"], 1.0)
+        self.assertEqual(middle["reversal_sensitivity"], 0.0)
+        self.assertEqual(ordered["reversal_sensitivity"], 4.0)
+
+    def test_invalid_temporal_contracts_are_rejected(self):
+        for frames, interface in (
+            ((0.0, 1.0), "ordered_delta"),
+            ((0.0, float("inf"), 1.0), "ordered_delta"),
+            ([0.0, 1.0, 2.0], "ordered_delta"),
+            ((0.0, 1.0, 2.0), "unknown"),
+        ):
+            with self.subTest(frames=frames, interface=interface), self.assertRaises(ValueError):
+                temporal_features(frames, interface)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":

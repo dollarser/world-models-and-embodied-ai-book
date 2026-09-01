@@ -26,6 +26,16 @@ TRANSITIONS = tuple(
     for action in (-1.0, 1.0)
 )
 ACTION_INTERFACES = ("action_blind", "action_conditioned")
+TEMPORAL_INTERFACES = ("middle_frame", "ordered_delta")
+TEMPORAL_CLIPS = tuple(
+    {
+        "frames": (center - direction, center, center + direction),
+        "current_state": center,
+        "direction": direction,
+    }
+    for center in (-2.0, -1.0, 1.0, 2.0)
+    for direction in (-1.0, 1.0)
+)
 
 
 def _require_representation(representation: str) -> None:
@@ -139,6 +149,41 @@ def action_interface_metrics(interface: str) -> dict[str, float]:
     }
 
 
+def temporal_features(frames: tuple[float, ...], interface: str) -> tuple[float, float]:
+    """Expose the same middle state with or without an ordered temporal delta."""
+    if interface not in TEMPORAL_INTERFACES:
+        raise ValueError(f"unknown temporal interface: {interface}")
+    if not isinstance(frames, tuple) or len(frames) != 3:
+        raise ValueError("frames must be a three-element tuple")
+    if any(
+        isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value)
+        for value in frames
+    ):
+        raise ValueError("frames must contain finite real numbers")
+    ordered_delta = frames[-1] - frames[0] if interface == "ordered_delta" else 0.0
+    return (frames[1], ordered_delta)
+
+
+def temporal_interface_metrics(interface: str) -> dict[str, float]:
+    """Separate current-state readability from time-direction sensitivity."""
+    current_state_errors: list[float] = []
+    direction_correct = 0
+    reversal_changes: list[float] = []
+    for sample in TEMPORAL_CLIPS:
+        frames = sample["frames"]
+        current_state, delta = temporal_features(frames, interface)
+        current_state_errors.append((current_state - sample["current_state"]) ** 2)
+        predicted_direction = 1.0 if delta >= 0.0 else -1.0
+        direction_correct += predicted_direction == sample["direction"]
+        reversed_delta = temporal_features(tuple(reversed(frames)), interface)[1]
+        reversal_changes.append(abs(delta - reversed_delta))
+    return {
+        "current_state_probe_rmse": sqrt(sum(current_state_errors) / len(current_state_errors)),
+        "temporal_direction_accuracy": direction_correct / len(TEMPORAL_CLIPS),
+        "reversal_sensitivity": sum(reversal_changes) / len(reversal_changes),
+    }
+
+
 def evaluate() -> dict[str, dict[str, float] | dict[str, dict[str, float]]]:
     metrics: dict[str, dict[str, float] | dict[str, dict[str, float]]] = {
         representation: {
@@ -152,5 +197,9 @@ def evaluate() -> dict[str, dict[str, float] | dict[str, dict[str, float]]]:
     metrics["action_interface"] = {
         interface: action_interface_metrics(interface)
         for interface in ACTION_INTERFACES
+    }
+    metrics["temporal_interface"] = {
+        interface: temporal_interface_metrics(interface)
+        for interface in TEMPORAL_INTERFACES
     }
     return metrics

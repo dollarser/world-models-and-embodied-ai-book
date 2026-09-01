@@ -29,11 +29,22 @@ def main() -> int:
         raise AssertionError("action-blind interface must retain an exact current-state readout")
     if action_metrics["action_blind"]["counterfactual_transition_rmse"] <= action_metrics["action_conditioned"]["counterfactual_transition_rmse"]:
         raise AssertionError("action-conditioned interface must win counterfactual transition prediction")
+    temporal_metrics = metrics["temporal_interface"]
+    if temporal_metrics["middle_frame"]["current_state_probe_rmse"] != 0.0:
+        raise AssertionError("middle-frame interface must retain the authored current state")
+    if temporal_metrics["middle_frame"]["temporal_direction_accuracy"] != 0.5:
+        raise AssertionError("direction-blind interface must remain at balanced-fixture chance")
+    if temporal_metrics["ordered_delta"]["temporal_direction_accuracy"] != 1.0:
+        raise AssertionError("ordered temporal delta must recover every authored direction")
+    if temporal_metrics["middle_frame"]["reversal_sensitivity"] != 0.0:
+        raise AssertionError("middle-frame interface must be invariant to reversal")
+    if temporal_metrics["ordered_delta"]["reversal_sensitivity"] != 4.0:
+        raise AssertionError("ordered temporal delta must change under reversal")
 
     report = {
         "experiment_id": "EXP-10-01",
         "status": "smoke",
-        "scope": "hand-designed representation shift and action-interface diagnostics; not V-JEPA inference",
+        "scope": "hand-designed representation shift, action-interface, and temporal-order diagnostics; not V-JEPA inference",
         "metrics": metrics,
         "gpu_verified": False,
     }
