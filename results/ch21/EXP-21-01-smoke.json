@@ -3,6 +3,30 @@
   "gpu_verified": false,
   "metrics": {
     "allowed_count": 1,
+    "async_schedule": {
+      "fallback_count": 2,
+      "late_arrival_count": 1,
+      "policy_action_count": 6,
+      "reason_counts": {
+        "queue_underflow": 1,
+        "stale_chunk": 1
+      },
+      "total_steps": 8,
+      "trace": [
+        {"mode": "policy_action", "observation_lag_steps": 0, "reason": null, "selected_chunk": "chunk-a", "step": 0},
+        {"mode": "policy_action", "observation_lag_steps": 1, "reason": null, "selected_chunk": "chunk-a", "step": 1},
+        {"mode": "policy_action", "observation_lag_steps": 2, "reason": null, "selected_chunk": "chunk-a", "step": 2},
+        {"mode": "policy_action", "observation_lag_steps": 2, "reason": null, "selected_chunk": "chunk-b", "step": 3},
+        {"mode": "fallback", "observation_lag_steps": 3, "reason": "stale_chunk", "selected_chunk": "chunk-b", "step": 4},
+        {"mode": "fallback", "observation_lag_steps": null, "reason": "queue_underflow", "selected_chunk": null, "step": 5},
+        {"mode": "policy_action", "observation_lag_steps": 1, "reason": null, "selected_chunk": "chunk-c", "step": 6},
+        {"mode": "policy_action", "observation_lag_steps": 2, "reason": null, "selected_chunk": "chunk-c", "step": 7}
+      ]
+    },
+    "deadline_burst_comparison": {
+      "bursted": {"all_cycles_meet_deadline": false, "deadline_miss_count": 2, "deadline_miss_rate": 0.333333, "max_ms": 80.0, "maximum_consecutive_deadline_misses": 2, "mean_ms": 40.0, "mean_passes_deadline": true, "p95_ms": 80.0, "p99_ms": 80.0},
+      "scattered": {"all_cycles_meet_deadline": false, "deadline_miss_count": 2, "deadline_miss_rate": 0.333333, "max_ms": 80.0, "maximum_consecutive_deadline_misses": 1, "mean_ms": 40.0, "mean_passes_deadline": true, "p95_ms": 80.0, "p99_ms": 80.0}
+    },
     "decisions": {
       "expired": {
         "allowed": false,
@@ -58,13 +82,28 @@
       "mobile_robot": "controlled_stop",
       "vehicle": "request_minimum_risk_maneuver"
     },
+    "fallback_state_machine": {
+      "failures_to_escalate": 3,
+      "successes_to_recover": 2,
+      "trace": [
+        {"allowed": true, "failure_streak": 0, "mode": "policy_action", "recovery_streak": 0, "step": 0},
+        {"allowed": false, "failure_streak": 1, "mode": "controlled_stop", "recovery_streak": 0, "step": 1},
+        {"allowed": false, "failure_streak": 2, "mode": "controlled_stop", "recovery_streak": 0, "step": 2},
+        {"allowed": false, "failure_streak": 3, "mode": "request_operator", "recovery_streak": 0, "step": 3},
+        {"allowed": true, "failure_streak": 0, "mode": "request_operator", "recovery_streak": 1, "step": 4},
+        {"allowed": true, "failure_streak": 0, "mode": "policy_action", "recovery_streak": 0, "step": 5}
+      ]
+    },
     "latency": {
       "all_cycles_meet_deadline": false,
+      "deadline_miss_count": 1,
       "deadline_miss_rate": 0.166667,
       "max_ms": 150.0,
+      "maximum_consecutive_deadline_misses": 1,
       "mean_ms": 45.0,
       "mean_passes_deadline": true,
-      "p95_ms": 150.0
+      "p95_ms": 150.0,
+      "p99_ms": 150.0
     },
     "reason_counts": {
       "action_chunk_expired": 1,

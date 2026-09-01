@@ -3,11 +3,13 @@
   "id": "EXP-21-01",
   "chapter": 21,
   "status": "smoke",
-  "claim_ids": ["CLAIM-21-02", "CLAIM-21-03", "CLAIM-21-07"],
+  "claim_ids": ["CLAIM-21-02", "CLAIM-21-03", "CLAIM-21-07", "CLAIM-21-09", "CLAIM-21-10"],
   "claim_scope": [
     "a mean latency below the deadline can hide a deadline miss in a fixed tail sample",
     "stale observations, deadline misses, invalid actions, bounds violations, expired chunks, and excessive uncertainty need distinct gate reasons",
-    "uncertainty thresholds trade accepted coverage against failure risk and failure capture in a fixed labeled fixture"
+    "uncertainty thresholds trade accepted coverage against failure risk and failure capture in a fixed labeled fixture",
+    "equal mean, percentile, maximum, and miss-rate summaries can hide different consecutive deadline-miss bursts",
+    "an asynchronous schedule must distinguish stale queued actions from queue underflow, and fallback recovery needs explicit hysteresis"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -15,8 +17,8 @@
     "config": "standard-library deadline and action-packet gate fixture"
   },
   "data": {
-    "name": "procedural latency and malformed action packets",
-    "version": "v2",
+    "name": "procedural latency bursts, action packets, async chunks, and fallback transitions",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -38,7 +40,12 @@
   "metrics": [
     {"name": "mean_latency_ms", "value": 45.0, "unit": "ms", "split": "fixed-six-cycles"},
     {"name": "p95_latency_ms", "value": 150.0, "unit": "ms", "split": "fixed-six-cycles"},
+    {"name": "p99_latency_ms", "value": 150.0, "unit": "ms", "split": "fixed-six-cycles"},
     {"name": "deadline_miss_rate", "value": 0.166667, "unit": "ratio", "split": "fixed-six-cycles"},
+    {"name": "bursted_maximum_consecutive_deadline_misses", "value": 2.0, "unit": "cycle", "split": "bursted-six-cycles"},
+    {"name": "scattered_maximum_consecutive_deadline_misses", "value": 1.0, "unit": "cycle", "split": "scattered-six-cycles"},
+    {"name": "async_policy_action_count", "value": 6.0, "unit": "step", "split": "eight-step-schedule"},
+    {"name": "async_fallback_count", "value": 2.0, "unit": "step", "split": "eight-step-schedule"},
     {"name": "allowed_packet_count", "value": 1.0, "unit": "packet", "split": "seven-gate-packets"},
     {"name": "fallback_packet_count", "value": 6.0, "unit": "packet", "split": "seven-gate-packets"},
     {"name": "strict_threshold_coverage", "value": 0.5, "unit": "ratio", "split": "six-selective-cases"},
@@ -49,7 +56,8 @@
   "artifacts": ["results/ch21/EXP-21-01-smoke.json"],
   "limitations": [
     "six hand-authored latency values rather than measured wall-clock timings",
-    "fallback labels are not actuator commands or safety proofs",
+    "fallback labels and state transitions are not actuator commands, reachability checks, completion evidence, or safety proofs",
+    "the discrete async schedule does not measure a scheduler, clock, network, queue implementation, or chunk fusion",
     "uncertainty scores and failure labels are hand-authored and do not validate an estimator or calibrated probability",
     "no scheduler, network, ROS, model, accelerator, hardware, fault tree, or certification"
   ]

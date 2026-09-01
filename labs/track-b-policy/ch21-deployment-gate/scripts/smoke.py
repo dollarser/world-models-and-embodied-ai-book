@@ -20,6 +20,16 @@ def main() -> int:
         raise AssertionError("the fixture mean must pass the deadline")
     if metrics["latency"]["all_cycles_meet_deadline"]:
         raise AssertionError("the fixture tail must include a deadline miss")
+    burst = metrics["deadline_burst_comparison"]
+    if burst["bursted"]["deadline_miss_rate"] != burst["scattered"]["deadline_miss_rate"]:
+        raise AssertionError("burst comparison must preserve the aggregate miss rate")
+    if burst["bursted"]["maximum_consecutive_deadline_misses"] <= burst["scattered"]["maximum_consecutive_deadline_misses"]:
+        raise AssertionError("burst length must expose information hidden by miss rate")
+    if metrics["async_schedule"]["reason_counts"] != {"queue_underflow": 1, "stale_chunk": 1}:
+        raise AssertionError("async fixture must expose one underflow and one stale chunk")
+    modes = [item["mode"] for item in metrics["fallback_state_machine"]["trace"]]
+    if modes[-2:] != ["request_operator", "policy_action"]:
+        raise AssertionError("escalated fallback must require sustained recovery")
     if metrics["allowed_count"] != 1 or metrics["fallback_count"] != 6:
         raise AssertionError("the deployment gate fixture changed")
     selective = metrics["selective_evaluation"]

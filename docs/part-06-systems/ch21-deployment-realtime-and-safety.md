@@ -3,7 +3,7 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-21-01`
-> 关联声明：`CLAIM-21-01`～`CLAIM-21-08`
+> 关联声明：`CLAIM-21-01`～`CLAIM-21-10`
 > 关联图表：`FIG-21-01` / `TAB-21-01` / `TAB-21-02`
 > 资源档位：S / M / L1
 > GPU 状态：待验证
@@ -43,7 +43,7 @@ L_{e2e}=L_{sensor}+L_{transport}+L_{pre}+L_{infer}+L_{post}+L_{queue}+L_{actuato
 
 `CLAIM-21-01`（fact）：吞吐、单次推理延迟和端到端控制 deadline 是不同指标；部署记录必须包含测量边界、warm-up、并发、批量、输入尺寸、硬件、频率、尾分位和 deadline miss。
 
-小样本的 p95/p99 很粗糙，仍应保留原始逐周期数据。正式测试要说明分位数定义，并报告 max、miss 连续长度和最坏时发生了什么。平均 FPS 不能表达抖动和队列饥饿。
+小样本的 p95/p99 很粗糙，仍应保留原始逐周期数据。正式测试要说明分位数定义，并报告 max、miss 连续长度和最坏时发生了什么。相同 miss rate 可能是一串连续超时，也可能是相隔很远的孤立超时；前者更可能耗尽 action queue 或触发 watchdog。平均 FPS 和单个 miss rate 都不能完整表达抖动、burst 与队列饥饿。
 
 ## 21.2 一次可审计的控制周期
 
@@ -79,7 +79,9 @@ flowchart LR
 2. 新 chunk 使用的观测是否已经陈旧；
 3. 新旧 chunk 重叠时如何对齐、融合或丢弃。
 
-[LeRobot 官方文档](https://github.com/huggingface/lerobot/blob/main/docs/source/inference.mdx) 当前同时提供 sync 与 Real-Time Chunking；其[异步推理指南](https://github.com/huggingface/lerobot/blob/main/docs/source/async.mdx)把 `actions_per_chunk`、queue threshold 和控制 FPS 暴露为调参项 `[O,R1]`。这些是上游接口，不是本书实测；文档中的设备内存和加速数字也不能直接移植到读者机器。
+[LeRobot 官方文档](https://github.com/huggingface/lerobot/blob/main/docs/source/inference.mdx) 当前同时提供 sync 与 Real-Time Chunking，后台线程生成 chunk、主控制环轮询动作；其[异步推理指南](https://github.com/huggingface/lerobot/blob/main/docs/source/async.mdx)把 `actions_per_chunk`、queue threshold 和控制 FPS 暴露为调参项，并明确提示生产/消费速度失配会导致空队列 `[O,R1]`。这些是 2026-09-01 核验的上游接口，不是本书实测；文档中的设备内存和加速数字也不能直接移植到读者机器。
+
+异步系统还必须冻结队列策略：FIFO 会保序但可能执行陈旧 chunk，latest-wins 会丢工作并改变动作连续性，重叠融合则要求 action index、观测版本和 prefix 对齐。队列“非空”只说明还有数值，不说明这些数值由足够新的观测生成；反过来，最新 chunk 已计算完成也不代表它在目标 start step 前到达。
 
 `CLAIM-21-04`（recommendation）：异步推理必须同时监控 action queue 深度、观测年龄、chunk 起止步、网络/推理 latency 和连续 fallback 次数；“控制线程未阻塞”不能证明动作仍新鲜。
 
@@ -99,8 +101,10 @@ make ch21-smoke
 | --- | ---: | --- |
 | mean | 45 ms | 低于 50 ms deadline |
 | nearest-rank p95 | 150 ms | 小样本尾部等于最大值 |
+| nearest-rank p99 | 150 ms | 六个样本中仍等于最大值 |
 | max | 150 ms | 有一个明确卡顿 |
 | deadline miss rate | 1/6 = 16.6667% | 手工样本，不是设备事件率 |
+| maximum consecutive misses | 1 | 只描述该固定顺序 |
 
 *TAB-21-01：`EXP-21-01` 固定延迟。没有测量墙钟或调度器。*
 
@@ -120,7 +124,7 @@ make ch21-smoke
 
 `CLAIM-21-03`（result）：七个 packet 中只有健康包通过，六种注入分别产生唯一原因码并进入 fallback。该结果验证网关实现，不估计真实系统故障率或安全性。
 
-结果保存在 `results/ch21/EXP-21-01-smoke.json`；9 个单元测试还拒绝非法 config、非有限 latency、错误 percentile 和非法 uncertainty score。
+结果保存在 `results/ch21/EXP-21-01-smoke.json`；14 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系和含糊状态机配置。
 
 ### 21.4.1 不要只发布一个拒绝阈值
 
@@ -144,6 +148,18 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 
 `CLAIM-21-08`（recommendation）：任何 uncertainty/OOD 执行门都应锁定分数定义、方向、估计器与校准版本，在独立 split 上报告 risk–coverage 和 fallback 后果；单个阈值、AUROC 或“高置信”标签不能单独授权动作。
 
+### 21.4.2 相同 miss rate，不同故障形状
+
+fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80,20,20 ms`。两者 mean 都是 `40 ms`，deadline miss 都是 `2/6`，p95/p99/max 都是 `80 ms`；唯一变化是连续 miss 最大长度分别为 `2` 和 `1`。
+
+`CLAIM-21-09`（result）：`EXP-21-01` v3 的 burst/scattered 对照证明 mean、尾分位、max 和 miss rate 完全相同时，连续 deadline miss 长度仍可不同。该结果只验证日志字段必要性，不估计真实调度 burst。
+
+### 21.4.3 异步队列：有 action 也可能不可执行
+
+离散八步 schedule 使用三个 chunk，`valid_until_step` 采用 exclusive 语义，允许晚到 chunk 只覆盖剩余有效步。最大观测滞后为两步：第 4 步仍有 `chunk-b`，但它来自第 1 步观测，因 `stale_chunk` 拒绝；第 5 步 `chunk-c` 尚未到达，因 `queue_underflow` 降级。最终 6 步执行 policy action、2 步 fallback，且有一个 chunk 晚于目标 start step 到达。
+
+这不是 LeRobot 或网络复现，而是把正文的两个失败状态变成机器合同。真实实现还要报告 queue depth trace、生产/消费速率、乱序/重复/丢包、融合规则、clock domain 与 action acknowledgement。
+
 ## 21.5 fallback 不是一个万能的零向量
 
 机械臂“保持位置”可能在夹持重物时过热，在接触任务中继续施力；移动底盘急停可能打滑；车辆在弯道冻结转向再制动可能偏离车道。fallback 应由 hazard analysis、当前状态、可用子系统和运行设计域决定。
@@ -152,9 +168,15 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 
 至少区分：传感器旧但低层控制健康、策略超时、动作非法、定位丢失、通信中断、执行器故障和安全层自身故障。不同原因可能需要不同降级，连续失败还应升级而非无限重试。
 
+进入 fallback 不等于安全状态已经达成。状态机要区分 `requested/operating/succeeded/failed`，并监控降级控制器自身的 heartbeat、deadline 和完成条件。恢复也不能只凭下一包健康就立刻重新授权高层策略；需要规定连续健康窗口、状态重同步、队列清空、人工确认或其他 profile-specific 条件。
+
+`EXP-21-01` 的通用状态机先正常执行，随后三次连续拒绝：前两次选择 `controlled_stop`，第三次升级为 `request_operator`。升级后第一次健康仍保持请求人工，第二次连续健康才恢复 `policy_action`。阈值和模式只是教学配置，不是任何本体的推荐安全参数。
+
+`CLAIM-21-10`（result）：固定六步状态序列验证了“连续三次失败升级、连续两次健康恢复”的迟滞合同，避免一次瞬时健康造成 mode flapping。它不证明 controlled stop 已完成、operator 可用或恢复动作安全。
+
 ## 21.6 ROS 2 与通信合同：QoS 不是安全证明
 
-[ROS 2 QoS 官方概念](https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html)提供 history、depth、reliability、durability、deadline、lifespan 和 liveliness 等策略 `[O,R1]`。传感器可偏向 best effort/小队列以避免旧帧堆积，关键状态可能要求 reliability；具体取舍必须测网络和丢包。
+[ROS 2 QoS 官方概念](https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html)提供 history、depth、reliability、durability、deadline、lifespan 和 liveliness 等策略 `[O,R1]`。传感器可偏向 best effort/小队列以避免旧帧堆积，关键状态可能要求 reliability；具体取舍必须测网络和丢包。[ROS 2 实时系统设计说明](https://design.ros2.org/articles/realtime_background.html)进一步强调 page fault、运行时动态分配和无限阻塞同步原语会破坏确定性；因此“节点运行在 ROS 2”与“控制路径满足实时约束”不是同一声明。
 
 QoS deadline 能报告数据未按期到达，但不会证明 callback、模型和执行器按时完成。实时执行还涉及内存锁定、优先级、动态分配、阻塞 I/O 和 executor 抖动。普通 Docker smoke 只能检查接口，不能验证调度确定性。
 
@@ -177,7 +199,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 驾驶系统要分别监控传感器 age、定位健康、规划轨迹 age、控制命令 age、车辆反馈、计算 deadline 和通信 liveliness。高层 world model/VLA 的轨迹不得绕过车辆动力学、道路边界、碰撞检查和 command gate。
 
-[Autoware Universe](https://github.com/autowarefoundation/autoware_universe)包含 operation mode、command gate、diagnostics 和 minimum-risk maneuver 相关组件 `[O,R1]`。其公开问题也显示 emergency stop 在弯道冻结横向命令可能产生车道偏离；这不是本书验证的缺陷结论，而是“停车策略也要按场景验证”的工程案例。
+[Autoware Universe](https://github.com/autowarefoundation/autoware_universe)包含 operation mode、command gate、diagnostics 和 minimum-risk maneuver 相关组件 `[O,R1]`。当前官方 operation-mode 文档明确区分 Autonomous、Local、Remote、Stop 与 `In Transition`，并在完成切换前保留原控制责任；command-mode 文档又区分 emergency stop、comfortable stop 与尚未支持的 pull over。这个结构支持本章的核心边界：模式请求、过渡责任、可用性和完成确认是不同状态，不能把一个 `fallback` 字符串当作 MRM 已成功。
 
 `CLAIM-21-06`（recommendation）：自动驾驶降级应按故障可用性选择减速、保持车道、受控停车、靠边、远程/人工接管或其他 MRM，并在直道、弯道、低附着、密集交通和传感器组合故障中闭环验证；不得用单一零控制向量代表安全。
 
@@ -193,19 +215,20 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 | 证据 | 当前状态 | 不能外推 |
 | --- | --- | --- |
-| packet gate 与固定 latency | CPU smoke | 实时调度、安全或可靠性 |
+| packet gate、固定 latency/burst 与离散异步 schedule | CPU smoke | 实时调度、网络、安全或可靠性 |
+| fallback 升级/恢复状态机 | CPU 布尔序列 | 降级控制器可达性、完成性或安全性 |
 | uncertainty gate 与 risk–coverage | CPU 手工分数/标签 | 校准质量、OOD 检出或安全性 |
 | LeRobot/OpenVLA/ROS 2/Autoware 能力 | 官方资料 | 本书已运行或满足 deadline |
 | 目标设备 latency/故障注入 | planned | 未执行前不得写数字 |
 
 ## 小结
 
-部署把模型问题变成时序和系统问题。必须测端到端年龄、尾延迟和 deadline miss，异步 action chunk 还要管理队列与新鲜度。不确定性门需要版本化分数、独立校准和 risk–coverage 证据。独立网关拒绝旧、迟、非法、过期或超过预注册阈值的动作；降级模式由具体本体和场景定义，而不是一个万能零向量。
+部署把模型问题变成时序和系统问题。必须测端到端年龄、尾延迟、deadline miss 与连续 burst，异步 action chunk 还要管理队列、新鲜度和晚到语义。不确定性门需要版本化分数、独立校准和 risk–coverage 证据。独立网关拒绝旧、迟、非法、过期或超过预注册阈值的动作；降级模式由具体本体和场景定义，并具有升级、完成与迟滞恢复合同，而不是一个万能零向量。
 
 ## 练习
 
 1. **延迟预算**：为 20 Hz 控制环给传感、预处理、推理、队列和执行器分配预算，并说明超预算策略。
-2. **代码实验**：给 `EXP-21-01` 加入连续三次 timeout 的升级状态机。
+2. **代码实验**：修改 `EXP-21-01` 的恢复窗口，构造一次健康脉冲导致 mode flapping 的反例。
 3. **异步审计**：设计 action queue 快耗尽、网络乱序和新 chunk 晚到的三个测试。
 4. **自动驾驶迁移**：比较直道与弯道定位故障时的最小风险动作，列出闭环验收指标。
 5. **选择性执行**：给 fixture 增加一个低分失败样本，观察 risk–coverage 曲线为何会暴露分数排序错误。
@@ -216,7 +239,10 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - [LeRobot async inference 文档](https://github.com/huggingface/lerobot/blob/main/docs/source/async.mdx)，`[O,R1]`；
 - [OpenVLA 官方仓库](https://github.com/openvla/openvla)，`[O,R1]`；
 - [ROS 2 QoS 官方说明](https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html)，`[O,R1]`；
+- [ROS 2 实时系统设计说明](https://design.ros2.org/articles/realtime_background.html)，`[O,R1]`，deadline、确定性执行和实时路径约束；
 - [Autoware Universe 官方仓库](https://github.com/autowarefoundation/autoware_universe)，`[O,R1]`；
+- [Autoware operation mode transition manager](https://autowarefoundation.github.io/autoware_universe/main/control/autoware_operation_mode_transition_manager/)，`[O,R1]`，模式过渡责任与完成检查；
+- [Autoware command mode types](https://autowarefoundation.github.io/autoware_universe/main/system/autoware_command_mode_types/)，`[O,R1]`，operation mode 与多种 MRM source；
 - Geifman & El-Yaniv, [Selective Classification for Deep Neural Networks](https://arxiv.org/abs/1705.08500)，`[P]`，risk–coverage 与拒绝选项基础；
 - Traub et al., [Overcoming Common Flaws in the Evaluation of Selective Classification Systems](https://arxiv.org/abs/2407.01032)，`[P]`，多阈值评测和未检出失败风险。
 
@@ -237,5 +263,5 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/uncertainty-gate-review-2026-09-01.md`；
-- 已知限制：没有测量真实墙钟、调度器、网络、模型、uncertainty estimator、ROS、机器人、车辆或 GPU，也不构成安全认证。
+- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`；
+- 已知限制：没有测量真实墙钟、调度器、网络、模型、uncertainty estimator、ROS、机器人、车辆或 GPU；异步 schedule 与状态机均为离散合同，不验证执行器可达性、MRM 完成或安全认证。

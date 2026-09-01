@@ -48,10 +48,10 @@
 | EXP-19-01 | `smoke` | 10 个单元测试；observation-only 有 2 个零误差解；等价解隐藏 state MAE 0.1625；state anchor 后唯一 | 标量无噪网格，不是物理仿真、真实参数辨识或 Sim2Real 性能 |
 | 第20章 具身评测 | `reviewed` | 四类审查通过；证据层级、协议交互、泄漏/盲法、cluster/paired/macro-micro 统计、CARLA 2.1 与机器 benchmark card 已接入 | 真实 clustered interval、真机/仿真与外部评测网络 |
 | EXP-20-01 | `smoke` | 14 个单元测试；四格协议为 100%/100%/87.5%/62.5%，interaction -25pp；8 attempted/8 valid/7 terminated/1 truncated/0 invalid | 手工 8 episode、独立 Bernoulli 假设；算术对照不是 benchmark、因果效应或故障率估计 |
-| 第21章 部署、实时性与安全边界 | `reviewed` | deadline、尾延迟、异步 chunk、watchdog、版本化 uncertainty gate、risk–coverage、fallback、自动驾驶 MRM 与四类审查 | 真实墙钟、校准 estimator、调度器、网络、模型、ROS、硬件和 GPU 未运行 |
-| EXP-21-01 | `smoke` | 9 个单元测试；mean 45 ms 掩盖 150 ms 尾部，六类异常分别拒绝；两个阈值展示 coverage—failure 取舍 | 手工 latency/packet/score/label，不是实时、OOD 或安全证明 |
+| 第21章 部署、实时性与安全边界 | `reviewed` | deadline burst、异步 chunk 新鲜度/underflow、watchdog、版本化 uncertainty gate、迟滞 fallback、Autoware MRM 状态与四类审查 | 真实墙钟、校准 estimator、调度器、网络、模型、ROS、执行器、硬件和 GPU 未运行 |
+| EXP-21-01 | `smoke` | 14 个单元测试；mean 45 ms 掩盖尾部；同 miss rate 的 burst 长度 2/1；8 步 schedule 有 1 stale/1 underflow；3-failure/2-health 状态机 | 手工 latency/packet/score/chunk/状态，不是实时、OOD、MRM 可达性或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 12 个单元测试；完整包 5 段 trace/0 issue，无效包 16 个具名 issue，缺段与错误依赖被拒绝 | metadata 图检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、241 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、246 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

@@ -49,6 +49,17 @@ class ActionPacket:
     uncertainty_revision: str
 
 
+@dataclass(frozen=True)
+class ActionChunk:
+    """A chunk schedule in control-step coordinates; valid_until_step is exclusive."""
+
+    chunk_id: str
+    observed_step: int
+    arrival_step: int
+    start_step: int
+    valid_until_step: int
+
+
 def nearest_rank(values: tuple[float, ...], percentile: float) -> float:
     if not values or not 0.0 < percentile <= 1.0:
         raise ValueError("values must be non-empty and percentile in (0, 1]")
@@ -58,7 +69,9 @@ def nearest_rank(values: tuple[float, ...], percentile: float) -> float:
     return ordered[ceil(percentile * len(ordered)) - 1]
 
 
-def latency_summary(latencies_ms: tuple[float, ...], deadline_ms: float) -> dict[str, float | bool]:
+def latency_summary(
+    latencies_ms: tuple[float, ...], deadline_ms: float
+) -> dict[str, float | int | bool]:
     if not _finite_number(deadline_ms) or deadline_ms <= 0.0:
         raise ValueError("deadline must be a finite positive number")
     if not latencies_ms:
@@ -67,13 +80,153 @@ def latency_summary(latencies_ms: tuple[float, ...], deadline_ms: float) -> dict
         raise ValueError("latencies must be finite non-negative numbers")
     mean = sum(latencies_ms) / len(latencies_ms)
     misses = sum(value > deadline_ms for value in latencies_ms)
+    longest_miss_burst = 0
+    current_miss_burst = 0
+    for value in latencies_ms:
+        if value > deadline_ms:
+            current_miss_burst += 1
+            longest_miss_burst = max(longest_miss_burst, current_miss_burst)
+        else:
+            current_miss_burst = 0
     return {
         "mean_ms": round(mean, 6),
         "p95_ms": round(nearest_rank(latencies_ms, 0.95), 6),
+        "p99_ms": round(nearest_rank(latencies_ms, 0.99), 6),
         "max_ms": round(max(latencies_ms), 6),
+        "deadline_miss_count": misses,
         "deadline_miss_rate": round(misses / len(latencies_ms), 6),
+        "maximum_consecutive_deadline_misses": longest_miss_burst,
         "mean_passes_deadline": mean <= deadline_ms,
         "all_cycles_meet_deadline": misses == 0,
+    }
+
+
+def audit_async_schedule(
+    chunks: tuple[ActionChunk, ...],
+    total_steps: int,
+    max_observation_lag_steps: int,
+) -> dict[str, object]:
+    """Audit whether an async chunk schedule supplies fresh actions at every tick."""
+    if isinstance(total_steps, bool) or not isinstance(total_steps, int) or total_steps <= 0:
+        raise ValueError("total_steps must be a positive integer")
+    if (
+        isinstance(max_observation_lag_steps, bool)
+        or not isinstance(max_observation_lag_steps, int)
+        or max_observation_lag_steps < 0
+    ):
+        raise ValueError("max_observation_lag_steps must be a non-negative integer")
+    if not chunks:
+        raise ValueError("at least one action chunk is required")
+
+    seen_ids = set()
+    for chunk in chunks:
+        if not isinstance(chunk, ActionChunk):
+            raise TypeError("chunks must contain ActionChunk values")
+        if not isinstance(chunk.chunk_id, str) or not chunk.chunk_id or chunk.chunk_id in seen_ids:
+            raise ValueError("chunk ids must be non-empty and unique")
+        seen_ids.add(chunk.chunk_id)
+        fields = (chunk.observed_step, chunk.arrival_step, chunk.start_step, chunk.valid_until_step)
+        if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in fields):
+            raise ValueError("chunk step fields must be non-negative integers")
+        if chunk.observed_step > chunk.arrival_step:
+            raise ValueError("a chunk cannot arrive before its source observation")
+        if chunk.start_step >= chunk.valid_until_step:
+            raise ValueError("chunk validity interval must be non-empty")
+
+    trace = []
+    reason_counts = {"queue_underflow": 0, "stale_chunk": 0}
+    for step in range(total_steps):
+        candidates = tuple(
+            chunk
+            for chunk in chunks
+            if chunk.arrival_step <= step and chunk.start_step <= step < chunk.valid_until_step
+        )
+        if not candidates:
+            reason = "queue_underflow"
+            selected = None
+            observation_lag = None
+        else:
+            selected_chunk = max(
+                candidates,
+                key=lambda chunk: (chunk.observed_step, chunk.arrival_step, chunk.chunk_id),
+            )
+            selected = selected_chunk.chunk_id
+            observation_lag = step - selected_chunk.observed_step
+            reason = "stale_chunk" if observation_lag > max_observation_lag_steps else None
+        if reason:
+            reason_counts[reason] += 1
+        trace.append(
+            {
+                "step": step,
+                "selected_chunk": selected,
+                "observation_lag_steps": observation_lag,
+                "mode": "fallback" if reason else "policy_action",
+                "reason": reason,
+            }
+        )
+
+    fallback_count = sum(item["mode"] == "fallback" for item in trace)
+    return {
+        "total_steps": total_steps,
+        "policy_action_count": total_steps - fallback_count,
+        "fallback_count": fallback_count,
+        "late_arrival_count": sum(chunk.arrival_step > chunk.start_step for chunk in chunks),
+        "reason_counts": reason_counts,
+        "trace": trace,
+    }
+
+
+def fallback_state_machine(
+    allowed_sequence: tuple[bool, ...],
+    *,
+    initial_mode: str,
+    escalated_mode: str,
+    failures_to_escalate: int = 3,
+    successes_to_recover: int = 2,
+) -> dict[str, object]:
+    """Exercise a generic escalation/recovery contract, not an actuator controller."""
+    if not allowed_sequence or any(not isinstance(value, bool) for value in allowed_sequence):
+        raise ValueError("allowed_sequence must be a non-empty boolean tuple")
+    if not initial_mode or not escalated_mode or initial_mode == escalated_mode:
+        raise ValueError("fallback modes must be distinct and explicit")
+    for name, value in (
+        ("failures_to_escalate", failures_to_escalate),
+        ("successes_to_recover", successes_to_recover),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ValueError(f"{name} must be a positive integer")
+
+    failure_streak = 0
+    recovery_streak = 0
+    escalated = False
+    trace = []
+    for step, allowed in enumerate(allowed_sequence):
+        if allowed:
+            failure_streak = 0
+            if escalated:
+                recovery_streak += 1
+                if recovery_streak >= successes_to_recover:
+                    escalated = False
+                    recovery_streak = 0
+            mode = escalated_mode if escalated else "policy_action"
+        else:
+            recovery_streak = 0
+            failure_streak += 1
+            escalated = escalated or failure_streak >= failures_to_escalate
+            mode = escalated_mode if escalated else initial_mode
+        trace.append(
+            {
+                "step": step,
+                "allowed": allowed,
+                "mode": mode,
+                "failure_streak": failure_streak,
+                "recovery_streak": recovery_streak,
+            }
+        )
+    return {
+        "failures_to_escalate": failures_to_escalate,
+        "successes_to_recover": successes_to_recover,
+        "trace": trace,
     }
 
 
@@ -147,6 +300,8 @@ def gate(packet: ActionPacket, config: GateConfig) -> dict[str, object]:
 
 
 LATENCIES_MS = (20.0, 22.0, 24.0, 26.0, 28.0, 150.0)
+BURSTED_LATENCIES_MS = (20.0, 80.0, 80.0, 20.0, 20.0, 20.0)
+SCATTERED_LATENCIES_MS = (20.0, 80.0, 20.0, 80.0, 20.0, 20.0)
 
 
 def evaluate() -> dict[str, object]:
@@ -180,8 +335,23 @@ def evaluate() -> dict[str, object]:
         (0.8, True),
         (0.9, True),
     )
+    async_schedule = (
+        ActionChunk("chunk-a", 0, 0, 0, 3),
+        ActionChunk("chunk-b", 1, 3, 3, 5),
+        ActionChunk("chunk-c", 5, 6, 5, 8),
+    )
     return {
         "latency": latency_summary(LATENCIES_MS, config.deadline_ms),
+        "deadline_burst_comparison": {
+            "bursted": latency_summary(BURSTED_LATENCIES_MS, config.deadline_ms),
+            "scattered": latency_summary(SCATTERED_LATENCIES_MS, config.deadline_ms),
+        },
+        "async_schedule": audit_async_schedule(async_schedule, 8, 2),
+        "fallback_state_machine": fallback_state_machine(
+            (True, False, False, False, True, True),
+            initial_mode="controlled_stop",
+            escalated_mode="request_operator",
+        ),
         "decisions": decisions,
         "allowed_count": sum(decision["allowed"] for decision in decisions.values()),
         "fallback_count": sum(not decision["allowed"] for decision in decisions.values()),
