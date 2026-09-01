@@ -21,7 +21,28 @@ from scripts.check_book import (
     check_prd_experiment_tiers,
     check_research_radar_contract,
     check_reading_map_contract,
+    check_review_index_contract,
 )
+
+
+class ReviewIndexContractTest(unittest.TestCase):
+    def test_accepts_indexed_review_records(self) -> None:
+        self.assertEqual(
+            [],
+            check_review_index_contract(
+                ["chapter-review.md", "book-review.md"],
+                "[chapter](chapter-review.md)\n[book](book-review.md)\n",
+            ),
+        )
+
+    def test_rejects_unindexed_review_records(self) -> None:
+        self.assertEqual(
+            ["review record is missing from reviews/README.md: missing-review.md"],
+            check_review_index_contract(
+                ["indexed-review.md", "missing-review.md"],
+                "[indexed](indexed-review.md)\n",
+            ),
+        )
 
 
 class FloatingGitHubSourceContractTest(unittest.TestCase):

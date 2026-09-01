@@ -134,6 +134,28 @@ def check_required() -> list[str]:
     return [f"missing required file: {path}" for path in REQUIRED if not (ROOT / path).is_file()]
 
 
+def check_review_index_contract(review_names: list[str], index_text: str) -> list[str]:
+    """Require every Markdown review record to be discoverable from the review index."""
+
+    return [
+        f"review record is missing from reviews/README.md: {name}"
+        for name in sorted(review_names)
+        if f"({name})" not in index_text
+    ]
+
+
+def check_review_index_files() -> list[str]:
+    index_path = ROOT / "reviews/README.md"
+    review_dir = ROOT / "reviews"
+    if not index_path.is_file() or not review_dir.is_dir():
+        return []
+    review_names = [path.name for path in review_dir.glob("*.md") if path.name != "README.md"]
+    return check_review_index_contract(
+        review_names,
+        index_path.read_text(encoding="utf-8"),
+    )
+
+
 def check_json() -> list[str]:
     errors: list[str] = []
     paths = (
@@ -1098,6 +1120,7 @@ def check_research_radar_file() -> list[str]:
 def main() -> int:
     errors = (
         check_required()
+        + check_review_index_files()
         + check_json()
         + check_documented_asset_versions()
         + check_manifest()
@@ -1116,7 +1139,7 @@ def main() -> int:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
     print(
-        "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
+        "book checks passed: required files, review index, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
         "experiment asset packages, explicit asset versions, heading hierarchy, chapter teaching sections, exercise self-checks, reader terminology, "
         "fact/inference evidence, critical "
         "recommendation policy, research radar, running-case reading map, manifest, "
