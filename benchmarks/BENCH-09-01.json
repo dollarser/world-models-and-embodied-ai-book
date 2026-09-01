@@ -9,19 +9,21 @@
   "evaluation_layers": ["E1", "E2", "E4"],
   "allowed_claims": [
     "The fixed fixture exhibits a ranking reversal between one-step RMSE and closed-loop success.",
-    "Action sensitivity is necessary to diagnose the action-blind predictor in this fixture."
+    "Action sensitivity is necessary to diagnose the action-blind predictor in this fixture.",
+    "Available-case and predeclared fixed-denominator aggregation select different terminal-horizon winners in the authored missing-rollout fixture."
   ],
   "forbidden_claims": [
     "The fixture estimates ranking-reversal frequency in learned world models.",
     "The fixture establishes real robot, autonomous-driving, OOD, or safety performance.",
-    "The fixture compares published world-model architectures."
+    "The fixture compares published world-model architectures.",
+    "The authored missing penalty is a universal or empirically estimated error value."
   ],
   "systems": [
     {
       "name": "action_blind",
       "role": "baseline",
       "type": "deterministic persistence predictor",
-      "revision": "fixture-v1",
+      "revision": "fixture-v2",
       "inputs": ["scalar state", "scalar candidate action"],
       "outputs": ["scalar next-state prediction"],
       "preprocessing": "none; the candidate action is deliberately ignored"
@@ -30,7 +32,7 @@
       "name": "action_faithful_biased",
       "role": "system_under_test",
       "type": "deterministic action-conditioned predictor with fixed bias",
-      "revision": "fixture-v1",
+      "revision": "fixture-v2",
       "inputs": ["scalar state", "scalar candidate action"],
       "outputs": ["scalar next-state prediction"],
       "preprocessing": "none"
@@ -39,15 +41,15 @@
   "datasets": [
     {
       "name": "procedural 1D intervention and goal-reaching fixture",
-      "version": "v1",
+      "version": "v2",
       "license": "MIT",
       "classification": "fixture",
       "fixture": true,
       "download_bytes": 0,
       "checksum": null,
       "role": "fixture",
-      "split_definition": "Twelve fixed low-motion one-step pairs and two fixed closed-loop start-goal pairs; no fitted parameters or model selection.",
-      "unit_of_analysis": "one-step transition for E1 and complete episode for E4",
+      "split_definition": "Twelve fixed low-motion one-step pairs, two fixed closed-loop start-goal pairs, and two three-rollout four-horizon error tables; no fitted parameters or model selection.",
+      "unit_of_analysis": "one-step transition for E1, action intervention for E2, complete episode for E4, and rollout for horizon missingness",
       "grouping_keys": ["predictor", "evaluation layer"],
       "leakage_controls": [
         "No training or calibration occurs.",
@@ -57,25 +59,26 @@
     }
   ],
   "protocol": {
-    "version": "fixture-v1",
-    "comparison_unit": "paired predictor evaluation on identical deterministic inputs",
-    "sample_count": 14,
+    "version": "fixture-v2",
+    "comparison_unit": "paired predictor evaluation on identical deterministic inputs plus stable/fragile rollout tables with a fixed attempted denominator",
+    "sample_count": 20,
     "randomness": {
       "deterministic": true,
       "seeds": [],
       "rationale": "All states, actions, goals, predictors, planner tie-breaking, and horizons are fixed."
     },
-    "horizons": [1, 24],
+    "horizons": [1, 4, 24],
     "action_space": "scalar discrete actions {-0.1, 0.0, 0.1}; tuple order resolves equal planner scores toward 0.0",
     "timing": "one abstract step; no wall-clock or real-time claim",
     "termination_conditions": [
       "One-step evaluation ends after all 12 transition pairs.",
+      "Horizon evaluation ends after all six authored rollout rows, retaining missing suffixes.",
       "Each closed-loop episode ends after exactly 24 planning steps."
     ],
     "baselines": ["action_blind persistence predictor"],
-    "comparison_design": "Report each predictor separately on E1 and E4, then compare metric ordering; do not combine metrics into one score.",
-    "selection_protocol": "No hyperparameter, threshold, checkpoint, or post-result model selection is permitted.",
-    "failure_definition": "Closed-loop failure means final absolute goal distance exceeds 0.11 after 24 steps."
+    "comparison_design": "Report each predictor separately on E1, E2, and E4; for horizon errors report attempted count, available count, coverage, available-case mean, and a fixed-denominator mean using the predeclared missing penalty 2.0; do not combine layers into one score.",
+    "selection_protocol": "No hyperparameter, threshold, checkpoint, missing penalty, or post-result model selection is permitted.",
+    "failure_definition": "Closed-loop failure means final absolute goal distance exceeds 0.11 after 24 steps; a missing rollout suffix receives penalty 2.0 only in the registered fixed-denominator diagnostic."
   },
   "metrics": [
     {
@@ -88,7 +91,7 @@
       "split": "12-pair low-motion fixture",
       "aggregation": "square root of the mean squared prediction error over all 12 paired transitions",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:prediction_rmse",
-      "implementation_version": "fixture-v1",
+      "implementation_version": "fixture-v2",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "This is an exhaustive deterministic teaching fixture, not a sample used to estimate population performance."
@@ -104,7 +107,7 @@
       "split": "two-goal fixture",
       "aggregation": "arithmetic mean of two Boolean episode outcomes",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:evaluate",
-      "implementation_version": "fixture-v1",
+      "implementation_version": "fixture-v2",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "Two authored counterexamples are the complete fixture and do not support a population confidence interval."
@@ -120,10 +123,74 @@
       "split": "two-goal fixture",
       "aggregation": "arithmetic mean of final absolute goal distance over both episodes",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:evaluate",
-      "implementation_version": "fixture-v1",
+      "implementation_version": "fixture-v2",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The deterministic fixture is not a statistical sample of tasks or environments."
+      }
+    },
+    {
+      "id": "METRIC-09-04",
+      "name": "action_sensitivity",
+      "layer": "E2",
+      "role": "diagnostic",
+      "direction": "maximize",
+      "unit": "prediction span",
+      "split": "three-action intervention fixture",
+      "aggregation": "maximum minus minimum next-state prediction across {-0.1, 0.0, 0.1} at state zero",
+      "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:action_sensitivity",
+      "implementation_version": "fixture-v2",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "The three interventions are exhaustive for the fixture; a larger span is useful only for detecting the authored action-blind baseline and is not universally better."
+      }
+    },
+    {
+      "id": "METRIC-09-05",
+      "name": "terminal_horizon_coverage",
+      "layer": "E1",
+      "role": "diagnostic",
+      "direction": "maximize",
+      "unit": "ratio",
+      "split": "three-rollout four-horizon fixture",
+      "aggregation": "valid terminal-horizon predictions divided by the three attempted rollouts",
+      "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:horizon_error_report",
+      "implementation_version": "fixture-v2",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "All authored rollout rows are enumerated; coverage describes fixture completeness rather than population uncertainty."
+      }
+    },
+    {
+      "id": "METRIC-09-06",
+      "name": "terminal_available_case_mean_error",
+      "layer": "E1",
+      "role": "diagnostic",
+      "direction": "minimize",
+      "unit": "scalar error",
+      "split": "three-rollout four-horizon fixture",
+      "aggregation": "arithmetic mean over only non-missing terminal-horizon errors, always accompanied by coverage",
+      "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:horizon_error_report",
+      "implementation_version": "fixture-v2",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "The value is a deterministic conditional summary of authored surviving outputs and is not a population estimate."
+      }
+    },
+    {
+      "id": "METRIC-09-07",
+      "name": "terminal_fixed_denominator_mean_error",
+      "layer": "E1",
+      "role": "primary",
+      "direction": "minimize",
+      "unit": "penalized scalar error",
+      "split": "three-rollout four-horizon fixture",
+      "aggregation": "arithmetic mean over all three attempted rollouts after assigning the predeclared penalty 2.0 to each missing terminal prediction",
+      "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:horizon_error_report",
+      "implementation_version": "fixture-v2",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "The penalty and rows are authored to expose denominator sensitivity; they do not estimate a natural error scale."
       }
     }
   ],
@@ -134,15 +201,16 @@
   "reporting": {
     "per_system": true,
     "per_task": false,
-    "disaggregations": ["predictor", "E1 versus E4 evaluation layer"],
+    "disaggregations": ["predictor", "E1 versus E2 versus E4 evaluation layer", "horizon", "stable versus fragile rollout table"],
     "raw_predictions": "Recompute from the deterministic source; no large prediction artifact is emitted.",
-    "failure_artifacts": "The action-blind predictor's two failed episode summaries are represented by the result metrics; no video exists.",
+    "failure_artifacts": "The action-blind predictor's two failed episodes and fragile rollout missing suffixes are represented by named result metrics; no video exists.",
     "confounders": [
       "The action-faithful predictor has an authored fixed bias.",
       "Planner tie-breaking intentionally favors no-op.",
-      "E1 has 12 transitions while E4 has two authored episodes."
+      "E1 has 12 one-step transitions and six authored rollout rows while E4 has two authored episodes.",
+      "The missing penalty 2.0 is selected before execution to create a diagnostic ranking reversal and has no external calibration."
     ],
-    "missing_value_policy": "Missing systems, metrics, or episode outcomes invalidate the run; no imputation or case dropping is allowed."
+    "missing_value_policy": "Missing registered systems, metrics, or closed-loop outcomes invalidate the run. Only authored horizon-table suffixes may be missing; report them in available counts and apply penalty 2.0 solely for the registered fixed-denominator metric."
   },
   "resources": {
     "tier": "S",
@@ -156,6 +224,7 @@
   "limitations": [
     "The predictors are deterministic hand-written functions rather than learned world models.",
     "The state and action spaces are one-dimensional and omit perception, contact, stochasticity, and dynamics mismatch.",
+    "The missing-rollout penalty is a protocol constant rather than an empirically calibrated error or safety cost.",
     "The card demonstrates protocol traceability and a logical counterexample, not external validity or safety."
   ]
 }

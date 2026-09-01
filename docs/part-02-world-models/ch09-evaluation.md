@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-09-01`
-> 关联声明：`CLAIM-09-01`～`CLAIM-09-07`
-> 关联图表：`FIG-09-01`
+> 关联声明：`CLAIM-09-01`～`CLAIM-09-08`
+> 关联图表：`FIG-09-01` / `TAB-09-01` / `TAB-09-02`
 > 资源档位：S / M
 > GPU 状态：不需要
 
@@ -85,6 +85,8 @@ E(h)=\frac{1}{N}\sum_{i=1}^{N} d\!\left(\hat{s}^{(i)}_{t+h},s^{(i)}_{t+h}\right)
 
 其中 `h` 是 rollout 长度，`d` 必须按用途选择：可以是像素距离、对象状态误差、碰撞状态错误或奖励误差。不同 horizon 的有效样本数也要一起报告，避免长序列因过滤失败样本而显得更好。
 
+“模型没有输出”不是一个可以直接从均值里删除的普通数值。视频生成中断、状态变为非有限值或解码器崩溃时，应在运行前选择并登记一种语义：整次运行技术无效、该 rollout 计为任务失败，或只估计“仍能输出的 rollout”这一条件总体。若采用失败惩罚，惩罚值和单位必须预注册；它用于把失败纳入固定分母，不是一个通用的真实误差估计。无论采用哪种语义，都要同时报告 attempted count、available count、coverage 和失败原因。
+
 ### latent probing
 
 潜在状态不一定能够解码出漂亮视频，但可能保存速度、接触、可达性或奖励等决策变量。线性 probing 能回答“这些变量是否容易从表示中读出”，却不能证明策略实际使用了它们，也不能证明干预动作后的潜在转移正确。probe 是诊断工具，不是闭环验收。
@@ -128,16 +130,29 @@ make ch09-test-local
 make ch09-smoke
 ```
 
-固定程序化 fixture 的实际输出为：
+固定程序化 fixture 的第一个反例输出为：
 
-| 预测器 | one-step RMSE ↓ | 闭环成功率 ↑ | 平均终点距离 ↓ |
-| --- | ---: | ---: | ---: |
-| action-blind | **0.05774** | 0% | 2.00 |
-| action-faithful-biased | 0.12000 | **100%** | **0.10** |
+| 预测器 | one-step RMSE ↓ | action sensitivity ↑ | 闭环成功率 ↑ | 平均终点距离 ↓ |
+| --- | ---: | ---: | ---: | ---: |
+| action-blind | **0.05774** | 0.00 | 0% | 2.00 |
+| action-faithful-biased | 0.12000 | **0.20** | **100%** | **0.10** |
+
+*TAB-09-01：`EXP-09-01` 的 one-step—干预—闭环排序反转。action sensitivity 是同一状态下三个候选动作预测值的极差。*
 
 `CLAIM-09-01`（result）：在 `EXP-09-01` 的固定 fixture 中，one-step RMSE 与闭环成功率给出了相反的模型排序。
 
 这项结果只证明排序反转在逻辑上可以发生。它使用两个确定性函数、两个目标和一维动力学，不能估计这种现象在真实世界模型中的频率，也不能证明所有感知指标与控制性能负相关。它的作用是给评测代码建立一个必须能识别的反例。
+
+第二个反例固定三条 stable rollout 和三条 fragile rollout。fragile 只剩一条能够到达第 4 步；若直接对幸存输出求均值，它以 0.40 看似优于 stable 的 0.80。协议预先把缺失 rollout 记为误差 2.0 后，固定分母均值变为 1.4667，排序反转：
+
+| 系统 | 第4步 attempted / available | coverage | 幸存样本均值 ↓ | 固定分母均值 ↓ |
+| --- | ---: | ---: | ---: | ---: |
+| stable | 3 / 3 | 1.000 | 0.8000 | **0.8000** |
+| fragile | 3 / 1 | 0.333 | **0.4000** | 1.4667 |
+
+*TAB-09-02：`EXP-09-01` 的长时缺失分母反例。缺失惩罚 2.0 是本 fixture 的预注册失败语义，不是推荐给其他任务的通用常数。*
+
+`CLAIM-09-08`（result）：在 `EXP-09-01` 的固定三 rollout 反例中，available-case 聚合选择 fragile，而预注册缺失惩罚的固定分母聚合选择 stable。该结果证明分母语义可以改变排序，不估计真实模型崩溃率，也不证明任意惩罚值都合理。
 
 ## 9.6 WorldArena：同时测感知与功能，但不要抹平任务边界
 
@@ -214,7 +229,7 @@ resources + experiment_ids + artifacts + limitations
 
 仓库中的 `specs/benchmark-card.schema.json` 是 Draft 2020-12 Schema；`benchmarks/BENCH-06-01.json`、`BENCH-09-01.json` 和 `BENCH-20-01.json` 分别覆盖 prior/posterior 误差、指标排序反转和闭环比例/Wilson 区间。严格检查还验证 claim/experiment 的章节归属、benchmark 与 experiment 双向引用、metric layer、ID 前缀、产物路径、系统名唯一性和下载量总和。它能阻止字段缺失和跨资产漂移，不能判断指标是否科学充分，也不能替代领域评审。
 
-`BENCH-09-01` 明确把 E1 的 12 个 one-step 转移与 E4 的两个闭环 episode 分开，固定 24 步 horizon、动作集合、tie-breaking 和失败阈值，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。它没有 uncertainty estimator，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构校准数据或风险曲线。
+`BENCH-09-01` v2 明确把 E1 的 12 个 one-step 转移、E2 action sensitivity、E4 的两个闭环 episode 和 6 条多步误差行分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值及缺失惩罚，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。它没有 uncertainty estimator，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构校准数据或风险曲线。
 
 `CLAIM-09-07`（recommendation）：可审计比较应在运行前冻结 benchmark card，并把评测协议、单次运行来源和测量结果拆成可互相引用的资产；机器 Schema 只证明结构与追溯关系成立，不证明 benchmark 有外部效度。
 
@@ -224,7 +239,7 @@ resources + experiment_ids + artifacts + limitations
 
 | 类型 | 声明/结果 | 来源或实验 ID | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | one-step 与闭环指标发生排序反转 | `EXP-09-01` | CPU smoke | 手工一维反例 |
+| 本书结果 | one-step/闭环与缺失分母分别造成排序反转 | `EXP-09-01` | CPU smoke | 手工一维反例与预注册惩罚 |
 | 外部事实 | WorldArena 分开评估感知与功能用途 | 官方仓库 | `[O,R1]` | 本书未运行 |
 | 外部案例 | WorldArena 2.0 扩展模态、用途与平台维度 | 论文/官方项目 | `[P/O,R0–R1]` | 接口与排行榜会变化 |
 | 外部案例 | KineBench 显式移除额外 IDM 的归因混淆 | arXiv:2607.19876 | `[P,R0]` | 本书未运行，仅限论文设置 |
@@ -245,9 +260,10 @@ resources + experiment_ids + artifacts + limitations
 
 1. **概念判断**：一个模型 FVD 更低，但策略排序相关性更差。若用途分别是视频展示和动作规划，应如何选择？
 2. **代码实验**：修改 `EXP-09-01` 的动作分布，让非零动作占比逐渐升高，画出两个预测器 one-step 排名何时翻转。
-3. **协议设计**：复制 `BENCH-09-01` 为一个抓取视频世界模型填写 benchmark card，分别给出 E1、E2 和 E4 的退出条件；若使用随机任务，说明 seed、group split 和置信区间方法。
-4. **自动驾驶迁移**：设计一个平均 ADE 很低却高风险的驾驶数据分布，说明需要增加哪些分桶指标。
-5. **反例审查**：解释为何“闭环成功率高”仍可能掩盖安全问题，并给出至少两个补充指标。
+3. **分母审计**：分别把 fragile rollout 的缺失处理为运行无效、任务失败和条件于幸存输出，写出三种 estimand 及允许声明。
+4. **协议设计**：复制 `BENCH-09-01` 为一个抓取视频世界模型填写 benchmark card，分别给出 E1、E2 和 E4 的退出条件；若使用随机任务，说明 seed、group split 和置信区间方法。
+5. **自动驾驶迁移**：设计一个平均 ADE 很低却高风险的驾驶数据分布，说明需要增加哪些分桶指标。
+6. **反例审查**：解释为何“闭环成功率高”仍可能掩盖安全问题，并给出至少两个补充指标。
 
 ## 延伸阅读
 

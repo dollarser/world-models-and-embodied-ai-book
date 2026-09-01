@@ -22,6 +22,11 @@ def main() -> int:
         raise AssertionError("fixture must make the action-blind model win one-step RMSE")
     if not perceptual["closed_loop_success_rate"] < functional["closed_loop_success_rate"]:
         raise AssertionError("fixture must reverse the ranking under closed-loop utility")
+    if not perceptual["action_sensitivity"] < functional["action_sensitivity"]:
+        raise AssertionError("action intervention must expose the action-blind predictor")
+    missingness = metrics["horizon_missingness"]
+    if missingness["available_case_terminal_winner"] == missingness["fixed_denominator_terminal_winner"]:
+        raise AssertionError("missing-rollout policy must reverse the terminal ranking")
 
     report = {
         "experiment_id": "EXP-09-01",

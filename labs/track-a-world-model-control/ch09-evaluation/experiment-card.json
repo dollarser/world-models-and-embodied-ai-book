@@ -3,20 +3,21 @@
   "id": "EXP-09-01",
   "chapter": 9,
   "status": "smoke",
-  "claim_ids": ["CLAIM-09-01", "CLAIM-09-02"],
+  "claim_ids": ["CLAIM-09-01", "CLAIM-09-02", "CLAIM-09-08"],
   "benchmark_ids": ["BENCH-09-01"],
   "claim_scope": [
     "lower one-step prediction error need not imply better closed-loop action selection",
-    "action sensitivity must be evaluated when a model is used under intervention"
+    "action sensitivity must be evaluated when a model is used under intervention",
+    "available-case and fixed-denominator aggregation can reverse a terminal-horizon ranking when rollouts go missing"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library deterministic ranking-reversal fixture"
+    "config": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py fixture-v2"
   },
   "data": {
     "name": "procedural 1D intervention and goal-reaching fixture",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -38,13 +39,19 @@
   "metrics": [
     {"name": "action_blind_one_step_rmse", "value": 0.05773502691896258, "unit": "position", "split": "procedural-fixture"},
     {"name": "action_faithful_one_step_rmse", "value": 0.12, "unit": "position", "split": "procedural-fixture"},
+    {"name": "action_blind_sensitivity", "value": 0.0, "unit": "prediction-span", "split": "intervention-fixture"},
+    {"name": "action_faithful_sensitivity", "value": 0.2, "unit": "prediction-span", "split": "intervention-fixture"},
     {"name": "action_blind_closed_loop_success_rate", "value": 0.0, "unit": "ratio", "split": "two-goal-fixture"},
-    {"name": "action_faithful_closed_loop_success_rate", "value": 1.0, "unit": "ratio", "split": "two-goal-fixture"}
+    {"name": "action_faithful_closed_loop_success_rate", "value": 1.0, "unit": "ratio", "split": "two-goal-fixture"},
+    {"name": "fragile_terminal_coverage", "value": 0.3333333333333333, "unit": "ratio", "split": "horizon-fixture"},
+    {"name": "fragile_terminal_available_case_error", "value": 0.4, "unit": "error", "split": "horizon-fixture"},
+    {"name": "fragile_terminal_fixed_denominator_error", "value": 1.4666666666666668, "unit": "penalized-error", "split": "horizon-fixture"}
   ],
   "artifacts": ["results/ch09/EXP-09-01-smoke.json"],
   "limitations": [
     "deterministic hand-designed predictors rather than learned world models",
     "one-dimensional dynamics and a one-step planner",
+    "the missing penalty of 2.0 is an authored protocol choice rather than a universal error value",
     "demonstrates logical possibility, not frequency in real benchmarks"
   ]
 }
