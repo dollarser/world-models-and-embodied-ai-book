@@ -233,6 +233,45 @@ JEPA 把预测目标从像素移到表示空间，使模型可以忽略部分不
 4. **视频协议**：设计时间反转和帧打乱 probe，分别测试静态捷径与时间方向。
 5. **自动驾驶迁移**：为相对速度、车道偏移和 TTC 定义 route-disjoint split 与单位。
 
+## 自检要点
+
+Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复某信息”。以下答案把表示可读性、动作反事实、规划效用和闭环证据分开，避免逐级越权。
+
+<details>
+<summary>SELF-CHECK-10-01：动作 probe 与规划证据</summary>
+
+不能。更高的动作分类 probe 可能只读出行为数据中的相机、场景或操作者捷径，也没有说明表示保留候选动作导致的未来差异。至少还缺：按 episode/route/object 分组的 shift split 与标签置乱负对照；当前状态和动作条件 transition 的分离测试；E2 配对反事实方向/幅度；E3 策略回报排序或 regret；E4 外部闭环成功、安全和干预指标；以及时延、动作覆盖与不确定性。Probe 可以筛查信息是否容易读出，不能单独授权 planner 或执行器。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-10-02：纹理相关性的翻转区域</summary>
+
+可把平衡二分类任务写成 `y∈{-1,1}`，纹理符号以概率 `(1+ρ_s)/2` 与 y 一致，幅度为 `A_s>0`，分别冻结 `ρ_train,ρ_ID,ρ_shift`。无噪声 centroid probe 在 `ρ_train≠0` 时学习其符号，split s 的期望准确率为 `(1+sign(ρ_train)ρ_s)/2`：ID 与训练同号时高于 0.5，shift 反号时低于 0.5，`ρ_s=0` 为 chance；`A=0` 时表示坍塌。当前确定 fixture 相当于训练/ID 同号、shift 反号，因此 appearance 为 `1/1/0`，task-predictive 保持 `1/1/1`，collapsed 为 `0.5/0.5/0.5`。无噪声下正幅度只缩放距离，不改变分类；要研究幅度边界需显式加入噪声或正则化，不能凭图假造翻转。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-10-03：随机高维特征负对照</summary>
+
+生成与标签独立的 `d` 维高斯特征，并在 `d≥n`、训练样本很少时拟合低正则线性 probe；它可能插值训练标签而得到接近 100% train accuracy，但独立 group test 应回到约 50%。应同时画 train/validation/test 随 n、d 和正则变化的曲线，并加入 label permutation、多 seed 区间、嵌套选择集和固定 probe 容量。若用 test split 选维度或正则，负对照本身也会发生选择泄漏。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-10-04：静态捷径与时间方向</summary>
+
+固定同一批视频及帧集合，做三路输入：原顺序、序列内随机打乱、完全反转。若动作/事件 probe 在打乱后几乎不降，说明它可能依赖单帧对象或背景，不能据此声称时序建模；原序与反序的方向标签或未来预测差异才检查时间箭头。还需有静态单帧 baseline、保持首尾帧/长度一致、按视频分组切分，并避免压缩伪影或 padding 暴露变换类型。反转性能下降也可能来自训练分布外观，不能自动解释成物理理解。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-10-05：驾驶量、单位与 route split</summary>
+
+先以物理 route/scenario group 切 train、selection 和 test，同一路线的天气、相机版本、裁剪片段和派生 replay 不得跨组。相对纵向速度用 ego/body frame 的 `m/s`，明确正号表示目标远离还是接近；车道偏移用 map/lane frame 的有符号米，注明参考点和左/右正方向；TTC 用秒，只对 closing speed 为正且路径有冲突时定义，其他情况记为 censored/`+∞` 而非 0。按速度、遮挡、道路和 horizon 分桶报告 MAE/区间，单位和 frame 必须与标签时间戳一起冻结。
+
+</details>
+
 ## 延伸阅读
 
 - Assran et al., [I-JEPA](https://arxiv.org/abs/2301.08243)，`[A,R1]`，图像联合嵌入预测；
@@ -259,6 +298,6 @@ JEPA 把预测目标从像素移到表示空间，使模型可以忽略部分不
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch10-probe-shift-action-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
+- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch10-probe-shift-action-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载或运行任何 I-JEPA/V-JEPA checkpoint，也没有第一人称或驾驶数据；
 - 下一步：官方 ViT-B 微型推理仍待可用 GPU；其 24 GB 推理占用、macOS/Docker 解码路径与真实视频 probe 均保持待验证。

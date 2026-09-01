@@ -295,6 +295,45 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 4. **系统分类**：为一个交互视频产品填写 renderer/simulator/planner 证据表。
 5. **自动驾驶迁移**：设计保持、急刹与切入三分支，并写明其他车辆的响应协议。
 
+## 自检要点
+
+动作条件模型的最低证据不是“不同动作生成不同画面”，而是同一历史下的配对干预、正确方向、时间对齐、多步后果和明确失败分母。
+
+<details>
+<summary>SELF-CHECK-11-01：左右不同仍不等于正确</summary>
+
+没有。`left_right_swapped` 在当前 fixture 中 action sensitivity 和左右 separation 都是 2，与正确模型一样大，但 signed separation 为 -2、counterfactual vector RMSE 约 1.633。还需同一历史下由已知 simulator/动力学、同步真实 rollout 或可靠状态标注给出的 counterfactual oracle，核对方向、幅度、碰撞/终止和多步轨迹；视觉任务还需 flow、ego pose、3D/occupancy 或对象状态 oracle。仅用文本提示一致性或两段视频彼此不同，最多证明模型读取了条件。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-11-02：边界、滑移与不确定性</summary>
+
+可把 transition 改为：越过 `[0,6]²` 时记录 `collision/out_of_bounds` 而不是只静默 clip；每一步再以冻结概率和 seed 施加纵横滑移。对每个起点—动作序列运行相同 seed 集，按所有 attempted rollout 报 endpoint/trajectory error 均值、碰撞或越界失败率、有效 coverage，以及预测分布的 interval coverage/NLL 或 Brier；样本标准差只能称 stochastic spread，不能自动称 epistemic uncertainty。若失败 rollout 被删掉，低均值会产生幸存者偏差。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-11-03：动作错位一帧</summary>
+
+把本应作用于 `o_t→o_{t+1}` 的 `a_t` 整体配成 `a_{t-1}`，先在含转向/制动切换的序列上比较；连续重复同一动作的片段可能掩盖错位。One-step 指标会在动作切换边界显著恶化，但若常见动作占比很高，micro average 仍可能好看；free rollout 会把第一次错误状态继续作为下一步输入，endpoint 和轨迹误差通常累积。应按 action transition 类型和 horizon 报错，并用固定一帧正/负 shift 作负对照；结果依序列构成，不能声称必然单调。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-11-04：renderer、simulator 与 planner 证据表</summary>
+
+表中至少列 `输入条件、可控 ego action、他体响应、状态/碰撞 oracle、时间推进、分支重置、E1/E2/E3/E4、允许声明`。若产品只按文本改变视频且无可验证状态，可登记 renderer；若给定动作后按一致规则推进多主体状态、可重置并由 oracle 验证，可在限定作用域称 simulator；只有再证明候选动作覆盖、策略排序/代价有效并接入滚动重规划，才可登记 planner role。一个系统可同时有多个角色，但每列证据分别通过，不能由“交互式”一词推导。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-11-05：保持、急刹与切入分支</summary>
+
+固定同一历史、地图、ego 初态与随机种子，三支 ego action 分别为保持速度、带 jerk 上限的急刹、带横向轨迹和转向率的切入；每支写清控制 frame、单位、频率、起效时刻和 horizon。他车响应应选一种预注册协议：open-loop replay 只适合短时反事实且不得称交互；规则/仿真 driver 根据相对距离和 TTC 反馈；learned response 则需独立校准与 OOD gate。分别报告 ego/他车轨迹、最小 TTC、碰撞、舒适度、道路约束与不确定性，并保留“冻结他车”负对照以区分 ego action effect 和响应模型 effect。
+
+</details>
+
 ## 延伸阅读
 
 - Valevski et al., [GameNGen](https://arxiv.org/abs/2408.14837)，`[A,R1]`，动作条件扩散游戏引擎；
@@ -322,6 +361,6 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
+- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有训练视频模型、下载 checkpoint、运行仿真或验证任何闭源案例；
 - 下一步：视频训练与仿真验证保持待办；Cosmos/DIAMOND 等上游资产只完成一手资料核验，未下载或运行。

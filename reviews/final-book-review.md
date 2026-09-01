@@ -37,7 +37,7 @@
 - 22 张实验卡均指向存在的结构化结果，正文只引用对应实验作用域内的数字；
 - 当前正文中显式写出的 `EXP/BENCH` 版本由卡片版本门禁约束；本轮修复第2章 v2→v3 和第21章 v3/v5→v6 的陈旧引用，历史 review 仍保留审查当时快照；
 - 第12章新增米制点→半开栅格的 floor/截断负边界，并用 UniOcc、Drive-OccWorld 与 DynamicCity 的一手会议资料拆开当前估计、未来预测、动作条件世界模型和 4D 场景生成；固定 CPU fixture 不冒充外部地图或上游模型复现；
-- 第1–9章已有 50 组折叠式练习自检，manifest 明确当前覆盖 9/22 章；机器合同拒绝题目/答案缺失、重复、跨章和空壳内容，开放题仍保留多种合格答案；第5–9章的公式、阈值和 fixture 数值另见 `reviews/part-02-exercise-self-check-review-2026-09-02.md`；
+- 第1–12章已有 67 组折叠式练习自检，manifest 明确当前覆盖 12/22 章；机器合同拒绝题目/答案缺失、重复、跨章和空壳内容，开放题仍保留多种合格答案；第5–9章和第10–12章的公式、阈值及 fixture 数值分别见 `reviews/part-02-exercise-self-check-review-2026-09-02.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`；
 - 第5章多模态分布进入第11章视频未来和第14章生成动作，第7章规划进入第17章 model exploitation，第22章复用第9/19/20/21章真实性与部署边界；
 - 发布流程允许 `reviewed` 章节组成明确标注证据范围的在线候选，但不会把 `gpu_status: pending` 覆盖为 `reproducible`；
 - 已移除第13、15章关于后续批次的过期正文描述，历史批次审查记录保留当时结论。
