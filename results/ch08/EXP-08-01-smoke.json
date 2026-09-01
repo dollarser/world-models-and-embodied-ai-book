@@ -28,15 +28,39 @@
     },
     "imagined_loss_weighting": {
       "correct_mask": {
-        "cumulative_weights": [1.0, 1.0, 0.0],
-        "raw_losses": [1.0, 1.0, 100.0],
-        "weighted_contributions": [1.0, 1.0, 0.0],
+        "cumulative_weights": [
+          1.0,
+          1.0,
+          0.0
+        ],
+        "raw_losses": [
+          1.0,
+          1.0,
+          100.0
+        ],
+        "weighted_contributions": [
+          1.0,
+          1.0,
+          0.0
+        ],
         "weighted_loss_sum": 2.0
       },
       "missing_mask": {
-        "cumulative_weights": [1.0, 1.0, 1.0],
-        "raw_losses": [1.0, 1.0, 100.0],
-        "weighted_contributions": [1.0, 1.0, 100.0],
+        "cumulative_weights": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "raw_losses": [
+          1.0,
+          1.0,
+          100.0
+        ],
+        "weighted_contributions": [
+          1.0,
+          1.0,
+          100.0
+        ],
         "weighted_loss_sum": 102.0
       },
       "post_terminal_loss_leakage": 100.0,
@@ -71,6 +95,26 @@
         1.0
       ],
       "start_target_gap": 1.0
+    },
+    "truncation_trace_boundary": {
+      "bootstrap_discounts": [
+        1.0,
+        0.0
+      ],
+      "boundary_ignored_targets": [
+        101.0,
+        100.0
+      ],
+      "boundary_safe_targets": [
+        5.0,
+        100.0
+      ],
+      "cross_episode_start_target_leakage": 96.0,
+      "lambda_trace_continuations": [
+        false,
+        false
+      ],
+      "scope": "two adjacent authored rows from different episodes; not an estimated replay corruption rate"
     }
   },
   "scope": "analytic lambda-return, continuation, and imagined-loss weighting fixture; not Dreamer training or policy improvement",

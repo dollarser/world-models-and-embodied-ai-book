@@ -24,6 +24,8 @@ def main() -> int:
         raise AssertionError("the fixture must expose post-terminal reward leakage")
     if metrics["episode_end_semantics"]["truncation_bootstrap_loss"] != 4.0:
         raise AssertionError("collapsing truncation into done must expose lost bootstrap value")
+    if metrics["truncation_trace_boundary"]["cross_episode_start_target_leakage"] != 96.0:
+        raise AssertionError("a truncation must bootstrap without consuming the next episode's return")
     if metrics["imagined_loss_weighting"]["post_terminal_loss_leakage"] != 100.0:
         raise AssertionError("the continuation mask must remove post-terminal loss contribution")
     report = {

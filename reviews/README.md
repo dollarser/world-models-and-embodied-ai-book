@@ -52,6 +52,7 @@
 - [第2章 state aliasing 与任务相关状态审查](ch02-state-aliasing-review-2026-09-01.md)
 - [第3章时间对齐与运动补偿边界审查](ch03-temporal-alignment-review-2026-09-01.md)
 - [第8章 imagined loss 累计权重审查](ch08-imagined-loss-weight-review-2026-09-01.md)
+- [第8章截断 bootstrap 与 λ-trace 边界审查](ch08-truncation-trace-boundary-review-2026-09-02.md)
 - [第12章稀疏 waypoint 与路径段验证审查](ch12-path-segment-validation-review-2026-09-01.md)
 - [第3章 optical/body 坐标轴与深度语义审查](ch03-optical-body-review-2026-09-01.md)
 - [第4/22章 split identity 传播审查](ch04-ch22-split-identity-propagation-review-2026-09-02.md)

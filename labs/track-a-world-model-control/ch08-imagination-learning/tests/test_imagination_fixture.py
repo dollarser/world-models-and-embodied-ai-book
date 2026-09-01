@@ -11,6 +11,7 @@ from imagination_fixture import (  # noqa: E402
     bootstrap_discounts,
     cumulative_loss_weights,
     evaluate,
+    lambda_trace_continuations,
     lambda_returns,
     weighted_loss_audit,
 )
@@ -56,6 +57,20 @@ class ImaginationFixtureTests(unittest.TestCase):
     def test_terminal_dominates_bootstrap_when_both_end_flags_are_true(self):
         self.assertEqual(bootstrap_discounts((True,), (True,), (False,)), (0.0,))
 
+    def test_termination_and_truncation_both_close_lambda_trace(self):
+        self.assertEqual(
+            lambda_trace_continuations((False, True, False), (False, False, True)),
+            (True, False, False),
+        )
+
+    def test_truncation_bootstraps_without_cross_episode_lambda_leakage(self):
+        result = evaluate()["truncation_trace_boundary"]
+        self.assertEqual(result["bootstrap_discounts"], (1.0, 0.0))
+        self.assertEqual(result["lambda_trace_continuations"], (False, False))
+        self.assertEqual(result["boundary_safe_targets"], (5.0, 100.0))
+        self.assertEqual(result["boundary_ignored_targets"], (101.0, 100.0))
+        self.assertEqual(result["cross_episode_start_target_leakage"], 96.0)
+
     def test_missing_next_observation_is_not_silently_treated_as_terminal(self):
         with self.assertRaises(ValueError):
             bootstrap_discounts((False,), (True,), (False,))
@@ -91,6 +106,14 @@ class ImaginationFixtureTests(unittest.TestCase):
             lambda_returns((), (), (), 0.5)
         with self.assertRaises(ValueError):
             lambda_returns((0.0,), (1.0, 1.0), (0.0,), 0.5)
+
+    def test_trace_contract_rejects_bad_lengths_and_types(self):
+        with self.assertRaises(ValueError):
+            lambda_trace_continuations((False,), (False, True))
+        with self.assertRaises(ValueError):
+            lambda_returns((0.0,), (1.0,), (0.0,), 0.5, ())
+        with self.assertRaises(ValueError):
+            lambda_returns((0.0,), (1.0,), (0.0,), 0.5, (1,))
 
     def test_invalid_numbers_ranges_and_booleans_are_rejected(self):
         invalid_cases = (

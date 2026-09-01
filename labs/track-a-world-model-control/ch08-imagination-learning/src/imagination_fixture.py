@@ -60,17 +60,33 @@ def bootstrap_discounts(
     return tuple(discounts)
 
 
+def lambda_trace_continuations(
+    terminated: Sequence[bool], truncated: Sequence[bool]
+) -> tuple[bool, ...]:
+    """Keep lambda recursion inside one sampled episode or sequence segment."""
+
+    terminated_ = _boolean_sequence("terminated", terminated)
+    truncated_ = _boolean_sequence("truncated", truncated)
+    if len(terminated_) != len(truncated_):
+        raise ValueError("terminated and truncated must have equal lengths")
+    return tuple(not (is_terminal or is_truncated) for is_terminal, is_truncated in zip(terminated_, truncated_))
+
+
 def lambda_returns(
     rewards: Sequence[float],
     discounts: Sequence[float],
     next_values: Sequence[float],
     lambda_: float,
+    trace_continuations: Sequence[bool] | None = None,
 ) -> tuple[float, ...]:
     """Compute backward lambda returns for a finite imagined trajectory.
 
     discounts already include both the scalar discount and continuation mask.
     next_values[t] is V(s_{t+1}); the final recursion bootstraps from the final
     next value before applying the same lambda-return equation as other steps.
+    trace_continuations[t] is false at any sampled sequence boundary, including
+    a truncation that keeps value bootstrap but must not consume the next row's
+    return. It defaults to true for a single uninterrupted imagined sequence.
     """
 
     rewards_ = _finite_sequence("rewards", rewards)
@@ -78,6 +94,12 @@ def lambda_returns(
     next_values_ = _finite_sequence("next_values", next_values)
     if not (len(rewards_) == len(discounts_) == len(next_values_)):
         raise ValueError("rewards, discounts, and next_values must have equal lengths")
+    if trace_continuations is None:
+        trace_continuations_ = (True,) * len(rewards_)
+    else:
+        trace_continuations_ = _boolean_sequence("trace_continuations", trace_continuations)
+        if len(trace_continuations_) != len(rewards_):
+            raise ValueError("trace_continuations must have the same length as rewards")
     if any(discount < 0.0 or discount > 1.0 for discount in discounts_):
         raise ValueError("discounts must lie in [0, 1]")
     if isinstance(lambda_, bool) or not isinstance(lambda_, (int, float)) or not isfinite(lambda_):
@@ -89,7 +111,8 @@ def lambda_returns(
     targets = [0.0] * len(rewards_)
     recursive_target = next_values_[-1]
     for index in range(len(rewards_) - 1, -1, -1):
-        mixed_value = (1.0 - lambda_value) * next_values_[index] + lambda_value * recursive_target
+        trace_factor = lambda_value * float(trace_continuations_[index])
+        mixed_value = (1.0 - trace_factor) * next_values_[index] + trace_factor * recursive_target
         recursive_target = rewards_[index] + discounts_[index] * mixed_value
         targets[index] = round(recursive_target, 12)
     return tuple(targets)
@@ -150,6 +173,30 @@ def evaluate() -> dict[str, object]:
     terminal_target = lambda_returns((1.0,), terminal_discount, (4.0,), 0.0)
     truncation_target = lambda_returns((1.0,), truncation_discount, (4.0,), 0.0)
     collapsed_done_target = lambda_returns((1.0,), (0.0,), (4.0,), 0.0)
+    cross_episode_terminated = (False, True)
+    cross_episode_truncated = (True, False)
+    cross_episode_discounts = bootstrap_discounts(
+        cross_episode_terminated,
+        cross_episode_truncated,
+        (True, False),
+    )
+    cross_episode_traces = lambda_trace_continuations(
+        cross_episode_terminated,
+        cross_episode_truncated,
+    )
+    boundary_safe_targets = lambda_returns(
+        (1.0, 100.0),
+        cross_episode_discounts,
+        (4.0, 0.0),
+        1.0,
+        cross_episode_traces,
+    )
+    boundary_ignored_targets = lambda_returns(
+        (1.0, 100.0),
+        cross_episode_discounts,
+        (4.0, 0.0),
+        1.0,
+    )
     correct_loss_weighting = weighted_loss_audit((1.0, 1.0, 100.0), (1.0, 0.0, 0.0))
     missing_mask_loss_weighting = weighted_loss_audit((1.0, 1.0, 100.0), (1.0, 1.0, 0.0))
 
@@ -179,6 +226,16 @@ def evaluate() -> dict[str, object]:
             "truncation_target": truncation_target[0],
             "collapsed_done_target": collapsed_done_target[0],
             "truncation_bootstrap_loss": round(truncation_target[0] - collapsed_done_target[0], 12),
+        },
+        "truncation_trace_boundary": {
+            "bootstrap_discounts": cross_episode_discounts,
+            "lambda_trace_continuations": cross_episode_traces,
+            "boundary_safe_targets": boundary_safe_targets,
+            "boundary_ignored_targets": boundary_ignored_targets,
+            "cross_episode_start_target_leakage": round(
+                boundary_ignored_targets[0] - boundary_safe_targets[0], 12
+            ),
+            "scope": "two adjacent authored rows from different episodes; not an estimated replay corruption rate",
         },
         "imagined_loss_weighting": {
             "correct_mask": correct_loss_weighting,

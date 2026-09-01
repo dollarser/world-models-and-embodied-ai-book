@@ -1,10 +1,10 @@
 # 第8章 在想象中学习：Dreamer 系列
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-08-01`
-> 关联声明：`CLAIM-08-01`～`CLAIM-08-08`
-> 关联图表：`FIG-08-01` / `TAB-08-01` / `TAB-08-02` / `TAB-08-03`
+> 关联声明：`CLAIM-08-01`～`CLAIM-08-09`
+> 关联图表：`FIG-08-01` / `TAB-08-01` / `TAB-08-02` / `TAB-08-03` / `TAB-08-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -78,23 +78,25 @@ a_\tau \sim \pi_\theta(\cdot\mid s_\tau),\qquad
 s_{\tau+1}\sim \hat p_\phi(\cdot\mid s_\tau,a_\tau).
 \]
 
-reward head 给出 \hat r_\tau，continuation head 估计轨迹是否仍应继续。记
+reward head 给出 \hat r_\tau，continuation head 估计轨迹是否仍应继续。对一条未被外部切段的 imagined trajectory，可记
 
 \[
 d_\tau=\gamma\hat c_\tau,
 \]
 
-其中 \hat c_\tau 可表示 predicted continuation；真实 transition 上则应由数据集的 terminated/truncated 语义构造。将 timeout 错当 terminal 会截断有效 bootstrap，将真正 terminal 当 continuation 则会让 episode 之后的虚假奖励泄漏回来。
+其中 \hat c_\tau 可表示 predicted continuation。真实 replay transition 还需要把两个职责分开：`d_t` 决定是否从当前行的下一状态 value bootstrap，`m_t` 决定 λ 递推是否可以读取数组中的下一行。自然终止通常令 `d_t=0,m_t=0`；外部截断且最终观测有效时令 `d_t=γ,m_t=0`；同一 episode 内的普通 transition 才是 `d_t=γ,m_t=1`。将 timeout 错当 terminal 会截断有效 bootstrap；只保留 discount 却忘记 trace 边界，又会把下一 episode 的 reward 接回来。
 
 Imagined horizon 不是越长越好。它越长，越能看见延迟回报，也越会累积 dynamics、reward、continuation 与 actor-induced OOD 误差。第7章的 planning horizon 与这里的 imagination horizon 面临相同误差—远见权衡，但用途不同：前者在线选择动作，后者生成学习 target。
 
 ## 8.3 λ-return：在 bootstrap 与长回报之间
 
-本章采用有限序列上的递推定义：
+本章采用带显式序列边界的有限递推定义：
 
 \[
-G_t^\lambda=\hat r_t+d_t\left[(1-\lambda)V(s_{t+1})+\lambda G_{t+1}^\lambda\right].
+G_t^\lambda=\hat r_t+d_t\left[(1-\lambda m_t)V(s_{t+1})+\lambda m_t G_{t+1}^\lambda\right].
 \]
+
+在未中断的 imagined rollout 内 `m_t=1`，即退化为常见 λ-return；在截断边界 `m_t=0`，仍可由非零 `d_t` 保留 `V(s_{t+1})`，但不会读取下一行的 `G_{t+1}`。若实现保证每个 batch slice 恰好止于边界，末端 bootstrap 与显式 `m_t=0` 数值等价；一旦数组可能拼接多个 episode，独立 trace mask 就是防止跨段污染的机器合同。
 
 - λ=0 时每步只看一步 reward 加 critic bootstrap，通常方差较低但更依赖 critic；
 - λ=1 时把后续 imagined reward 全部向前传播，更少依赖中间 value，却更暴露于长 rollout 的 model error；
@@ -149,7 +151,18 @@ make ch08-smoke
 
 `CLAIM-08-07`（result）：`EXP-08-01` 的固定单步反例中，把有效截断误当自然终止会让 target 从 5 降为 1，bootstrap loss 为 4。若 `terminated/truncated` 同时为真，代码按自然终止关闭 bootstrap；若需要 bootstrap 但下一观测无效，则拒绝该 transition。这验证接口语义，不估计 learned continuation head 的误差。
 
-这里没有矛盾：外部截断之后不能把下一 episode 的 reward 接到当前序列上，但若截断时保存了有效最终观测，仍可用该观测估计截断点的 value。若最终观测丢失，正确做法是把 target 标为不可构造并暴露数据问题，而不是猜成 terminal。
+这里没有矛盾：外部截断之后不能把下一 episode 的 reward 接到当前序列上，但若截断时保存了有效最终观测，仍可用该观测估计截断点的 value。[Gymnasium 的官方 time-limit 指南](https://gymnasium.farama.org/main/tutorials/handling_time_limits/)明确区分 termination 与 truncation 的 bootstrap 语义 `[O,R1]`；Pardo et al. 的[Time Limits in Reinforcement Learning](https://proceedings.mlr.press/v80/pardo18a.html)把训练用外部 time limit 下的末状态 bootstrap 形式化为 partial-episode bootstrapping `[P,R1]`。若最终观测丢失，正确做法是把 target 标为不可构造并暴露数据问题，而不是猜成 terminal。
+
+但 bootstrap 正确还不够。`EXP-08-01` v4 故意把两个不同 episode 的行相邻放置：第一行 reward 为1，因外部截断而结束，保存的下一状态 value 为4；第二行是新 episode 的终止 transition，reward 为100。
+
+| 第一行处理 | bootstrap discount `d₀` | λ-trace `m₀` | λ=1 的第一行 target |
+| --- | ---: | ---: | ---: |
+| 正确：截断并关闭跨行 trace | 1 | 0 | 5 |
+| 错误：只保留 bootstrap、默认 trace 连续 | 1 | 1 | 101 |
+
+*TAB-08-04：截断 bootstrap 与 λ-trace 边界的双信号反例。来源：`EXP-08-01` v4，本书原创，MIT，2026-09-02。第二行的100是手工放大的新 episode reward。*
+
+`CLAIM-08-09`（result）：`EXP-08-01` v4 的两行跨 episode 反例中，正确的 `d₀=1,m₀=0` 得到第一行 target 5；若保留 bootstrap discount 却遗漏 trace 边界，target 变为101，产生96的跨 episode 泄漏。该结果只验证数组边界与递推接口，不估计真实 replay 污染率、critic bias、训练稳定性或策略性能。
 
 ### 8.5.1 Target 正确不等于 loss 权重正确
 
@@ -168,7 +181,7 @@ w_0=1,\qquad w_t=\prod_{i=0}^{t-1}d_i\quad(t>0).
 
 *TAB-08-03：`EXP-08-01` 的固定 loss-weighting 反例。100 是手工伪 loss，用于让错误可见；总和不是 Dreamer 训练曲线或性能指标。*
 
-`CLAIM-08-08`（result）：`EXP-08-01` v3 的三步手工序列中，正确累计权重把终止后 raw loss 100 的贡献降为 0，加权总和为 2；漏掉 continuation mask 时总和为 102，post-terminal leakage 为 100。这只验证非负标量 loss 与手工 discount 的累计加权合同，没有 actor/critic、梯度、learned continuation 或策略改进。
+`CLAIM-08-08`（result）：`EXP-08-01` v4 的三步手工序列中，正确累计权重把终止后 raw loss 100 的贡献降为 0，加权总和为 2；漏掉 continuation mask 时总和为 102，post-terminal leakage 为 100。这只验证非负标量 loss 与手工 discount 的累计加权合同，没有 actor/critic、梯度、learned continuation 或策略改进。
 
 运行产物为 `results/ch08/EXP-08-01-smoke.json`；实验卡明确记录了零下载、CPU、未用 GPU 和非训练边界。
 
@@ -230,7 +243,7 @@ reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和�
 
 | 档位 | 路径 | 当前状态 | 证据要求 |
 | --- | --- | --- | --- |
-| S | 本章标准库 λ-return fixture | 已运行 | 15 个单元测试、宿主与 Docker smoke、精确 JSON |
+| S | 本章标准库 λ-return fixture | 已运行 | 18 个单元测试、宿主与 Docker smoke、精确 JSON |
 | M | DreamerV3 debug/微型环境接口检查 | 可选、待运行 | CPU/Docker 优先；上游已警告 debug 不会学好模型 |
 | L1 | 小环境的缩小配置训练，目标 24 GB 单卡以内 | 可选、待验证 | 实测峰值 VRAM、墙钟、seed、return gap 与失败 |
 | L2 | 最多 2×80 GB 的 Dreamer 4 社区研究性审计 | 非必需、待验证 | 锁 commit/许可/数据；不得冒充作者实现或通用复现 |
@@ -250,6 +263,7 @@ Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中�
 3. **结束语义**：为一个移动机器人写 terminated、truncated、timeout、sensor-drop 的 truth table。
 4. **驾驶协议**：为自动驾驶 cut-in 场景设计 train/validation/closed-loop 三组互斥 seed 和五项指标。
 5. **权重审计**：给定 discount `[0.9,0.9,0]`，手算三个 step 的累计 loss weight；再解释为什么不能只检查 λ-return target。
+6. **截断边界**：构造三个相邻 transition，令第二个 transition 为外部截断；分别写出 bootstrap discount 与 λ-trace mask，并计算遗漏 trace mask 时第一个 episode 的 target 会吸收哪些新 episode reward。
 
 ## 自检要点
 
@@ -290,12 +304,21 @@ Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-08-06：bootstrap 与 λ-trace 是两个问题</summary>
+
+例如三行 reward 为 `[0,1,100]`，第二行是外部截断且其有效 final observation 的 value 为4，第三行来自新 episode。可令 bootstrap discounts 为 `[1,1,0]`，因为第二行需要 `1+V(final)=5`；trace masks 应为 `[1,0,0]`，因为第二行之后不得读取第三行 return。λ=1 时正确 targets 的前两项为 `[5,5]`；若错误使用全1 trace，第二行会变成101，第一行也变成101，两个当前 episode target 都被新 episode 的100污染。若第二行是自然终止，则其 discount 应为0；若 final observation 无效，则不能用“设成0”伪造合法 target。生产实现还必须确认 replay sampler 是否已经在边界切片；切片保证与 mask 仍应至少有一个可测试合同。
+
+</details>
+
 ## 延伸阅读
 
 - [Dreamer 论文](https://arxiv.org/abs/1912.01603)与[项目页](https://dreamrl.github.io/)；
 - [DreamerV2 论文](https://arxiv.org/abs/2010.02193)；
 - [DreamerV3 Nature 论文](https://www.nature.com/articles/s41586-025-08744-2)与[作者仓库](https://github.com/danijar/dreamerv3)；
 - [Dreamer 4 预印本](https://arxiv.org/abs/2509.24527)。
+- Pardo et al., [Time Limits in Reinforcement Learning](https://proceedings.mlr.press/v80/pardo18a.html)；
+- Gymnasium, [Handling Time Limits](https://gymnasium.farama.org/main/tutorials/handling_time_limits/)。
 
 ## 下一章接口
 
@@ -307,5 +330,5 @@ Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch08-imagined-loss-weight-review-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
-- 已知限制：只有解析 target、累计 survival weight 和手工反例，没有 world model、actor/critic 更新、梯度、learned continuation、上游 checkpoint、仿真、GPU 或真实闭环。
+- 审查记录路径：`reviews/ch08-imagined-loss-weight-review-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`、`reviews/ch08-truncation-trace-boundary-review-2026-09-02.md`；
+- 已知限制：只有解析 target、截断/trace 边界、累计 survival weight 和手工反例，没有 world model、actor/critic 更新、梯度、learned continuation、真实 replay 污染率、上游 checkpoint、仿真、GPU 或真实闭环。
