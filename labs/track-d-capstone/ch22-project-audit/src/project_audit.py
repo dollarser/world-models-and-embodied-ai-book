@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from hashlib import sha256
 from math import isfinite
+import re
 
 
 REQUIRED_ARTIFACTS = (
@@ -12,8 +14,18 @@ REQUIRED_ARTIFACTS = (
     "reproduction_command",
     "model_card",
 )
+REQUIRED_ARTIFACT_PRODUCERS = {
+    "experiment_card": "evidence_package",
+    "result": "independent_evaluation",
+    "failure_record": "deployment_or_safety_gate",
+    "reproduction_command": "evidence_package",
+    "model_card": "method_contract",
+}
 DRIVING_METRICS = {"route_completion", "collision_rate", "intervention_rate"}
 ALLOWED_TIERS = {"S", "M", "L1", "L2"}
+CLAIM_ID_PATTERN = re.compile(r"^CLAIM-[0-9]{2}-[0-9]{2}$")
+TRACE_ARTIFACT_PATTERN = re.compile(r"^(?:EXP|BENCH)-([0-9]{2})-[0-9]{2}$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 TRACE_STAGE_RULES = {
     "input_contract": {"chapters": {4}, "depends_on": set()},
     "method_contract": {"chapters": set(range(5, 19)), "depends_on": {"input_contract"}},
@@ -47,14 +59,35 @@ def _string_set(value: object) -> set[str]:
     return {item for item in value if isinstance(item, str) and item}
 
 
+def _strict_string_set(value: object) -> set[str] | None:
+    if not isinstance(value, (list, tuple)) or not value:
+        return None
+    if any(not isinstance(item, str) or not item for item in value):
+        return None
+    items = set(value)
+    return items if len(items) == len(value) else None
+
+
+def _artifact_binding(
+    uri: str, payload: str, producer_stage: str, claim_id: str
+) -> dict[str, object]:
+    return {
+        "uri": uri,
+        "sha256": sha256(payload.encode("utf-8")).hexdigest(),
+        "producer_stage": producer_stage,
+        "claim_ids": [claim_id],
+    }
+
+
 def audit_project(package: object) -> list[str]:
     if not isinstance(package, dict):
         return ["package_not_object"]
     issues = []
     if not isinstance(package.get("research_question"), str) or not package["research_question"].strip():
         issues.append("missing_research_question")
-    if not isinstance(package.get("claim_id"), str) or not package["claim_id"].startswith("CLAIM-"):
+    if not isinstance(package.get("claim_id"), str) or not CLAIM_ID_PATTERN.fullmatch(package["claim_id"]):
         issues.append("missing_claim_id")
+    claim_id = package.get("claim_id") if isinstance(package.get("claim_id"), str) else ""
 
     data = _dict(package.get("data"))
     if not isinstance(data.get("license"), str) or not data["license"].strip():
@@ -63,21 +96,61 @@ def audit_project(package: object) -> list[str]:
         issues.append("private_data_without_authorization")
 
     split = _dict(package.get("split"))
-    train_groups = _string_set(split.get("train_groups"))
-    eval_groups = _string_set(split.get("eval_groups"))
-    if not train_groups or not eval_groups:
+    train_groups = _strict_string_set(split.get("train_groups"))
+    selection_groups = _strict_string_set(split.get("selection_groups"))
+    eval_groups = _strict_string_set(split.get("eval_groups"))
+    if train_groups is None or selection_groups is None or eval_groups is None:
         issues.append("missing_group_split")
-    elif train_groups & eval_groups:
-        issues.append("train_eval_group_overlap")
+    else:
+        if train_groups & eval_groups:
+            issues.append("train_eval_group_overlap")
+        if selection_groups & eval_groups:
+            issues.append("selection_eval_group_overlap")
+        if train_groups & selection_groups:
+            issues.append("train_selection_group_overlap")
 
     artifacts = _dict(package.get("artifacts"))
+    artifact_payloads = _dict(package.get("artifact_payloads"))
     for artifact in REQUIRED_ARTIFACTS:
-        if not isinstance(artifacts.get(artifact), str) or not artifacts[artifact].strip():
+        binding = _dict(artifacts.get(artifact))
+        if not binding:
             issues.append(f"missing_{artifact}")
+            continue
+        uri = binding.get("uri")
+        digest = binding.get("sha256")
+        producer_stage = binding.get("producer_stage")
+        artifact_claims = _strict_string_set(binding.get("claim_ids"))
+        if (
+            not isinstance(uri, str)
+            or not uri
+            or not isinstance(digest, str)
+            or not SHA256_PATTERN.fullmatch(digest)
+            or producer_stage != REQUIRED_ARTIFACT_PRODUCERS[artifact]
+            or artifact_claims is None
+            or any(not CLAIM_ID_PATTERN.fullmatch(item) for item in artifact_claims)
+            or claim_id not in artifact_claims
+        ):
+            issues.append(f"invalid_artifact_binding:{artifact}")
+            continue
+        payload = artifact_payloads.get(uri)
+        if not isinstance(payload, str):
+            issues.append(f"artifact_payload_missing:{artifact}")
+        elif sha256(payload.encode("utf-8")).hexdigest() != digest:
+            issues.append(f"artifact_digest_mismatch:{artifact}")
 
-    failure_injections = _string_set(package.get("failure_injections"))
-    if not failure_injections:
+    failure_injections = package.get("failure_injections")
+    if not isinstance(failure_injections, (list, tuple)) or not failure_injections:
         issues.append("missing_failure_injection")
+    elif any(
+        not isinstance(injection, dict)
+        or not isinstance(injection.get("name"), str)
+        or not injection["name"]
+        or not isinstance(injection.get("expected_issue"), str)
+        or injection.get("observed_issue") != injection.get("expected_issue")
+        or injection.get("trace_artifact") != "failure_record"
+        for injection in failure_injections
+    ):
+        issues.append("unverified_failure_injection")
     limitations = _string_set(package.get("known_limitations"))
     if not limitations:
         issues.append("missing_known_limitations")
@@ -100,8 +173,12 @@ def audit_project(package: object) -> list[str]:
         or (gpu_count > 0 and vram_gb_each == 0)
     ):
         issues.append("invalid_resource_record")
-    elif gpu_count > 2 or (gpu_count == 1 and vram_gb_each > 24) or (gpu_count == 2 and vram_gb_each > 80):
-        issues.append("resource_limit_exceeded")
+    elif (
+        (tier in {"S", "M"} and gpu_count != 0)
+        or (tier == "L1" and (gpu_count > 1 or vram_gb_each > 24))
+        or (tier == "L2" and (gpu_count > 2 or vram_gb_each > 80))
+    ):
+        issues.append("resource_tier_mismatch")
     if package.get("claims_gpu_result") is True and resources.get("gpu_verified") is not True:
         issues.append("gpu_result_unverified")
 
@@ -116,14 +193,20 @@ def audit_project(package: object) -> list[str]:
             stage = _dict(traceability.get(stage_name))
             chapter = stage.get("chapter")
             artifact = stage.get("artifact")
+            revision = stage.get("revision")
             decision = stage.get("decision")
             dependencies = _string_set(stage.get("depends_on"))
+            artifact_match = (
+                TRACE_ARTIFACT_PATTERN.fullmatch(artifact) if isinstance(artifact, str) else None
+            )
             if (
                 isinstance(chapter, bool)
                 or not isinstance(chapter, int)
                 or chapter not in rule["chapters"]
-                or not isinstance(artifact, str)
-                or not artifact.strip()
+                or artifact_match is None
+                or int(artifact_match.group(1)) != chapter
+                or not isinstance(revision, str)
+                or not revision.strip()
                 or not isinstance(decision, str)
                 or not decision.strip()
                 or dependencies != rule["depends_on"]
@@ -133,15 +216,36 @@ def audit_project(package: object) -> list[str]:
     evaluation = _dict(package.get("evaluation"))
     if evaluation.get("independent_from_training") is not True:
         issues.append("evaluation_not_independent")
+    if evaluation.get("protocol_frozen_before_evaluation") is not True:
+        issues.append("evaluation_protocol_not_frozen")
+    independent_trace = _dict(traceability.get("independent_evaluation"))
+    if evaluation.get("evaluator_artifact") != independent_trace.get("artifact"):
+        issues.append("evaluation_trace_mismatch")
     metrics = _string_set(evaluation.get("metrics"))
     if not metrics:
         issues.append("missing_evaluation_metrics")
     if package.get("domain") == "automatic_driving":
         if not DRIVING_METRICS <= metrics:
             issues.append("driving_metrics_incomplete")
-        if package.get("safety_gateway") is not True:
+        gateway = _dict(package.get("safety_gateway"))
+        deployment_trace = _dict(traceability.get("deployment_or_safety_gate"))
+        if (
+            gateway.get("enabled") is not True
+            or gateway.get("trace_artifact") != deployment_trace.get("artifact")
+            or gateway.get("failure_record") != "failure_record"
+            or not _strict_string_set(gateway.get("fallback_modes"))
+        ):
             issues.append("missing_safety_gateway")
     return issues
+
+
+VALID_ARTIFACT_PAYLOADS = {
+    "experiment-card.json": "fixture experiment card v3",
+    "results.json": "fixture structured result v3",
+    "failures.md": "stale_observation -> stale_observation\nfixed_disturbance -> route_failure",
+    "commands/reproduce.txt": "make ch22-smoke",
+    "model-card.md": "fixture model card: no model, no vehicle",
+}
 
 
 VALID_DRIVING_PACKAGE = {
@@ -149,15 +253,43 @@ VALID_DRIVING_PACKAGE = {
     "claim_id": "CLAIM-22-02",
     "domain": "automatic_driving",
     "data": {"classification": "fixture", "license": "MIT", "authorized": True},
-    "split": {"train_groups": ["route-a", "route-b"], "eval_groups": ["route-c"]},
-    "artifacts": {
-        "experiment_card": "experiment-card.json",
-        "result": "results.json",
-        "failure_record": "failures.md",
-        "reproduction_command": "make ch22-smoke",
-        "model_card": "model-card.md",
+    "split": {
+        "train_groups": ["route-a", "route-b"],
+        "selection_groups": ["route-selection"],
+        "eval_groups": ["route-c"],
     },
-    "failure_injections": ["stale_observation", "fixed_disturbance"],
+    "artifacts": {
+        "experiment_card": _artifact_binding(
+            "experiment-card.json", VALID_ARTIFACT_PAYLOADS["experiment-card.json"], "evidence_package", "CLAIM-22-02"
+        ),
+        "result": _artifact_binding(
+            "results.json", VALID_ARTIFACT_PAYLOADS["results.json"], "independent_evaluation", "CLAIM-22-02"
+        ),
+        "failure_record": _artifact_binding(
+            "failures.md", VALID_ARTIFACT_PAYLOADS["failures.md"], "deployment_or_safety_gate", "CLAIM-22-02"
+        ),
+        "reproduction_command": _artifact_binding(
+            "commands/reproduce.txt", VALID_ARTIFACT_PAYLOADS["commands/reproduce.txt"], "evidence_package", "CLAIM-22-02"
+        ),
+        "model_card": _artifact_binding(
+            "model-card.md", VALID_ARTIFACT_PAYLOADS["model-card.md"], "method_contract", "CLAIM-22-02"
+        ),
+    },
+    "artifact_payloads": VALID_ARTIFACT_PAYLOADS,
+    "failure_injections": [
+        {
+            "name": "stale_observation",
+            "expected_issue": "stale_observation",
+            "observed_issue": "stale_observation",
+            "trace_artifact": "failure_record",
+        },
+        {
+            "name": "fixed_disturbance",
+            "expected_issue": "route_failure",
+            "observed_issue": "route_failure",
+            "trace_artifact": "failure_record",
+        },
+    ],
     "known_limitations": ["scalar fixture", "no vehicle"],
     "resources": {"tier": "S", "gpu_count": 0, "vram_gb_each": 0, "gpu_verified": False},
     "claims_gpu_result": False,
@@ -165,30 +297,35 @@ VALID_DRIVING_PACKAGE = {
         "input_contract": {
             "chapter": 4,
             "artifact": "EXP-04-01",
+            "revision": "fixture-v3",
             "decision": "validate episode boundaries, timestamps, masks, and route split before targets",
             "depends_on": [],
         },
         "method_contract": {
             "chapter": 8,
             "artifact": "EXP-08-01",
+            "revision": "fixture-v2",
             "decision": "construct continuation-aware value targets without collapsing truncation into terminal",
             "depends_on": ["input_contract"],
         },
         "independent_evaluation": {
             "chapter": 20,
             "artifact": "BENCH-20-01",
+            "revision": "fixture-v4",
             "decision": "freeze route population, safety-aware success, timeout policy, and valid denominator",
             "depends_on": ["input_contract", "method_contract"],
         },
         "deployment_or_safety_gate": {
             "chapter": 21,
             "artifact": "EXP-21-01",
+            "revision": "fixture-v3",
             "decision": "reject stale, late, uncertain, or out-of-bounds actions with a profile-specific fallback",
             "depends_on": ["input_contract", "method_contract"],
         },
         "evidence_package": {
             "chapter": 22,
             "artifact": "EXP-22-01",
+            "revision": "fixture-v3",
             "decision": "bind question, artifacts, failures, resources, evaluation, and limitations into one audit",
             "depends_on": [
                 "input_contract",
@@ -200,9 +337,22 @@ VALID_DRIVING_PACKAGE = {
     },
     "evaluation": {
         "independent_from_training": True,
+        "protocol_frozen_before_evaluation": True,
+        "evaluator_artifact": "BENCH-20-01",
         "metrics": ["route_completion", "collision_rate", "intervention_rate", "deadline_miss_rate"],
     },
-    "safety_gateway": True,
+    "safety_gateway": {
+        "enabled": True,
+        "trace_artifact": "EXP-21-01",
+        "failure_record": "failure_record",
+        "fallback_modes": ["controlled_stop", "request_operator"],
+    },
+}
+
+
+INVALID_ARTIFACT_PAYLOADS = {
+    "experiment-card.json": "invalid fixture experiment card",
+    "model-card.md": "invalid fixture model card",
 }
 
 
@@ -211,14 +361,31 @@ INVALID_DRIVING_PACKAGE = {
     "claim_id": "claim-22",
     "domain": "automatic_driving",
     "data": {"classification": "private", "license": "", "authorized": False},
-    "split": {"train_groups": ["same-route"], "eval_groups": ["same-route"]},
-    "artifacts": {"experiment_card": "experiment-card.json", "model_card": "model-card.md"},
+    "split": {
+        "train_groups": ["same-route"],
+        "selection_groups": ["same-selection"],
+        "eval_groups": ["same-route"],
+    },
+    "artifacts": {
+        "experiment_card": _artifact_binding(
+            "experiment-card.json", INVALID_ARTIFACT_PAYLOADS["experiment-card.json"], "evidence_package", "claim-22"
+        ),
+        "model_card": _artifact_binding(
+            "model-card.md", INVALID_ARTIFACT_PAYLOADS["model-card.md"], "method_contract", "claim-22"
+        ),
+    },
+    "artifact_payloads": INVALID_ARTIFACT_PAYLOADS,
     "failure_injections": [],
     "known_limitations": [],
     "resources": {"tier": "L2", "gpu_count": 3, "vram_gb_each": 80, "gpu_verified": False},
     "claims_gpu_result": True,
-    "evaluation": {"independent_from_training": False, "metrics": ["success_rate"]},
-    "safety_gateway": False,
+    "evaluation": {
+        "independent_from_training": False,
+        "protocol_frozen_before_evaluation": False,
+        "evaluator_artifact": "unbound-evaluator",
+        "metrics": ["success_rate"],
+    },
+    "safety_gateway": {"enabled": False},
 }
 
 
@@ -235,4 +402,6 @@ def evaluate() -> dict[str, object]:
         "required_artifact_count": len(REQUIRED_ARTIFACTS),
         "driving_metric_count": len(DRIVING_METRICS),
         "required_trace_stage_count": len(TRACE_STAGE_RULES),
+        "verified_artifact_binding_count": len(REQUIRED_ARTIFACTS),
+        "verified_failure_injection_count": len(VALID_DRIVING_PACKAGE["failure_injections"]),
     }

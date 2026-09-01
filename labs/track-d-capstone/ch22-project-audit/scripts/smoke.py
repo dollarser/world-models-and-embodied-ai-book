@@ -20,14 +20,18 @@ def main() -> int:
         raise AssertionError("the complete fixed package must be accepted")
     if metrics["invalid_package"]["accepted"]:
         raise AssertionError("the incomplete fixed package must be rejected")
-    if metrics["invalid_package"]["issue_count"] != 16:
+    if metrics["invalid_package"]["issue_count"] != 20:
         raise AssertionError("the fixed audit issue set changed")
     if metrics["required_trace_stage_count"] != 5:
         raise AssertionError("the complete package must expose the five-stage evidence trace")
+    if metrics["verified_artifact_binding_count"] != 5:
+        raise AssertionError("all required artifacts must have verified digest bindings")
+    if metrics["verified_failure_injection_count"] != 2:
+        raise AssertionError("both fixed failure injections must reproduce their expected issue")
     report = {
         "experiment_id": "EXP-22-01",
         "status": "smoke",
-        "scope": "project-metadata contract audit; not end-to-end model or deployment validation",
+        "scope": "in-memory project-package contract audit; not filesystem reproduction, model, or deployment validation",
         "metrics": metrics,
         "gpu_verified": False,
     }

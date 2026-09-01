@@ -20,5 +20,6 @@
 - [第2章三态能力蕴含审查](ch02-capability-implication-review-2026-09-01.md)
 - [第20章评测有效性与证据层级审查](ch20-evaluation-validity-review-2026-09-01.md)
 - [第21章运行时队列与降级状态审查](ch21-runtime-fallback-review-2026-09-01.md)
+- [第22章 Artifact Provenance 与独立评测审查](ch22-artifact-provenance-review-2026-09-01.md)
 
 `reviewed` 只表示正文和当前可执行路径通过内容、代码、一致性与教学审查，不自动表示 GPU、大数据或上游完整复现已经完成。

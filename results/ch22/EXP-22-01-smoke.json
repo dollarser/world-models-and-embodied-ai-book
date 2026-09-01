@@ -5,22 +5,26 @@
     "driving_metric_count": 3,
     "invalid_package": {
       "accepted": false,
-      "issue_count": 16,
+      "issue_count": 20,
       "issues": [
         "missing_research_question",
         "missing_claim_id",
         "missing_data_license",
         "private_data_without_authorization",
         "train_eval_group_overlap",
+        "invalid_artifact_binding:experiment_card",
         "missing_result",
         "missing_failure_record",
         "missing_reproduction_command",
+        "invalid_artifact_binding:model_card",
         "missing_failure_injection",
         "missing_known_limitations",
-        "resource_limit_exceeded",
+        "resource_tier_mismatch",
         "gpu_result_unverified",
         "traceability_incomplete",
         "evaluation_not_independent",
+        "evaluation_protocol_not_frozen",
+        "evaluation_trace_mismatch",
         "driving_metrics_incomplete",
         "missing_safety_gateway"
       ]
@@ -31,8 +35,10 @@
       "accepted": true,
       "issue_count": 0,
       "issues": []
-    }
+    },
+    "verified_artifact_binding_count": 5,
+    "verified_failure_injection_count": 2
   },
-  "scope": "project-metadata contract audit; not end-to-end model or deployment validation",
+  "scope": "in-memory project-package contract audit; not filesystem reproduction, model, or deployment validation",
   "status": "smoke"
 }
