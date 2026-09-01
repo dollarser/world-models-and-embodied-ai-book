@@ -152,7 +152,7 @@ make ch22-smoke
 
 1. **反事实场景生成**：固定历史，只改变候选 action/事件，评估动作敏感性、物理一致性和长尾覆盖；
 2. **规划/代价估计**：在模型中比较轨迹，再在 MetaDrive/CARLA 回查 return、碰撞与错排；
-3. **代理闭环评测**：检查 learned simulator 的策略排序是否与物理 simulator 对齐，并预留新增 policy 校准集。
+3. **代理闭环评测**：检查 learned simulator 的策略排序是否与物理 simulator 对齐，并预留新增 policy 校准集；同时保存第17章的 action grounding、transition、state decoder 与 outcome scorer 四段 trace，避免把最终错排全部归因给世界模型。
 
 三者不能用同一个“视频看起来真实”验收。最低驾驶指标为 route completion、collision rate、intervention rate；再按用途加入规则、舒适、稀有事件召回、model-vs-simulator return gap、P95 latency 和 deadline miss。
 

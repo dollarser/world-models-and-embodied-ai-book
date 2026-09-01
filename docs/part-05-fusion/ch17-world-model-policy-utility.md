@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-17-01`
-> 关联声明：`CLAIM-17-01`～`CLAIM-17-09`
-> 关联图表：`FIG-17-01` / `TAB-17-01` / `TAB-17-02`
+> 关联声明：`CLAIM-17-01`～`CLAIM-17-10`
+> 关联图表：`FIG-17-01` / `TAB-17-01` / `TAB-17-02` / `TAB-17-03`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -142,6 +142,25 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 
 代理评测至少包含三段误差：策略动作是否按正确 schema 注入、世界模型 rollout 是否保持动作条件动力学、自动/VLM outcome scorer 是否正确判定成功与失败。[WorldGym 官方 runner](https://github.com/world-model-eval/world-model-eval) 同时打包 diffusion world model、多个 policy runner 和自动 VLM scoring；最终相关性是三段误差的合成，不能只归因于“world model quality” `[O,R1]`。
 
+### 17.7.1 把“模型错了”拆成可定位的四段账
+
+三段描述仍容易把中间 state/pose 解码藏进 rollout。更可审计的代理评测应保存四段输入输出，而不是只留最终成功分：
+
+| 组件 | 输入→输出 | 最小负对照 | 必须保留的证据 |
+| --- | --- | --- | --- |
+| action grounding | policy command→实际注入 action | frame、单位、时序或左右标签置换 | 原命令、转换后命令、执行回执 |
+| transition model | 注入 action+state→预测下一状态/帧 | 固定动作干预与真实转移锚点 | rollout、首个偏离步、coverage |
+| state decoder | latent/frame→pose、状态或事件 | 已知 pose/终止的盲测样本 | decoder 版本、误差、失败样本 |
+| outcome scorer | 解码轨迹→成功、风险或 return | 人工/规则 oracle confusion matrix | 原始判定、阈值、盲法和分母 |
+
+*TAB-17-03：代理世界模型评测的四段归因账。来源：本书原创接口；`EXP-17-01` v4 只验证单故障机制。*
+
+[KineBench](https://arxiv.org/abs/2607.19876)指出依赖 IDM 从生成视频恢复动作会混淆世界模型误差与动作提取误差，并改用分割、深度估计和 6D pose tracking 组成的显式运动学管线 `[P]`。这减少了一类黑盒归因，却没有让新管线变成真值：论文也明确其可靠性仍依赖 segmentation、depth 与 pose-tracking 模块。因而“IDM-free”应读作更可分解，而不是“action grounding 无误”。[WorldArena 2.0](https://arxiv.org/abs/2605.17912)又把评测从视觉/离线/仿真扩展到视触觉、交互式策略优化和真实平台 `[P]`；平台或模态一变，四段账都应重新校准，不能沿用一个总相关系数。
+
+`EXP-17-01` v4 给四段各注入一个确定性故障。全正确 oracle 保持 `safe_route`、Spearman 为 `1`、regret 为 `0`；action-grounding 故障把安全策略错误注入为 shortcut，代理改选 `idle`，真实 regret 为 `1.05`。更关键的是，transition 把碰撞预测成 goal、decoder 把 collision 解码成 goal、scorer 把 collision 直接打成 `1.0` 时，三者产生完全相同的最终三策略分数、都选择 `phantom_shortcut`，Spearman 都为 `-0.5`、真实 regret 都为 `1.85`。只有检查中间的 predicted terminal 与 decoded terminal 才能定位故障段。
+
+`CLAIM-17-10`（result）：在 `EXP-17-01` v4 的单故障四段管线中，transition、state decoder 和 outcome scorer 三个不同故障产生相同最终代理分数与错误策略选择；因此端到端相关性、成功分或 regret 不能单独归因到某个组件。该结果只证明固定 corridor 中的不可辨识反例，不给出真实组件故障率、误差独立性或可加总的统计预算。
+
 代理评测要预注册真实性锚点：至少保留一组未用于训练世界模型或 scorer 的独立仿真/硬件 episode，报告 Pearson/Spearman、逐策略偏差、置信区间、错误排序、失败视频、scorer confusion matrix 和新增策略后的校准漂移。策略数量很少或分数并列时，Spearman 必须使用平均秩并报告区间；全体分数相同则相关系数未定义，不能记成零。若只公布相关性最高的子集，就无法判断筛选器何时失效。
 
 ## 17.8 EXP-17-01：8/9 正确仍选中碰撞策略
@@ -168,6 +187,9 @@ make ch17-smoke
 | 把错误 state-action 声明为 support 内后的拒绝数 | 0 | 同一模型错误、只改变手工 support 声明 |
 | support 内负对照的选择/真实终点 | `phantom_shortcut` / collision | coverage membership 不检查预测是否正确 |
 | support 内负对照的 regret | 1.85 | 与无 gate 相同 |
+| 四段归因场景数 | 5 | oracle 加四个单故障，不是故障率样本 |
+| action-grounding 故障选择/regret | `idle` / 1.05 | 命令被错误映射为 shortcut |
+| transition/decoder/scorer 故障 | 相同代理分数，均选 `phantom_shortcut` | 中间 trace 不同，最终分数不可定位 |
 
 *TAB-17-01：`EXP-17-01` 的模型 gap 与策略排序。固定规则用于说明接口，不是 learned simulator benchmark。*
 
@@ -294,6 +316,8 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - NVIDIA, [Cosmos-Predict2.5 快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/tree/a2c298b0a3df3778b973fe65e9e58877b292d8a7)，`[O,R1]`。
 - NVIDIA, [Cosmos 3 action modes 快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/blob/9aa98e5a0773a5558f07d2699e640858f7ca8827/cookbooks/cosmos3/generator/action/README.md)，`[O,R1]`。
 - Huang et al., [A2World](https://arxiv.org/abs/2606.29501v1)、[ECCV 2026 官方收录页](https://eccv.ecva.net/virtual/2026/poster/3656)与[官方仓库快照 `077e10a`](https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834)，`[P/O,R1]`；
+- Shang et al., [WorldArena 2.0](https://arxiv.org/abs/2605.17912)，`[P,R0]`；
+- Liu et al., [KineBench](https://arxiv.org/abs/2607.19876)，`[P,R0]`；
 - Yu et al., [MOPO: Model-based Offline Policy Optimization](https://proceedings.neurips.cc/paper_files/paper/2020/hash/a322852ce0df73e204b7e67cbbef0d0a-Abstract.html)，`[P,R1]`。
 
 ## 下一章接口
@@ -313,6 +337,6 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/ch17-dual-use-world-model-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
-- 已知限制：两套 support 都是手工声明，只验证 coverage gate 的逻辑边界；未训练 learned world model，未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
-- 下一步：在第22章综合项目中复用 return gap、策略错排、双用途独立验收和真实性锚点；A2World 模型执行等待满足资源/许可预检的可选路径。
+- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/ch17-dual-use-world-model-review-2026-09-02.md`、`reviews/ch17-component-attribution-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
+- 已知限制：两套 support 都是手工声明，只验证 coverage gate 的逻辑边界；四段账只含确定性单故障和 terminal label，不估计真实组件故障率、相关性或可加总预算；未训练 learned world model，未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
+- 下一步：在第22章综合项目中复用 return gap、策略错排、四段归因账、双用途独立验收和真实性锚点；A2World 模型执行等待满足资源/许可预检的可选路径。

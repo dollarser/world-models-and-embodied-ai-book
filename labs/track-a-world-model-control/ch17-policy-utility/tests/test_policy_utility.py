@@ -10,6 +10,7 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 from policy_utility import (  # noqa: E402
     POLICIES,
     State,
+    component_attribution_audit,
     evaluate,
     policy_returns,
     rollout,
@@ -19,6 +20,7 @@ from policy_utility import (  # noqa: E402
     support_issues,
     transition,
     transition_agreement,
+    proxy_evaluation_scenario,
 )
 
 
@@ -115,6 +117,47 @@ class PolicyUtilityTests(unittest.TestCase):
             transition(State(), "teleport", learned=False)
         with self.assertRaises(ValueError):
             transition(State(terminal="goal"), "wait", learned=False)
+
+    def test_oracle_proxy_pipeline_preserves_the_true_ranking(self):
+        oracle = proxy_evaluation_scenario()
+        self.assertEqual(oracle["selected_policy"], "safe_route")
+        self.assertEqual(oracle["model_exploitation_regret"], 0.0)
+        self.assertEqual(oracle["spearman_rank_correlation"], 1.0)
+
+    def test_each_component_fault_can_change_the_selected_policy(self):
+        expected = {
+            "action_grounding": "idle",
+            "transition_model": "phantom_shortcut",
+            "state_decoder": "phantom_shortcut",
+            "outcome_scorer": "phantom_shortcut",
+        }
+        for component, selected in expected.items():
+            with self.subTest(component=component):
+                scenario = proxy_evaluation_scenario(component)
+                self.assertEqual(scenario["selected_policy"], selected)
+                self.assertGreater(scenario["model_exploitation_regret"], 0.0)
+
+    def test_three_fault_locations_are_observationally_equivalent_end_to_end(self):
+        audit = component_attribution_audit()
+        self.assertTrue(audit["equivalent_end_to_end_scores"])
+        scenarios = audit["scenarios"]
+        self.assertEqual(
+            scenarios["transition_model"]["proxy_scores"],
+            scenarios["state_decoder"]["proxy_scores"],
+        )
+        self.assertEqual(
+            scenarios["state_decoder"]["proxy_scores"],
+            scenarios["outcome_scorer"]["proxy_scores"],
+        )
+        traces = audit["phantom_shortcut_localization_traces"]
+        self.assertNotEqual(
+            traces["transition_model"],
+            traces["state_decoder"],
+        )
+
+    def test_proxy_pipeline_rejects_unknown_faults(self):
+        with self.assertRaises(ValueError):
+            proxy_evaluation_scenario("combined")
 
 
 if __name__ == "__main__":

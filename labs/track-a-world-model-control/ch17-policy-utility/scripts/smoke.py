@@ -33,6 +33,13 @@ def main() -> int:
         raise AssertionError("support membership must not hide the in-support model error")
     if gate_audit["in_support_model_error"]["model_exploitation_regret"] != metrics["model_exploitation_regret"]:
         raise AssertionError("the in-support error must preserve the ungated exploitation regret")
+    attribution = metrics["component_attribution_audit"]
+    if attribution["scenarios"]["oracle"]["selected_policy"] != "safe_route":
+        raise AssertionError("the all-correct proxy pipeline must preserve the true selection")
+    if not attribution["equivalent_end_to_end_scores"]:
+        raise AssertionError("three fault locations must remain indistinguishable from final scores alone")
+    if attribution["scenarios"]["action_grounding"]["selected_policy"] != "idle":
+        raise AssertionError("the grounding fault must change the selected policy")
 
     report = {
         "experiment_id": "EXP-17-01",

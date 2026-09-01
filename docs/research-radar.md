@@ -112,7 +112,7 @@ A2World从action-to-video预训练出发，再分成history-aware的A2World-sim�
 ## 当前最值得追踪的证据缺口
 
 - learned simulator 对**新增策略**的 prospective ranking，而不是对参与调参的固定策略回顾性相关；
-- transition、state decoder、reward/judge、action grounding 的组件级误差和端到端误差预算；
+- transition、state decoder、reward/judge、action grounding 已有第17章 S 档单故障归因账；仍缺 learned pipeline 上的组件校准、交互项和端到端误差预算；
 - 24 GB 单卡内真实可执行的最小配方，以及 checkpoint 冷启动下载、loader/权重兼容、磁盘、峰值显存和墙钟；
 - 机器人与自动驾驶中按场景严重度分桶的 model exploitation、uncertainty gate 和 fallback 后果；
 - 代码、权重、数据、benchmark 与许可证能否作为同一版本化研究对象被第三方取得。

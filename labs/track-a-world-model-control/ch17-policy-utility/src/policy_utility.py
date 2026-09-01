@@ -42,6 +42,12 @@ SUPPORTED_STATE_ACTIONS = frozenset(
     for action in ("advance", "wait")
 )
 SUPPORT_WITH_SHORTCUT = SUPPORTED_STATE_ACTIONS | {(0, "shortcut")}
+ATTRIBUTION_FAULTS = (
+    "action_grounding",
+    "transition_model",
+    "state_decoder",
+    "outcome_scorer",
+)
 
 
 def transition(state: State, action: str, learned: bool) -> tuple[State, float]:
@@ -215,6 +221,101 @@ def transition_agreement() -> dict[str, object]:
     }
 
 
+def proxy_evaluation_scenario(fault_component: str | None = None) -> dict[str, object]:
+    """Run a four-component proxy evaluator with at most one named injected fault."""
+
+    if fault_component is not None and fault_component not in ATTRIBUTION_FAULTS:
+        raise ValueError("unknown proxy-evaluation fault component")
+
+    proxy_scores: dict[str, float] = {}
+    traces: dict[str, dict[str, object]] = {}
+    for policy_name, commanded_actions in POLICIES.items():
+        grounded_actions = commanded_actions
+        if fault_component == "action_grounding" and policy_name == "safe_route":
+            grounded_actions = ("shortcut",)
+
+        predicted = rollout(
+            grounded_actions,
+            learned=fault_component == "transition_model",
+        )
+        decoded_terminal = str(predicted["terminal"])
+        if (
+            fault_component == "state_decoder"
+            and policy_name == "phantom_shortcut"
+            and decoded_terminal == "collision"
+        ):
+            decoded_terminal = "goal"
+
+        executed_steps = int(predicted["executed_steps"])
+        if fault_component == "outcome_scorer" and policy_name == "phantom_shortcut":
+            score = 1.0
+        elif decoded_terminal == "goal":
+            score = 1.0 + STEP_COST * (executed_steps - 1)
+        elif decoded_terminal == "collision":
+            score = -1.0
+        else:
+            score = float(predicted["return"])
+        proxy_scores[policy_name] = round(score, 12)
+        traces[policy_name] = {
+            "commanded_actions": commanded_actions,
+            "grounded_actions": grounded_actions,
+            "predicted_terminal": predicted["terminal"],
+            "decoded_terminal": decoded_terminal,
+            "proxy_score": proxy_scores[policy_name],
+        }
+
+    selected = max(proxy_scores, key=proxy_scores.get)  # type: ignore[arg-type]
+    true_returns = policy_returns(learned=False)
+    true_best = max(true_returns, key=true_returns.get)  # type: ignore[arg-type]
+    return {
+        "fault_component": fault_component or "none",
+        "proxy_scores": proxy_scores,
+        "selected_policy": selected,
+        "selected_policy_true_terminal": rollout(POLICIES[selected], learned=False)["terminal"],
+        "model_exploitation_regret": round(true_returns[true_best] - true_returns[selected], 12),
+        "spearman_rank_correlation": round(
+            spearman_rank_correlation(true_returns, proxy_scores),
+            12,
+        ),
+        "policy_traces": traces,
+    }
+
+
+def component_attribution_audit() -> dict[str, object]:
+    """Expose component faults that are distinguishable only with intermediate traces."""
+
+    detailed_scenarios = {
+        "oracle": proxy_evaluation_scenario(),
+        **{fault: proxy_evaluation_scenario(fault) for fault in ATTRIBUTION_FAULTS},
+    }
+    equivalent_faults = ("transition_model", "state_decoder", "outcome_scorer")
+    reference_scores = detailed_scenarios[equivalent_faults[0]]["proxy_scores"]
+    scenarios = {
+        name: {
+            "selected_policy": scenario["selected_policy"],
+            "selected_policy_true_terminal": scenario["selected_policy_true_terminal"],
+            "model_exploitation_regret": scenario["model_exploitation_regret"],
+            "spearman_rank_correlation": scenario["spearman_rank_correlation"],
+            "proxy_scores": scenario["proxy_scores"],
+        }
+        for name, scenario in detailed_scenarios.items()
+    }
+    return {
+        "scenario_count": len(scenarios),
+        "scenarios": scenarios,
+        "observationally_equivalent_failure_group": list(equivalent_faults),
+        "equivalent_end_to_end_scores": all(
+            detailed_scenarios[fault]["proxy_scores"] == reference_scores
+            for fault in equivalent_faults[1:]
+        ),
+        "phantom_shortcut_localization_traces": {
+            fault: detailed_scenarios[fault]["policy_traces"]["phantom_shortcut"]
+            for fault in equivalent_faults
+        },
+        "scope": "single-fault deterministic component ledger; intermediate traces localize faults but do not estimate field rates",
+    }
+
+
 def evaluate() -> dict[str, object]:
     true_returns = policy_returns(learned=False)
     model_returns = policy_returns(learned=True)
@@ -241,4 +342,5 @@ def evaluate() -> dict[str, object]:
         ),
         "support_gate_audit": gate_audit,
         "transition_agreement": agreement,
+        "component_attribution_audit": component_attribution_audit(),
     }
