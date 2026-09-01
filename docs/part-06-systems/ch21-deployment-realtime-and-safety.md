@@ -1,10 +1,10 @@
 # 第21章 部署、实时性与安全边界
 
 > 状态：`reviewed`
-> 资料核查日期：2026-09-01
+> 资料核查日期：2026-09-02
 > 关联实验：`EXP-21-01`
-> 关联声明：`CLAIM-21-01`～`CLAIM-21-11`
-> 关联图表：`FIG-21-01` / `TAB-21-01` / `TAB-21-02` / `TAB-21-03`
+> 关联声明：`CLAIM-21-01`～`CLAIM-21-12`
+> 关联图表：`FIG-21-01` / `TAB-21-01` / `TAB-21-02` / `TAB-21-03` / `TAB-21-04`
 > 资源档位：S / M / L1
 > GPU 状态：待验证
 
@@ -126,7 +126,7 @@ make ch21-smoke
 
 `CLAIM-21-03`（result）：七个 packet 中只有健康包通过，六种注入分别产生唯一原因码并进入 fallback。该结果验证网关实现，不估计真实系统故障率或安全性。
 
-结果保存在 `results/ch21/EXP-21-01-smoke.json`；15 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系、授权序列长度/类型错误和含糊状态机配置。
+结果保存在 `results/ch21/EXP-21-01-smoke.json`；19 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系、授权序列长度/类型错误、跳过 `operating` 的生命周期和含糊状态机配置。
 
 ### 21.4.1 不要只发布一个拒绝阈值
 
@@ -186,6 +186,25 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 
 `CLAIM-21-11`（result）：在相同七步健康序列上，仅健康对照在第 5 步恢复 `policy_action`；授权感知分支同步保持 `request_operator` 并记录 `reactivation_not_authorized`，到第 6 步授权为真才恢复。该结果只验证两个信号在确定性状态机中被分离，不证明 fallback 完成、operator 可用、授权真实有效或重新激活安全。
 
+### 21.5.1 完成、失败和授权是三个不同事件
+
+[Autoware 1.8.0 fail-safe API](https://autowarefoundation.github.io/autoware-documentation/1.8.0/design/autoware-architecture-v1/interfaces/ad-api/features/fail-safe/) 把 MRM 运行状态分为 `NONE / OPERATING / SUCCEEDED / FAILED`：`SUCCEEDED` 表示车辆已处于安全状态，`FAILED` 则表示仍不安全，一般需要切换到其他 MRM 行为 `[O,R1]`。其 request API 又是另一个触发接口。因此本书在该 API 之外加一个本地 `requested` 控制面状态，用来检查“发出请求”不能被当成“已经开始”。这不是对 Autoware message enum 的重命名。
+
+`EXP-21-01` v5 另加三条四步生命周期。所有状态都是手工报告，`max_operating_steps=2` 也是离散教学阈值，不是真实时间或推荐参数。
+
+| 对照路径 | 关键步 | 结果 | 重新激活语义 |
+| --- | ---: | --- | --- |
+| `requested → operating → succeeded → succeeded` | 2 | 已 `succeeded`，但授权为假 | 拒绝：`reactivation_not_authorized` |
+| 同一成功路径 | 3 | 仍为 `succeeded`，授权为真 | 本 fixture 首次允许重新激活 |
+| `requested → operating → operating → operating` | 1–2 | 未完成时即给授权 | 拒绝：`fallback_not_succeeded` |
+| 同一超时路径 | 3 | 第 3 个 operating step 触发 `fallback_timeout`，有效状态锁定为 `failed` | 拒绝：`fallback_failed` |
+| `requested → operating → operating → succeeded`，上限 1 | 2–3 | 第 2 步已超时，第 3 步才迟到 `succeeded` | 失败锁定不被迟到成功清除，重新激活计数为 0 |
+| `requested → operating → failed → failed` | 2–3 | 执行器报告失败，即使授权为真 | 始终拒绝，重新激活计数为 0 |
+
+*TAB-21-04：fallback 完成、超时/失败与重新激活授权的固定负对照。未执行 MRM 或实体安全检查。*
+
+`CLAIM-21-12`（result）：固定生命周期 fixture 中，成功路径在第 2 步报告 `succeeded` 仍因未授权而拒绝，第 3 步才重新激活；过早授权路径在第 3 步超时锁定为 `failed`，迟到的 `succeeded` 也不能清除已锁定超时，显式失败路径的重新激活计数同样为 0。该结果只验证状态转移、超时锁定和授权合取，不验证完成检查器、物理可达性、车辆安全状态或备用 MRM 切换。
+
 ## 21.6 ROS 2 与通信合同：QoS 不是安全证明
 
 [ROS 2 QoS 官方概念](https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html)提供 history、depth、reliability、durability、deadline、lifespan 和 liveliness 等策略 `[O,R1]`。传感器可偏向 best effort/小队列以避免旧帧堆积，关键状态可能要求 reliability；具体取舍必须测网络和丢包。[ROS 2 实时系统设计说明](https://design.ros2.org/articles/realtime_background.html)进一步强调 page fault、运行时动态分配和无限阻塞同步原语会破坏确定性；因此“节点运行在 ROS 2”与“控制路径满足实时约束”不是同一声明。
@@ -211,7 +230,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 驾驶系统要分别监控传感器 age、定位健康、规划轨迹 age、控制命令 age、车辆反馈、计算 deadline 和通信 liveliness。高层 world model/VLA 的轨迹不得绕过车辆动力学、道路边界、碰撞检查和 command gate。
 
-[Autoware Universe](https://github.com/autowarefoundation/autoware_universe)包含 operation mode、command gate、diagnostics 和 minimum-risk maneuver 相关组件 `[O,R1]`。其当前 [operation mode transition manager 文档](https://github.com/autowarefoundation/autoware_universe/blob/main/control/autoware_operation_mode_transition_manager/README.md)明确区分 `IN TRANSITION` 与 `COMPLETED`：切换完成前仍由原 operator 负责控制，组件还要检查 transition completion `[O,R1]`。command-mode 文档又区分 emergency stop、comfortable stop 与尚未支持的 pull over。这个结构支持本章的核心边界：模式请求、过渡责任、可用性和完成确认是不同状态，不能把一个 `fallback` 字符串当作 MRM 已成功。
+[Autoware Universe](https://github.com/autowarefoundation/autoware_universe)包含 operation mode、command gate、diagnostics 和 minimum-risk maneuver 相关组件 `[O,R1]`。其当前 [operation mode transition manager 文档](https://github.com/autowarefoundation/autoware_universe/blob/main/control/autoware_operation_mode_transition_manager/README.md)明确区分 `IN TRANSITION` 与 `COMPLETED`：切换完成前仍由原 operator 负责控制，组件还要检查 transition completion；如果在 `transition_timeout` 内未完成，则视为 transition failure `[O,R1]`。command-mode 文档又区分 emergency stop、comfortable stop 与尚未支持的 pull over。这个结构支持本章的核心边界：模式请求、过渡责任、可用性和完成确认是不同状态，不能把一个 `fallback` 字符串当作 MRM 已成功。
 
 `CLAIM-21-06`（recommendation）：自动驾驶降级应按故障可用性选择减速、保持车道、受控停车、靠边、远程/人工接管或其他 MRM，并在直道、弯道、低附着、密集交通和传感器组合故障中闭环验证；不得用单一零控制向量代表安全。
 
@@ -228,7 +247,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 | 证据 | 当前状态 | 不能外推 |
 | --- | --- | --- |
 | packet gate、固定 latency/burst 与离散异步 schedule | CPU smoke | 实时调度、网络、安全或可靠性 |
-| fallback 升级、健康恢复与重新激活授权状态机 | CPU 手工布尔序列 | 降级控制器可达性/完成性、operator 可用性、真实授权或安全性 |
+| fallback 升级、健康恢复、生命周期与重新激活授权状态机 | CPU 手工布尔/状态序列 | 降级控制器可达性/完成性、operator 可用性、真实授权、备用 MRM 切换或安全性 |
 | uncertainty gate 与 risk–coverage | CPU 手工分数/标签 | 校准质量、OOD 检出或安全性 |
 | LeRobot/OpenVLA/ROS 2/Autoware 能力 | 官方资料 | 本书已运行或满足 deadline |
 | 目标设备 latency/故障注入 | planned | 未执行前不得写数字 |
@@ -253,6 +272,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - [ROS 2 QoS 官方说明](https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html)，`[O,R1]`；
 - [ROS 2 实时系统设计说明](https://design.ros2.org/articles/realtime_background.html)，`[O,R1]`，deadline、确定性执行和实时路径约束；
 - [Autoware Universe 官方仓库](https://github.com/autowarefoundation/autoware_universe)，`[O,R1]`；
+- [Autoware 1.8.0 fail-safe API](https://autowarefoundation.github.io/autoware-documentation/1.8.0/design/autoware-architecture-v1/interfaces/ad-api/features/fail-safe/)，`[O,R1]`，MRM 请求、运行、成功与失败语义；
 - [Autoware operation mode transition manager](https://autowarefoundation.github.io/autoware_universe/main/control/autoware_operation_mode_transition_manager/)，`[O,R1]`，模式过渡责任与完成检查；
 - [Autoware command mode types](https://autowarefoundation.github.io/autoware_universe/main/system/autoware_command_mode_types/)，`[O,R1]`，operation mode 与多种 MRM source；
 - Geifman & El-Yaniv, [Selective Classification for Deep Neural Networks](https://arxiv.org/abs/1705.08500)，`[P]`，risk–coverage 与拒绝选项基础；
@@ -275,5 +295,5 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
+- 审查记录路径：`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/ch21-reactivation-authorization-review-2026-09-01.md`、`reviews/ch21-fallback-lifecycle-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
 - 已知限制：没有测量真实墙钟、调度器、网络、模型、uncertainty estimator、ROS、机器人、车辆或 GPU；异步 schedule 与状态机均为离散合同，不验证执行器可达性、MRM 完成或安全认证。

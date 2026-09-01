@@ -14,7 +14,9 @@ from deployment_gate import (  # noqa: E402
     LATENCIES_MS,
     SCATTERED_LATENCIES_MS,
     audit_async_schedule,
+    audit_fallback_lifecycle,
     evaluate,
+    fallback_lifecycle_audit,
     fallback_reactivation_audit,
     fallback_state_machine,
     gate,
@@ -103,6 +105,60 @@ class DeploymentGateTests(unittest.TestCase):
             "reactivation_not_authorized",
         )
         self.assertEqual(authorization_aware[6]["mode"], "policy_action")
+
+    def test_fallback_completion_does_not_authorize_reactivation(self):
+        success = fallback_lifecycle_audit()["success_then_authorize"]["trace"]
+        self.assertEqual(success[2]["effective_state"], "succeeded")
+        self.assertFalse(success[2]["reactivation_allowed"])
+        self.assertEqual(success[2]["blocked_reason"], "reactivation_not_authorized")
+        self.assertTrue(success[3]["reactivation_allowed"])
+
+    def test_premature_authorization_and_timeout_fail_closed(self):
+        timeout = fallback_lifecycle_audit()["premature_authorization_then_timeout"]["trace"]
+        self.assertEqual(timeout[1]["blocked_reason"], "fallback_not_succeeded")
+        self.assertEqual(timeout[2]["blocked_reason"], "fallback_not_succeeded")
+        self.assertEqual(timeout[3]["effective_state"], "failed")
+        self.assertEqual(timeout[3]["failure_reason"], "fallback_timeout")
+        self.assertEqual(timeout[3]["blocked_reason"], "fallback_failed")
+        self.assertFalse(timeout[3]["reactivation_allowed"])
+        late = fallback_lifecycle_audit()["timeout_then_late_success"]
+        self.assertEqual(late["trace"][2]["failure_reason"], "fallback_timeout")
+        self.assertEqual(late["trace"][3]["reported_state"], "succeeded")
+        self.assertEqual(late["trace"][3]["effective_state"], "failed")
+        self.assertEqual(late["trace"][3]["blocked_reason"], "fallback_failed")
+        self.assertEqual(late["reactivation_count"], 0)
+
+    def test_reported_fallback_failure_cannot_reactivate(self):
+        failed = fallback_lifecycle_audit()["reported_failure"]
+        self.assertEqual(failed["reactivation_count"], 0)
+        self.assertEqual(failed["trace"][2]["failure_reason"], "fallback_reported_failed")
+        self.assertEqual(failed["trace"][3]["blocked_reason"], "fallback_failed")
+
+    def test_fallback_lifecycle_rejects_ambiguous_contracts(self):
+        with self.assertRaises(ValueError):
+            audit_fallback_lifecycle(("operating",), (False,), max_operating_steps=1)
+        with self.assertRaises(ValueError):
+            audit_fallback_lifecycle(
+                ("requested", "succeeded"),
+                (False, True),
+                max_operating_steps=1,
+            )
+        with self.assertRaises(ValueError):
+            audit_fallback_lifecycle(("requested",), (), max_operating_steps=1)
+        with self.assertRaises(ValueError):
+            audit_fallback_lifecycle(("requested",), (False,), max_operating_steps=True)
+        with self.assertRaises(ValueError):
+            audit_fallback_lifecycle(
+                ("requested", "unknown"),
+                (False, False),
+                max_operating_steps=1,
+            )
+        with self.assertRaises(ValueError):
+            audit_fallback_lifecycle(
+                ("requested",),
+                (1,),  # type: ignore[arg-type]
+                max_operating_steps=1,
+            )
 
     def test_healthy_packet_is_allowed(self):
         packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")

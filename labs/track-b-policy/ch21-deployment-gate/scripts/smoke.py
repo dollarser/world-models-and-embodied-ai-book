@@ -36,6 +36,19 @@ def main() -> int:
         raise AssertionError("healthy packets must not bypass explicit reactivation authorization")
     if authorization_aware[6]["mode"] != "policy_action":
         raise AssertionError("authorized recovery must reactivate after the healthy window")
+    lifecycle = metrics["fallback_lifecycle_audit"]
+    success = lifecycle["success_then_authorize"]["trace"]
+    timeout = lifecycle["premature_authorization_then_timeout"]["trace"]
+    late_success = lifecycle["timeout_then_late_success"]
+    failed = lifecycle["reported_failure"]
+    if success[2]["reactivation_allowed"] or not success[3]["reactivation_allowed"]:
+        raise AssertionError("fallback completion and reactivation authorization must remain separate")
+    if timeout[3]["failure_reason"] != "fallback_timeout" or timeout[3]["reactivation_allowed"]:
+        raise AssertionError("fallback timeout must fail closed")
+    if late_success["trace"][3]["effective_state"] != "failed" or late_success["reactivation_count"]:
+        raise AssertionError("late success must not clear a latched fallback timeout")
+    if failed["reactivation_count"] != 0:
+        raise AssertionError("reported fallback failure must never reactivate policy")
     if metrics["allowed_count"] != 1 or metrics["fallback_count"] != 6:
         raise AssertionError("the deployment gate fixture changed")
     selective = metrics["selective_evaluation"]

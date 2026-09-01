@@ -269,6 +269,128 @@ def fallback_reactivation_audit() -> dict[str, object]:
     }
 
 
+FALLBACK_LIFECYCLE_TRANSITIONS = {
+    "requested": frozenset({"requested", "operating", "failed"}),
+    "operating": frozenset({"operating", "succeeded", "failed"}),
+    "succeeded": frozenset({"succeeded"}),
+    "failed": frozenset({"failed"}),
+}
+
+
+def audit_fallback_lifecycle(
+    reported_states: tuple[str, ...],
+    reactivation_authorized_sequence: tuple[bool, ...],
+    *,
+    max_operating_steps: int,
+) -> dict[str, object]:
+    """Audit lifecycle reports and fail closed on timeout; not an MRM controller."""
+
+    if not reported_states or any(
+        not isinstance(state, str) or state not in FALLBACK_LIFECYCLE_TRANSITIONS
+        for state in reported_states
+    ):
+        raise ValueError("reported fallback states must use the explicit lifecycle vocabulary")
+    if reported_states[0] != "requested":
+        raise ValueError("fallback lifecycle must begin with requested")
+    if (
+        len(reactivation_authorized_sequence) != len(reported_states)
+        or any(not isinstance(value, bool) for value in reactivation_authorized_sequence)
+    ):
+        raise ValueError("reactivation authorization must be a same-length boolean tuple")
+    if (
+        isinstance(max_operating_steps, bool)
+        or not isinstance(max_operating_steps, int)
+        or max_operating_steps <= 0
+    ):
+        raise ValueError("max_operating_steps must be a positive integer")
+
+    for previous, current in zip(reported_states, reported_states[1:]):
+        if current not in FALLBACK_LIFECYCLE_TRANSITIONS[previous]:
+            raise ValueError(f"illegal fallback lifecycle transition: {previous}->{current}")
+
+    operating_steps = 0
+    failure_latched = False
+    trace = []
+    for step, (reported_state, reactivation_authorized) in enumerate(
+        zip(reported_states, reactivation_authorized_sequence)
+    ):
+        failure_reason = None
+        if failure_latched:
+            effective_state = "failed"
+        elif reported_state == "operating":
+            operating_steps += 1
+            if operating_steps > max_operating_steps:
+                effective_state = "failed"
+                failure_latched = True
+                failure_reason = "fallback_timeout"
+            else:
+                effective_state = reported_state
+        elif reported_state == "failed":
+            effective_state = "failed"
+            failure_latched = True
+            failure_reason = "fallback_reported_failed"
+        else:
+            effective_state = reported_state
+
+        reactivation_allowed = effective_state == "succeeded" and reactivation_authorized
+        if reactivation_allowed:
+            blocked_reason = None
+        elif effective_state == "failed" and reactivation_authorized:
+            blocked_reason = "fallback_failed"
+        elif reactivation_authorized:
+            blocked_reason = "fallback_not_succeeded"
+        elif effective_state == "succeeded":
+            blocked_reason = "reactivation_not_authorized"
+        else:
+            blocked_reason = None
+        trace.append(
+            {
+                "step": step,
+                "reported_state": reported_state,
+                "effective_state": effective_state,
+                "operating_steps": operating_steps,
+                "reactivation_authorized": reactivation_authorized,
+                "reactivation_allowed": reactivation_allowed,
+                "blocked_reason": blocked_reason,
+                "failure_reason": failure_reason,
+            }
+        )
+
+    return {
+        "max_operating_steps": max_operating_steps,
+        "reactivation_count": sum(item["reactivation_allowed"] for item in trace),
+        "trace": trace,
+    }
+
+
+def fallback_lifecycle_audit() -> dict[str, object]:
+    """Compare successful, timed-out, and explicitly failed authored lifecycles."""
+
+    return {
+        "success_then_authorize": audit_fallback_lifecycle(
+            ("requested", "operating", "succeeded", "succeeded"),
+            (False, False, False, True),
+            max_operating_steps=2,
+        ),
+        "premature_authorization_then_timeout": audit_fallback_lifecycle(
+            ("requested", "operating", "operating", "operating"),
+            (False, True, True, True),
+            max_operating_steps=2,
+        ),
+        "timeout_then_late_success": audit_fallback_lifecycle(
+            ("requested", "operating", "operating", "succeeded"),
+            (False, False, False, True),
+            max_operating_steps=1,
+        ),
+        "reported_failure": audit_fallback_lifecycle(
+            ("requested", "operating", "failed", "failed"),
+            (False, False, True, True),
+            max_operating_steps=2,
+        ),
+        "scope": "hand-authored lifecycle reports and authorization; not fallback execution or safety evidence",
+    }
+
+
 def selective_metrics(
     cases: tuple[tuple[float, bool], ...], threshold: float
 ) -> dict[str, float | None]:
@@ -387,6 +509,7 @@ def evaluate() -> dict[str, object]:
         },
         "async_schedule": audit_async_schedule(async_schedule, 8, 2),
         "fallback_reactivation_audit": fallback_reactivation_audit(),
+        "fallback_lifecycle_audit": fallback_lifecycle_audit(),
         "decisions": decisions,
         "allowed_count": sum(decision["allowed"] for decision in decisions.values()),
         "fallback_count": sum(not decision["allowed"] for decision in decisions.values()),

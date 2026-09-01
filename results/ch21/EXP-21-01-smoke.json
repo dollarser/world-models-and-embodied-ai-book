@@ -82,6 +82,49 @@
       "mobile_robot": "controlled_stop",
       "vehicle": "request_minimum_risk_maneuver"
     },
+    "fallback_lifecycle_audit": {
+      "premature_authorization_then_timeout": {
+        "max_operating_steps": 2,
+        "reactivation_count": 0,
+        "trace": [
+          {"blocked_reason": null, "effective_state": "requested", "failure_reason": null, "operating_steps": 0, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "requested", "step": 0},
+          {"blocked_reason": "fallback_not_succeeded", "effective_state": "operating", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "operating", "step": 1},
+          {"blocked_reason": "fallback_not_succeeded", "effective_state": "operating", "failure_reason": null, "operating_steps": 2, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "operating", "step": 2},
+          {"blocked_reason": "fallback_failed", "effective_state": "failed", "failure_reason": "fallback_timeout", "operating_steps": 3, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "operating", "step": 3}
+        ]
+      },
+      "reported_failure": {
+        "max_operating_steps": 2,
+        "reactivation_count": 0,
+        "trace": [
+          {"blocked_reason": null, "effective_state": "requested", "failure_reason": null, "operating_steps": 0, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "requested", "step": 0},
+          {"blocked_reason": null, "effective_state": "operating", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "operating", "step": 1},
+          {"blocked_reason": "fallback_failed", "effective_state": "failed", "failure_reason": "fallback_reported_failed", "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "failed", "step": 2},
+          {"blocked_reason": "fallback_failed", "effective_state": "failed", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "failed", "step": 3}
+        ]
+      },
+      "scope": "hand-authored lifecycle reports and authorization; not fallback execution or safety evidence",
+      "success_then_authorize": {
+        "max_operating_steps": 2,
+        "reactivation_count": 1,
+        "trace": [
+          {"blocked_reason": null, "effective_state": "requested", "failure_reason": null, "operating_steps": 0, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "requested", "step": 0},
+          {"blocked_reason": null, "effective_state": "operating", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "operating", "step": 1},
+          {"blocked_reason": "reactivation_not_authorized", "effective_state": "succeeded", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "succeeded", "step": 2},
+          {"blocked_reason": null, "effective_state": "succeeded", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": true, "reactivation_authorized": true, "reported_state": "succeeded", "step": 3}
+        ]
+      },
+      "timeout_then_late_success": {
+        "max_operating_steps": 1,
+        "reactivation_count": 0,
+        "trace": [
+          {"blocked_reason": null, "effective_state": "requested", "failure_reason": null, "operating_steps": 0, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "requested", "step": 0},
+          {"blocked_reason": null, "effective_state": "operating", "failure_reason": null, "operating_steps": 1, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "operating", "step": 1},
+          {"blocked_reason": null, "effective_state": "failed", "failure_reason": "fallback_timeout", "operating_steps": 2, "reactivation_allowed": false, "reactivation_authorized": false, "reported_state": "operating", "step": 2},
+          {"blocked_reason": "fallback_failed", "effective_state": "failed", "failure_reason": null, "operating_steps": 2, "reactivation_allowed": false, "reactivation_authorized": true, "reported_state": "succeeded", "step": 3}
+        ]
+      }
+    },
     "fallback_reactivation_audit": {
       "authorization_aware": {
         "failures_to_escalate": 3,
