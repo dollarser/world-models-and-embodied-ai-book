@@ -309,49 +309,49 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 
 空间题先冻结 frame、米制原点、分辨率、时间和 unknown 规则。以下答案对应本章二维、半开、三态栅格合同，不外推为连续几何或真实传感器证明。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-12-01：最大量程未命中射线</summary>
 
 只有当传感器协议明确“该束有效发射、量程内未收到回波”，且无 dropout、透明/低反射无效码时，才能把从传感器原点之后到最大有效量程之前被射线穿过的格子标为 observed free；没有 occupied endpoint，量程之外仍为 unknown。最大量程落在格子边界时应按半开区间和 ray traversal 规则决定最后一格，不能因 endpoint 数值等于 max range 就标 occupied。还要保存 observation time，旧 free 证据过期后回到 unknown。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-12-02：分辨率与同一物理 footprint</summary>
 
 必须保持米制 footprint 不变，而不是保持 `footprint_radius_cells` 不变。对半宽 `R` 的方形近似，可先取保守半径 `k=ceil(R/r)`：例如 `R=0.5 m` 时，0.1 m 格取 k=5、检查 11×11 邻域，0.5 m 格取 k=1、检查 3×3；粗格覆盖更量化、薄缝和窄障碍更容易混叠。这个 cell dilation 还不是精确车辆/机器人形状，边界保守度与 cell-center 约定有关；正式比较应在同一米制地图上栅格化 polygon/Minkowski footprint，并报告 false-safe/false-blocked。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-12-03：新鲜度、速度与制动距离</summary>
 
 当前 fixture 的 cell 在 step 0 观测、step 3 查询，规则是 `age>max_age` 才过期：阈值 0、1、2 时路径因该 cell 变 unknown 而不安全，阈值≥3 时仍保留 free。工程阈值应换算为秒，并约束未观测期间可能位移 `v_rel τ`，同时考虑感知/规划/制动延迟和停止距离 `v²/(2a)`；速度越高、相对目标越快或定位误差越大，可接受 τ 通常越小。路径从 safe 变 unknown 的时刻只是触发重新观测、减速或 fallback，不证明此处已有障碍。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-12-04：吸盘与两指夹爪 affordance</summary>
 
 吸盘 approach 至少要求目标表面片平整、法向与接近轴对齐、有效密封面积、材质/孔隙可吸附、末端和手臂路径无碰撞，并保留真空状态与负载上限。两指夹爪还需可达的对向接触面、开口/指厚、抓取宽度、摩擦锥、夹持力、质心/扭矩、手指闭合扫掠和防碰撞姿态。二者都依赖机器人 base/EEF frame、IK、关节限位、对象 pose uncertainty 和任务后的搬运方向；“与 occupied 相邻的 free cell”只够做接近位置 fixture。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-12-05：遮挡切入的 occupancy-flow</summary>
 
 构造同一 ego 轨迹下的三时刻真值：车辆先在遮挡后为 unknown，随后进入相邻车道，并在预测 horizon 与 ego swept footprint 相交；模型输出每个未来时刻的 occupied probability/flow。逐 horizon 报 observed-mask 与全规划域 IoU、flow endpoint error、risk coverage，再用同一 footprint 做碰撞/最小 TTC。IoU 与碰撞必须分开：大量道路格预测正确可使 IoU 很高，但漏掉唯一冲突格仍产生碰撞；反之整体 IoU 低也不必然碰撞。不得用评测 mask 排除 unknown 后，再让 planner 把这些格当 free。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-12-06：waypoint 间距与碰撞结论</summary>
 
 间距 1 格时相邻整数 waypoint 已覆盖中心格，但 footprint、对角角落和两时刻之间的连续扫掠仍可能遗漏；间距 2 或 4 格时 waypoint-only 会产生 1 或 3 格级空洞，可能直接跳过障碍。Bresenham 能检查连接线经过的离散中心格，当前 fixture 因而发现 `(3,4)`，但它不是 supercover，也不覆盖 sub-cell 障碍、姿态变化或曲线偏离。更细连续碰撞器只有在几何、插值、采样上界和 swept volume 都冻结后，才能支持相应连续路径结论。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-12-07：半开边界映射</summary>
 
 相对坐标除以 0.5 得 `(-0.02,0.5)`。Floor 映射为 `(-1,0)`，正确表示 x 在原点左侧、整体越界；向 0 截断得到 `(0,0)`，错误吸入地图。Python 的 ties-to-even `round` 得 `(0,0)`；其他 round 规则可能把 y 映为 1，但无论哪种都不符合按下边界分格的半开合同。对有限 7×7、原点 0、分辨率 0.5 m 的栅格，x 上边界 3.5 m 映为 index 7，必须判 out of bounds；任一内部边界也属于右/上侧下一格，而不是前一格。

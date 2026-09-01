@@ -239,42 +239,42 @@ S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数�
 
 以下答案给出可核算的最小闭环；开放题允许其他设计，但必须写清分布、条件变量、时间预算和判定阈值，不能只用“更真实”代替指标。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-05-01：三模态分布</summary>
 
 例如把等权 support 设为 `{-1,0,1}`，均值仍为 0，但这次均值恰好落在真实 support 上；这说明“均值是否离开 support”依赖具体分布，不能从“多模态”三个字直接推出。忠实采样器的 mode recall 为 1、support 外质量为 0；只生成一个 mode 的 collapsed sampler recall 为 `1/3`；若三个 mode 都覆盖但另有 10% 质量落在 support 外，则 recall 仍可为 1，而 support 外质量为 0.1。均值、覆盖率和非法质量回答的是三个不同问题，应并列报告。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-05-02：posterior 与 dynamics prior</summary>
 
 VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并通过 prior regularization 使其可采样。RSSM posterior 是序列过滤分布，如 `q(s_t|h_t,o_t)`，会用当前观测修正由历史和动作形成的 belief。learned dynamics prior 如 `p(s_t|h_t)` 或 `p(s_t|s_{t-1},a_{t-1})` 不看当前 `o_t`，用于想象与 open-loop rollout。三者都叫“分布”不等于条件集合或训练职责相同；RSSM 还要让 posterior state 与可预测的 prior 对齐。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-05-03：采样步数与控制时限</summary>
 
 先把 deadline 写成预算：`N × t_step + t_condition + t_decode + t_io + safety_margin ≤ T_control`。增加 diffusion step 可能改善样本，却线性或近线性增加延迟；若 action chunk 每 100 ms 必须刷新，而 20 步去噪每步 6 ms，仅去噪已需 120 ms，方案即使离线指标更好也不可部署。应比较少步蒸馏、并行化、较长 action chunk 和 fallback，并同时报告端到端 P50/P95/P99、deadline miss rate 与闭环质量，而不是只报单步 GPU latency。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-05-04：车辆切入条件与 shuffle 对照</summary>
 
 一个最小 schema 可含 `history_id,timestamp,ego_state,ego_action_chunk,other_vehicle_history,other_behavior_intent,map_context,horizon,target_future`；其中 ego action 与他车行为必须是可独立干预的字段，不能埋在同一个视频 token 中。固定历史与地图，交换 batch 内 `ego_action_chunk` 或 `other_behavior_intent`，分别测预测位移、碰撞概率和响应方向变化；再保留“不 shuffle”的 matched control。若 shuffle 后指标几乎不变，模型可能忽略条件；变化很大仍需与真实反事实方向比对，不能只称“敏感”。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-05-05：高 TV 但方向错误</summary>
 
 令真实条件规律为 `x=0 → y=0`、`x=1 → y=1`，错误模型却给出 `x=0 → y=1`、`x=1 → y=0`，且两者都是确定分布。模型两个条件输出之间的 TV 为 1，说明它强烈响应了 `x`；但每个条件都与真值反向，条件准确率为 0。故 context sensitivity 只能排查“完全忽略条件”，正确性还需有配对反事实、方向一致性或条件真值误差。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-05-06：ensemble 分歧与 defer</summary>
 
 把 `(2,2,2)` 改成 `(-2,2,2)`、真值保持 `-2`：range 从 0 变为 4；ensemble mean 为 `2/3`；mean prediction error 的绝对值为 `|2/3-(-2)|=8/3≈2.667`，比原来的 4 小但仍然错误。fixture 阈值为 0.25，因此 range 4 会触发 defer。分歧是拒绝/路由信号，均值误差是预测质量；一次修改可让两者同时改善，也可能让一个改善另一个恶化，不能互相替代。

@@ -313,49 +313,49 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 
 部署题的合格答案必须说明 deadline 后执行什么，而不只是如何加速平均推理。以下状态机与数值仍是离散合同测试，不代表真实执行器或道路认证。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-21-01：20 Hz 预算必须留出系统余量</summary>
 
 20 Hz 的周期是 50 ms。一组可执行预算为传感采集 8 ms、预处理 6 ms、推理 20 ms、队列/校验 4 ms、执行器接口 8 ms，共 46 ms，保留 4 ms 抖动余量；还要单独约束 observation age 和端到端 action age，不能只把各阶段平均值相加。任一阶段使预测动作在 deadline 后才到达时，丢弃该动作/过期 suffix，执行已验证的 profile-specific fallback，并记录原因、阶段耗时和 P95/P99 miss。降分辨率或切小模型只能在预注册路径中使用，不能在超时后继续执行迟到动作。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-21-02：单次健康脉冲会造成 mode flapping</summary>
 
 把 `successes_to_recover` 从 2 改为 1，并在无需新授权的简化分支输入健康序列 `F,F,F,T,F`：第三次失败进入 fallback，紧接的一次 `T` 又恢复 policy，下一次 `F` 立刻重新降级，形成 mode flapping。测试应断言 mode 序列、原因和 transition 次数，而不只看最终 mode。修复可采用连续健康窗口/迟滞、最短驻留时间和独立 reactivation authorization；若 receipt 未通过，即使健康窗口满足也不得恢复。该反例验证状态机逻辑，不估计真实故障相关性。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-21-03：异步队列的三个边界测试</summary>
 
 ①队列快耗尽：执行到当前 chunk 的半开有效区间末端且下一 chunk 不存在，必须产生 `queue_underflow`，不能重复最后动作；②网络乱序：较新 `observation_step/chunk_id` 先到、旧 chunk 后到，旧包不得覆盖 freshest admissible chunk；③新 chunk 晚到：若它在控制时刻已过有效区间，直接记 stale，若区间尚有效但 observation lag 超阈值也走 `stale_chunk` fallback。每例固定 observed step、arrival step、valid interval、选择结果和原因码，并检查被拒包不残留在队列。这里只证明调度合同，不证明真实网络 QoS。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-21-04：直道与弯道不能共享一个定位故障动作</summary>
 
 直道且车道边界/前向障碍仍可靠时，可在独立纵向与横向安全约束下保持走廊并受控减速至停车；弯道定位失真会迅速放大横向路径误差，盲目保持旧方向盘角或旧轨迹更危险，应更早降速，并只在冗余 lane/occupancy 证据足够时沿保守走廊到可停车区域，否则立即受控停车。闭环验收至少包含碰撞/越界、最大横向偏差、停车距离/时间、峰值减速度与 jerk、后车冲突、MRM 触发/完成/失败、deadline miss 和定位恢复后的授权转移。两者都必须按速度、曲率、摩擦和交通分桶；一次仿真停车不证明道路安全。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-21-05：低分失败暴露错误排序</summary>
 
 在现有六例中加入 `(score=0.15, failed=true)`。阈值 0.5 时接受原来的 0.1/0.2/0.3 三个安全样本和新增失败样本，coverage 为 `4/7≈0.5714`、accepted failure rate 为 `1/4=0.25`；总计四个失败中拒绝三个，failure rejection recall 为 `3/4=0.75`。相比原 fixture 在同阈值的 risk 0，这说明低 score 并未单调对应低风险；只调高阈值反而抓不到该失败，调到低于 0.15 又会牺牲安全低分样本。risk–coverage 曲线揭示排序问题，但仍需独立校准、分桶和漂移监测。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-21-06：receipt 失败原因必须保持可诊断</summary>
 
 从有效 receipt 每次只改一个维度：把 `fallback_run_id` 改成其他 run 应得 `fallback_run_mismatch`；令 `now` 超出 `issued_at/valid_until` 应得 `stale_or_future_receipt_time`；复用已消费 receipt 或不递增 sequence 应得 `receipt_already_consumed` 或 `replay_or_out_of_order_receipt`；把 `target_mode` 改成非 `policy_action` 应得 `target_mode_mismatch`。测试还应确认失败 receipt 不消费 sequence、不改变 mode，并保留 receipt/run/decision trace。独立原因码支持响应与审计，但不能替代签名、身份认证、完整性保护和持久化防重放。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-21-07：相同失败计数不能替代严重度审计</summary>
 
 用四个成功、一个低严重度失败和一个高严重度失败构造两个 gate：都接受三个相同成功样本和一个失败，因此 coverage 都是 `4/6`、接受失败率都是 `1/4`、拒绝失败个数都是 `1/2`；一个留下低严重度失败，另一个留下高严重度失败。合格答案必须同时保留 case ID、失败类型、场景分桶、暴露分母和权重来源，并说明任意 `1/10` 敏感性分析代理权重只能做敏感性/负对照，不能解释为事故概率、伤害或货币损失。若严重度标签、暴露量或 fallback 闭环后果未经验证，停止真实部署外推；下一步应进入冻结场景的仿真/封闭场地验证，而不是用总体 failure rate 覆盖缺口。

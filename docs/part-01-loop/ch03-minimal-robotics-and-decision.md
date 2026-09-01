@@ -373,42 +373,42 @@ episode:
 
 先在纸上画 frame 和单位，再展开自检。几何题的“图看起来对”不算验收；至少要检查原点、单位轴、正逆方向、时间和数量级。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-03-01：概念判断</summary>
 
 点之间的相对形状可以在整体尺度错误时保持相似，因此可视化仍像一辆车；但外参的米制平移与毫米点坐标相加会产生 1000 倍语义错配，碰撞距离、速度和地图 cell 都会错误。合格答案应提出数值检查：统一单位后检查已知尺寸、原点/单位轴和 round trip，而不是把渲染外观当标定证据。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-03-02：代码实验</summary>
 
 0.10 m 平移错误对所有点增加同一个目标-frame 位移向量；5° yaw 错误绕旋转中心转动点，误差方向随方位变化，大小近似随距离 `r` 增长为 `2r sin(2.5°)`。应冻结同一组三维点，分别注入平移和旋转，报告每点误差而不只报均值，并运行 `make ch03-test-local`。数值只描述固定点集，不能外推真实外参标定精度。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-03-03：几何练习</summary>
 
 正确检查是 `p_camera ≈ T_camera_body @ (T_body_camera @ p_camera)`，同时验证 rotation 正交且 `det=+1`。若 optical→body 错用单位矩阵，而正反投影始终在 camera frame 内使用同一针孔模型，像素 round trip 仍可为 0；错误只在跨 frame 的单位轴语义中出现。合格答案必须解释为何“同一错误用于正反两程”会自洽，并加入 optical right/down/forward 的单位轴测试。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-03-04：控制练习</summary>
 
 20 Hz 的 `Δt=0.05 s`，5 Hz 的 `Δt=0.2 s`。若动作字段表示每步位置增量，为保持同一每秒速度，单步增量应放大 4 倍、每秒步数降为四分之一；若字段本来就是 `m/s`，数值可不变但保持时长和积分必须改。还要复核控制增益、限幅、噪声/延迟的“按步还是按秒”定义，不能只改循环次数。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-03-05：自动驾驶迁移</summary>
 
 合格 schema 至少让图像带 `sensor_time/camera_front/px` 和 calibration ID，让车辆状态带 `pose_time/vehicle或map frame/m,s,rad`，让轨迹带 reference frame、目标时间、点间隔、速度/曲率和执行 horizon。100 ms 注入应只改变位姿查询时间，保持传感器样本和运动真值固定，再比较匹配/过期变换后的点或轨迹。缺失 transform 时应使依赖样本无效，不能补默认单位矩阵。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-03-06：数量级练习</summary>
 
 平移误差为 `|v|·|Δt| = 15 m/s × 0.05 s = 0.75 m`。平面 yaw 误差还取决于角速度和点到旋转中心的距离：弦长为 `2r sin(|ωΔt|/2)`，同一 yaw 时间差对近点和远点的米制错位不同。只给角度而不给 `r` 不能唯一确定空间误差；一般 SE(3) 运动也不能把独立平移/转动例的标量误差直接相加。

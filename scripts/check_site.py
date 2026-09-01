@@ -13,6 +13,10 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
 SELF_CHECK_ID_PATTERN = re.compile(r"SELF-CHECK-\d{2}-\d{2}")
+COMPILED_SELF_CHECK_BLOCK_PATTERN = re.compile(
+    r"<details(?:\s[^>]*)?>.*?SELF-CHECK-\d{2}-\d{2}.*?</details>",
+    re.DOTALL,
+)
 
 
 class TargetParser(HTMLParser):
@@ -153,6 +157,11 @@ def main() -> int:
             errors.append(f"compiled chapter lost or reordered exercise self-checks: {compiled.relative_to(ROOT)}")
         if compiled_text.count("<details>") < len(source_self_check_ids):
             errors.append(f"compiled chapter lost foldable self-check containers: {compiled.relative_to(ROOT)}")
+        compiled_self_check_blocks = COMPILED_SELF_CHECK_BLOCK_PATTERN.findall(compiled_text)
+        if len(compiled_self_check_blocks) != len(source_self_check_ids):
+            errors.append(f"compiled chapter has malformed self-check blocks: {compiled.relative_to(ROOT)}")
+        elif any("`" in block for block in compiled_self_check_blocks):
+            errors.append(f"compiled chapter left raw Markdown in self-check blocks: {compiled.relative_to(ROOT)}")
         compiled_self_checks += len(source_self_check_ids)
 
     checked_targets = 0

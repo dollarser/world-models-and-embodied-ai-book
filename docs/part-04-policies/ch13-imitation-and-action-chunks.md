@@ -198,28 +198,28 @@ S 档下载量 0、无 GPU、无外部数据，代码和 fixture 按 MIT 发布�
 
 动作块题必须分别记录预测时域、执行时域、控制频率、查询时延和缓存失效条件。离线动作误差、协议 smoke 与真实闭环风险属于不同证据层。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-13-01：相同 MSE 不代表相同闭环风险</summary>
 
 不能。较早误差会改变后续观测分布并可能持续累积，序列末端误差则可能没有足够时间传播；但末端也可能恰好对应接触、停车线或任务终止，单次错误后果反而更大。相同 MSE 还隐藏方向、连续 burst、状态敏感度和动作限幅。至少应按 horizon/任务阶段报告误差，比较 rollout state deviation、碰撞/越界、恢复和终止失败，并用相同初态闭环评测；不能只凭错误位置推断必然更安全。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-13-02：调用、反应与时间集成 Pareto</summary>
 
 先固定 `K_pred=8`，单独扫描 `K_exec`。当前16步 fixture 中，`K_exec=1/4/8` 的查询数为 16/4/2，平均反应延迟为 0/1.6/3.733 步，deadline=2 时通过率为 1/0.733/0.333；这只是离散调用—陈旧性，不是实测推理 latency。再固定 `K_exec=1` 扫 deadline 和 temporal coefficient `m`：正 m 按当前“最旧到最新”索引给旧预测更大相对权重，稳态更平滑但真实突变更滞后。分别画 query/最大延迟与 stationary-error/change-error 的非支配点；LeRobot 协议中 temporal ensembling 要求每步查询，不能把它与任意 `K_exec>1` 组合成不存在的实验格。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-13-03：ACT 切分与闭环失败</summary>
 
 先按原始 episode/source asset 分组，同一 episode 的窗口、重采样、裁剪、不同相机视图和增广副本只能进入一个 split；再按对象实例、任务模板、场景/操作者设置需要证明的泛化轴，selection 与最终 test 分开。闭环失败至少分三类：协变量偏移后无法恢复或任务超时；长 chunk/推理延迟导致陈旧动作、碰撞或越界；接触/终止/夹爪状态错误导致掉落、重复动作或终止后继续执行。每类保留 attempted episode 分母、视频/trace 和安全接管，不把 simulator crash 静默删去。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-13-04：八步执行窗口的真实时长</summary>
 
 20 Hz 下8步覆盖 `8/20=0.4 s`，若扰动刚错过查询边界，最多还执行7个旧步，即约0.35 s 才按固定周期重规划；5 Hz 下分别是1.6 s和1.4 s。对车辆，0.35 s 在高速下已对应显著行驶距离，必须有事件触发中断、独立制动和更短安全时域；机械臂的1.4 s 也可能跨越接触阶段，需力/碰撞触发和 chunk invalidation。控制频率低不等于任务风险低，且推理/通信时延还要另加。

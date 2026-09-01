@@ -293,35 +293,35 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 
 先独立写清用途、选择准则和真实性锚点，再展开自检。这里的数值只对应 `EXP-17-01` 或题目中明确给出的反事实，不是 learned world model 的实测性能。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-17-01：冻结 encoder 不等于在线 simulator</summary>
 
 这是“表征预训练”用途：世界模型只提供冻结 video encoder，ACT 在真实/记录动作监督上学习，部署时既不生成未来，也不按候选动作递归 rollout。最低对照应固定 ACT、数据切分、训练步数和 action schema，只替换 encoder，至少比较随机初始化、通用视觉预训练和该视频 encoder；再报告 ID/shift 的动作误差、闭环成功与安全，而不是只报 probe。若 encoder 预训练数据与评测 route/episode 同源，还要先做泄漏审计。这个实验不能推出 encoder 具备规划、reward、termination 或反事实能力。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-17-02：随机乐观错误要同时看均值与尾部</summary>
 
 一种可复核改法是令 `shortcut` 的模型 return 以 0.1 概率为 20、以 0.9 概率为 -1；其模型均值为 `0.1×20+0.9×(-1)=1.1`，高于 `safe_route` 的 0.85，所以按模型均值选 shortcut。若以最差 20% 的条件均值或 20% 分位数做保守选择，shortcut 的值为 -1，因而会选 safe route；真实规则中的 shortcut 仍为碰撞、return -1。运行多 seed 时应保存每个候选的抽样数、均值、分位数和最终选择；best-of-N 还可能放大罕见乐观样本。该构造只说明选择准则会改变模型利用风险，不证明某个尾部阈值已校准。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-17-03：receding horizon 不能撤回错误首步</summary>
 
 滚动时域每执行一小段就用新观察重规划，因此能截断远端预测误差的累积，并在环境偏离想象后更新计划。但当前周期选出的第一步仍由当前错误模型排序；若它已越过护栏、碰撞或进入不可恢复状态，下一次重规划没有机会撤销。最低安全设计还需独立检查首步/短前缀的可达性、碰撞、动作范围、support 和 deadline，并允许拒绝或 fallback。缩短 horizon 是误差管理手段，不是模型正确性或安全证明。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-17-04：代理评测的预注册合同</summary>
 
 最低合同应在看最终结果前冻结：真实锚点（例如同一策略在固定版本 MetaDrive 或物理 simulator 的 route return/碰撞）、策略族及其训练来源、固定 route/seed、模型 rollout horizon/候选预算、代理与锚点的排序指标，以及有效/无效运行分母。可预注册拒绝条件为：策略排序相关低于阈值、model-vs-anchor return gap 或风险漏检超过阈值、所选轨迹越出 support、首步风险 gate 失败或 deadline miss。应保留无模型基线、已知 dynamics/oracle 和专门诱导 exploitation 的负对照。通过只授权该策略族与场景范围内的筛选，不能替代最终目标环境评测。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-17-05：施工锥幻觉与最小风险动作</summary>
 
 在固定 route/seed 放置有可追踪 ID 的施工锥，使 learned model 将占用区域预测为可通行；候选规划器应因此产生穿越锥桶的诱导轨迹。独立锚点用 simulator collision/occupancy 和道路边界检查同一动作前缀，并记录首次分歧时刻、TTC、速度、制动距离、模型风险、gate 原因和 intervention。合格的最小风险响应是在可用距离和后车风险允许时受控减速并停在障碍前，或切换到经独立验证的安全走廊；不得继续执行旧 chunk。一次成功停车只验证该注入与动力学条件，不证明任意施工区或真实道路安全。

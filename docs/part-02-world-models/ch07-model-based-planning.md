@@ -245,42 +245,42 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 
 规划题必须冻结 horizon、动作预算、discount 作用位置、tie-breaking 和约束语义。以下阈值只对应本章手工环境与五个等权场景。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-07-01：discount 与首步</summary>
 
 若 return 定义为 `r0+γr1+γ²r2`，H=3 的延迟路径 `advance,advance,harvest` 值为 `-0.1-0.1γ+γ²`，立即 `harvest` 为 0。令两者相等得正根 `γ*=(0.1+√0.41)/2≈0.3702`：`γ<γ*` 时首步 harvest，`γ>γ*` 时首步 advance；在当前偏向较早 action 的 tie-break 下，等号也选 advance。若 discount 还作用于 terminal value 或候选提前终止规则不同，阈值必须重算。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-07-02：random shooting 预算曲线</summary>
 
 固定 RNG seed 和同一候选生成顺序，对预算 `B=1,2,4,8…` 取前 B 个样本，记录 `best_so_far(B)=max_{i≤B} score_i`，则曲线应单调不降；若每个预算重新抽样，单次曲线可能下降，不能解释为更多预算更差。还应跨多个预注册 seed 报中位数/区间、找到穷举最优的比例和计算时延。当前离散 H=3 仅有 8 个候选，适合验证搜索合同，不足以证明 random shooting 在连续控制中有效。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-07-03：reward 偏差与优化失败</summary>
 
 先保存每个候选的模型预测分数与真实环境回报。若搜索器没有找到模型分数最高的候选，是 optimization failure；若它准确找到模型最优候选，但该候选真实回报差或违反约束，是 reward/model failure（也可能含 dynamics/termination error）。只看最终低回报无法区分两者。一个有效注入实验应冻结候选集，分别比较 `optimizer regret under model` 与 `model-selected real regret`，而不是同时换模型和搜索预算。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-07-04：急刹、绕行与硬约束</summary>
 
 候选表可含 `min_TTC, collision_prob, lane_boundary, max_decel, max_jerk, progress, model_uncertainty`。例如急刹：TTC 1.5 s、碰撞概率 0.01、最大减速度 7、jerk 8、进度低；绕行：TTC 0.8 s、碰撞概率 0.08、边界余量 0.1 m、减速度 3、jerk 4、进度高。先用冻结的碰撞/TTC/边界硬门筛除绕行，再在可行集内按舒适与进度选急刹；若两者都不可行则进入最小风险 fallback。硬约束不能被高 progress 加权抵消，示例数值也不是道路安全阈值建议。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-07-05：风险目标的临界点</summary>
 
 令 risky 五个 return 为 `(1.5,1.5,1.5,1.5,x)`。其均值为 `(6+x)/5`，与 steady 的 0.6 在 `x=-3` 打平，故 `x>-3` 时均值偏好 risky。对 `x≤1.5`，最差 20% 均值就是 `x`，在 `x=0.6` 打平，`x>0.6` 才偏好 risky。chance constraint 使用 `P(return<0)≤0.1`：`x<0` 时失败率 0.2、不可行，`x≥0` 时为 0、可行。改变 `x` 是改变 outcome/reward 或失败定义，属于偏好/后果模型；改变五个场景的概率权重才是概率模型变化。可行不等于被选中，还需声明可行集内的排序规则。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-07-06：非整数尾部质量与小样本边界</summary>
 
 对排序后 `(-2,1.5,1.5,1.5,1.5)`：`α=0.1` 对应 0.5 个样本质量，正式下尾均值仍为 -2，`ceil` 对照也取一个样本而相等；`α=0.3` 对应 1.5，正式值为 `(-2+0.5×1.5)/1.5=-0.833333`，`ceil` 值为 `(-2+1.5)/2=-0.25`；`α=0.5` 对应 2.5，正式值为 `(-2+1.5+0.5×1.5)/2.5=0.1`，`ceil` 值为 `(-2+1.5+1.5)/3=0.333333`；`α=1` 两者都等于全样本均值 0.8。相等不表示估计充分：五个等权点的原始分辨率是 20%，`α=1%` 的计算只反复使用单个最差观测，既没有见到真实 1% 事件的能力，也没有总体外推、相关性或模型偏差保证。要回答总体尾部问题，需预先定义抽样单位、独立性/分层、样本量、估计量和不确定区间。

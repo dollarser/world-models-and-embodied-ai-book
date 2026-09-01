@@ -254,12 +254,22 @@ class ExerciseSelfCheckContractTest(unittest.TestCase):
             "1. **概念判断**：first\n"
             "2. **代码实验**：second\n\n"
             "## 自检要点\n\n"
-            "<details>\n<summary>SELF-CHECK-03-01：概念判断</summary>\n\n"
+            "<details markdown=\"1\">\n<summary>SELF-CHECK-03-01：概念判断</summary>\n\n"
             "合格答案应指出接口、前提和不能推出的结论，并给出一个可以复查的反例或命令；还要说明证据来自正文、结果文件还是外部来源。\n\n</details>\n\n"
-            "<details>\n<summary>SELF-CHECK-03-02：代码实验</summary>\n\n"
+            "<details markdown=\"1\">\n<summary>SELF-CHECK-03-02：代码实验</summary>\n\n"
             "合格答案应给出预期变化、固定分母、验证命令和失败边界，不能只写运行成功；若结果不同，还应先检查输入、版本和随机性。\n\n</details>\n"
         )
         self.assertEqual([], check_exercise_self_check_contract(3, text, True))
+
+    def test_rejects_self_check_without_markdown_rendering(self) -> None:
+        text = (
+            "# Chapter\n\n## 练习\n\n1. **概念判断**：first\n\n## 自检要点\n\n"
+            "<details>\n<summary>SELF-CHECK-03-01：概念判断</summary>\n\n"
+            "这段答案包含 `metric_name`、验证步骤、失败边界和足够长度，但容器没有启用 Markdown-in-HTML。\n\n"
+            "</details>\n"
+        )
+        errors = check_exercise_self_check_contract(3, text, True)
+        self.assertTrue(any("Markdown content is rendered" in item for item in errors))
 
     def test_rejects_missing_foreign_and_unmatched_self_checks(self) -> None:
         text = (

@@ -271,35 +271,35 @@ VLA 把视觉语言知识连接到动作，但真正可执行的系统还需要�
 
 VLA 首先是绑定到具体本体、时间和动作 schema 的策略。语言输出、token、连续 chunk 和高层意图只有经过解码与执行网关后才具有可执行含义。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-15-01：VLM 文本不是已 grounding 的 VLA</summary>
 
 按本书定义，它仍是产生空间语言建议的 VLM，不是已证明可执行的 VLA。缺少把“左”绑定到 camera/base/world frame、当前对象与可达目标的 grounding，也没有动作示范/交互数据学得本体动力学和 controller 接口。升级证据至少包括版本化 action schema、状态/相机时间对齐、动作训练或可靠 controller mapping、可达/碰撞检查、E2 干预与闭环评测。把文本用规则翻成动作可以构成组合系统，但规则控制器的证据不能归功于 VLM。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-15-02：九档 token 的误差与词表</summary>
 
 当前 normalized action `(0.6,-0.4)` 在9档时 step 为0.25，编码得到 `(6,2)`，解码仍是 `(0.5,-0.5)`，平均绝对归一化误差仍为0.1；档数增加没有保证这个特定点误差下降。复用同一标量 token 集时动作量化词表从5增到9，两个动作维的序列长度仍为2；若每维使用独立 token ID 则需要10/18个 ID，若把二维组合成一个 joint token 则是25/81种。必须声明 tokenizer 设计，不能把 bins、词表基数和序列长度混为一个量。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-15-03：两份互不兼容的7-DoF schema</summary>
 
 Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺序的 `q1…q7`（rad）、每维限位/速度、robot joint frame、control_hz、timestamp 与 gripper 独立字段。Delta-EEF schema 则定义 `mode=delta_pose`、`dx,dy,dz`（m）、`dRx,dRy,dRz`（rad，明确 axis-angle/Euler）、参考 `base` 或 `tool` frame、增量组合方向、dt/horizon 和 gripper。二者即使都是7维也不能逐维互换：EEF 到 joint 需要带当前 q 的 IK，存在冗余、奇异、限位和多解；joint absolute 也不等于局部笛卡尔增量。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-15-04：2 Hz/20 Hz 双系统缓存失效</summary>
 
 慢层每0.5 s发布带 `instruction_revision,command_id,observation_time,expires_at,schema_id` 的目标，快层每0.05 s只消费当前 revision 下未过期的动作 prefix。新指令到达时原子增加 revision、清空旧 chunk/在途请求并等待新目标；晚到的旧响应因 revision/command ID 不匹配而拒绝。急停走独立最高优先级通道，立即清队列、锁存 safe mode，并要求完成检查与新的显式授权才能恢复；健康恢复或新文本不能自动解锁。日志保存 capture/receive/infer/execute 时间和 ACK，避免同一 chunk 重放。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-15-05：驾驶低频意图 JSON</summary>
 
 一个最小对象可含 `intent_id,observation_id,issued_at,expires_at,clock_id,map_frame,route_segment,maneuver,target_lane,target_speed_range,horizon_s,confidence,reason,schema_version`，但不含可直接执行的 steering/brake。进入 planner 前检查 JSON/schema、枚举和值域、frame/clock/新鲜度、观测与地图版本、目标车道存在且可达、速度/法规约束、语言来源授权和重复/乱序 ID；随后仍须生成动力学可行候选，通过 occupancy/碰撞/舒适与最小风险门禁。字段合法只证明接口可解析，不证明意图真实或安全。

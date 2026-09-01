@@ -248,35 +248,35 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 
 生成动作题要把分布表达、候选有效性、选择器、安全门和端到端预算拆开。多样性或采样数量本身不是闭环收益。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-14-01：不对称双峰的均值</summary>
 
 若 `-2` 的权重为 p、`+1` 的权重为 `1-p`，条件均值为 `μ=1-3p`；等权时 μ=-0.5，距两个 mode 都是1.5，因此不是任一有效模式。若同时把 fixture 的 `VALID_MODES` 改为 `(-2,1)` 并保留 tolerance 0.25，均值有效当且仅当 `3 min(p,1-p)≤0.25`，即 `p≤1/12` 或 `p≥11/12`；严格只承认 mode 本身时则只有 p=0或1。必须同步更新 mode oracle，不能只改 demonstrations、仍用旧 `(-1,1)` 计算有效性。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-14-02：50 ms 内的抽象采样预算</summary>
 
 扣除18 ms 后只剩32 ms；若把每一步都保守按单次调用 P95 7 ms 串行估算，算术上限是 `floor(32/7)=4` 步，预算28 ms，5步需35 ms而超限。它不是可部署的 P95 保证：多个调用的尾延迟不能简单由单次 P95 相加，预处理可能相关，batch size 也改变 latency。应在目标 runtime 上测完整4步链路的 P50/P95/P99、deadline miss rate 和安全余量；候选若批处理，还要分别记录 forward 次数与 sample-model evaluations。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-14-03：Push-T 三策略公平对照</summary>
 
 至少冻结十项：①原始 demonstrations/许可与 train-selection-test seed；②观察模态、历史长度、图像预处理；③动作 frame、单位、频率、归一化；④prediction/execution horizon；⑤backbone、conditioning 与参数预算；⑥训练更新数、batch、optimizer/schedule；⑦数据增广与采样权重；⑧候选数、solver steps、随机 seed 和选择规则；⑨硬件、precision、batching/runtime 与端到端时延测法；⑩闭环初态、任务 horizon、成功/失败分母和统计区间。MSE 头无需生成32候选也应在相同执行协议下比较，不能靠给某一方法额外 oracle 或计算预算取胜。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-14-04：真实终点选择造成泄漏</summary>
 
 真实终点只有执行候选后才能知道；用它从32个样本挑最优等于把 test outcome 当在线 selector 输入，会得到随样本数增大的 best-of-N 乐观偏差。这可单独标成 oracle upper bound，用于诊断生成器 support，但不能称可执行策略。合法在线选择只能使用当时可得的状态、冻结 world model/critic、任务代价与安全门，并要独立验证 selector error；最终评测仍按所有 attempted episodes 统计真实 outcome。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-14-05：驾驶三模式与无候选降级</summary>
 
 固定同一历史和地图，生成保持车道、变道、减速三类带时间戳轨迹；每类分别报告 mode coverage、轨迹/动力学可行率、道路边界、碰撞/最小 TTC、舒适度、进度、模型不确定性和端到端 deadline。先用硬约束拒绝候选，再在可行集排序，不能让路线进度抵消碰撞。若零候选通过，输出结构化 `no_valid_candidate`，执行独立验证的保持车道受限减速或最小风险停车，并触发重新感知/规划；不得选择“最不坏”的已拒绝轨迹冒充 fallback。

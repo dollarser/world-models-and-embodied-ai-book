@@ -14,7 +14,7 @@
 | `make check-strict` | Docker | JSON Schema、manifest、实验卡/benchmark card 条件与跨资产规则 | `BLOCK` |
 | `make check` | 宿主 + Docker | 依次执行 local 与 strict | `BLOCK` |
 | `make docs-build` | Docker | MkDocs 严格构建、导航、Markdown 扩展 | `BLOCK` |
-| `make docs-preview-check` | Docker + 宿主标准库 | 严格构建后检查 22 章产物、内部 href/src、全站中文页面语言/device-width viewport/唯一main/H1/图片alt、除短404页外的正文skip-link目标、Mermaid 无障碍元数据、已登记折叠式练习自检的 ID/顺序与容器保留，以及预览入口 | `BLOCK`，发布候选必跑 |
+| `make docs-preview-check` | Docker + 宿主标准库 | 严格构建后检查 22 章产物、内部 href/src、全站中文页面语言/device-width viewport/唯一main/H1/图片alt、除短404页外的正文skip-link目标、Mermaid 无障碍元数据、已登记折叠式练习自检的 ID/顺序、容器保留与内部 Markdown 已编译，以及预览入口 | `BLOCK`，发布候选必跑 |
 | `make chNN-smoke` | Docker/CPU | 章节最小数据流、指标与测试 | `BLOCK`，仅针对已实现章节 |
 | `make smoke-all` | Docker/CPU | 依次运行 22 章单元测试与固定 smoke | `BLOCK`，发布候选必跑 |
 
@@ -28,7 +28,7 @@
 | 正文资产版本 | 自动 + 人工 `BLOCK` | 当前 22 章正文若显式写出 `EXP-NN-NN vK` 或 `BENCH-NN-NN vK`，版本必须与对应 experiment/benchmark card 一致；历史 review 保留当时快照，不参与当前正文门禁 |
 | 文档构建 | 自动 `BLOCK` | `make docs-build` 返回 0 且无 warning |
 | 章节模板 | 自动 + 人工 `BLOCK` | “本章契约、小结、练习、延伸阅读、验收记录”使用独立 H2；第1–21章有“下一章接口”，第22章有“全书出口”；非适用项明确说明而非静默删除 |
-| 练习自检 | 自动 + 人工 `BLOCK` | manifest 登记覆盖的章节中，每道编号练习恰有一个同章 `SELF-CHECK-NN-MM` 可折叠块；要点包含最低合格推理、复核方式与证据边界，未登记章节不得据此宣称全书答案已完成 |
+| 练习自检 | 自动 + 人工 `BLOCK` | manifest 登记覆盖的章节中，每道编号练习恰有一个同章 `SELF-CHECK-NN-MM` 可折叠块；源码容器必须启用 `markdown="1"`，编译块不得残留原始 Markdown 反引号；要点包含最低合格推理、复核方式与证据边界，未登记章节不得据此宣称全书答案已完成 |
 | 读者术语 | 自动 + 人工 `BLOCK` | 高频缩写同时出现在作者术语基线与读者术语表；定义说明作用域和不能单独证明的结论 |
 | 声明追溯 | 自动 + 人工 `BLOCK` | `CLAIM` 定义与 manifest 双向相等、类型规范、章节归属正确；每个 `result` 由同章实验卡反向绑定，外部报告数字不冒充本书结果 |
 | 事实证据 | 自动 + 人工 `BLOCK` | 每个 `fact` 在 `fact-evidence.json` 登记证据基类、成熟度、锚点和支持边界；登记集与正文事实集双向相等，供应商声明不升级为独立验证；GitHub `official_asset` 必须使用完整 40 位 commit 的不可变 URL |

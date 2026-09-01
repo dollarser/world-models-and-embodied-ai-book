@@ -255,35 +255,35 @@ Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中�
 
 这里的计算严格采用 8.3 节递推和当前 fixture 的索引约定。不同 Dreamer 实现若把 reward、continuation 或 bootstrap 对齐到不同位置，必须先转换接口再比较。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-08-01：gamma 0.99 的三个 start target</summary>
 
 把原 discounts 从 `[1,1,0]` 改为 `[0.99,0.99,0]`，rewards 与 next values 保持 `[0,0,1]`、`[0.4,0.8,0]`。按当前递推，λ=0 的 targets 为 `[0.396,0.792,1]`，start target 0.396；λ=0.5 为 `[0.639045,0.891,1]`，start 0.639045；λ=1 为 `[0.9801,0.99,1]`，start 0.9801。测试应调用同一 `lambda_returns` 并用明确容差比较，不能把手算值直接写成新的训练结果声明。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-08-02：两种污染是否相加</summary>
 
 在本章 λ=1、固定 dynamics、固定 reward 向量和二值 mask 的线性递推里，二者可相加：相对正确 start target 1，终点 reward +1 贡献 gap 1，漏掉终止 mask 让 episode 后的 10 贡献 gap 10，同时注入得到 start target 12，总 gap 11。这个加法只对冻结接口成立；若 reward bias 改变 policy visitation，continuation 是 learned probability，含归一化/clipping，或 λ、value 也联动，交互项可能非零，必须用四格 factorial control 检查。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-08-03：episode 结束 truth table</summary>
 
 最小表为：任务自然完成/碰撞终态 `terminated=1,truncated=0,bootstrap=0,target valid=1`；时间上限且 final observation 有效 `0,1,bootstrap=γ,valid=1`；外部 timeout 也通常是 truncation，若 final observation 有效则 bootstrap，否则 target invalid；sensor-drop 不是自动 terminal，若下一观测无效且需要 bootstrap，应标记 transition/target invalid 并单独统计。若自然终止与时间上限同时发生，当前 fixture 以 terminated 为准关闭 bootstrap。环境 API 的实际语义必须核对，不能按字段名猜。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-08-04：cut-in 的互斥 split 与指标</summary>
 
 先以 `scenario_group_id`（同一路线、交通参与者初始化和派生天气共享一组）做稳定 hash，再划 `0–5=train,6–7=validation,8–9=closed-loop test`；每组内部的 simulator seed 从冻结清单产生，任何派生 replay 不得跨组。五项最低指标可取碰撞率、最小 TTC/低于阈值占比、任务/路线完成率、最大 jerk 或超舒适阈值时长、独立安全网关干预率；另报有效 episode 分母和 simulator failure。validation 只选模型，closed-loop test 不回流调参。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-08-05：累计 loss weight</summary>
 
 按 `w0=1,w_t=∏_{i<t}d_i`，discount `[0.9,0.9,0]` 对三个 step 的权重是 `[1,0.9,0.81]`；最后一个 0 只会关闭下一步，不能反向把终止 transition 自身权重清零。只检查 λ-return target 会漏掉另一条路径：即使 target 已正确 mask，终止后的伪 latent 仍可能以错误的非零 survival weight进入 actor/critic loss。应分别测试 target recursion 和 loss contribution，含一个终止后超大伪 loss 的负对照。

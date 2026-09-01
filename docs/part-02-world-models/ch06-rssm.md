@@ -267,42 +267,42 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 
 先区分本章标准库 fixture 的可观察结果与神经 RSSM 的一般结论。数值答案只对固定 seed、固定动力学和当前代码成立。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-06-01：无动作视频预测器</summary>
 
 按本书用于控制与决策的工作定义，它通常不满足：它学习的是 `p(o_{t+1:t+H}|o_{≤t})`，无法回答候选动作 `a` 改变后未来如何变化。若任务只是被动环境预测，或动作由观测历史唯一决定且不需要反事实规划，可以把它称为特定用途的预测模型，但必须禁止“支持动作规划”的声明。要升级为本书主线世界模型，至少需显式动作条件、时间对齐和 E2 action-intervention 检查。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-06-02：observation gain</summary>
 
 在当前固定轨迹中，将 `observation_gain` 取 0、0.25、0.5、0.65、1，filtering RMSE 约为 0.0446、0.0451、0.0537、0.0608、0.0863，而 open-loop RMSE 始终约为 0.3332。后者只从初态反复调用 `prior`，所以不读取该 gain；前者每步用带噪观测修正 position，因而会变化且不保证 gain 越高越好。这里 gain=0 时 `velocity_gain=0.18` 仍会从 innovation 修正速度，不能把结果误读成“完全不使用观测”。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-06-03：KL 的梯度路由</summary>
 
 `KL(sg(q)‖p)` 中 posterior `q` 被 stop-gradient，梯度只流向 dynamics prior `p`；`KL(q‖sg(p))` 中 prior 被截断，梯度只流向 representation/posterior `q`。两式前向都代入同一组概率值计算 `KL(q‖p)`，所以日志标量可以完全相同；stop-gradient 改的是反向图，不是前向数值。检查实现时应同时看 loss 数值、scale 与参数梯度目标。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-06-04：free nats 分段函数</summary>
 
 当前 fixture 定义为 `L_c(k)=max(k,c)`，其中 raw KL `k≥0`、`c=free_nats`。当 `c=0` 时 `L=k`；`c=0.5` 时，`0≤k≤0.5` 为常数 0.5，之后为 `k`；`c=2` 时，`0≤k≤2` 为常数 2，之后为 `k`。这不是 `max(k-c,0)`：两种写法的数值、日志和 scale 不同。严格说拐点处两支相等；“常数区”可写为 `k<c`，并注明实现采用哪一侧的次梯度。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-06-05：像素更好、控制状态更差</summary>
 
 例如驾驶视频中 99% 像素是静态道路与天空，模型通过增强背景纹理把 pixel MSE 降低，却把只占少量像素的刹车灯、横穿行人速度或遮挡后车辆存在概率平均掉。画面会更锐利，但 TTC、object permanence 或相对速度 latent 更差，导致制动时机错误。合格反例应同时给出视觉指标改善、决策变量退化和对应动作后果，而不是只说“像素不重要”。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-06-06：单帧 RGB 的不可辨识变量</summary>
 
 单帧通常不能唯一确定相对速度/加速度、他车驾驶意图、遮挡物存在状态、交通灯相位变化方向、路面摩擦、ego 延迟与执行器状态。相对运动和意图影响跟车、变道与避让；灯相位影响停车/通过；摩擦影响制动距离和转向上限；执行器状态影响 action timing。需要时间序列、ego motion/control、地图或额外传感器形成 belief，并保留不确定性；多帧也不保证所有隐变量都可辨识。

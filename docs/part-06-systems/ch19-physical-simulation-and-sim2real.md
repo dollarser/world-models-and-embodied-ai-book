@@ -217,28 +217,28 @@ CARLA 用于高保真多相机、天气、城市资产和传感器管线扩展�
 
 仿真题先写单位、frame、时间和终止语义。参数拟合误差小只表示所选数据与观测模型可拟合，不自动表示隐藏状态或真实世界已被辨识。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-19-01：一个可执行的转向合同</summary>
 
 示例合同可定义状态为 ego frame 的 `(x[m],y[m],yaw[rad],v[m/s],steer[rad])`，动作为目标前轮角 `δ_cmd[rad]∈[-0.5,0.5]` 与纵向加速度 `a_cmd[m/s²]∈[-4,2]`，固定 20 Hz、零阶保持，并显式加入 1 个 control step 的执行延迟。`reset(seed, route_id)` 必须同时重置车辆、控制队列、传感器时间戳和随机源；成功终止、碰撞/越界 terminal、时间上限 timeout 分开编码。还应登记坐标手性、yaw 正方向、转向速率/饱和、观测延迟和缺帧策略。这个合同只消除接口歧义，不证明 bicycle dynamics、高速轮胎或真实执行器正确。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-19-02：观测噪声破坏精确网格恢复</summary>
 
 可在 `EXP-19-01` 生成 observation 后加入固定 seed、零均值且幅度已登记的噪声，并保持校准/留出噪声独立。有限样本下，真实参数通常不再产生恰好零 residual，网格最优点会随 seed、噪声模型和分辨率变化；应报告多 seed 参数分布、置信/后验范围和 held-out 误差，而不是要求恢复唯一精确值。噪声减少信息，却不会解除原 fixture 的结构性 `gain×observation_scale` 等价：多个参数仍可产生同一无噪声 observation。加入更多算力或更细网格不能替代新测量。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-19-03：激励不足与结构混淆需要不同干预</summary>
 
 gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限轨迹上两组参数近似相同，但阶跃、脉冲、PRBS 或不同频率/幅度动作可让响应起点和幅值分离，这是 practical identifiability 问题。`gain×scale` 则是观测方程只看到乘积的结构对称性；无论重复多少同类动作，都不能唯一拆开两者。前者应设计满足安全约束的新动作并留出验证，后者需增加独立 state/标尺测量或固定其中一个已校准参数。若新传感器仍只测同一乘积，结构歧义仍在。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-19-04：MetaDrive 到 CARLA 的五类语义</summary>
 
 至少重新验证：① observation 的相机内外参、坐标系、同步与传感器噪声；② action 的转向/油门/制动含义、单位、范围、控制器与延迟；③车辆和接触动力学，包括轴距、轮胎、碰撞体与执行饱和；④ route/map/traffic 规则、道路边界、参与者行为和随机 seed；⑤ reset、成功、碰撞、越界、timeout、干预与无效运行的 episode 语义。还应锁定步频、天气和资产版本。只有把目标总体与分母映射清楚后才可比较共同指标；否则分别报告各环境结果和 gap，不把两个“success rate”相减。

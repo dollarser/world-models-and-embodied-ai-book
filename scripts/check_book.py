@@ -57,8 +57,11 @@ SELF_CHECK_SUMMARY_PATTERN = re.compile(
     r"<summary>SELF-CHECK-(\d{2})-(\d{2})：[^<\n]+</summary>"
 )
 SELF_CHECK_BLOCK_PATTERN = re.compile(
-    r"<details>\s*<summary>SELF-CHECK-(\d{2})-(\d{2})：[^<\n]+</summary>(.*?)</details>",
+    r'<details(?:\s+markdown="1")?>\s*<summary>SELF-CHECK-(\d{2})-(\d{2})：[^<\n]+</summary>(.*?)</details>',
     re.DOTALL,
+)
+MARKDOWN_SELF_CHECK_PATTERN = re.compile(
+    r'<details\s+markdown="1">\s*<summary>SELF-CHECK-\d{2}-\d{2}：[^<\n]+</summary>'
 )
 PRD_CHAPTER_HEADING_PATTERN = re.compile(r"^#### 第(\d+)章[^\n]*$", re.MULTILINE)
 EXPERIMENT_ID_PATTERN = re.compile(r"\bEXP-\d{2}-\d{2}\b")
@@ -433,10 +436,15 @@ def check_exercise_self_check_contract(
         for owner, number in SELF_CHECK_SUMMARY_PATTERN.findall(self_check_section)
     ]
     blocks = SELF_CHECK_BLOCK_PATTERN.findall(self_check_section)
-    if self_check_section.count("<details>") != self_check_section.count("</details>"):
+    if self_check_section.count("<details") != self_check_section.count("</details>"):
         errors.append(f"chapter {chapter_number} self-check details tags are unbalanced")
     if len(blocks) != len(summaries):
         errors.append(f"chapter {chapter_number} has a malformed or unclosed self-check block")
+    if len(MARKDOWN_SELF_CHECK_PATTERN.findall(self_check_section)) != len(summaries):
+        errors.append(
+            f'chapter {chapter_number} self-check blocks must use <details markdown="1"> '
+            "so Markdown content is rendered"
+        )
 
     duplicate_numbers = sorted(
         {number for owner, number in summaries if summaries.count((owner, number)) > 1}

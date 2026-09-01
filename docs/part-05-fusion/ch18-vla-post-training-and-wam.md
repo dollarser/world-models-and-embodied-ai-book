@@ -233,35 +233,35 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 
 先标出 episode、stage、rollout group 和独立评测环境四种分母。以下是满足题意的一组最小方案；开放设计可以不同，但必须保持对照变量和证据边界。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-18-01：episode 失败会丢掉正确阶段</summary>
 
 可增加动作 `(0.5,0.1)`、阶段结果 `[1,0]` 的轨迹，并预先定义第一阶段 oracle action 为 0.5。episode-level success-only 权重因最终失败而把两个动作都置零；step-level 权重 `[1,0]` 则保留第一阶段动作、丢弃第二阶段动作。按现有 fixture 的两个成功轨迹，episode-only 第一阶段 target 仍为 `(0.2+0.3)/2=0.25`；若阶段内等权加入新样本，则 phase-1 target 为 `(0.2+0.3+0.5)/3≈0.3333`。这只演示 credit assignment 差异；阶段标签本身若错误，也会把偏差更精细地传播。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-18-02：全同 reward 的 LOO 优势退化</summary>
 
 对大小为 `n>1` 的组，可写 `A_i=r_i-(Σ_{j≠i}r_j)/(n-1)`。若全成功 `r_i=1`，每个 `A_i=1-1=0`；若全失败 `r_i=0`，也全部为 0，因此这两组没有组内相对更新信号。测试应分别断言全成功、全失败为全零，并用混合组如 `[1,0,0]` 断言优势为 `[1,-0.5,-0.5]`。丢弃并重采全同组会改变任务分布，必须另报 attempted、discarded、resampled 和 used groups。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-18-03：五阶段任务的进度与恢复状态机</summary>
 
 例如“定位杯子→抓取→抬起→移动→放置”，每阶段都要有由当前观察判定的完成谓词，而不是只靠已发出的命令：杯子可见且定位置信足够、夹爪闭合且杯子随动、离桌高度达阈值、进入目标上方容差、释放且稳定。若连续 `K` 个检查周期进度量不改善或谓词互相矛盾，进入 `stuck`；先停止当前 chunk，再按阶段执行重观测、退回安全姿态、重抓或重新规划，并限制重试次数。恢复成功要重新满足阶段入口条件，失败/超时转受控停止。阈值、窗口、最大重试与转移日志均应冻结，不能用一次最终成功掩盖循环恢复。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-18-04：SimWAM 是辅助未来预测案例</summary>
 
 按本章当前公开实现说明，SimWAM 属于 `TAB-18-04` 的 auxiliary future prediction：action token 与 future-video token 隔离、两类 expert 不共享权重，部署时丢弃视频分支并走 action-only 路径。因果 ablation 应固定数据、action path、参数/训练预算和评测协议，只移除或置零 future-video loss/branch，比较 held-out 闭环 action outcome、碰撞和资源；若参数量变化，应再做容量匹配对照。仅比较视频 loss、或同时改变 action backbone，不能识别辅助未来预测的贡献。该分类不表示本书已复现其上游结果。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-18-05：cut-in 后训练的四列对照</summary>
 
 四列必须共享 policy 初始化/容量、动作 schema、观测、训练 cut-in 总暴露量或明确分成 data-added 与 compute-matched 两套协议：SFT 只用冻结示范；MetaDrive RL 用物理 simulator reward；learned-simulator RL 用版本锁定的 learned rollout/reward；第四列不训练，只把三个最终 checkpoint 放到未参与训练、调参或选择的 held-out CARLA route/seed。每列报告训练数据/rollout、成功、碰撞、干预、规则、舒适、尾部风险和资源；learned 列还报 model-vs-CARLA return gap 与排序。CARLA 语义若无法与训练环境对齐，应缩小可比指标而非直接排行成功率；任何碰撞 gate 恶化都不能被路线进度抵消。

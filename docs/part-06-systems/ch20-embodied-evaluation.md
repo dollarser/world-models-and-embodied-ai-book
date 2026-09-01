@@ -340,56 +340,56 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 
 统计练习先声明 estimand、独立采样单元和分母。下面的计算用于暴露不确定性与加权选择，不构成模型优越性的显著性证明。
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-20-01：90%/20 不能只凭点估计胜出</summary>
 
 若 A 的 90% 指 `18/20`、B 的 80% 指 `160/200`，按本章 Wilson 95% 公式，区间约为 A `[0.6990,0.9721]`、B `[0.7391,0.8495]`；A 点估计更高但不确定性更大且区间重叠。选择还要求两者共享任务总体、route/seed、成功定义、timeout、无效运行规则和资源预算，并预先定义风险/成本效用。不能由区间重叠推出“完全相同”，也不能因 A 区间更宽就自动选 B；应扩充配对或分层样本，报告 effect 与区间，再按决策损失判断。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-20-02：一次重试产生两个不同 estimand</summary>
 
 把每个 task/seed 最多运行两次，第二次只在首次失败后发生，并保存 `task_id, attempt_id, attempted, outcome, cost`。per-attempt 成功率的分母是所有实际 attempt，回答“任一执行尝试成功的概率”；best-of-two 的分母是 task，每个 task 只要一次成功即记成功，回答“允许该恢复政策后任务成功的概率”。若独立且每次成功率恒为 `p`，理论 best-of-two 为 `1-(1-p)^2`，但自适应重试通常不满足独立同分布，实测应按 task 聚合。报告还要包含平均/尾部尝试数、时延、干预与第二次尝试的安全风险；不能把 best-of-two 与只允许一次执行的部署系统直接比较。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-20-03：benchmark card 的已知与未知</summary>
 
 最低提取字段包括论文/代码 revision、环境与资产版本、任务/route/seed、观测和 action schema、控制频率、reset/termination/timeout、成功与安全定义、episode accounting、训练/选择/评测切分、基线公平性、重复次数/区间、资源和 evaluator。论文未明确的随机 seed、失败重试、技术无效运行、checkpoint 选择、相机延迟或统计独立单元必须标为 `unknown`，不能凭常见默认值补齐。提取结果应链接一手正文、补充材料或代码行，并区分作者报告与本书运行。字段缺失意味着可比性受限，不等价于论文方法错误。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-20-04：驾驶指标要保留速度与安全的 Pareto 关系</summary>
 
 不要只给可互相抵消的总分。至少并列 route completion/progress、到达时间或有效平均速度、碰撞/越界/红灯（按事件与每公里暴露量）、intervention、舒适、MRM 触发/完成和 P95/P99 latency；碰撞、动作越界和 MRM 失败作为硬 gate。先在 safety gate 内比较效率，或报告 safety–progress Pareto frontier，并按城市/高速、天气和稀有事件分层。这样“慢而安全”会在效率上暴露，“快而危险”会被安全 gate 拒绝。权重总分可作为次级摘要，但必须发布原始分项和预注册权重。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-20-05：不平衡 route 会改变目标量</summary>
 
 构造三条 route 的配对差：A 有 8 对且每对 candidate-baseline 为 `+1`，B、C 各 1 对且差为 `-1`。若目标是按实际 episode 暴露量，micro 差为 `(8-1-1)/10=0.6`；若目标是让每条 route 等权，macro 差为 `(1-1-1)/3≈-0.3333`，结论方向反转。cluster bootstrap 应有放回重采 3 条 route，再在每条 route 保留其成组观测，而不是把 10 对当独立样本。只有 3 个手工 cluster 时区间会很离散；它展示 estimand 敏感性，不提供可靠 population coverage。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-20-06：100 个 replay 不等于 100 条独立 route</summary>
 
 先写目标量：episode 行回答“一个独立抽取 episode 的事件概率”，route 行回答“一条独立抽取的新 route 在固定10次 replay 中至少出现一次事件的概率”。零事件精确式在 `n=100` 与 `n=10` 时分别给出 `0.029513` 和 `0.258866`，但它们不是同一参数，不能用后者除以前者宣称风险高约8.8倍，也不能把 `n=10` 当作未经模型证明的 per-episode 有效样本量。把固定重复数改为1还会改变 route-level outcome 本身，即使公式数值仍只由10个 cluster 决定。合格协议要保存 route/scene/seed/生成谱系、每 cluster 重复数和 cluster 内事件；缺少这些身份时停止总体上界发布。若要估计 per-episode 风险，应预先指定相关数据模型或稳健区间并验证假设；若目标是发现新场景失败，应增加独立 route 覆盖，而不是只重复已有 route。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-20-07：split 的角色由使用方式决定</summary>
 
 先按时间顺序列出候选配置、代码 revision、选择准则、每次读取的 split 与决策。只要某次 final 结果影响 checkpoint、prompt、阈值、重试政策或报告子集，它就已成为 selection evidence；改名、清缓存或换指标都不能恢复独立性。应冻结最终候选与协议，取得 lineage/route/scene/近重复簇均隔离的新 confirmation set，只运行一次并完整报告失败；若无法取得新数据，就把现有数值降级为探索性结果，删除独立泛化或公平排行声明。新确认结果也不证明没有其他污染，仍需审计生成谱系、人工反馈、benchmark API 查询和停止规则。
 
 </details>
 
-<details>
+<details markdown="1">
 <summary>SELF-CHECK-20-08：边际成功率不能恢复配对联合表</summary>
 
 先固定两张20对表的边际数都为 candidate `12/20`、baseline `8/20`。表A可取 `(both success,candidate only,baseline only,both failure)=(8,4,0,8)`，表B取 `(4,8,4,4)`；两者点差都是 `+0.2`，但 discordant cells 分别为 `4:0` 与 `8:4`。按正文 equal-tail exact conditional 公式，双侧值分别是 `0.125` 与 `0.387695`。合格解释必须保留四格 joint counts、pair identity、方向、效应点差和预注册检验版本；不能由两个 `p>0.05` 宣称等效，也不能把较小值解释为安全或实际收益。若 pair 嵌套于 route/scene/seed family，独立单元仍是 cluster，应使用预先规定的 cluster-aware 设计；McNemar 只保留 episode pairing，不会修复伪重复。多任务、阈值或策略比较还需另行处理 multiplicity，不能挑最有利的一张表报告。
