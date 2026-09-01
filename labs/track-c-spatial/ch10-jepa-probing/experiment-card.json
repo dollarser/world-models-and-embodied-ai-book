@@ -3,19 +3,21 @@
   "id": "EXP-10-01",
   "chapter": 10,
   "status": "smoke",
-  "claim_ids": ["CLAIM-10-02", "CLAIM-10-03"],
+  "claim_ids": ["CLAIM-10-02", "CLAIM-10-03", "CLAIM-10-06", "CLAIM-10-07"],
   "claim_scope": [
     "low reconstruction error need not imply that a representation retains the task variable under nuisance shift",
-    "a collapsed-representation negative control can detect an uninformative probing protocol"
+    "a collapsed-representation negative control can detect an uninformative probing protocol",
+    "an in-distribution probe can reward a nuisance shortcut that fails under a locked correlation shift",
+    "exact current-state readout does not imply that a predictor uses candidate actions correctly"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library hand-designed representation and shifted-probe fixture"
+    "config": "standard-library hand-designed representation, shifted-probe, and action-interface fixture"
   },
   "data": {
     "name": "procedural task-and-texture representation fixture",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -37,14 +39,23 @@
   "metrics": [
     {"name": "appearance_reconstruction_mse", "value": 1.25, "unit": "squared-signal", "split": "shifted-test"},
     {"name": "task_predictive_reconstruction_mse", "value": 125.0, "unit": "squared-signal", "split": "shifted-test"},
+    {"name": "appearance_in_distribution_probe_accuracy", "value": 1.0, "unit": "ratio", "split": "held-out-id-test"},
+    {"name": "task_predictive_in_distribution_probe_accuracy", "value": 1.0, "unit": "ratio", "split": "held-out-id-test"},
     {"name": "appearance_shifted_probe_accuracy", "value": 0.0, "unit": "ratio", "split": "shifted-test"},
     {"name": "task_predictive_shifted_probe_accuracy", "value": 1.0, "unit": "ratio", "split": "shifted-test"},
-    {"name": "collapsed_shifted_probe_accuracy", "value": 0.5, "unit": "ratio", "split": "shifted-test"}
+    {"name": "collapsed_shifted_probe_accuracy", "value": 0.5, "unit": "ratio", "split": "shifted-test"},
+    {"name": "action_blind_current_state_probe_rmse", "value": 0.0, "unit": "state", "split": "counterfactual-action-fixture"},
+    {"name": "action_conditioned_current_state_probe_rmse", "value": 0.0, "unit": "state", "split": "counterfactual-action-fixture"},
+    {"name": "action_blind_counterfactual_transition_rmse", "value": 1.0, "unit": "state", "split": "counterfactual-action-fixture"},
+    {"name": "action_conditioned_counterfactual_transition_rmse", "value": 0.0, "unit": "state", "split": "counterfactual-action-fixture"},
+    {"name": "action_blind_action_sensitivity", "value": 0.0, "unit": "state", "split": "counterfactual-action-fixture"},
+    {"name": "action_conditioned_action_sensitivity", "value": 2.0, "unit": "state", "split": "counterfactual-action-fixture"}
   ],
   "artifacts": ["results/ch10/EXP-10-01-smoke.json"],
   "limitations": [
     "hand-designed scalar representations rather than learned image or video encoders",
-    "four train and four shifted test samples without statistical uncertainty",
+    "four train, four held-out ID, four shifted, and eight transition samples without statistical uncertainty",
+    "action interfaces and exact transition rule are hand-authored rather than learned",
     "demonstrates metric non-equivalence, not relative performance of JEPA models"
   ]
 }

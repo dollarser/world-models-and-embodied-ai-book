@@ -22,11 +22,18 @@ def main() -> int:
         raise AssertionError("appearance representation must win reconstruction")
     if appearance["shifted_probe_accuracy"] >= predictive["shifted_probe_accuracy"]:
         raise AssertionError("task-predictive representation must win shifted probing")
+    if appearance["in_distribution_probe_accuracy"] != 1.0:
+        raise AssertionError("appearance shortcut must look successful in distribution")
+    action_metrics = metrics["action_interface"]
+    if action_metrics["action_blind"]["current_state_probe_rmse"] != 0.0:
+        raise AssertionError("action-blind interface must retain an exact current-state readout")
+    if action_metrics["action_blind"]["counterfactual_transition_rmse"] <= action_metrics["action_conditioned"]["counterfactual_transition_rmse"]:
+        raise AssertionError("action-conditioned interface must win counterfactual transition prediction")
 
     report = {
         "experiment_id": "EXP-10-01",
         "status": "smoke",
-        "scope": "hand-designed representation ranking reversal; not V-JEPA inference",
+        "scope": "hand-designed representation shift and action-interface diagnostics; not V-JEPA inference",
         "metrics": metrics,
         "gpu_verified": False,
     }

@@ -26,8 +26,8 @@
 | EXP-07-01 | `smoke` | 7 个单元测试；H=1/3、terminal value、扰动重规划和受限 Bellman gap | 三状态已知规则，不是 learned planning 性能 |
 | 第8章 在想象中学习 | `reviewed` | Dreamer V1–V4 谱系、λ-return、continuation、terminated/truncated bootstrap、误差传播、自动驾驶正文与四类审查 | world model、actor/critic 训练、上游 checkpoint、仿真和 GPU 未运行 |
 | EXP-08-01 | `smoke` | 12 个单元测试；λ=0/0.5/1 target、reward bias、终止后泄漏及截断误折叠造成 4 的 bootstrap loss | 标量解析序列，不是 Dreamer、策略改进或样本效率结果 |
-| 第10章 非生成式预测表示 | `reviewed` | 四类审查通过；JEPA 谱系、probe 协议与第5章非生成式边界 | 官方 checkpoint、真实数据与 GPU 未运行 |
-| EXP-10-01 | `smoke` | 5 个单元测试；重建与 shifted probe 排名反转 | 手工标量表征，不是 JEPA 性能 |
+| 第10章 非生成式预测表示 | `reviewed` | 四类审查通过；JEPA 2.1 一手资料核验、ID/shift probe 协议、动作接口边界与第5/11章衔接 | 官方 checkpoint、真实数据与 GPU 未运行 |
+| EXP-10-01 | `smoke` | 12 个单元测试；重建排名反转、ID 100%→shift 0% 捷径、状态可读但动作盲反事实失败 | 手工标量表征与确定性接口，不是 JEPA、因果或规划性能 |
 | 第11章 动作条件视频世界模型 | `reviewed` | 四类审查通过；动作反事实、生成式谱系与 renderer/simulator/planner 边界 | 视频训练、checkpoint、仿真和 GPU 未运行 |
 | EXP-11-01 | `smoke` | 6 个单元测试；动作敏感性与未见序列组合 | 确定性网格和 ASCII 帧，不是视频模型 |
 | 第12章 可行动的空间表征 | `reviewed` | 3D 零基础入口、三态 occupancy、动态空间、affordance、自动驾驶正文与四类审查 | 真实 RGB-D/驾驶数据、学习模型、仿真和 GPU 均未运行 |
@@ -52,6 +52,6 @@
 | EXP-21-01 | `smoke` | 9 个单元测试；mean 45 ms 掩盖 150 ms 尾部，六类异常分别拒绝；两个阈值展示 coverage—failure 取舍 | 手工 latency/packet/score/label，不是实时、OOD 或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 12 个单元测试；完整包 5 段 trace/0 issue，无效包 16 个具名 issue，缺段与错误依赖被拒绝 | metadata 图检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、190 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、197 个章节单元测试、22 组结果精确比对、27 个 HTML/986 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸/可访问性巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

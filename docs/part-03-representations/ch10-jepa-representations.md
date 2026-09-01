@@ -1,10 +1,10 @@
 # 第10章 非生成式预测表示：从 I-JEPA 到 V-JEPA 2.x
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-10-01`
-> 关联声明：`CLAIM-10-01`～`CLAIM-10-05`
-> 关联图表：`FIG-10-01` / `TAB-10-01` / `TAB-10-02`
+> 关联声明：`CLAIM-10-01`～`CLAIM-10-07`
+> 关联图表：`FIG-10-01` / `TAB-10-01` / `TAB-10-02` / `TAB-10-03`
 > 资源档位：S / M
 > GPU 状态：待验证
 
@@ -111,7 +111,7 @@ probe 固定或部分固定 encoder，只训练受限读出器。线性 probe �
 - OOD、遮挡和时间反转下是否稳定；
 - 闭环策略是否因此更安全或成功。
 
-协议至少锁定 backbone/checkpoint、层、token、池化、归一化、head 容量、优化器、数据划分和随机种子。只比较“linear probe”而不统一这些字段，不构成公平比较。
+协议至少锁定 backbone/checkpoint、层、token、池化、归一化、head 容量、优化器、数据划分和随机种子。只比较“linear probe”而不统一这些字段，不构成公平比较。训练分数也不能冒充泛化证据：至少要保留未参与拟合的同分布（ID）测试集，再增加预先定义的 nuisance shift；否则无法区分“probe 学会了任务变量”和“probe 学会了训练环境中恰好相关的背景”。
 
 最小 probe 矩阵应包含：
 
@@ -127,7 +127,7 @@ probe 固定或部分固定 encoder，只训练受限读出器。线性 probe �
 
 ## 10.6 EXP-10-01：重建与任务 probe 排名反转
 
-本章 S0 smoke 构造两个信号分量：低幅度的任务变量和高幅度纹理。训练集纹理与任务同向，测试集将纹理相关性反转。三个手工表征分别保留纹理、任务变量或全部坍塌。
+本章 S0 smoke 构造两个信号分量：低幅度的任务变量和高幅度纹理。probe 仅用四个训练样本拟合，再在未参与拟合的四个 ID 样本和四个纹理相关性反转样本上评测。三个手工表征分别保留纹理、任务变量或全部坍塌。这个双测试集设计特意让外观捷径先“看起来有效”，再暴露其失效。
 
 ```bash
 make ch10-test-local
@@ -135,11 +135,11 @@ make ch10-smoke-local
 make ch10-smoke
 ```
 
-| 表征 | 重建 MSE ↓ | shifted probe accuracy ↑ | shifted task RMSE ↓ |
-| --- | ---: | ---: | ---: |
-| appearance | **1.25** | 0% | 3.16228 |
-| task-predictive | 125.00 | **100%** | **0.00000** |
-| collapsed | 126.25 | 50% | 1.58114 |
+| 表征 | 重建 MSE ↓ | ID probe accuracy ↑ | shifted probe accuracy ↑ | shifted task RMSE ↓ |
+| --- | ---: | ---: | ---: | ---: |
+| appearance | **1.25** | **100%** | 0% | 3.16228 |
+| task-predictive | 125.00 | **100%** | **100%** | **0.00000** |
+| collapsed | 126.25 | 50% | 50% | 1.58114 |
 
 *TAB-10-02：`EXP-10-01` 的固定排名反转。表征为手工标量函数，不是 JEPA checkpoint。*
 
@@ -147,11 +147,26 @@ make ch10-smoke
 
 `CLAIM-10-03`（result）：同一实验的 collapsed 表征在平衡测试集上取得 50% accuracy，作为 probe 管线的负对照；若它异常高，应先查标签泄漏、样本重复或度量实现。
 
-该实验没有图像、视频、模型参数或训练，不估计 V-JEPA 的能力。其价值是建立官方特征到来前就能测试的评测合同。
+`CLAIM-10-06`（result）：appearance 与 task-predictive 在未参与拟合的 ID 集上都取得 100%，但纹理相关性反转后前者降至 0%、后者保持 100%。该固定反例表明，单独报告 ID probe 会把 nuisance shortcut 与稳定任务信息混为一谈；四样本结果不估计真实模型的 OOD 性能。
+
+### 10.6.1 可读状态不等于动作条件转移
+
+同一 fixture 还提供一个与第11章衔接的解析诊断。`action_blind` 与 `action_conditioned` 接口都原样暴露当前状态，所以受限的当前状态 probe 都是零误差；给定候选动作 \(a\in\{-1,+1\}\) 时，真实规则为 \(s_{t+1}=s_t+a_t\)，只有后者把动作送入 predictor。动作敏感度定义为相同状态下两个候选动作预测之差的绝对值再取均值。
+
+| predictor 接口 | 当前状态 probe RMSE ↓ | 反事实转移 RMSE ↓ | 动作敏感度 ↑ |
+| --- | ---: | ---: | ---: |
+| action-blind | **0.0** | 1.0 | 0.0 |
+| action-conditioned | **0.0** | **0.0** | 2.0 |
+
+*TAB-10-03：`EXP-10-01` 的动作接口诊断。数值来自八条手工确定性转移，不是学习模型、因果发现或规划实验。*
+
+`CLAIM-10-07`（result）：两个手工接口的当前状态 probe RMSE 都为 0，但 action-blind 接口的反事实转移 RMSE 为 1、动作敏感度为 0；action-conditioned 接口对应为 0 和 2。这只证明状态可读性不足以验证 predictor 是否使用动作，不证明动作条件模型会规划。
+
+该实验没有图像、视频、模型参数或训练，不估计 V-JEPA 的能力。其价值是建立官方特征到来前就能测试的评测合同，并把“表示信息”“动作接口”和“规划用途”拆成不同验收项。
 
 ## 10.7 官方特征路径：S1/M 档而非本次实测
 
-当前机器不下载 checkpoint。后续在资源允许时，先选择官方 V-JEPA 2.1 ViT-B/16 作为 S1 推理候选，而不是从 1B/2B 模型开始。执行前需要：
+当前机器不下载 checkpoint。截至 2026-09-01，官方仓库列出的最小 V-JEPA 2.1 checkpoint 是 80M 参数、384 分辨率的 ViT-B/16，并提供 `vjepa2_1_vit_base_384` PyTorch Hub 入口；因此后续先把它作为 S1 **推理候选**，而不是从 1B/2B 模型开始。这是型号存在性与资源排序，不是 24 GB 可运行结论。执行前需要：
 
 1. 锁定 `facebookresearch/vjepa2` commit、checkpoint URL 与校验和；
 2. 核验模型权重、代码和输入视频的各自许可；
@@ -159,6 +174,8 @@ make ch10-smoke
 4. 用可再分发微型视频跑 shape、确定性、时间顺序和层选择 smoke；
 5. 冻结 backbone，比对常数、随机、单帧和时间打乱基线；
 6. 只有实测后才能填写 24 GB 单卡可行性。
+
+官方预训练配置面向多节点多 GPU，不能由 80M 参数量反推本书单卡可训练。官方 README 还指出其默认 `decord` 在 macOS 上不受支持，替代实现由使用者自行选择；本书因此优先在锁版本的 Linux Docker 环境做 S1 预检，并把宿主机直接安装保留为可选路径。容器化能固定依赖，不能消除 checkpoint 显存、数据许可或上游兼容性风险。
 
 官方仓库当前说明大部分代码为 MIT，少量数据增强文件为 Apache-2.0；这不意味着所有 checkpoint、训练数据和下游数据自动继承 MIT。当前实验卡因此只覆盖本书 MIT fixture。
 
@@ -192,7 +209,8 @@ M 档可在经许可的少量第一人称视频上训练轻量 masked predictor 
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 重建与 shifted probe 排名反转 | `EXP-10-01` | CPU smoke | 手工标量表征 |
+| 本书结果 | ID/shift probe 捷径与重建排名反转 | `EXP-10-01` | CPU smoke | 手工标量表征、样本极少 |
+| 本书结果 | 状态可读与动作条件转移分离 | `EXP-10-01` | CPU smoke | 手工接口与确定性规则 |
 | 方法事实 | I-JEPA/V-JEPA 预测 latent 目标 | 原论文/官方代码 | `[A/O,R1]` | 本书未运行 |
 | 方法更新 | V-JEPA 2.1 加入 dense loss 与深层监督 | 2026 预印本/官方代码 | `[A/O,R1]` | 论文结果未复现 |
 | 未验证 | 官方 ViT-B 特征的微型 probing | 后续 S1 | planned | checkpoint 未下载 |
@@ -206,7 +224,7 @@ JEPA 把预测目标从像素移到表示空间，使模型可以忽略部分不
 ## 练习
 
 1. **概念判断**：某 encoder 的动作分类 probe 更高，能否声称它更适合机器人规划？列出缺失证据。
-2. **代码实验**：改变 `EXP-10-01` 中纹理幅度和 train/test 相关性，绘制指标翻转区域。
+2. **代码实验**：改变 `EXP-10-01` 中纹理幅度和 train/ID/shift 相关性，绘制三个 split 的指标翻转区域。
 3. **负对照**：添加随机高维特征，说明小样本 probe 如何过拟合。
 4. **视频协议**：设计时间反转和帧打乱 probe，分别测试静态捷径与时间方向。
 5. **自动驾驶迁移**：为相对速度、车道偏移和 TTC 定义 route-disjoint split 与单位。
@@ -222,7 +240,7 @@ JEPA 把预测目标从像素移到表示空间，使模型可以忽略部分不
 
 ## 下一章接口
 
-第11章将给 predictor 加入动作条件并要求 counterfactual 未来；第12章会检查 dense token 是否保留深度、occupancy 和可行动空间。`EXP-10-01` 的负对照和 shifted probe 继续作为两章准入门禁。
+第11章将给 predictor 加入动作条件并要求 counterfactual 未来；第12章会检查 dense token 是否保留深度、occupancy 和可行动空间。`EXP-10-01` 的 ID/shift 对照、collapsed 负对照和 action sensitivity 继续作为两章准入门禁。
 
 ## 验收与审查记录
 
@@ -237,6 +255,6 @@ JEPA 把预测目标从像素移到表示空间，使模型可以忽略部分不
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`；
+- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch10-probe-shift-action-review-2026-09-01.md`；
 - 已知限制：没有下载或运行任何 I-JEPA/V-JEPA checkpoint，也没有第一人称或驾驶数据；
-- 下一步：官方 ViT-B 微型推理仍待可用 GPU；当前生成式/非生成式目标已与第5章核对。
+- 下一步：官方 ViT-B 微型推理仍待可用 GPU；其 24 GB 推理占用、macOS/Docker 解码路径与真实视频 probe 均保持待验证。

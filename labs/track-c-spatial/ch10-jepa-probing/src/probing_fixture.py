@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from math import sqrt
+from math import isfinite, sqrt
 
 
 TRAIN = tuple(
@@ -13,27 +13,55 @@ TEST = tuple(
     {"task": task, "texture": -10.0 * task}
     for task in (-2.0, -1.0, 1.0, 2.0)
 )
+ID_TEST = tuple(
+    {"task": task, "texture": 10.0 * task}
+    for task in (-1.5, -0.5, 0.5, 1.5)
+)
+PROBE_SPLITS = {"in_distribution": ID_TEST, "shifted": TEST}
+REPRESENTATIONS = ("appearance", "task_predictive", "collapsed")
+
+TRANSITIONS = tuple(
+    {"state": state, "action": action, "next_state": state + action}
+    for state in (-2.0, -1.0, 1.0, 2.0)
+    for action in (-1.0, 1.0)
+)
+ACTION_INTERFACES = ("action_blind", "action_conditioned")
+
+
+def _require_representation(representation: str) -> None:
+    if representation not in REPRESENTATIONS:
+        raise ValueError(f"unknown representation: {representation}")
+
+
+def _require_sample(sample: dict[str, float]) -> None:
+    if set(sample) != {"task", "texture"}:
+        raise ValueError("sample must contain exactly task and texture")
+    if any(isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value) for value in sample.values()):
+        raise ValueError("sample values must be finite real numbers")
 
 
 def encode(sample: dict[str, float], representation: str) -> float:
+    _require_sample(sample)
+    _require_representation(representation)
     if representation == "appearance":
         return sample["texture"]
     if representation == "task_predictive":
         return sample["task"]
     if representation == "collapsed":
         return 0.0
-    raise ValueError(f"unknown representation: {representation}")
+    return 0.0
 
 
 def reconstruct(feature: float, representation: str) -> tuple[float, float]:
     """Return a deliberately restricted decoder for the two signal components."""
+    _require_representation(representation)
     if representation == "appearance":
         return (0.0, feature)
     if representation == "task_predictive":
         return (feature, 0.0)
     if representation == "collapsed":
         return (0.0, 0.0)
-    raise ValueError(f"unknown representation: {representation}")
+    return (0.0, 0.0)
 
 
 def reconstruction_mse(representation: str) -> float:
@@ -52,15 +80,19 @@ def fit_centroid_probe(representation: str) -> tuple[float, float]:
     return (sum(negative) / len(negative), sum(positive) / len(positive))
 
 
-def probe_accuracy(representation: str) -> float:
+def probe_accuracy(representation: str, split: str = "shifted") -> float:
+    """Fit on TRAIN and score on an explicit, held-out evaluation split."""
+    if split not in PROBE_SPLITS:
+        raise ValueError(f"unknown probe split: {split}")
     negative_centroid, positive_centroid = fit_centroid_probe(representation)
     correct = 0
-    for sample in TEST:
+    evaluation_samples = PROBE_SPLITS[split]
+    for sample in evaluation_samples:
         feature = encode(sample, representation)
         predicted_positive = abs(feature - positive_centroid) <= abs(feature - negative_centroid)
         target_positive = sample["task"] > 0
         correct += predicted_positive == target_positive
-    return correct / len(TEST)
+    return correct / len(evaluation_samples)
 
 
 def task_regression_rmse(representation: str) -> float:
@@ -77,12 +109,48 @@ def task_regression_rmse(representation: str) -> float:
     return sqrt(sum(errors) / len(errors))
 
 
-def evaluate() -> dict[str, dict[str, float]]:
+def predict_next_state(state: float, action: float, interface: str) -> float:
+    """Two hand-authored predictor interfaces sharing an exact state readout."""
+    if interface not in ACTION_INTERFACES:
+        raise ValueError(f"unknown action interface: {interface}")
+    if any(isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value) for value in (state, action)):
+        raise ValueError("state and action must be finite real numbers")
+    if interface == "action_conditioned":
+        return state + action
+    return state
+
+
+def action_interface_metrics(interface: str) -> dict[str, float]:
+    """Separate current-state readability from counterfactual transition use."""
+    _ = predict_next_state(0.0, 0.0, interface)
+    state_probe_errors = [(sample["state"] - sample["state"]) ** 2 for sample in TRANSITIONS]
+    transition_errors = [
+        (predict_next_state(sample["state"], sample["action"], interface) - sample["next_state"]) ** 2
+        for sample in TRANSITIONS
+    ]
+    sensitivities = [
+        abs(predict_next_state(state, 1.0, interface) - predict_next_state(state, -1.0, interface))
+        for state in (-2.0, -1.0, 1.0, 2.0)
+    ]
     return {
+        "current_state_probe_rmse": sqrt(sum(state_probe_errors) / len(state_probe_errors)),
+        "counterfactual_transition_rmse": sqrt(sum(transition_errors) / len(transition_errors)),
+        "action_sensitivity": sum(sensitivities) / len(sensitivities),
+    }
+
+
+def evaluate() -> dict[str, dict[str, float] | dict[str, dict[str, float]]]:
+    metrics: dict[str, dict[str, float] | dict[str, dict[str, float]]] = {
         representation: {
             "reconstruction_mse": reconstruction_mse(representation),
-            "shifted_probe_accuracy": probe_accuracy(representation),
+            "in_distribution_probe_accuracy": probe_accuracy(representation, "in_distribution"),
+            "shifted_probe_accuracy": probe_accuracy(representation, "shifted"),
             "shifted_task_rmse": task_regression_rmse(representation),
         }
-        for representation in ("appearance", "task_predictive", "collapsed")
+        for representation in REPRESENTATIONS
     }
+    metrics["action_interface"] = {
+        interface: action_interface_metrics(interface)
+        for interface in ACTION_INTERFACES
+    }
+    return metrics
