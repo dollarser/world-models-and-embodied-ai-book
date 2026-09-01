@@ -1,3 +1,4 @@
+from math import sin
 from pathlib import Path
 import sys
 import unittest
@@ -17,6 +18,8 @@ from bridge_fixture import (  # noqa: E402
     inverse_transform,
     occupancy_cells,
     project,
+    temporal_alignment_audit,
+    temporal_transform_error,
     transform_point,
     transform_yaw_translation,
 )
@@ -111,6 +114,40 @@ class GeometryControlBridgeTests(unittest.TestCase):
         for steps in (0, -1, True, 1.5):
             with self.subTest(steps=steps), self.assertRaises(ValueError):
                 control_audit(steps)
+
+    def test_linear_timestamp_error_matches_velocity_times_offset(self):
+        result = temporal_alignment_audit()["translation_only"]
+        self.assertEqual(result["timestamp_offset_s"], -0.1)
+        self.assertEqual(result["spatial_error_m"], 0.2)
+
+    def test_rotational_timestamp_error_matches_chord_distance(self):
+        result = temporal_alignment_audit()["rotation_only"]
+        expected = 2.0 * 10.0 * sin(0.05 / 2.0)
+        self.assertAlmostEqual(result["spatial_error_m"], expected)
+
+    def test_timestamp_matched_transform_has_zero_error(self):
+        result = temporal_alignment_audit()["timestamp_matched"]
+        self.assertEqual(result["timestamp_offset_s"], 0.0)
+        self.assertEqual(result["spatial_error_m"], 0.0)
+
+    def test_temporal_transform_rejects_invalid_point_time_and_velocity(self):
+        valid = {
+            "world_x_velocity_mps": 2.0,
+            "yaw_rate_radps": 0.5,
+            "sensor_time_s": 1.0,
+            "pose_time_s": 0.9,
+        }
+        with self.assertRaises(ValueError):
+            temporal_transform_error((1.0, 2.0), **valid)
+        for field, value in (
+            ("world_x_velocity_mps", True),
+            ("yaw_rate_radps", float("nan")),
+            ("sensor_time_s", float("inf")),
+        ):
+            changed = dict(valid)
+            changed[field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                temporal_transform_error((10.0, 0.0, 0.0), **changed)
 
 
 if __name__ == "__main__":

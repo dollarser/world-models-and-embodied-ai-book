@@ -20,9 +20,45 @@
       "occupied_bev_cells": [[6, 0], [10, -1], [10, 0]],
       "off_axis_z_depth_to_range_ratio": 1.4142135623730951,
       "optical_forward_axis_in_body": [1.0, 0.0, 0.0],
-      "point_count": 3
+      "point_count": 3,
+      "temporal_alignment": {
+        "rotation_only": {
+          "point_range_m": 10.0,
+          "pose_time_s": 0.9,
+          "pose_time_world_point_m": [9.004471023527, 4.349655341112, 0.0],
+          "sensor_time_s": 1.0,
+          "spatial_error_m": 0.499947918294,
+          "timestamp_matched_world_point_m": [8.775825618904, 4.794255386042, 0.0],
+          "timestamp_offset_s": -0.1,
+          "world_x_velocity_mps": 0.0,
+          "yaw_rate_radps": 0.5
+        },
+        "scope": "constant world-x velocity and yaw-rate timestamp fixture; not motion estimation",
+        "timestamp_matched": {
+          "point_range_m": 10.0,
+          "pose_time_s": 1.0,
+          "pose_time_world_point_m": [10.775825618904, 4.794255386042, 0.0],
+          "sensor_time_s": 1.0,
+          "spatial_error_m": 0.0,
+          "timestamp_matched_world_point_m": [10.775825618904, 4.794255386042, 0.0],
+          "timestamp_offset_s": 0.0,
+          "world_x_velocity_mps": 2.0,
+          "yaw_rate_radps": 0.5
+        },
+        "translation_only": {
+          "point_range_m": 10.0,
+          "pose_time_s": 0.9,
+          "pose_time_world_point_m": [11.8, 0.0, 0.0],
+          "sensor_time_s": 1.0,
+          "spatial_error_m": 0.2,
+          "timestamp_matched_world_point_m": [12.0, 0.0, 0.0],
+          "timestamp_offset_s": -0.1,
+          "world_x_velocity_mps": 2.0,
+          "yaw_rate_radps": 0.0
+        }
+      }
     }
   },
-  "scope": "exact RGB-D geometry and planar feedback fixtures; not calibrated hardware",
+  "scope": "exact RGB-D, temporal-transform, and planar feedback fixtures; not calibrated hardware",
   "status": "smoke"
 }

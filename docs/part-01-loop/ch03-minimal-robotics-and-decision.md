@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-03-01`
-> 关联声明：`CLAIM-03-01`～`CLAIM-03-08`
-> 关联图表：`FIG-03-01` / `FIG-03-02` / `TAB-03-01` / `TAB-03-02` / `TAB-03-03`
+> 关联声明：`CLAIM-03-01`～`CLAIM-03-09`
+> 关联图表：`FIG-03-01` / `FIG-03-02` / `TAB-03-01` / `TAB-03-02` / `TAB-03-03` / `TAB-03-04`
 > 资源档位：S
 > GPU 状态：不需要
 
@@ -36,7 +36,8 @@
 3. 将少量点栅格化为简化 occupancy/BEV；
 4. 区分关节、末端、车辆和高层动作；
 5. 说明 MDP 与 POMDP 中状态、观测、信念、规划和策略的关系；
-6. 定位轴向、单位、外参、时间同步和控制频率错误。
+6. 定位轴向、单位、外参、时间同步和控制频率错误；
+7. 由位姿时间偏移和已知运动，量化一个点的空间错位，而不把“最新位姿”误当成“采样时位姿”。
 
 ## 3.1 先建立闭环，而不是先背术语
 
@@ -135,6 +136,37 @@ p_world = T_world_body @ T_body_camera @ p_camera
 
 [Modern Robotics](https://modernrobotics.northwestern.edu/nu-gm-book-resource/) 系统讲解刚体运动、齐次变换和 `SE(3)`；本章只提取后续学习系统需要的接口，完整推导交给该开放教材。
 
+### 3.3.1 时间戳也是几何的一部分
+
+若传感器在 $t_s$ 采到本体点 ${}^{body}p$，把它放进世界坐标时需要的是同一采样时刻的位姿：
+
+\[
+{}^{world}p(t_s)=T_{world\leftarrow body}(t_s)\,{}^{body}p,
+\]
+
+而不是消息到达或融合线程运行时的“最新位姿” $T_{world\leftarrow body}(t_p)$。两者的数组 shape 完全相同，错误却会直接变成空间错位。仅有平移、速度为常数时，错位大小为
+
+\[
+\epsilon_{trans}=|v_x|\,|\Delta t|,
+\qquad \Delta t=t_p-t_s.
+\]
+
+仅有平面转动时，距离旋转中心为 $r$ 的点产生弦长误差
+
+\[
+\epsilon_{rot}=2r\sin\left(\frac{|\omega\Delta t|}{2}\right).
+\]
+
+| 固定情形 | 点到旋转中心 | 运动 | `sensor_time / pose_time` | 空间误差 |
+| --- | ---: | --- | ---: | ---: |
+| 仅平移 | 10 m | $v_x=2$ m/s | 1.0 / 0.9 s | 0.20 m |
+| 仅转动 | 10 m | $\omega=0.5$ rad/s | 1.0 / 0.9 s | 0.499947918294 m |
+| 时间匹配 | 10 m | $v_x=2$ m/s，$\omega=0.5$ rad/s | 1.0 / 1.0 s | 0 m |
+
+*TAB-03-04：`EXP-03-01` 的解析时间错位夹具。平移和转动行是两个独立对照；不能把两行误差简单相加来近似一般 `SE(3)` 运动。*
+
+真实链路还要分别处理 clock offset、传输/排队延迟、一次扫描或 rolling shutter 内部的采样跨度，以及位姿插值。ROS 2 [`tf2` 时间旅行接口](https://docs.ros.org/en/lyrical/Tutorials/Intermediate/Tf2/Time-Travel-With-Tf2-Cpp.html)显式区分 source time、target time 与 fixed frame；Autoware 的 [point-cloud distortion corrector](https://autowarefoundation.github.io/autoware_universe/pr-10077/sensing/autoware_pointcloud_preprocessor/docs/distortion-corrector/)则按点时间戳结合 twist/IMU 做运动补偿，并把输入同步作为前提。这些接口说明“使用最新 transform”并不等价于“时间已经对齐”；本书没有运行 ROS 或 Autoware，也不据此声称完成真实 deskew。
+
 ## 3.4 点云、遮挡与简化 BEV
 
 对每个有效深度像素执行反投影，就得到相机坐标点云。点云不是完整世界：它只包含传感器当前能看到且返回有效深度的表面。物体背后、视野外和透明/反光区域应标记为未知，不能默认为空闲。
@@ -203,9 +235,9 @@ y=l_1\sin q_1+l_2\sin(q_1+q_2).
 
 `CLAIM-03-04`（fact）：在部分可观测任务中，单次观测通常不足以等同真实状态；历史或状态估计器用于形成任务相关信念。该定义与第2章术语契约一致。
 
-## 3.8 EXP-03-01：几何与反馈的两个精确 smoke
+## 3.8 EXP-03-01：几何、时间与反馈的三个精确 smoke
 
-实验完全使用 Python 标准库和程序化 fixture：三个 RGB-D 像素先反投影、变换和栅格化；二维机械臂再比较固定开环增量与带噪观测的比例反馈。
+实验完全使用 Python 标准库和程序化 fixture：三个 RGB-D 像素先反投影、变换和栅格化；同一 body 点用匹配/过期位姿变到世界坐标；二维机械臂再比较固定开环增量与带噪观测的比例反馈。
 
 ```bash
 make ch03-test-local
@@ -222,6 +254,9 @@ make ch03-smoke
 | 外参 x 偏移注入 | 0.10 m | 点云整体系统性平移 |
 | 错用单位轴映射的平均点误差 | 2.35718 m | 投影闭合不能检出 frame 轴误用 |
 | 离轴 z-depth / 同数值 range 比 | 1.41421× | z-depth 与射线距离不能混用 |
+| 2 m/s 平移中的 100 ms 过期位姿 | 0.20 m | 时间偏移可直接成为空间平移误差 |
+| 0.5 rad/s 转动中的 100 ms 过期位姿（10 m 点） | 0.49995 m | 转动错位还依赖点到旋转中心的距离 |
+| 匹配时间戳的位姿 | 0 m | 固定解析模型的零偏移基线 |
 | 固定开环末端误差 | 0.12595 m | 执行偏差逐步累积 |
 | 观测反馈末端误差 | 0.01905 m | 在本 fixture 中反馈减小误差 |
 
@@ -235,7 +270,9 @@ make ch03-smoke
 
 `CLAIM-03-07`（result）：在归一化离轴坐标 `(1,0)` 上，把数值 1 m 当作 z-depth 得到的射线距离为 1.41421 m；这证明 z-depth 与 range 的接口不可混用，不估计真实深度传感器误差。
 
-`CLAIM-03-08`（result）：`EXP-03-01` v3 将 `T_world_body @ T_body_camera` 的组合结果与逐段作用于三个点的结果比较，最大差为 0 m；测试同时拒绝缩放、镜像和剪切矩阵作为 rotation。它验证固定变换实现与输入合同，不证明真实外参或定位正确。
+`CLAIM-03-08`（result）：`EXP-03-01` v4 保留了 v3 的刚体链检查：将 `T_world_body @ T_body_camera` 的组合结果与逐段作用于三个点的结果比较，最大差为 0 m；测试同时拒绝缩放、镜像和剪切矩阵作为 rotation。它验证固定变换实现与输入合同，不证明真实外参或定位正确。
+
+`CLAIM-03-09`（result）：`EXP-03-01` v4 在常数 world-x 平移与常数 yaw 的解析夹具中，分别把 100 ms 过期位姿映射为 0.20 m 平移误差，以及 10 m 点上的 0.499947918294 m 转动误差；匹配时间戳时误差为 0 m。这只验证单点、精确时间戳和手工运动参数下的变换合同，不是 localization、pose interpolation、scan deskew、clock synchronization 或真实传感器精度结果。
 
 ## 3.9 六类错误的定位顺序
 
@@ -310,13 +347,14 @@ episode:
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 本书结果 | 反投影 round trip 与错误注入可检出 | `EXP-03-01` | CPU smoke | 三个理想像素 |
+| 本书结果 | 过期位姿产生可计算的空间错位 | `EXP-03-01` | CPU smoke | 单点、常速度/常 yaw 解析模型 |
 | 本书结果 | 反馈降低固定二维控制误差 | `EXP-03-01` | CPU smoke | 无动力学与接触 |
 | 开放教材 | `SE(3)`、运动学与操作系统框架 | Modern Robotics / MIT notes | `[O,R1]` | 本书未运行配套栈 |
 | 官方规范 | ROS 单位和移动 frame 约定 | REP-103/105 | `[O,R1]` | 数据源可采用不同约定 |
 
 实验下载量 0、无需 GPU、无外部数据或硬件；代码、fixture、结果和本书原创图按 MIT 发布。外部教材和规范保持各自许可，只提供链接，不复制其图表。
 
-真实系统还会受到畸变、滚动快门、深度空洞、温漂、外参变化、关节回差、接触、延迟和急停链路影响。S 档 smoke 只证明公式和接口在固定输入上运行，不能证明标定、控制稳定性、实时性或功能安全。
+真实系统还会受到畸变、滚动快门、深度空洞、温漂、外参变化、clock drift、位姿插值误差、扫描内运动、关节回差、接触、延迟和急停链路影响。S 档 smoke 只证明公式和接口在固定输入上运行，不能证明标定、时间同步、deskew、控制稳定性、实时性或功能安全。
 
 ## 小结
 
@@ -329,6 +367,7 @@ episode:
 3. **几何练习**：将 body 点变回 camera，验证正逆变换 round trip；再故意把 optical→body 旋转改成单位矩阵，解释为何像素 round trip 仍不报警。
 4. **控制练习**：把动作频率从 20 Hz 改为 5 Hz，同时保持每秒速度含义不变；指出代码需要改哪些量。
 5. **自动驾驶迁移**：为前视相机、车辆状态和规划轨迹填写本章 schema，并设计一次 100 ms 时间错位注入。
+6. **数量级练习**：车辆以 15 m/s 平移时，50 ms 过期位姿会产生多大平移误差？再说明为什么 yaw 造成的误差还需要点的距离才能确定。
 
 ## 延伸阅读
 
@@ -336,6 +375,8 @@ episode:
 - Tedrake, [Robotic Manipulation: Perception, Planning, and Control](https://manipulation.mit.edu/)，持续更新的开放课程笔记；
 - OpenCV, [Camera Calibration 官方文档](https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html)，相机模型和标定接口；
 - ROS, [REP-103](https://www.ros.org/reps/rep-0103.html) 与 [REP-105](https://www.ros.org/reps/rep-0105.html)，单位、坐标与移动平台 frame；
+- ROS 2, [tf2：Traveling in time](https://docs.ros.org/en/lyrical/Tutorials/Intermediate/Tf2/Time-Travel-With-Tf2-Cpp.html)，source/target time 与 fixed frame 的显式时间变换；
+- Autoware, [Distortion Corrector](https://autowarefoundation.github.io/autoware_universe/pr-10077/sensing/autoware_pointcloud_preprocessor/docs/distortion-corrector/)，按点时间戳与运动信息补偿扫描内畸变；
 - Sutton & Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html)，MDP 与序贯决策的系统教材。
 
 ## 下一章接口
@@ -355,6 +396,6 @@ episode:
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch03-rigid-transform-bridge-review-2026-09-01.md`；
-- 已知限制：没有真实相机、机器人、畸变、动力学、接触或时间同步运行；
-- 下一步：M 档再加入真实标定、畸变与时间错位数据；当前 S 档接口已与第4、12、13、19章核对。
+- 审查记录路径：`reviews/ch03-temporal-alignment-review-2026-09-01.md`；
+- 已知限制：没有真实相机、机器人、畸变、动力学、接触、clock synchronization、pose interpolation 或 scan deskew 运行；
+- 下一步：M 档再加入合法真实数据上的标定、畸变、时间同步与运动补偿审计；当前 S 档接口已与第4、12、13、19章核对。

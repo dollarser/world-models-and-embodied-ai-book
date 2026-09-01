@@ -152,6 +152,86 @@ def transform_yaw_translation(
     return transform_point(point, rotation, translation_m)
 
 
+def temporal_transform_error(
+    point_body_m: tuple[float, float, float],
+    *,
+    world_x_velocity_mps: float,
+    yaw_rate_radps: float,
+    sensor_time_s: float,
+    pose_time_s: float,
+) -> dict[str, object]:
+    """Measure using a pose from the wrong time for one body-frame point.
+
+    The authored motion model uses constant world-x translation and constant
+    yaw. It isolates timestamp mechanics; it is not a vehicle-motion model or
+    a sensor-calibration routine.
+    """
+
+    point_body_m = _finite_vector(point_body_m, "body point", 3)
+    world_x_velocity_mps, yaw_rate_radps, sensor_time_s, pose_time_s = _finite_vector(
+        (world_x_velocity_mps, yaw_rate_radps, sensor_time_s, pose_time_s),
+        "temporal transform parameters",
+        4,
+    )
+
+    def world_point_at(timestamp_s: float) -> tuple[float, float, float]:
+        return transform_yaw_translation(
+            point_body_m,
+            yaw_rate_radps * timestamp_s,
+            (world_x_velocity_mps * timestamp_s, 0.0, 0.0),
+        )
+
+    timestamp_matched_point = world_point_at(sensor_time_s)
+    pose_time_point = world_point_at(pose_time_s)
+    spatial_error = sqrt(
+        sum(
+            (pose_time_point[index] - timestamp_matched_point[index]) ** 2
+            for index in range(3)
+        )
+    )
+    return {
+        "sensor_time_s": sensor_time_s,
+        "pose_time_s": pose_time_s,
+        "timestamp_offset_s": round(pose_time_s - sensor_time_s, 12),
+        "world_x_velocity_mps": world_x_velocity_mps,
+        "yaw_rate_radps": yaw_rate_radps,
+        "point_range_m": sqrt(sum(value * value for value in point_body_m)),
+        "timestamp_matched_world_point_m": tuple(round(value, 12) for value in timestamp_matched_point),
+        "pose_time_world_point_m": tuple(round(value, 12) for value in pose_time_point),
+        "spatial_error_m": round(spatial_error, 12),
+    }
+
+
+def temporal_alignment_audit() -> dict[str, object]:
+    """Return fixed translation-only, rotation-only, and matched-time cases."""
+
+    point = (10.0, 0.0, 0.0)
+    return {
+        "translation_only": temporal_transform_error(
+            point,
+            world_x_velocity_mps=2.0,
+            yaw_rate_radps=0.0,
+            sensor_time_s=1.0,
+            pose_time_s=0.9,
+        ),
+        "rotation_only": temporal_transform_error(
+            point,
+            world_x_velocity_mps=0.0,
+            yaw_rate_radps=0.5,
+            sensor_time_s=1.0,
+            pose_time_s=0.9,
+        ),
+        "timestamp_matched": temporal_transform_error(
+            point,
+            world_x_velocity_mps=2.0,
+            yaw_rate_radps=0.5,
+            sensor_time_s=1.0,
+            pose_time_s=1.0,
+        ),
+        "scope": "constant world-x velocity and yaw-rate timestamp fixture; not motion estimation",
+    }
+
+
 def occupancy_cells(points: list[tuple[float, float, float]], cell_size_m: float = 0.25) -> list[tuple[int, int]]:
     """Rasterize horizontal x-y positions into occupied BEV cells."""
     if (
@@ -220,6 +300,7 @@ def geometry_audit() -> dict[str, object]:
         "occupied_bev_cells": occupancy_cells(body_points),
         "camera_points_m": camera_points,
         "body_points_m": body_points,
+        "temporal_alignment": temporal_alignment_audit(),
     }
 
 
