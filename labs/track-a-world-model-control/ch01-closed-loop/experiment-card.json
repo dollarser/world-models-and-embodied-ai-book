@@ -3,18 +3,19 @@
   "id": "EXP-01-01",
   "chapter": 1,
   "status": "smoke",
-  "claim_ids": ["CLAIM-01-02"],
+  "claim_ids": ["CLAIM-01-02", "CLAIM-01-06"],
   "claim_scope": [
-    "two fixed residual-action sequences with equal per-step MAE produce different integrated states and safety-bound outcomes"
+    "two fixed residual-action sequences with equal per-step MAE produce different integrated states and safety-bound outcomes",
+    "one fixed scalar disturbance sequence produces different finite-horizon outcomes under open loop, timely feedback, delayed feedback, and insufficient action authority"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library scalar integrator fixture"
+    "config": "standard-library scalar integrator fixture-v2"
   },
   "data": {
-    "name": "two hand-authored five-step residual sequences",
-    "version": "v1",
+    "name": "two hand-authored five-step residual sequences and one twelve-step disturbance sequence",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -38,12 +39,18 @@
     {"name": "alternating_offline_mae", "value": 0.1, "unit": "action", "split": "alternating"},
     {"name": "persistent_final_state", "value": 0.5, "unit": "state", "split": "persistent"},
     {"name": "alternating_final_state", "value": 0.1, "unit": "state", "split": "alternating"},
-    {"name": "persistent_first_violation_step", "value": 4, "unit": "step", "split": "persistent"}
+    {"name": "persistent_first_violation_step", "value": 4, "unit": "step", "split": "persistent"},
+    {"name": "open_loop_final_state", "value": 1.2, "unit": "state", "split": "feedback-comparison"},
+    {"name": "timely_feedback_maximum_abs_state", "value": 0.124999999488, "unit": "state", "split": "feedback-comparison"},
+    {"name": "delayed_feedback_final_state", "value": 0.4076, "unit": "state", "split": "feedback-comparison"},
+    {"name": "authority_limited_final_state", "value": 0.65, "unit": "state", "split": "feedback-comparison"},
+    {"name": "authority_limited_saturation_count", "value": 11, "unit": "step", "split": "feedback-comparison"}
   ],
   "artifacts": ["results/ch01/EXP-01-01-smoke.json"],
   "limitations": [
-    "hand-authored residuals and unit-gain scalar integration",
+    "hand-authored residuals, disturbances, proportional feedback, and unit-gain scalar integration",
     "the fixed bound is illustrative rather than a physical safety limit",
-    "no image, learned perception, feedback controller, stochastic dynamics, simulator, GPU, robot, or vehicle"
+    "the delayed and limited cases are finite-horizon counterexamples, not a general controller-stability analysis",
+    "no image, learned perception, physical controller, stochastic dynamics, simulator, GPU, robot, or vehicle"
   ]
 }

@@ -7,7 +7,7 @@ import unittest
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from closed_loop_fixture import evaluate, rollout  # noqa: E402
+from closed_loop_fixture import evaluate, feedback_rollout, rollout  # noqa: E402
 
 
 class ClosedLoopFixtureTests(unittest.TestCase):
@@ -45,6 +45,45 @@ class ClosedLoopFixtureTests(unittest.TestCase):
                 rollout(residuals)
         with self.assertRaises(ValueError):
             rollout((0.1,), safety_bound=0.0)
+
+    def test_timely_feedback_rejects_the_same_persistent_disturbance(self):
+        comparison = evaluate()["feedback_comparison"]
+        self.assertEqual(comparison["open_loop"]["final_state"], 1.2)
+        self.assertTrue(comparison["open_loop"]["bound_violated"])
+        self.assertEqual(comparison["timely_feedback"]["final_state"], 0.124999999488)
+        self.assertEqual(comparison["timely_feedback"]["maximum_abs_state"], 0.124999999488)
+        self.assertFalse(comparison["timely_feedback"]["bound_violated"])
+
+    def test_two_step_observation_delay_changes_the_closed_loop_outcome(self):
+        comparison = evaluate()["feedback_comparison"]
+        delayed = comparison["delayed_feedback"]
+        self.assertEqual(delayed["controller_gain"], comparison["timely_feedback"]["controller_gain"])
+        self.assertEqual(delayed["observation_delay_steps"], 2)
+        self.assertEqual(delayed["final_state"], 0.4076)
+        self.assertTrue(delayed["bound_violated"])
+        self.assertEqual(delayed["first_violation_step"], 4)
+
+    def test_insufficient_action_authority_is_reported_as_saturation(self):
+        limited = evaluate()["feedback_comparison"]["authority_limited_feedback"]
+        self.assertEqual(limited["action_limit"], 0.05)
+        self.assertEqual(limited["saturation_count"], 11)
+        self.assertEqual(limited["final_state"], 0.65)
+        self.assertTrue(limited["bound_violated"])
+
+    def test_feedback_contract_rejects_invalid_delay_gain_limit_and_disturbance(self):
+        for kwargs in (
+            {"controller_gain": -0.1},
+            {"controller_gain": True},
+            {"controller_gain": 0.8, "observation_delay_steps": True},
+            {"controller_gain": 0.8, "observation_delay_steps": -1},
+            {"controller_gain": 0.8, "action_limit": 0.0},
+            {"controller_gain": 0.8, "safety_bound": float("inf")},
+        ):
+            with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                feedback_rollout((0.1,), **kwargs)
+        for disturbances in ((), (False,), (float("nan"),)):
+            with self.subTest(disturbances=disturbances), self.assertRaises(ValueError):
+                feedback_rollout(disturbances, controller_gain=0.8)
 
 
 if __name__ == "__main__":

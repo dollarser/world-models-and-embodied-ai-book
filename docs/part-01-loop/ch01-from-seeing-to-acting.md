@@ -1,10 +1,10 @@
 # 第1章 从“看见”到“行动”
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-01-01`
-> 关联声明：`CLAIM-01-01`～`CLAIM-01-05`
-> 关联图表：`FIG-01-01` / `TAB-01-01` / `TAB-01-02`
+> 关联声明：`CLAIM-01-01`～`CLAIM-01-06`
+> 关联图表：`FIG-01-01` / `TAB-01-01` / `TAB-01-02` / `TAB-01-03`
 > 资源档位：S
 > GPU 状态：不需要
 
@@ -23,13 +23,13 @@
 ### 非目标
 
 - 不在导论中提前推导 RSSM、actor-critic、扩散策略或车辆动力学；
-- 不把 `EXP-01-01` 称为感知、控制或安全实验；
+- 不把 `EXP-01-01` 称为物理 controller 性能、安全或部署实验；
 - 不许诺读完即可部署机器人或自动驾驶系统；
 - 不要求按章节编号一次读完所有支线。
 
 ### 学完后的可验证产出
 
-读者应能画出观测—状态估计—预测—决策—动作—环境反馈闭环，指出离线 CV 指标缺失的动作和后果，解释两组相同逐帧误差为什么可能有不同闭环结局，并选择适合自己的阅读与实验路径。
+读者应能画出观测—状态估计—预测—决策—动作—环境反馈闭环，指出离线 CV 指标缺失的动作和后果，解释两组相同逐帧误差为什么可能有不同闭环结局，说明反馈为何能纠偏以及观测时延、动作限幅为何会破坏这种能力，并选择适合自己的阅读与实验路径。
 
 ## 1.1 CV 模型通常停在“输出”处
 
@@ -106,6 +106,30 @@ make ch01-smoke
 
 首次测试还暴露了一个工程细节：二进制浮点的 `0.1+0.1+0.1` 会略大于 `0.3`。代码对边界比较加入明确容差，避免数值表示把“等于边界”误判为“超过边界”。真实系统也必须规定单位、精度、inclusive/exclusive 规则和安全裕量。
 
+### 1.3.1 反馈能纠偏，但不能绕过时延和动作权限
+
+前一个反例只有 residual 积分，还没有 controller。为了补上最小反馈概念，fixture 增加一个与任何机器人或车辆都不绑定的标量系统：
+
+\[
+x_{t+1}=x_t+u_t+d_t,\qquad
+u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
+\]
+
+这里 $d_t$ 是每步固定为 $0.1$ 的外部扰动，$\tilde{x}_t$ 是 controller 实际拿到的当前或延迟 state，$k$ 是比例增益，$u_{\max}$ 是动作权限。这个式子只回答三个机制问题：及时观测下的负反馈能否抵消持续扰动；旧观测会不会让动作落后；动作权限不足时 controller 是否只能持续饱和。MIT Underactuated Robotics 的 [Output Feedback](https://underactuated.mit.edu/output_feedback.html) 讲义强调实际决策依赖 measurement 而非不可直接获得的真实 state，estimator dynamics 也会进入闭环；其 [torque-limited pendulum](https://underactuated.mit.edu/pend.html) 例子则展示 actuator limit 会约束可实现的控制。它们为机制提供课程级来源，但不是本 fixture 数值的外部验证。
+
+| case | $k$ | 观测时延 | $u_{\max}$ | 最大 $|x|$ | 最终 $x$ | 首次越过 0.3 / 饱和步数 |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| open loop | 0.0 | 0 | 0.25 | 1.2000 | 1.2000 | 第 4 步 / 0 |
+| timely feedback | 0.8 | 0 | 0.25 | 0.1250 | 0.1250 | 未越界 / 0 |
+| delayed feedback | 0.8 | 2 | 0.25 | 0.4076 | 0.4076 | 第 4 步 / 1 |
+| authority-limited feedback | 0.8 | 0 | 0.05 | 0.6500 | 0.6500 | 第 6 步 / 11 |
+
+*TAB-01-03：`EXP-01-01` 的 12 步固定反馈结果。越界定义为 $|x|>0.3$；恰好等于 0.3 不算越界。state、disturbance 和 action 都无物理单位。*
+
+`CLAIM-01-06`（result）：在这组固定 12 步标量 fixture 中，及时无饱和反馈把最大绝对 state 从 open-loop 的 1.2 限制到约 0.125；把观测延迟两步后最大值为 0.4076 并越界，把动作限幅降到 0.05 后最大值为 0.65 且 11 步饱和。该结果只证明反馈效果依赖观测新鲜度和动作权限，不证明一般 closed-loop stability、真实 controller 收敛性或物理安全收益。
+
+无时延且未饱和时，固定点满足 $x^*=d/k=0.125$，这解释了 timely feedback 的残余偏差。delayed case 的 12 步轨迹只是一个有限时域反例，未做特征根或 Lyapunov 分析时不要把它改写成“系统不稳定”；authority-limited case 则表明命令方向正确也不等于执行权限充足。后续第7章讨论重规划，第19章讨论仿真合同，第21章再把时延、deadline、fallback 和独立安全网关接入系统证据。
+
 ## 1.4 两个贯穿案例
 
 ### 机械臂抓取
@@ -177,6 +201,7 @@ make ch01-smoke
 2. **代码实验**：保持 MAE=0.1，构造第三组 residual，使最终 state 为 -0.3，并说明边界语义。
 3. **迁移分析**：把检测器 5 cm 稳定偏差分别放入抓取和车道保持，列出会放大的状态变量。
 4. **阅读计划**：选择 `TAB-01-02` 一条路线，为每章写一个可验证产出，不以“读完”作验收。
+5. **反馈边界**：推导无时延、未饱和时的固定点 $x^*=d/k$；再解释为什么这个推导不能直接用于两步时延和 $u_{\max}=0.05$ 两种 case。
 
 ## 延伸阅读
 
@@ -184,6 +209,8 @@ make ch01-smoke
 - Lynch & Park, [Modern Robotics](https://modernrobotics.northwestern.edu/)，开放机器人学教材；
 - Tedrake, [MIT Robotic Manipulation](https://manipulation.csail.mit.edu/)，模型、规划与操作课程；
 - Sutton & Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html)，RL 开放教材。
+- Tedrake, [Underactuated Robotics: Output Feedback](https://underactuated.mit.edu/output_feedback.html)，measurement、state estimation 与闭环动态；
+- Tedrake, [Underactuated Robotics: The Simple Pendulum](https://underactuated.mit.edu/pend.html)，带 torque limit 的最小控制例子。
 
 ## 下一章接口
 
@@ -195,5 +222,5 @@ make ch01-smoke
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/final-book-review.md`；
-- 已知限制：标量积分和手工 residual，没有图像、学习模型、反馈 controller、仿真、GPU、机器人或车辆。
+- 审查记录路径：`reviews/ch01-feedback-boundary-review-2026-09-01.md`；
+- 已知限制：标量积分、比例反馈和手工 disturbance/residual，没有图像、学习模型、物理 controller、仿真、GPU、机器人或车辆。
