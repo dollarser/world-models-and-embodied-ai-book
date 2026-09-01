@@ -3,13 +3,14 @@
   "id": "EXP-20-01",
   "chapter": 20,
   "status": "smoke",
-  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06"],
+  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07"],
   "benchmark_ids": ["BENCH-20-01"],
   "claim_scope": [
     "success rates are not directly comparable when task populations, success definitions, or denominators differ",
     "a benchmark card should expose protocol differences before ranking models",
     "a small-sample point estimate should be accompanied by an uncertainty interval under explicit assumptions",
-    "valid truncations remain in a frozen denominator while declared technical-invalid attempts block aggregation instead of disappearing"
+    "valid truncations remain in a frozen denominator while declared technical-invalid attempts block aggregation instead of disappearing",
+    "a factorial protocol audit can expose interaction and prevent warning labels from being misread as additive causal effects"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -17,8 +18,8 @@
     "config": "standard-library fixed episode-table protocol audit"
   },
   "data": {
-    "name": "procedural eight-episode evaluation table with explicit end semantics",
-    "version": "v3",
+    "name": "procedural eight-episode factorial evaluation table with explicit end semantics",
+    "version": "v4",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -40,6 +41,9 @@
   "metrics": [
     {"name": "easy_goal_only_success_rate", "value": 1.0, "unit": "ratio", "split": "easy-four-episode"},
     {"name": "full_safety_aware_success_rate", "value": 0.625, "unit": "ratio", "split": "full-eight-episode"},
+    {"name": "easy_safety_aware_success_rate", "value": 1.0, "unit": "ratio", "split": "easy-four-episode"},
+    {"name": "full_goal_only_success_rate", "value": 0.875, "unit": "ratio", "split": "full-eight-episode"},
+    {"name": "protocol_interaction", "value": -0.25, "unit": "ratio_difference", "split": "two-by-two-protocol-grid"},
     {"name": "easy_goal_only_wilson_95_lower", "value": 0.510109, "unit": "ratio", "split": "easy-four-episode"},
     {"name": "full_safety_aware_wilson_95_lower", "value": 0.305742, "unit": "ratio", "split": "full-eight-episode"},
     {"name": "full_safety_aware_wilson_95_upper", "value": 0.863156, "unit": "ratio", "split": "full-eight-episode"},
@@ -55,7 +59,8 @@
   "artifacts": ["results/ch20/EXP-20-01-smoke.json"],
   "limitations": [
     "fixed hand-authored outcomes rather than simulator rollouts",
-    "Wilson intervals assume independent Bernoulli trials and do not repair protocol incomparability",
+    "Wilson intervals assume independent Bernoulli trials and do not repair protocol incomparability or clustering",
+    "the factorial effects are arithmetic contrasts on authored rows, not population causal-effect estimates",
     "does not estimate any real policy or benchmark performance",
     "the injected invalid-run case tests rejection only and does not estimate a technical failure rate"
   ]

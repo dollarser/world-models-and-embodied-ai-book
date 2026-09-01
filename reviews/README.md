@@ -18,5 +18,6 @@
 - [第6章 KL 路由与 free-nats 审查](ch06-kl-routing-review-2026-09-01.md)
 - [第9章长时分母与动作干预审查](ch09-horizon-denominator-review-2026-09-01.md)
 - [第2章三态能力蕴含审查](ch02-capability-implication-review-2026-09-01.md)
+- [第20章评测有效性与证据层级审查](ch20-evaluation-validity-review-2026-09-01.md)
 
 `reviewed` 只表示正文和当前可执行路径通过内容、代码、一致性与教学审查，不自动表示 GPU、大数据或上游完整复现已经完成。

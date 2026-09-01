@@ -4,14 +4,15 @@
   "chapter": 20,
   "title": "Episode protocol comparability audit",
   "status": "executed",
-  "purpose": "Expose how task population, success definition, and denominator change a reported closed-loop success rate, while preserving the assumptions of its uncertainty interval.",
-  "claim_ids": ["CLAIM-20-02", "CLAIM-20-03", "CLAIM-20-05", "CLAIM-20-06"],
-  "evaluation_layers": ["E0", "E4"],
+  "purpose": "Expose how task population, success definition, and denominator change a reported success rate, while preserving uncertainty assumptions and separating protocol diagnostics from causal attribution.",
+  "claim_ids": ["CLAIM-20-02", "CLAIM-20-03", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07"],
+  "evaluation_layers": ["E0"],
   "allowed_claims": [
-    "The two authored protocols produce different success rates from the fixed episode table.",
+    "The four authored protocols produce different success rates from the fixed episode table.",
     "The protocol audit identifies task-population, success-definition, and denominator differences.",
     "Wilson intervals communicate small-sample uncertainty under an independent Bernoulli interpretation.",
-    "The fixture keeps a valid timeout in the denominator and blocks aggregation when a technical-invalid attempt is declared."
+    "The fixture keeps a valid timeout in the denominator and blocks aggregation when a technical-invalid attempt is declared.",
+    "The two-by-two protocol grid exposes a population-by-success-rule interaction on the authored rows."
   ],
   "forbidden_claims": [
     "The fixture estimates performance of a policy, simulator, robot, or autonomous vehicle.",
@@ -23,36 +24,37 @@
       "name": "fixed_episode_table",
       "role": "system_under_test",
       "type": "hand-authored table of eight completed episode outcomes",
-      "revision": "fixture-v3",
+      "revision": "fixture-v4",
       "inputs": ["protocol name", "episode suite", "goal", "collision", "intervention", "route completion", "terminated", "truncated", "valid", "invalid reason"],
-      "outputs": ["protocol aggregates", "attempt/valid/terminated/truncated/invalid counts", "comparability warnings"],
+      "outputs": ["four protocol aggregates", "attempt/valid/terminated/truncated/invalid counts", "comparability warnings", "factorial arithmetic contrasts"],
       "preprocessing": "select episodes by named suite; validate end semantics; do not delete failed, truncated, safety-violating, or declared-invalid rows"
     }
   ],
   "datasets": [
     {
-      "name": "procedural eight-episode evaluation table with explicit end semantics",
-      "version": "v3",
+      "name": "procedural eight-episode factorial evaluation table with explicit end semantics",
+      "version": "v4",
       "license": "MIT",
       "classification": "fixture",
       "fixture": true,
       "download_bytes": 0,
       "checksum": null,
       "role": "fixture",
-      "split_definition": "Four easy and four hard authored attempts; easy_goal_only selects easy, full_safety_aware selects both suites; hard-2 is a valid timeout truncation.",
+      "split_definition": "Four easy and four hard authored attempts crossed with goal-only and safety-aware success rules; hard-2 is a valid timeout truncation.",
       "unit_of_analysis": "attempted episode with explicit validity and end flags",
       "grouping_keys": ["episode id", "suite", "protocol"],
       "leakage_controls": [
         "Episode outcomes are immutable inputs rather than fitted observations.",
         "The full protocol retains all eight episode rows, including the valid timeout failure.",
         "A declared technical-invalid attempt blocks aggregation instead of being filtered after outcomes are known.",
-        "Protocol differences are reported before any numeric ranking."
+        "All four population-by-success-rule cells are reported before interpreting the endpoint difference.",
+        "Protocol diagnostics are not presented as independent causal contributions."
       ]
     }
   ],
   "protocol": {
-    "version": "fixture-v3",
-    "comparison_unit": "aggregate of authored episode outcomes under each named protocol",
+    "version": "fixture-v4",
+    "comparison_unit": "aggregate of authored episode outcomes under each of four named population-by-success-rule protocols",
     "sample_count": 8,
     "randomness": {
       "deterministic": true,
@@ -63,23 +65,23 @@
     "action_space": "not represented; the fixture begins from completed episode outcomes",
     "timing": "one completed episode is one analysis unit; no step frequency or wall-clock measurement exists",
     "termination_conditions": ["Evaluate every valid row selected by the named protocol exactly once; at least one of terminated or truncated marks episode end, and both may be true on the same final step."],
-    "baselines": ["easy_goal_only protocol as an intentionally incomplete comparison"],
-    "comparison_design": "Audit task population, success definition, and denominator before presenting each protocol separately; do not interpret the two percentages as a model ranking.",
-    "selection_protocol": "Both protocol definitions and all eight outcomes are fixed. A valid truncated timeout stays in the denominator. A declared technical-invalid attempt aborts aggregation; any future retry, replacement, or exclusion policy must be frozen before execution.",
+    "baselines": ["easy_goal_only protocol as an intentionally incomplete endpoint"],
+    "comparison_design": "Cross easy/full populations with goal-only/safety-aware rules, audit endpoint mismatches, and report conditional contrasts plus their interaction; do not interpret arithmetic contrasts as model ranking or population causal effects.",
+    "selection_protocol": "All four protocol definitions and all eight outcomes are fixed. A valid truncated timeout stays in the denominator. A declared technical-invalid attempt aborts aggregation; any future retry, replacement, or exclusion policy must be frozen before execution.",
     "failure_definition": "goal-only counts goal completion; safety-aware additionally requires no collision and no intervention. A valid timeout without goal completion is a failure. Technical-invalid attempts are reported but never silently converted into failures or removed from a completed aggregate."
   },
   "metrics": [
     {
       "id": "METRIC-20-01",
       "name": "success_rate",
-      "layer": "E4",
+      "layer": "E0",
       "role": "primary",
       "direction": "maximize",
       "unit": "ratio",
-      "split": "reported separately for easy_goal_only and full_safety_aware",
+      "split": "reported separately for all four population-by-success-rule cells",
       "aggregation": "success count divided by the complete protocol-specific episode denominator",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:evaluate_protocol",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "wilson",
         "confidence_level": 0.95,
@@ -89,14 +91,14 @@
     {
       "id": "METRIC-20-02",
       "name": "collision_rate",
-      "layer": "E4",
+      "layer": "E0",
       "role": "safety",
       "direction": "minimize",
       "unit": "ratio",
       "split": "reported separately for each protocol-selected episode set",
       "aggregation": "collision count divided by the complete protocol-specific episode denominator",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:evaluate_protocol",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The smoke emits a deterministic point value only; it must not be used as a risk estimate."
@@ -105,14 +107,14 @@
     {
       "id": "METRIC-20-03",
       "name": "intervention_rate",
-      "layer": "E4",
+      "layer": "E0",
       "role": "safety",
       "direction": "minimize",
       "unit": "ratio",
       "split": "reported separately for each protocol-selected episode set",
       "aggregation": "intervention count divided by the complete protocol-specific episode denominator",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:evaluate_protocol",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The authored fixture is not a sampled intervention-rate study."
@@ -121,14 +123,14 @@
     {
       "id": "METRIC-20-04",
       "name": "mean_route_completion",
-      "layer": "E4",
+      "layer": "E0",
       "role": "diagnostic",
       "direction": "maximize",
       "unit": "ratio",
       "split": "reported separately for each protocol-selected episode set",
       "aggregation": "arithmetic mean route completion over the complete protocol-specific denominator",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:evaluate_protocol",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "No population or repeated-seed interval is estimated by this fixture."
@@ -144,7 +146,7 @@
       "split": "protocol pair",
       "aggregation": "count distinct task-population, success-definition, and denominator mismatches",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:comparability_warnings",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "This is a deterministic contract audit count rather than a sampled metric."
@@ -160,10 +162,26 @@
       "split": "reported as attempted, valid, terminated, truncated, and invalid counts per protocol",
       "aggregation": "count rows by predeclared validity and terminated/truncated flags before outcome aggregation; a simultaneous terminal and timeout contributes to both end-reason counts but only one attempted episode",
       "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:audit_episode_rows",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "These are deterministic provenance counts, not estimates from a sampled population."
+      }
+    },
+    {
+      "id": "METRIC-20-07",
+      "name": "protocol_interaction",
+      "layer": "E0",
+      "role": "diagnostic",
+      "direction": "none",
+      "unit": "ratio difference",
+      "split": "two-by-two task-population and success-rule grid",
+      "aggregation": "difference between the safety-rule contrast on full and easy populations; also report both conditional population contrasts and both conditional safety-rule contrasts",
+      "implementation": "labs/track-b-policy/ch20-evaluation/src/protocol_fixture.py:factorial_protocol_effects",
+      "implementation_version": "fixture-v4",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "This is an exact arithmetic contrast on authored rows, not an estimated population interaction."
       }
     }
   ],
@@ -174,13 +192,15 @@
   "reporting": {
     "per_system": false,
     "per_task": false,
-    "disaggregations": ["protocol", "easy versus hard suite", "goal/collision/intervention outcome", "terminated and/or truncated", "valid versus technical-invalid attempt"],
+    "disaggregations": ["all four population-by-success-rule protocol cells", "easy versus hard suite", "goal/collision/intervention outcome", "terminated and/or truncated", "valid versus technical-invalid attempt"],
     "raw_predictions": "No model predictions exist; the complete eight-row outcome table is embedded in the source fixture.",
     "failure_artifacts": "Each failed, collided, or intervened episode remains as a named row in the fixture; there is no video.",
     "confounders": [
       "The compared protocols use different task populations.",
       "The compared protocols use different success definitions.",
       "The compared protocols use different denominators.",
+      "Denominator change follows suite selection and is not an independent randomized factor.",
+      "Population and success-rule effects interact on the authored rows.",
       "Episode rows are authored and are not independent draws from a real deployment population.",
       "No empirical reset, logging, or timeout failure rate is estimated."
     ],
@@ -197,7 +217,8 @@
   "artifacts": ["results/ch20/EXP-20-01-smoke.json"],
   "limitations": [
     "The eight outcomes are hand-authored and do not measure any policy or environment.",
-    "The Wilson intervals assume independent Bernoulli trials and do not repair protocol incomparability.",
+    "The Wilson intervals assume independent Bernoulli trials and do not repair protocol incomparability or clustering.",
+    "The factorial contrasts are exact for the authored table but are not population causal-effect estimates.",
     "The fixture omits time-series logs, retries, clustered tasks, video, exposure distance, and real safety events.",
     "The invalid-attempt path is a contract test and does not estimate a real technical failure rate."
   ]

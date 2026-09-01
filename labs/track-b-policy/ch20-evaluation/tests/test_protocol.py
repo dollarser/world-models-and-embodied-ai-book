@@ -6,7 +6,14 @@ import unittest
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from protocol_fixture import EPISODES, audit_episode_rows, comparability_warnings, evaluate_protocol, wilson_interval  # noqa: E402
+from protocol_fixture import (  # noqa: E402
+    EPISODES,
+    audit_episode_rows,
+    comparability_warnings,
+    evaluate_protocol,
+    factorial_protocol_effects,
+    wilson_interval,
+)
 
 
 class ProtocolFixtureTests(unittest.TestCase):
@@ -21,6 +28,18 @@ class ProtocolFixtureTests(unittest.TestCase):
         self.assertEqual(result["success_rate"], 0.625)
         self.assertEqual(result["collision_rate"], 0.125)
         self.assertEqual(result["intervention_rate"], 0.125)
+
+    def test_factorial_cells_isolate_protocol_dimensions(self):
+        self.assertEqual(evaluate_protocol("easy_safety_aware")["success_rate"], 1.0)
+        self.assertEqual(evaluate_protocol("full_goal_only")["success_rate"], 0.875)
+
+    def test_protocol_effects_are_not_additive_main_causes(self):
+        effects = factorial_protocol_effects()
+        self.assertEqual(effects["population_effect_under_goal_only"], -0.125)
+        self.assertEqual(effects["population_effect_under_safety_aware"], -0.375)
+        self.assertEqual(effects["safety_rule_effect_on_easy"], 0.0)
+        self.assertEqual(effects["safety_rule_effect_on_full"], -0.25)
+        self.assertEqual(effects["interaction"], -0.25)
 
     def test_valid_timeout_remains_in_the_denominator_as_failure(self):
         result = evaluate_protocol("full_safety_aware")

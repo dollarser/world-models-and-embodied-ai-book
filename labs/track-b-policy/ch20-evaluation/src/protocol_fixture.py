@@ -20,6 +20,8 @@ EPISODES = (
 
 PROTOCOLS = {
     "easy_goal_only": {"suites": ("easy",), "safety_aware": False},
+    "easy_safety_aware": {"suites": ("easy",), "safety_aware": True},
+    "full_goal_only": {"suites": ("easy", "hard"), "safety_aware": False},
     "full_safety_aware": {"suites": ("easy", "hard"), "safety_aware": True},
 }
 
@@ -150,10 +152,24 @@ def comparability_warnings(left: str, right: str) -> list[str]:
     return warnings
 
 
+def factorial_protocol_effects() -> dict[str, float]:
+    """Expose population/success-rule effects without pretending they are additive."""
+    easy_goal = evaluate_protocol("easy_goal_only")["success_rate"]
+    easy_safe = evaluate_protocol("easy_safety_aware")["success_rate"]
+    full_goal = evaluate_protocol("full_goal_only")["success_rate"]
+    full_safe = evaluate_protocol("full_safety_aware")["success_rate"]
+    return {
+        "population_effect_under_goal_only": full_goal - easy_goal,
+        "population_effect_under_safety_aware": full_safe - easy_safe,
+        "safety_rule_effect_on_easy": easy_safe - easy_goal,
+        "safety_rule_effect_on_full": full_safe - full_goal,
+        "interaction": (full_safe - full_goal) - (easy_safe - easy_goal),
+    }
+
+
 def evaluate() -> dict[str, object]:
     left, right = "easy_goal_only", "full_safety_aware"
-    return {
-        left: evaluate_protocol(left),
-        right: evaluate_protocol(right),
-        "comparability_warnings": comparability_warnings(left, right),
-    }
+    metrics = {name: evaluate_protocol(name) for name in PROTOCOLS}
+    metrics["comparability_warnings"] = comparability_warnings(left, right)
+    metrics["factorial_protocol_effects"] = factorial_protocol_effects()
+    return metrics

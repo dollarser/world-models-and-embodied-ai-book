@@ -17,6 +17,8 @@ from protocol_fixture import evaluate  # noqa: E402
 def main() -> int:
     metrics = evaluate()
     easy = metrics["easy_goal_only"]
+    easy_safe = metrics["easy_safety_aware"]
+    full_goal = metrics["full_goal_only"]
     full = metrics["full_safety_aware"]
     if easy["success_rate"] <= full["success_rate"]:
         raise AssertionError("fixture must expose a protocol-dependent score gap")
@@ -28,6 +30,11 @@ def main() -> int:
         raise AssertionError("the valid timeout must remain visible in the complete denominator")
     if full["invalid_episode_count"] != 0:
         raise AssertionError("the fixed reference table must not contain invalid technical runs")
+    if easy_safe["success_rate"] != 1.0 or full_goal["success_rate"] != 0.875:
+        raise AssertionError("all four factorial protocol cells must remain visible")
+    effects = metrics["factorial_protocol_effects"]
+    if effects["interaction"] != -0.25:
+        raise AssertionError("the fixture must expose a population-by-success-rule interaction")
 
     report = {
         "experiment_id": "EXP-20-01",
