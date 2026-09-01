@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import ceil, isfinite
 
 
@@ -58,6 +58,182 @@ class ActionChunk:
     arrival_step: int
     start_step: int
     valid_until_step: int
+
+
+@dataclass(frozen=True)
+class ReactivationReceipt:
+    """Authored approval record; identity strings are not authenticated principals."""
+
+    receipt_id: str
+    approver_id: str
+    fallback_run_id: str
+    target_mode: str
+    issued_step: int
+    valid_until_step: int
+    sequence: int
+    decision: str
+
+
+def validate_reactivation_receipt(
+    receipt: ReactivationReceipt,
+    *,
+    now_step: int,
+    expected_fallback_run_id: str,
+    expected_target_mode: str,
+    authorized_approver_ids: frozenset[str],
+    last_accepted_sequence: int | None = None,
+    consumed_receipt_ids: frozenset[str] = frozenset(),
+) -> tuple[str, ...]:
+    """Validate binding, freshness and single-use semantics without authenticating a sender."""
+
+    if not isinstance(receipt, ReactivationReceipt):
+        return ("invalid_reactivation_receipt",)
+    if isinstance(now_step, bool) or not isinstance(now_step, int) or now_step < 0:
+        raise ValueError("now_step must be a non-negative integer")
+    if not isinstance(expected_fallback_run_id, str) or not expected_fallback_run_id:
+        raise ValueError("expected_fallback_run_id must be explicit")
+    if not isinstance(expected_target_mode, str) or not expected_target_mode:
+        raise ValueError("expected_target_mode must be explicit")
+    if (
+        not isinstance(authorized_approver_ids, frozenset)
+        or not authorized_approver_ids
+        or any(not isinstance(value, str) or not value for value in authorized_approver_ids)
+    ):
+        raise ValueError("authorized_approver_ids must be a non-empty frozenset of strings")
+    if last_accepted_sequence is not None and (
+        isinstance(last_accepted_sequence, bool)
+        or not isinstance(last_accepted_sequence, int)
+        or last_accepted_sequence < 0
+    ):
+        raise ValueError("last_accepted_sequence must be a non-negative integer or None")
+    if not isinstance(consumed_receipt_ids, frozenset) or any(
+        not isinstance(value, str) or not value for value in consumed_receipt_ids
+    ):
+        raise ValueError("consumed_receipt_ids must be a frozenset of non-empty strings")
+
+    issues = []
+    for name, value in (
+        ("receipt_id", receipt.receipt_id),
+        ("approver_id", receipt.approver_id),
+        ("fallback_run_id", receipt.fallback_run_id),
+        ("target_mode", receipt.target_mode),
+        ("decision", receipt.decision),
+    ):
+        if not isinstance(value, str) or not value:
+            issues.append(f"invalid_{name}")
+
+    step_fields_valid = all(
+        not isinstance(value, bool) and isinstance(value, int) and value >= 0
+        for value in (receipt.issued_step, receipt.valid_until_step)
+    )
+    if not step_fields_valid or receipt.issued_step >= receipt.valid_until_step:
+        issues.append("invalid_receipt_validity_interval")
+    elif not receipt.issued_step <= now_step < receipt.valid_until_step:
+        issues.append("stale_or_future_receipt_time")
+
+    if (
+        isinstance(receipt.sequence, bool)
+        or not isinstance(receipt.sequence, int)
+        or receipt.sequence < 0
+    ):
+        issues.append("invalid_receipt_sequence")
+    elif last_accepted_sequence is not None and receipt.sequence <= last_accepted_sequence:
+        issues.append("replay_or_out_of_order_receipt")
+
+    if receipt.fallback_run_id != expected_fallback_run_id:
+        issues.append("fallback_run_mismatch")
+    if receipt.target_mode != expected_target_mode:
+        issues.append("target_mode_mismatch")
+    if receipt.approver_id not in authorized_approver_ids:
+        issues.append("unauthorized_approver")
+    if receipt.decision != "approved":
+        issues.append("reactivation_not_approved")
+    if receipt.receipt_id in consumed_receipt_ids:
+        issues.append("receipt_already_consumed")
+    return tuple(dict.fromkeys(issues))
+
+
+def reactivation_receipt_audit() -> dict[str, object]:
+    """Run fixed negative controls for an authored, single-use reactivation receipt."""
+
+    receipt = ReactivationReceipt(
+        receipt_id="receipt-042",
+        approver_id="operator-alpha",
+        fallback_run_id="fallback-run-007",
+        target_mode="policy_action",
+        issued_step=100,
+        valid_until_step=105,
+        sequence=42,
+        decision="approved",
+    )
+    common = {
+        "now_step": 102,
+        "expected_fallback_run_id": "fallback-run-007",
+        "expected_target_mode": "policy_action",
+        "authorized_approver_ids": frozenset({"operator-alpha"}),
+    }
+    valid_issues = validate_reactivation_receipt(receipt, **common)
+    if valid_issues:
+        raise AssertionError("the authored valid receipt must pass before consumption")
+
+    cases = {
+        "valid": valid_issues,
+        "replayed": validate_reactivation_receipt(
+            receipt,
+            last_accepted_sequence=receipt.sequence,
+            consumed_receipt_ids=frozenset({receipt.receipt_id}),
+            **common,
+        ),
+        "expired": validate_reactivation_receipt(
+            replace(
+                receipt,
+                receipt_id="receipt-expired",
+                issued_step=90,
+                valid_until_step=100,
+            ),
+            **common,
+        ),
+        "future": validate_reactivation_receipt(
+            replace(
+                receipt,
+                receipt_id="receipt-future",
+                issued_step=103,
+                valid_until_step=108,
+            ),
+            **common,
+        ),
+        "wrong_run": validate_reactivation_receipt(
+            replace(receipt, receipt_id="receipt-run", fallback_run_id="fallback-run-old"),
+            **common,
+        ),
+        "wrong_target": validate_reactivation_receipt(
+            replace(receipt, receipt_id="receipt-target", target_mode="diagnostic_mode"),
+            **common,
+        ),
+        "unauthorized_approver": validate_reactivation_receipt(
+            replace(receipt, receipt_id="receipt-approver", approver_id="operator-unknown"),
+            **common,
+        ),
+        "denied": validate_reactivation_receipt(
+            replace(receipt, receipt_id="receipt-denied", decision="denied"),
+            **common,
+        ),
+        "out_of_order": validate_reactivation_receipt(
+            replace(receipt, receipt_id="receipt-old-sequence", sequence=41),
+            last_accepted_sequence=42,
+            **common,
+        ),
+    }
+    return {
+        "case_count": len(cases),
+        "allowed_count": sum(not issues for issues in cases.values()),
+        "rejected_count": sum(bool(issues) for issues in cases.values()),
+        "cases": cases,
+        "scope": (
+            "hand-authored receipt fields and in-memory single-session state; "
+            "not authentication, integrity, cryptography, reboot persistence, or safety evidence"
+        ),
+    }
 
 
 def nearest_rank(values: tuple[float, ...], percentile: float) -> float:
@@ -510,6 +686,7 @@ def evaluate() -> dict[str, object]:
         "async_schedule": audit_async_schedule(async_schedule, 8, 2),
         "fallback_reactivation_audit": fallback_reactivation_audit(),
         "fallback_lifecycle_audit": fallback_lifecycle_audit(),
+        "reactivation_receipt_audit": reactivation_receipt_audit(),
         "decisions": decisions,
         "allowed_count": sum(decision["allowed"] for decision in decisions.values()),
         "fallback_count": sum(not decision["allowed"] for decision in decisions.values()),

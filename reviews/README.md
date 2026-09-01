@@ -23,6 +23,7 @@
 - [第21章运行时队列与降级状态审查](ch21-runtime-fallback-review-2026-09-01.md)
 - [第21章重新激活授权审查](ch21-reactivation-authorization-review-2026-09-01.md)
 - [第21章 fallback 生命周期审查](ch21-fallback-lifecycle-review-2026-09-02.md)
+- [第15/21章重新激活 receipt 交叉审查](ch15-ch21-reactivation-receipt-review-2026-09-02.md)
 - [第22章 Artifact Provenance 与独立评测审查](ch22-artifact-provenance-review-2026-09-01.md)
 - [第3/10/11/12章零基础3D与刚体变换桥接审查](ch03-rigid-transform-bridge-review-2026-09-01.md)
 - [全书声明—来源—实验合同审查](claim-evidence-contract-review-2026-09-01.md)

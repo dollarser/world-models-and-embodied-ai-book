@@ -12,6 +12,7 @@ from deployment_gate import (  # noqa: E402
     BURSTED_LATENCIES_MS,
     GateConfig,
     LATENCIES_MS,
+    ReactivationReceipt,
     SCATTERED_LATENCIES_MS,
     audit_async_schedule,
     audit_fallback_lifecycle,
@@ -22,7 +23,9 @@ from deployment_gate import (  # noqa: E402
     gate,
     latency_summary,
     nearest_rank,
+    reactivation_receipt_audit,
     selective_metrics,
+    validate_reactivation_receipt,
 )
 
 
@@ -158,6 +161,54 @@ class DeploymentGateTests(unittest.TestCase):
                 ("requested",),
                 (1,),  # type: ignore[arg-type]
                 max_operating_steps=1,
+            )
+
+    def test_valid_reactivation_receipt_is_single_use(self):
+        audit = reactivation_receipt_audit()
+        self.assertEqual(audit["allowed_count"], 1)
+        self.assertEqual(audit["rejected_count"], 8)
+        self.assertEqual(audit["cases"]["valid"], ())
+        self.assertEqual(
+            audit["cases"]["replayed"],
+            ("replay_or_out_of_order_receipt", "receipt_already_consumed"),
+        )
+
+    def test_reactivation_receipt_binds_run_target_and_declared_approver(self):
+        cases = reactivation_receipt_audit()["cases"]
+        self.assertEqual(cases["wrong_run"], ("fallback_run_mismatch",))
+        self.assertEqual(cases["wrong_target"], ("target_mode_mismatch",))
+        self.assertEqual(cases["unauthorized_approver"], ("unauthorized_approver",))
+
+    def test_reactivation_receipt_rejects_time_decision_and_order_failures(self):
+        cases = reactivation_receipt_audit()["cases"]
+        self.assertEqual(cases["expired"], ("stale_or_future_receipt_time",))
+        self.assertEqual(cases["future"], ("stale_or_future_receipt_time",))
+        self.assertEqual(cases["denied"], ("reactivation_not_approved",))
+        self.assertEqual(cases["out_of_order"], ("replay_or_out_of_order_receipt",))
+
+    def test_reactivation_receipt_rejects_ambiguous_contracts(self):
+        receipt = ReactivationReceipt("r", "a", "run", "policy_action", 0, 2, 1, "approved")
+        common = {
+            "now_step": 1,
+            "expected_fallback_run_id": "run",
+            "expected_target_mode": "policy_action",
+            "authorized_approver_ids": frozenset({"a"}),
+        }
+        self.assertEqual(
+            validate_reactivation_receipt("not-a-receipt", **common),  # type: ignore[arg-type]
+            ("invalid_reactivation_receipt",),
+        )
+        malformed = ReactivationReceipt("", "", "", "", True, 0, True, "")
+        issues = validate_reactivation_receipt(malformed, **common)
+        self.assertIn("invalid_receipt_id", issues)
+        self.assertIn("invalid_receipt_validity_interval", issues)
+        self.assertIn("invalid_receipt_sequence", issues)
+        with self.assertRaises(ValueError):
+            validate_reactivation_receipt(receipt, **{**common, "now_step": True})
+        with self.assertRaises(ValueError):
+            validate_reactivation_receipt(
+                receipt,
+                **{**common, "authorized_approver_ids": frozenset()},
             )
 
     def test_healthy_packet_is_allowed(self):

@@ -167,6 +167,23 @@
       "p95_ms": 150.0,
       "p99_ms": 150.0
     },
+    "reactivation_receipt_audit": {
+      "allowed_count": 1,
+      "case_count": 9,
+      "cases": {
+        "denied": ["reactivation_not_approved"],
+        "expired": ["stale_or_future_receipt_time"],
+        "future": ["stale_or_future_receipt_time"],
+        "out_of_order": ["replay_or_out_of_order_receipt"],
+        "replayed": ["replay_or_out_of_order_receipt", "receipt_already_consumed"],
+        "unauthorized_approver": ["unauthorized_approver"],
+        "valid": [],
+        "wrong_run": ["fallback_run_mismatch"],
+        "wrong_target": ["target_mode_mismatch"]
+      },
+      "rejected_count": 8,
+      "scope": "hand-authored receipt fields and in-memory single-session state; not authentication, integrity, cryptography, reboot persistence, or safety evidence"
+    },
     "reason_counts": {
       "action_chunk_expired": 1,
       "action_out_of_bounds": 1,

@@ -49,6 +49,15 @@ def main() -> int:
         raise AssertionError("late success must not clear a latched fallback timeout")
     if failed["reactivation_count"] != 0:
         raise AssertionError("reported fallback failure must never reactivate policy")
+    receipt_audit = metrics["reactivation_receipt_audit"]
+    if receipt_audit["allowed_count"] != 1 or receipt_audit["rejected_count"] != 8:
+        raise AssertionError("only the fresh, correctly bound receipt may pass")
+    replay_reasons = receipt_audit["cases"]["replayed"]
+    if replay_reasons != (
+        "replay_or_out_of_order_receipt",
+        "receipt_already_consumed",
+    ):
+        raise AssertionError("a consumed receipt must be rejected by identity and sequence")
     if metrics["allowed_count"] != 1 or metrics["fallback_count"] != 6:
         raise AssertionError("the deployment gate fixture changed")
     selective = metrics["selective_evaluation"]

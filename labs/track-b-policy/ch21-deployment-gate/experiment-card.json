@@ -3,7 +3,7 @@
   "id": "EXP-21-01",
   "chapter": 21,
   "status": "smoke",
-  "claim_ids": ["CLAIM-21-02", "CLAIM-21-03", "CLAIM-21-07", "CLAIM-21-09", "CLAIM-21-10", "CLAIM-21-11", "CLAIM-21-12"],
+  "claim_ids": ["CLAIM-21-02", "CLAIM-21-03", "CLAIM-21-07", "CLAIM-21-09", "CLAIM-21-10", "CLAIM-21-11", "CLAIM-21-12", "CLAIM-21-13"],
   "claim_scope": [
     "a mean latency below the deadline can hide a deadline miss in a fixed tail sample",
     "stale observations, deadline misses, invalid actions, bounds violations, expired chunks, and excessive uncertainty need distinct gate reasons",
@@ -11,7 +11,8 @@
     "equal mean, percentile, maximum, and miss-rate summaries can hide different consecutive deadline-miss bursts",
     "an asynchronous schedule must distinguish stale queued actions from queue underflow, and fallback recovery needs explicit hysteresis",
     "a fixed negative control separates healthy-input hysteresis from explicit policy-reactivation authorization",
-    "authored lifecycle reports keep request, operation, success, timeout or failure, and reactivation authorization distinct"
+    "authored lifecycle reports keep request, operation, success, timeout or failure, and reactivation authorization distinct",
+    "a fixed reactivation-receipt audit rejects stale, future, misbound, unauthorized, denied, replayed, consumed, and out-of-order records"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -20,7 +21,7 @@
   },
   "data": {
     "name": "procedural latency bursts, action packets, async chunks, and fallback transitions",
-    "version": "v5",
+    "version": "v6",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -62,12 +63,16 @@
     {"name": "lifecycle_timeout_failure_step", "value": 3.0, "unit": "step", "split": "timeout-lifecycle"},
     {"name": "lifecycle_timeout_reactivation_count", "value": 0.0, "unit": "step", "split": "timeout-lifecycle"},
     {"name": "lifecycle_late_success_reactivation_count", "value": 0.0, "unit": "step", "split": "timeout-then-late-success-lifecycle"},
-    {"name": "lifecycle_reported_failure_reactivation_count", "value": 0.0, "unit": "step", "split": "reported-failure-lifecycle"}
+    {"name": "lifecycle_reported_failure_reactivation_count", "value": 0.0, "unit": "step", "split": "reported-failure-lifecycle"},
+    {"name": "reactivation_receipt_case_count", "value": 9.0, "unit": "case", "split": "receipt-audit"},
+    {"name": "reactivation_receipt_allowed_count", "value": 1.0, "unit": "case", "split": "receipt-audit"},
+    {"name": "reactivation_receipt_rejected_count", "value": 8.0, "unit": "case", "split": "receipt-audit"}
   ],
   "artifacts": ["results/ch21/EXP-21-01-smoke.json"],
   "limitations": [
     "six hand-authored latency values rather than measured wall-clock timings",
-    "fallback labels, authored lifecycle reports, timeout thresholds, and the hand-authored reactivation signal are not actuator commands, reachability checks, completion-detector evidence, operator availability, authorization-system validation, backup-MRM switching, or safety proofs",
+    "fallback labels, authored lifecycle reports, timeout thresholds, and hand-authored reactivation inputs are not actuator commands, reachability checks, completion-detector evidence, operator availability, backup-MRM switching, or safety proofs",
+    "receipt identity, approver, run, target, time, and sequence fields are authored strings or integers with in-memory single-session state; they provide no authentication, signature, integrity, revocation, reboot persistence, concurrency guarantee, or authorization-system validation",
     "the discrete async schedule does not measure a scheduler, clock, network, queue implementation, or chunk fusion",
     "uncertainty scores and failure labels are hand-authored and do not validate an estimator or calibrated probability",
     "no scheduler, network, ROS, model, accelerator, hardware, fault tree, or certification"
