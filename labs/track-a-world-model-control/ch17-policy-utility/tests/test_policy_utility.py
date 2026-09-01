@@ -13,6 +13,7 @@ from policy_utility import (  # noqa: E402
     component_attribution_audit,
     evaluate,
     policy_returns,
+    prospective_policy_ranking_audit,
     rollout,
     spearman_rank_correlation,
     support_gate_audit,
@@ -158,6 +159,33 @@ class PolicyUtilityTests(unittest.TestCase):
     def test_proxy_pipeline_rejects_unknown_faults(self):
         with self.assertRaises(ValueError):
             proxy_evaluation_scenario("combined")
+
+    def test_retrospective_panel_can_look_perfect_before_a_new_policy(self):
+        audit = prospective_policy_ranking_audit()
+        self.assertEqual(audit["calibration_policies"], ["safe_route", "idle"])
+        self.assertEqual(audit["calibration_spearman"], 1.0)
+        self.assertEqual(audit["calibration_maximum_absolute_return_gap"], 0.0)
+
+    def test_held_out_policy_reverses_the_prospective_selection(self):
+        audit = prospective_policy_ranking_audit()
+        self.assertEqual(audit["held_out_policies"], ["phantom_shortcut"])
+        self.assertEqual(audit["prospective_spearman"], -0.5)
+        self.assertEqual(audit["prospective_selected_policy"], "phantom_shortcut")
+        self.assertEqual(audit["prospective_selected_policy_true_terminal"], "collision")
+        self.assertEqual(audit["prospective_model_exploitation_regret"], 1.85)
+        self.assertEqual(audit["held_out_return_gaps"], {"phantom_shortcut": 2.0})
+
+    def test_prospective_policy_panels_must_be_valid_and_disjoint(self):
+        invalid = (
+            ((), ("phantom_shortcut",)),
+            (("safe_route", "safe_route"), ("phantom_shortcut",)),
+            (("safe_route",), ("safe_route",)),
+            (("unknown",), ("phantom_shortcut",)),
+            (("safe_route",), ["phantom_shortcut"]),
+        )
+        for calibration, held_out in invalid:
+            with self.subTest(calibration=calibration, held_out=held_out), self.assertRaises(ValueError):
+                prospective_policy_ranking_audit(calibration, held_out)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":

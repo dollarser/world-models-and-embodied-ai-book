@@ -316,6 +316,69 @@ def component_attribution_audit() -> dict[str, object]:
     }
 
 
+def prospective_policy_ranking_audit(
+    calibration_policies: tuple[str, ...] = ("safe_route", "idle"),
+    held_out_policies: tuple[str, ...] = ("phantom_shortcut",),
+) -> dict[str, object]:
+    """Freeze a retrospective policy panel before adding held-out candidates."""
+
+    for name, panel in (
+        ("calibration", calibration_policies),
+        ("held_out", held_out_policies),
+    ):
+        if not isinstance(panel, tuple) or not panel:
+            raise ValueError(f"{name} policies must be a non-empty tuple")
+        if len(panel) != len(set(panel)):
+            raise ValueError(f"{name} policies must not contain duplicates")
+        if any(policy not in POLICIES for policy in panel):
+            raise ValueError(f"{name} policies contain an unknown policy")
+    if set(calibration_policies) & set(held_out_policies):
+        raise ValueError("calibration and held-out policies must be disjoint")
+
+    true_returns = policy_returns(learned=False)
+    model_returns = policy_returns(learned=True)
+    calibration_true = {name: true_returns[name] for name in calibration_policies}
+    calibration_model = {name: model_returns[name] for name in calibration_policies}
+    prospective_names = calibration_policies + held_out_policies
+    prospective_true = {name: true_returns[name] for name in prospective_names}
+    prospective_model = {name: model_returns[name] for name in prospective_names}
+    selected = max(prospective_model, key=prospective_model.get)  # type: ignore[arg-type]
+    true_best = max(prospective_true, key=prospective_true.get)  # type: ignore[arg-type]
+
+    return {
+        "calibration_policy_count": len(calibration_policies),
+        "held_out_policy_count": len(held_out_policies),
+        "calibration_policies": list(calibration_policies),
+        "held_out_policies": list(held_out_policies),
+        "calibration_spearman": round(
+            spearman_rank_correlation(calibration_true, calibration_model),
+            12,
+        ),
+        "calibration_maximum_absolute_return_gap": max(
+            abs(calibration_model[name] - calibration_true[name])
+            for name in calibration_policies
+        ),
+        "prospective_spearman": round(
+            spearman_rank_correlation(prospective_true, prospective_model),
+            12,
+        ),
+        "prospective_selected_policy": selected,
+        "prospective_selected_policy_true_terminal": rollout(
+            POLICIES[selected],
+            learned=False,
+        )["terminal"],
+        "prospective_model_exploitation_regret": round(
+            prospective_true[true_best] - prospective_true[selected],
+            12,
+        ),
+        "held_out_return_gaps": {
+            name: round(model_returns[name] - true_returns[name], 12)
+            for name in held_out_policies
+        },
+        "scope": "model frozen before a disjoint authored policy is added; not learned-policy generalization",
+    }
+
+
 def evaluate() -> dict[str, object]:
     true_returns = policy_returns(learned=False)
     model_returns = policy_returns(learned=True)
@@ -343,4 +406,5 @@ def evaluate() -> dict[str, object]:
         "support_gate_audit": gate_audit,
         "transition_agreement": agreement,
         "component_attribution_audit": component_attribution_audit(),
+        "prospective_policy_ranking_audit": prospective_policy_ranking_audit(),
     }

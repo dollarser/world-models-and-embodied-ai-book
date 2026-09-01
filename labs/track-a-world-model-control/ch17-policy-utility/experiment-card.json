@@ -3,23 +3,24 @@
   "id": "EXP-17-01",
   "chapter": 17,
   "status": "smoke",
-  "claim_ids": ["CLAIM-17-02", "CLAIM-17-03", "CLAIM-17-07", "CLAIM-17-08", "CLAIM-17-10"],
+  "claim_ids": ["CLAIM-17-02", "CLAIM-17-03", "CLAIM-17-07", "CLAIM-17-08", "CLAIM-17-10", "CLAIM-17-11"],
   "claim_scope": [
     "high average transition agreement can coexist with a decision-critical model error",
     "a planner can exploit one optimistic model error and reverse the true policy ranking",
     "world-model utility must be measured with downstream return gaps and held-out true-environment anchors",
     "an explicit observed-support gate rejects the unsupported shortcut in this fixture and changes the selected policy",
     "the same gate accepts the erroneous shortcut and preserves exploitation regret when that state-action is authored as covered",
-    "distinct transition, state-decoder, and outcome-scorer faults can be observationally equivalent at the final proxy-score interface"
+    "distinct transition, state-decoder, and outcome-scorer faults can be observationally equivalent at the final proxy-score interface",
+    "perfect retrospective ranking on a frozen two-policy panel does not guarantee ranking of a disjoint policy introduced after calibration"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library corridor transition, policy-ranking, support-gate, and four-component attribution fixture"
+    "config": "standard-library corridor transition, policy-ranking, prospective policy split, support-gate, and four-component attribution fixture"
   },
   "data": {
     "name": "procedural safe-route and phantom-shortcut transitions",
-    "version": "v4",
+    "version": "v5",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -50,7 +51,11 @@
     {"name": "component_attribution_scenario_count", "value": 5, "unit": "count", "split": "oracle-plus-four-single-fault-scenarios"},
     {"name": "action_grounding_fault_exploitation_regret", "value": 1.05, "unit": "return", "split": "three-fixed-policies"},
     {"name": "observationally_equivalent_fault_count", "value": 3, "unit": "count", "split": "transition-decoder-scorer"},
-    {"name": "equivalent_fault_exploitation_regret", "value": 1.85, "unit": "return", "split": "transition-decoder-scorer"}
+    {"name": "equivalent_fault_exploitation_regret", "value": 1.85, "unit": "return", "split": "transition-decoder-scorer"},
+    {"name": "retrospective_calibration_spearman", "value": 1.0, "unit": "correlation", "split": "two-calibration-policies"},
+    {"name": "retrospective_calibration_maximum_return_gap", "value": 0.0, "unit": "return", "split": "two-calibration-policies"},
+    {"name": "prospective_spearman_after_held_out_policy", "value": -0.5, "unit": "correlation", "split": "two-calibration-plus-one-held-out-policy"},
+    {"name": "prospective_held_out_policy_exploitation_regret", "value": 1.85, "unit": "return", "split": "two-calibration-plus-one-held-out-policy"}
   ],
   "artifacts": ["results/ch17/EXP-17-01-smoke.json"],
   "limitations": [
@@ -61,6 +66,8 @@
     "both support declarations are hand-authored rather than learned coverage estimates",
     "support membership cannot detect errors inside observed support or shared model bias",
     "component scenarios inject one deterministic fault at a time and do not estimate prevalence, interactions, independence, or an additive error budget",
-    "the state decoder is represented by a terminal-label interface rather than learned pose, depth, or event extraction"
+    "the state decoder is represented by a terminal-label interface rather than learned pose, depth, or event extraction",
+    "the prospective panel contains only one authored held-out policy and does not estimate generalization across learned policy families, checkpoints, tasks, or initial-state shifts",
+    "a two-policy Spearman value is a fragile ordering check rather than a calibrated correlation estimate"
   ]
 }

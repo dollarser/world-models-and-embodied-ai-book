@@ -14,6 +14,7 @@
     "model_exploitation_regret": 1.85,
     "model_selected_first_transition_matches": false,
     "policy_ranking_matches": false,
+    "prospective_policy_ranking_audit": {"calibration_maximum_absolute_return_gap": 0.0, "calibration_policies": ["safe_route", "idle"], "calibration_policy_count": 2, "calibration_spearman": 1.0, "held_out_policies": ["phantom_shortcut"], "held_out_policy_count": 1, "held_out_return_gaps": {"phantom_shortcut": 2.0}, "prospective_model_exploitation_regret": 1.85, "prospective_selected_policy": "phantom_shortcut", "prospective_selected_policy_true_terminal": "collision", "prospective_spearman": -0.5, "scope": "model frozen before a disjoint authored policy is added; not learned-policy generalization"},
     "selected_policy_true_terminal": "collision",
     "spearman_rank_correlation": -0.5,
     "support_gate_audit": {

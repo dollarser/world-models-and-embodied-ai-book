@@ -40,6 +40,13 @@ def main() -> int:
         raise AssertionError("three fault locations must remain indistinguishable from final scores alone")
     if attribution["scenarios"]["action_grounding"]["selected_policy"] != "idle":
         raise AssertionError("the grounding fault must change the selected policy")
+    prospective = metrics["prospective_policy_ranking_audit"]
+    if prospective["calibration_spearman"] != 1.0:
+        raise AssertionError("the frozen retrospective panel must appear perfectly ranked")
+    if prospective["prospective_selected_policy_true_terminal"] != "collision":
+        raise AssertionError("the disjoint prospective policy must expose the ranking failure")
+    if prospective["prospective_model_exploitation_regret"] != 1.85:
+        raise AssertionError("the prospective policy failure must preserve the fixed true regret")
 
     report = {
         "experiment_id": "EXP-17-01",
