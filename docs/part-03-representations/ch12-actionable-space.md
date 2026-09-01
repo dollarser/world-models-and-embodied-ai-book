@@ -117,7 +117,7 @@ NeRF 和 3D Gaussian Splatting 以新视角渲染和场景重建见长。[Nerfst
 
 2026 年 Google DeepMind 发布的 [D4RT](https://deepmind.google/blog/d4rt-teaching-ai-to-see-the-world-in-four-dimensions/) 将点图、深度、相机与跨时间跟踪统一为动态 4D 重建查询，项目页提供论文与可视结果 `[V/A,R0]`。它是“随时间重建与跟踪”的研究锚点，不自动证明机器人抓取、导航或驾驶安全有效；本书未运行其模型。
 
-`CLAIM-12-05`（recommendation）：辐射场、Gaussian、点图或动态重建进入行动系统后，应另行验证度量尺度、碰撞几何、未知空间、动态一致性和任务 outcome；渲染指标不能替代这些门禁。
+`CLAIM-12-05`（recommendation）：只有当辐射场、Gaussian、点图或动态重建被控制器或规划器消费时，才应另行验证度量尺度、碰撞几何、未知空间、动态一致性和任务 outcome；渲染指标不能替代这些门禁。若它只用于可视化，应明确标为非行动表示，无需伪装成已通过控制门禁。
 
 ## 12.6 affordance：对象、动作与本体的关系
 

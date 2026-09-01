@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "audit_date": "2026-09-01",
+  "selection_basis": "Recommendations that can change resource escalation, data inclusion, evaluation publication, runtime activation, or safety-critical execution.",
+  "claims": [
+    {
+      "claim_id": "CLAIM-01-03",
+      "category": "deployment_safety",
+      "applies_when": "Any book model output is connected to a real or simulated driving control path.",
+      "required_action": "Route execution through an independently specified vehicle and safety gate with auditable inputs and outputs.",
+      "fallback_or_stop": "Keep the output advisory-only when the independent gate or its acceptance evidence is unavailable.",
+      "not_authorized": "A successful book fixture does not authorize direct vehicle control or road deployment."
+    },
+    {
+      "claim_id": "CLAIM-01-05",
+      "category": "resource_escalation",
+      "applies_when": "A reader considers moving beyond deterministic CPU fixtures to downloaded data or GPU runs.",
+      "required_action": "Complete the S-tier contract first and record hardware, data license, cost, and unresolved performance claims.",
+      "fallback_or_stop": "Remain at S tier and leave M/L work pending when hardware, permission, or download budget is unclear.",
+      "not_authorized": "The book does not require hardware purchase or permit unmeasured 24 GB and realtime claims."
+    },
+    {
+      "claim_id": "CLAIM-03-05",
+      "category": "data_governance",
+      "applies_when": "Driving training or evaluation consumes sensor frames, map transforms, timestamps, or duration-bearing actions.",
+      "required_action": "Declare every consumed frame, transform, clock basis, and action duration and verify them on a fixed trajectory.",
+      "fallback_or_stop": "Mark unverifiable fields invalid and exclude dependent samples or tasks instead of inventing defaults.",
+      "not_authorized": "Schema presence alone does not prove calibration, synchronization, or road validity."
+    },
+    {
+      "claim_id": "CLAIM-04-03",
+      "category": "data_governance",
+      "applies_when": "Episodes share routes, scenes, operators, objects, or other correlated acquisition units.",
+      "required_action": "Split at the declared correlation unit and record overlap audits before reporting generalization.",
+      "fallback_or_stop": "Downgrade the result to an in-distribution diagnostic when leakage-safe grouping cannot be established.",
+      "not_authorized": "Random frame splitting does not authorize a route-generalization or scene-generalization claim."
+    },
+    {
+      "claim_id": "CLAIM-04-04",
+      "category": "evaluation_publication",
+      "applies_when": "Training or evaluation contains stochastic seeds, episode sampling, or policy-environment interaction.",
+      "required_action": "Report seed and episode structure separately and choose training seed count from the claim and cost profile.",
+      "fallback_or_stop": "Use descriptive single-run language when replication is unavailable and retain the uncertainty as a limitation.",
+      "not_authorized": "Many episodes from one trained seed do not authorize a claim about training variability."
+    },
+    {
+      "claim_id": "CLAIM-05-06",
+      "category": "deployment_safety",
+      "applies_when": "A driving predictor exposes uncertainty to a planner, controller, or safety gateway.",
+      "required_action": "Separate data noise from support or OOD uncertainty and test the downstream response to each signal.",
+      "fallback_or_stop": "Abstain, reduce the operating domain, or use an independent safe planner when uncertainty is unsupported.",
+      "not_authorized": "A calibrated pixel loss does not authorize safe planning under distribution shift."
+    },
+    {
+      "claim_id": "CLAIM-07-06",
+      "category": "deployment_safety",
+      "applies_when": "A learned world model proposes candidate driving trajectories or action sequences.",
+      "required_action": "Pass candidates through independent feasibility, rule, collision, and fallback layers before execution.",
+      "fallback_or_stop": "Reject all candidates and invoke the predefined safe path when none pass every required layer.",
+      "not_authorized": "High predicted return does not authorize bypassing independent driving constraints."
+    },
+    {
+      "claim_id": "CLAIM-08-06",
+      "category": "deployment_safety",
+      "applies_when": "An imagination-trained actor is evaluated or connected to a physical or traffic environment.",
+      "required_action": "Run independent closed-loop evaluation with explicit intervention, termination, and safety outcomes.",
+      "fallback_or_stop": "Keep the actor offline or advisory-only if the independent closed-loop gate is absent or fails.",
+      "not_authorized": "Imagined return or latent consistency does not authorize execution."
+    },
+    {
+      "claim_id": "CLAIM-09-07",
+      "category": "evaluation_publication",
+      "applies_when": "A benchmark result will support a comparison, chapter conclusion, or release claim.",
+      "required_action": "Freeze the benchmark card, evaluator version, denominator, exclusions, and aggregation before the result run.",
+      "fallback_or_stop": "Label post-hoc changes exploratory and rerun the frozen protocol before making a confirmatory claim.",
+      "not_authorized": "A mutable evaluator does not authorize a stable ranking or longitudinal comparison."
+    },
+    {
+      "claim_id": "CLAIM-11-06",
+      "category": "deployment_safety",
+      "applies_when": "Driving prediction includes other agents whose reactions depend on ego action.",
+      "required_action": "Declare the other-agent behavior model, interaction protocol, and ego-action conditioning used in evaluation.",
+      "fallback_or_stop": "Restrict the claim to open-loop replay when interactive agent response is not modeled or tested.",
+      "not_authorized": "Plausible video continuation does not authorize an interactive traffic response claim."
+    },
+    {
+      "claim_id": "CLAIM-14-06",
+      "category": "deployment_safety",
+      "applies_when": "A generative action policy supplies commands to a driving stack.",
+      "required_action": "Validate action semantics, timing, selector behavior, constraints, and independent safety filtering end to end.",
+      "fallback_or_stop": "Reject or hand control to the predefined fallback when no sampled action passes the executable gate.",
+      "not_authorized": "Diverse or visually plausible samples do not authorize driving execution."
+    },
+    {
+      "claim_id": "CLAIM-15-06",
+      "category": "deployment_safety",
+      "applies_when": "A VLM or language-conditioned model contributes to an automated driving decision path.",
+      "required_action": "Limit it to low-frequency candidate generation and validate commands through deterministic executable contracts.",
+      "fallback_or_stop": "Ignore malformed, late, unsupported, or unsafe candidates and retain the independent controller.",
+      "not_authorized": "Natural-language fluency does not authorize high-frequency actuation or safety arbitration."
+    },
+    {
+      "claim_id": "CLAIM-17-03",
+      "category": "evaluation_publication",
+      "applies_when": "A world model evaluates or selects a policy that changes the visited state-action distribution.",
+      "required_action": "Test policy-induced distribution shift and separate proxy ranking from actual closed-loop outcome evidence.",
+      "fallback_or_stop": "Restrict conclusions to the tested policy population when prospective support coverage is unavailable.",
+      "not_authorized": "Agreement on a fixed dataset does not authorize ranking new policies or OOD scenarios."
+    },
+    {
+      "claim_id": "CLAIM-18-06",
+      "category": "deployment_safety",
+      "applies_when": "Post-trained VLA or WAM components enter an automated-driving evaluation or execution path.",
+      "required_action": "Use an independent evaluator and gateway for action validity, closed-loop outcome, timing, and safety.",
+      "fallback_or_stop": "Keep the component offline when independent evaluation or a valid fallback path is unavailable.",
+      "not_authorized": "Joint post-training loss does not authorize road deployment or direct control."
+    },
+    {
+      "claim_id": "CLAIM-19-05",
+      "category": "evaluation_publication",
+      "applies_when": "A study switches physics solver, accelerator path, or simulator backend while comparing performance.",
+      "required_action": "Hold model, initial state, and actions fixed and compare trajectory, contact, termination, and outcome divergence.",
+      "fallback_or_stop": "Report backends separately and treat backend as an experiment variable when tolerance or outcome changes.",
+      "not_authorized": "Higher throughput does not authorize claims of equivalent physics or task validity."
+    },
+    {
+      "claim_id": "CLAIM-19-06",
+      "category": "resource_escalation",
+      "applies_when": "A driving question may be evaluated in lightweight MetaDrive or higher-fidelity CARLA scenarios.",
+      "required_action": "Start with the least costly simulator that can answer the declared question and escalate on identified evidence gaps.",
+      "fallback_or_stop": "Stop at the lighter tier with explicit limitations when compute, assets, or scenario permission is unavailable.",
+      "not_authorized": "Scores from different simulators do not authorize a direct numerical ranking across backends."
+    },
+    {
+      "claim_id": "CLAIM-20-01",
+      "category": "evaluation_publication",
+      "applies_when": "A chapter, report, or release publishes task success rates.",
+      "required_action": "Expose task population, initialization, definitions, timeout, retry, valid denominator, exclusions, and per-task results.",
+      "fallback_or_stop": "Publish only incomplete descriptive evidence and omit a headline aggregate when required fields are missing.",
+      "not_authorized": "A filtered numerator and denominator do not authorize a representative overall success claim."
+    },
+    {
+      "claim_id": "CLAIM-20-03",
+      "category": "evaluation_publication",
+      "applies_when": "Results come from benchmark cards with different tasks, protocols, metrics, or aggregation rules.",
+      "required_action": "Compare only within compatible frozen cards or state the differences without collapsing them into one ranking.",
+      "fallback_or_stop": "Use a qualitative side-by-side account when compatibility cannot be demonstrated.",
+      "not_authorized": "A shared metric name does not authorize cross-benchmark numerical comparison."
+    },
+    {
+      "claim_id": "CLAIM-21-04",
+      "category": "deployment_safety",
+      "applies_when": "Perception, policy, controller, and gateway execute asynchronously or at different rates.",
+      "required_action": "Monitor data age, queueing, deadlines, cancellation, and end-to-end reaction time under load.",
+      "fallback_or_stop": "Drop stale commands and enter the predefined safe mode when deadline or freshness contracts fail.",
+      "not_authorized": "Fast isolated inference does not authorize a realtime or safe end-to-end claim."
+    },
+    {
+      "claim_id": "CLAIM-21-05",
+      "category": "deployment_safety",
+      "applies_when": "A runtime gateway must respond to invalid, late, uncertain, or unsafe model output.",
+      "required_action": "Select only embodiment-specific validated fallback modes with entry, completion, failure, and recovery rules.",
+      "fallback_or_stop": "Refuse activation or leave the operating domain when no reachable validated fallback exists.",
+      "not_authorized": "A language model may not invent fallback behavior or select a merely name-matched mode."
+    },
+    {
+      "claim_id": "CLAIM-21-06",
+      "category": "deployment_safety",
+      "applies_when": "A driving system claims a minimum-risk maneuver or other safety fallback.",
+      "required_action": "Define scenario-specific maneuver selection and test reachability, traffic interaction, completion, and failure.",
+      "fallback_or_stop": "Do not activate the claimed operating domain when no tested maneuver can safely handle required failures.",
+      "not_authorized": "Naming an MRM does not authorize assuming it is reachable or safe in every scene."
+    },
+    {
+      "claim_id": "CLAIM-21-08",
+      "category": "deployment_safety",
+      "applies_when": "An uncertainty score controls abstention, escalation, or a runtime safety gate.",
+      "required_action": "Version the score, calibration data, threshold, operating domain, and downstream response together.",
+      "fallback_or_stop": "Disable or conservatively revalidate the gate after model, data, threshold, or domain drift.",
+      "not_authorized": "A scalar confidence score does not authorize universal calibration or safety coverage."
+    },
+    {
+      "claim_id": "CLAIM-22-05",
+      "category": "deployment_safety",
+      "applies_when": "The capstone includes an automated-driving branch or reports driving-task completion.",
+      "required_action": "Report task completion separately from collision, intervention, rule, timing, and fallback outcomes.",
+      "fallback_or_stop": "Keep the driving branch in simulation or advisory mode unless its independent safety gates pass.",
+      "not_authorized": "Task completion does not authorize a road-safety or deployment claim."
+    },
+    {
+      "claim_id": "CLAIM-22-09",
+      "category": "evaluation_publication",
+      "applies_when": "The capstone produces a final result intended to support the book conclusion or release.",
+      "required_action": "Run independent final evaluation from frozen artifacts and retain environment, command, log, and result provenance.",
+      "fallback_or_stop": "Publish the outcome as provisional when independent rerun or provenance artifacts are incomplete.",
+      "not_authorized": "A development-loop best run does not authorize the final headline conclusion."
+    }
+  ]
+}

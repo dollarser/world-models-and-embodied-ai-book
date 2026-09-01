@@ -21,6 +21,7 @@ REQUIRED = (
     "specs/evidence-policy.md",
     "specs/fact-evidence.json",
     "specs/inference-evidence.json",
+    "specs/critical-recommendations.json",
     "specs/experiment-card.schema.json",
     "specs/benchmark-card.schema.json",
     "specs/chapter-status.schema.json",
@@ -75,6 +76,12 @@ ALLOWED_FACT_EVIDENCE_BASES = {
     "mathematical_identity",
 }
 ALLOWED_SOURCE_MATURITY = {"P", "A", "O", "V", "T", "internal"}
+ALLOWED_RECOMMENDATION_CATEGORIES = {
+    "resource_escalation",
+    "data_governance",
+    "evaluation_publication",
+    "deployment_safety",
+}
 RESULT_BOUNDARY_MARKERS = ("不", "不能", "只", "未", "无法", "并非", "不是", "没有")
 
 
@@ -390,6 +397,50 @@ def check_inference_evidence_contract(
     return errors
 
 
+def check_critical_recommendation_contract(
+    recommendation_claim_ids: set[str], registry: object
+) -> list[str]:
+    """Require high-consequence author choices to expose trigger, action, fallback, and authority limits."""
+
+    if not isinstance(registry, dict):
+        return ["critical recommendation registry must be a JSON object"]
+    errors: list[str] = []
+    if registry.get("version") != 1:
+        errors.append("critical recommendation registry version must be 1")
+    audit_date = registry.get("audit_date")
+    if not isinstance(audit_date, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}", audit_date) is None:
+        errors.append("critical recommendation registry must have an ISO audit_date")
+    selection_basis = registry.get("selection_basis")
+    if not isinstance(selection_basis, str) or len(selection_basis.strip()) < 60:
+        errors.append("critical recommendation registry must explain its selection basis")
+    entries = registry.get("claims")
+    if not isinstance(entries, list):
+        return errors + ["critical recommendation registry claims must be a list"]
+
+    entry_ids = [entry.get("claim_id") for entry in entries if isinstance(entry, dict)]
+    duplicates = sorted({claim_id for claim_id in entry_ids if entry_ids.count(claim_id) > 1})
+    for claim_id in duplicates:
+        errors.append(f"critical recommendation registry contains duplicate claim: {claim_id}")
+    registered_ids = {claim_id for claim_id in entry_ids if isinstance(claim_id, str)}
+    for claim_id in sorted(registered_ids - recommendation_claim_ids):
+        errors.append(f"critical recommendation registry contains non-recommendation or missing claim: {claim_id}")
+
+    required_fields = ("applies_when", "required_action", "fallback_or_stop", "not_authorized")
+    for entry in entries:
+        if not isinstance(entry, dict):
+            errors.append("critical recommendation registry entry must be an object")
+            continue
+        claim_id = entry.get("claim_id", "<missing>")
+        category = entry.get("category")
+        if category not in ALLOWED_RECOMMENDATION_CATEGORIES:
+            errors.append(f"critical recommendation {claim_id} has invalid category: {category!r}")
+        for field in required_fields:
+            value = entry.get(field)
+            if not isinstance(value, str) or len(value.strip()) < 30:
+                errors.append(f"critical recommendation {claim_id} must state {field}")
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -540,6 +591,29 @@ def check_inference_evidence_files() -> list[str]:
     return check_inference_evidence_contract(inference_claim_ids, registry)
 
 
+def check_critical_recommendation_files() -> list[str]:
+    manifest_path = ROOT / "specs/book-manifest.json"
+    registry_path = ROOT / "specs/critical-recommendations.json"
+    if not manifest_path.is_file() or not registry_path.is_file():
+        return []
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    recommendation_claim_ids: set[str] = set()
+    for chapter in manifest.get("chapters", []):
+        if not isinstance(chapter, dict) or not isinstance(chapter.get("document"), str):
+            continue
+        document_path = ROOT / chapter["document"]
+        if not document_path.is_file():
+            continue
+        for match in CLAIM_DEFINITION_PATTERN.finditer(document_path.read_text(encoding="utf-8")):
+            if match.group(4) == "recommendation":
+                recommendation_claim_ids.add(match.group(1))
+    return check_critical_recommendation_contract(recommendation_claim_ids, registry)
+
+
 def main() -> int:
     errors = (
         check_required()
@@ -550,6 +624,7 @@ def main() -> int:
         + check_glossary_files()
         + check_fact_evidence_files()
         + check_inference_evidence_files()
+        + check_critical_recommendation_files()
     )
     if errors:
         for error in errors:
@@ -557,7 +632,8 @@ def main() -> int:
         return 1
     print(
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
-        "heading hierarchy, chapter teaching sections, reader terminology, fact/inference evidence, manifest, "
+        "heading hierarchy, chapter teaching sections, reader terminology, fact/inference evidence, critical "
+        "recommendation policy, manifest, "
         "local links, 22-chapter PRD"
     )
     return 0

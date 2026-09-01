@@ -5,6 +5,7 @@ import unittest
 from scripts.check_book import (
     check_chapter_sections,
     check_claim_contract,
+    check_critical_recommendation_contract,
     check_fact_evidence_contract,
     check_figure_contract,
     check_glossary_contract,
@@ -269,6 +270,46 @@ class InferenceEvidenceContractTest(unittest.TestCase):
         errors = check_inference_evidence_contract({"CLAIM-17-04"}, registry)
         self.assertTrue(any("two explicit premises" in item for item in errors))
         self.assertTrue(any("counterexample or falsifier" in item for item in errors))
+
+
+class CriticalRecommendationContractTest(unittest.TestCase):
+    def test_accepts_explicit_trigger_action_fallback_and_authority_boundary(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "selection_basis": "Recommendations that change resource escalation, publication, or safety-critical execution decisions.",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-21-05",
+                    "category": "deployment_safety",
+                    "applies_when": "A runtime gateway receives invalid, late, or unsafe model output.",
+                    "required_action": "Select only a predefined and embodiment-specific validated fallback mode.",
+                    "fallback_or_stop": "Refuse activation when no reachable and validated fallback mode exists.",
+                    "not_authorized": "A language model is not authorized to invent an execution fallback.",
+                }
+            ],
+        }
+        self.assertEqual([], check_critical_recommendation_contract({"CLAIM-21-05"}, registry))
+
+    def test_rejects_stale_type_and_missing_stop_boundary(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "selection_basis": "Recommendations that change resource escalation, publication, or safety-critical execution decisions.",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-21-06",
+                    "category": "deployment_safety",
+                    "applies_when": "A runtime system handles a safety-relevant output during execution.",
+                    "required_action": "Select only a predefined and independently validated behavior.",
+                    "fallback_or_stop": "none",
+                    "not_authorized": "The model is not authorized to invent an execution fallback.",
+                }
+            ],
+        }
+        errors = check_critical_recommendation_contract({"CLAIM-21-05"}, registry)
+        self.assertTrue(any("non-recommendation or missing claim" in item for item in errors))
+        self.assertTrue(any("fallback_or_stop" in item for item in errors))
 
 
 if __name__ == "__main__":

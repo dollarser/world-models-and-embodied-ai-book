@@ -164,7 +164,7 @@ make ch19-smoke
 
 [MJX 官方文档](https://mujoco.readthedocs.io/en/stable/mjx.html) 当前区分 MJX-JAX 和 MJX-Warp：两者功能覆盖、批处理方式和自动微分能力不同；Warp 更接近完整 MuJoCo 功能但不提供自动微分，JAX 仍有缺失特性。把 XML 加载成功不能当作行为等价。
 
-`CLAIM-19-05`（recommendation）：切换 MuJoCo CPU、MJX-JAX、MJX-Warp 或其他求解后端时，应固定模型、初态和动作序列，逐步比较状态、接触、约束、奖励、终止和最终任务结果，再报告吞吐与显存。
+`CLAIM-19-05`（recommendation）：切换 MuJoCo CPU、MJX-JAX、MJX-Warp 或其他求解后端时，应固定模型、初态和动作序列，逐步比较状态、接触、约束、奖励、终止和最终任务结果，再报告吞吐与显存。若差异超过预注册容差或改变任务结论，就不得合并成同一性能比较，应分别报告并把后端视为实验变量。
 
 吞吐测试还必须说明并行环境数、是否渲染、步长、模型复杂度、编译时间是否计入以及硬件。单环境延迟和大批量 steps/s 回答不同问题。
 
