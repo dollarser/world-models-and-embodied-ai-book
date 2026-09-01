@@ -20,7 +20,7 @@
 - 本章补齐：episode 分母、成功定义、分层指标、benchmark card 与部署证据阶梯；
 - 不要求：3D 视觉、真实硬件、特定仿真器或 GPU。
 
-第15章已完成当前审查，第17章已形成正文与 S 档 model-exploitation 实验；第19章也已锁定仿真合同、MetaDrive/CARLA 分工和 Sim2Real 证据边界。当前仍需完成批次 C/D 交叉审查，才能标记 `reviewed`。
+第15、17、19章及本章已经完成批次交叉审查：action schema、model exploitation、仿真合同和闭环评测的边界已对齐。`reviewed` 仍只覆盖正文与 S 档 fixture，不表示真实策略、仿真器或硬件已复现。
 
 ### 非目标
 
@@ -152,6 +152,8 @@ make ch20-smoke
 ```
 
 `CLAIM-20-03`（recommendation）：若 benchmark card 的任务、成功定义或分母不同，应先标记“不可直接比较”，再决定是否能通过重算得到共同协议，而不是直接排序。
+
+上述字段已经映射到 `specs/benchmark-card.schema.json`。`benchmarks/BENCH-20-01.json` 冻结本章两种具名协议、完整八行分母、成功判据、Wilson 95% 区间假设和不可比因素；它还明确将 hard suite 的加入视为任务总体变化，而不是 OOD score 实验。严格验证可以发现缺字段、错误章节引用和产物漂移，但不能让这八个手工 episode 变成真实 benchmark 样本。
 
 视频最好保存索引和必要片段，而非只挑成功 demo。索引应包含 episode ID、任务、种子、结果、失败类别、日志路径和许可状态；涉及人员、家庭或道路数据时先做隐私与发布审查。
 

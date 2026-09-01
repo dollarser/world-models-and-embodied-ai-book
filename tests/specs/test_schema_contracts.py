@@ -84,6 +84,76 @@ class ExperimentSchemaContractTest(unittest.TestCase):
         card["data"]["download_bytes"] = 100
         self.assert_invalid(card)
 
+    def test_benchmark_id_must_be_well_formed(self) -> None:
+        card = deepcopy(self.card)
+        card["benchmark_ids"] = ["benchmark-latest"]
+        self.assert_invalid(card)
+
+
+class BenchmarkSchemaContractTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        schema = json.loads((ROOT / "specs/benchmark-card.schema.json").read_text(encoding="utf-8"))
+        cls.validator = Draft202012Validator(schema)
+        cls.card = json.loads((ROOT / "benchmarks/BENCH-09-01.json").read_text(encoding="utf-8"))
+
+    def assert_valid(self, card: dict[str, object]) -> None:
+        self.assertEqual([], list(self.validator.iter_errors(card)))
+
+    def assert_invalid(self, card: dict[str, object]) -> None:
+        self.assertNotEqual([], list(self.validator.iter_errors(card)))
+
+    def test_current_benchmark_card_is_valid(self) -> None:
+        self.assert_valid(self.card)
+
+    def test_executed_benchmark_requires_artifact(self) -> None:
+        card = deepcopy(self.card)
+        card["artifacts"] = []
+        self.assert_invalid(card)
+
+    def test_frozen_benchmark_may_precede_any_run(self) -> None:
+        card = deepcopy(self.card)
+        card["status"] = "frozen"
+        card["experiment_ids"] = []
+        card["artifacts"] = []
+        self.assert_valid(card)
+
+    def test_executed_benchmark_requires_experiment(self) -> None:
+        card = deepcopy(self.card)
+        card["experiment_ids"] = []
+        self.assert_invalid(card)
+
+    def test_deterministic_protocol_rejects_seed_list(self) -> None:
+        card = deepcopy(self.card)
+        card["protocol"]["randomness"]["seeds"] = [0]
+        self.assert_invalid(card)
+
+    def test_stochastic_protocol_requires_seed(self) -> None:
+        card = deepcopy(self.card)
+        card["protocol"]["randomness"]["deterministic"] = False
+        self.assert_invalid(card)
+
+    def test_statistical_interval_requires_confidence_level(self) -> None:
+        card = deepcopy(self.card)
+        uncertainty = card["metrics"][0]["statistical_uncertainty"]
+        uncertainty["method"] = "bootstrap"
+        self.assert_invalid(card)
+
+    def test_not_applicable_uncertainty_rejects_confidence_level(self) -> None:
+        card = deepcopy(self.card)
+        card["metrics"][0]["statistical_uncertainty"]["confidence_level"] = 0.95
+        self.assert_invalid(card)
+
+    def test_enabled_distribution_shift_requires_score_protocol(self) -> None:
+        card = deepcopy(self.card)
+        card["distribution_shift"] = {"enabled": True}
+        self.assert_invalid(card)
+
+    def test_fixture_dataset_cannot_declare_download(self) -> None:
+        card = deepcopy(self.card)
+        card["datasets"][0]["download_bytes"] = 1
+        self.assert_invalid(card)
+
 
 if __name__ == "__main__":
     unittest.main()

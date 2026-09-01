@@ -4,6 +4,7 @@
   "chapter": 20,
   "status": "smoke",
   "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05"],
+  "benchmark_ids": ["BENCH-20-01"],
   "claim_scope": [
     "success rates are not directly comparable when task populations, success definitions, or denominators differ",
     "a benchmark card should expose protocol differences before ranking models",

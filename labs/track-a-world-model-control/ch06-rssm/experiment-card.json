@@ -4,6 +4,7 @@
   "chapter": 6,
   "status": "smoke",
   "claim_ids": ["CLAIM-06-01", "CLAIM-06-02", "CLAIM-06-03", "CLAIM-06-04"],
+  "benchmark_ids": ["BENCH-06-01"],
   "claim_scope": [
     "prior uses history and action",
     "posterior uses observations for correction",

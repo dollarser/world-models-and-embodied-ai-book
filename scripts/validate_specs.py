@@ -31,9 +31,16 @@ def schema_errors(instance: object, schema: dict[str, object], label: str) -> li
     ]
 
 
-def validate_schemas() -> tuple[dict[str, object], dict[str, object], dict[str, object], list[str]]:
+def validate_schemas() -> tuple[
+    dict[str, object],
+    dict[str, object],
+    dict[str, object],
+    dict[str, object],
+    list[str],
+]:
     paths = {
         "experiment": "specs/experiment-card.schema.json",
+        "benchmark": "specs/benchmark-card.schema.json",
         "manifest": "specs/book-manifest.schema.json",
         "chapter_status": "specs/chapter-status.schema.json",
     }
@@ -49,7 +56,13 @@ def validate_schemas() -> tuple[dict[str, object], dict[str, object], dict[str, 
         except SchemaError as exc:
             errors.append(f"{path}: invalid schema: {exc.message}")
         schemas[name] = schema
-    return schemas["experiment"], schemas["manifest"], schemas["chapter_status"], errors
+    return (
+        schemas["experiment"],
+        schemas["benchmark"],
+        schemas["manifest"],
+        schemas["chapter_status"],
+        errors,
+    )
 
 
 def validate_manifest(manifest_schema: dict[str, object], status_schema: dict[str, object]) -> tuple[dict[str, object], list[str]]:
@@ -140,11 +153,124 @@ def validate_experiments(schema: dict[str, object], manifest: dict[str, object])
     return errors
 
 
+def validate_benchmarks(schema: dict[str, object], manifest: dict[str, object]) -> list[str]:
+    """Validate frozen protocols and their links to chapters, runs, and artifacts."""
+
+    errors: list[str] = []
+    chapters = {
+        chapter.get("number"): chapter
+        for chapter in manifest.get("chapters", [])
+        if isinstance(chapter, dict) and isinstance(chapter.get("number"), int)
+    }
+    experiment_chapters = {
+        experiment_id: chapter_number
+        for chapter_number, chapter in chapters.items()
+        for experiment_id in chapter.get("experiments", [])
+    }
+    experiment_cards: dict[str, dict[str, object]] = {}
+    for experiment_path in ROOT.glob("labs/**/experiment-card.json"):
+        experiment_card = json.loads(experiment_path.read_text(encoding="utf-8"))
+        if isinstance(experiment_card, dict) and isinstance(experiment_card.get("id"), str):
+            experiment_cards[experiment_card["id"]] = experiment_card
+
+    seen_ids: set[str] = set()
+    benchmark_cards: dict[str, dict[str, object]] = {}
+    for path in sorted(ROOT.glob("benchmarks/*.json")):
+        card = json.loads(path.read_text(encoding="utf-8"))
+        label = str(path.relative_to(ROOT))
+        errors.extend(schema_errors(card, schema, label))
+        if not isinstance(card, dict):
+            continue
+
+        benchmark_id = card.get("id")
+        chapter_number = card.get("chapter")
+        if isinstance(benchmark_id, str):
+            if benchmark_id in seen_ids:
+                errors.append(f"duplicate benchmark card id: {benchmark_id}")
+            seen_ids.add(benchmark_id)
+            benchmark_cards[benchmark_id] = card
+            if isinstance(chapter_number, int) and not benchmark_id.startswith(f"BENCH-{chapter_number:02d}-"):
+                errors.append(f"{label}: id does not match chapter {chapter_number}: {benchmark_id}")
+
+        chapter = chapters.get(chapter_number)
+        if chapter is None:
+            errors.append(f"{label}: chapter is not registered in manifest: {chapter_number}")
+            continue
+        registered_claims = set(chapter.get("claims", []))
+        for claim_id in card.get("claim_ids", []):
+            if claim_id not in registered_claims:
+                errors.append(f"{label}: claim is not registered in chapter {chapter_number}: {claim_id}")
+
+        for experiment_id in card.get("experiment_ids", []):
+            registered_chapter = experiment_chapters.get(experiment_id)
+            if registered_chapter is None:
+                errors.append(f"{label}: experiment is not registered in manifest: {experiment_id}")
+            elif registered_chapter != chapter_number:
+                errors.append(
+                    f"{label}: experiment {experiment_id} belongs to chapter {registered_chapter}, not {chapter_number}"
+                )
+            experiment_card = experiment_cards.get(experiment_id)
+            if (
+                experiment_card is not None
+                and isinstance(benchmark_id, str)
+                and benchmark_id not in experiment_card.get("benchmark_ids", [])
+            ):
+                errors.append(f"{label}: experiment {experiment_id} does not link back to {benchmark_id}")
+        for artifact in card.get("artifacts", []):
+            if isinstance(artifact, str) and not (ROOT / artifact).is_file():
+                errors.append(f"{label}: artifact does not exist: {artifact}")
+
+        layers = set(card.get("evaluation_layers", []))
+        metric_ids: set[str] = set()
+        for metric in card.get("metrics", []):
+            if not isinstance(metric, dict):
+                continue
+            metric_id = metric.get("id")
+            if isinstance(metric_id, str):
+                if metric_id in metric_ids:
+                    errors.append(f"{label}: duplicate metric id: {metric_id}")
+                metric_ids.add(metric_id)
+                if isinstance(chapter_number, int) and not metric_id.startswith(f"METRIC-{chapter_number:02d}-"):
+                    errors.append(f"{label}: metric id does not match chapter {chapter_number}: {metric_id}")
+            if metric.get("layer") not in layers:
+                errors.append(f"{label}: metric {metric_id} uses an undeclared evaluation layer: {metric.get('layer')}")
+
+        system_names = [item.get("name") for item in card.get("systems", []) if isinstance(item, dict)]
+        if len(system_names) != len(set(system_names)):
+            errors.append(f"{label}: system names must be unique")
+        declared_download = card.get("resources", {}).get("download_bytes") if isinstance(card.get("resources"), dict) else None
+        dataset_download = sum(
+            item.get("download_bytes", 0)
+            for item in card.get("datasets", [])
+            if isinstance(item, dict) and isinstance(item.get("download_bytes", 0), int)
+        )
+        if declared_download != dataset_download:
+            errors.append(
+                f"{label}: resource download_bytes {declared_download} != dataset total {dataset_download}"
+            )
+
+    for experiment_id, experiment_card in experiment_cards.items():
+        experiment_chapter = experiment_card.get("chapter")
+        for benchmark_id in experiment_card.get("benchmark_ids", []):
+            benchmark_card = benchmark_cards.get(benchmark_id)
+            if benchmark_card is None:
+                errors.append(f"{experiment_id}: benchmark card does not exist: {benchmark_id}")
+            elif benchmark_card.get("chapter") != experiment_chapter:
+                errors.append(
+                    f"{experiment_id}: benchmark {benchmark_id} belongs to chapter "
+                    f"{benchmark_card.get('chapter')}, not {experiment_chapter}"
+                )
+            elif experiment_id not in benchmark_card.get("experiment_ids", []):
+                errors.append(f"{experiment_id}: benchmark {benchmark_id} does not link back to the experiment")
+    return errors
+
+
 def main() -> int:
-    experiment_schema, manifest_schema, status_schema, errors = validate_schemas()
+    experiment_schema, benchmark_schema, manifest_schema, status_schema, errors = validate_schemas()
     manifest, manifest_errors = validate_manifest(manifest_schema, status_schema)
     errors.extend(manifest_errors)
     errors.extend(validate_experiments(experiment_schema, manifest))
+    errors.extend(validate_benchmarks(benchmark_schema, manifest))
 
     if errors:
         for message in errors:
@@ -152,7 +278,11 @@ def main() -> int:
         return 1
     chapter_count = len(manifest["chapters"])
     card_count = sum(1 for _ in ROOT.glob("labs/**/experiment-card.json"))
-    print(f"strict specs passed: 3 schemas, {chapter_count} chapters, {card_count} experiment card(s)")
+    benchmark_count = sum(1 for _ in ROOT.glob("benchmarks/*.json"))
+    print(
+        f"strict specs passed: 4 schemas, {chapter_count} chapters, "
+        f"{card_count} experiment card(s), {benchmark_count} benchmark card(s)"
+    )
     return 0
 
 

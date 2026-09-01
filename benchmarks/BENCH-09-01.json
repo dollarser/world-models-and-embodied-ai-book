@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "id": "BENCH-09-01",
+  "chapter": 9,
+  "title": "One-step prediction versus closed-loop action selection",
+  "status": "executed",
+  "purpose": "Test whether a predictor ranking based on low-motion one-step error agrees with closed-loop goal-reaching utility under action intervention.",
+  "claim_ids": ["CLAIM-09-01", "CLAIM-09-02", "CLAIM-09-07"],
+  "evaluation_layers": ["E1", "E2", "E4"],
+  "allowed_claims": [
+    "The fixed fixture exhibits a ranking reversal between one-step RMSE and closed-loop success.",
+    "Action sensitivity is necessary to diagnose the action-blind predictor in this fixture."
+  ],
+  "forbidden_claims": [
+    "The fixture estimates ranking-reversal frequency in learned world models.",
+    "The fixture establishes real robot, autonomous-driving, OOD, or safety performance.",
+    "The fixture compares published world-model architectures."
+  ],
+  "systems": [
+    {
+      "name": "action_blind",
+      "role": "baseline",
+      "type": "deterministic persistence predictor",
+      "revision": "fixture-v1",
+      "inputs": ["scalar state", "scalar candidate action"],
+      "outputs": ["scalar next-state prediction"],
+      "preprocessing": "none; the candidate action is deliberately ignored"
+    },
+    {
+      "name": "action_faithful_biased",
+      "role": "system_under_test",
+      "type": "deterministic action-conditioned predictor with fixed bias",
+      "revision": "fixture-v1",
+      "inputs": ["scalar state", "scalar candidate action"],
+      "outputs": ["scalar next-state prediction"],
+      "preprocessing": "none"
+    }
+  ],
+  "datasets": [
+    {
+      "name": "procedural 1D intervention and goal-reaching fixture",
+      "version": "v1",
+      "license": "MIT",
+      "classification": "fixture",
+      "fixture": true,
+      "download_bytes": 0,
+      "checksum": null,
+      "role": "fixture",
+      "split_definition": "Twelve fixed low-motion one-step pairs and two fixed closed-loop start-goal pairs; no fitted parameters or model selection.",
+      "unit_of_analysis": "one-step transition for E1 and complete episode for E4",
+      "grouping_keys": ["predictor", "evaluation layer"],
+      "leakage_controls": [
+        "No training or calibration occurs.",
+        "The one-step pairs and closed-loop goals are defined separately.",
+        "Both predictors receive identical ordered inputs."
+      ]
+    }
+  ],
+  "protocol": {
+    "version": "fixture-v1",
+    "comparison_unit": "paired predictor evaluation on identical deterministic inputs",
+    "sample_count": 14,
+    "randomness": {
+      "deterministic": true,
+      "seeds": [],
+      "rationale": "All states, actions, goals, predictors, planner tie-breaking, and horizons are fixed."
+    },
+    "horizons": [1, 24],
+    "action_space": "scalar discrete actions {-0.1, 0.0, 0.1}; tuple order resolves equal planner scores toward 0.0",
+    "timing": "one abstract step; no wall-clock or real-time claim",
+    "termination_conditions": [
+      "One-step evaluation ends after all 12 transition pairs.",
+      "Each closed-loop episode ends after exactly 24 planning steps."
+    ],
+    "baselines": ["action_blind persistence predictor"],
+    "comparison_design": "Report each predictor separately on E1 and E4, then compare metric ordering; do not combine metrics into one score.",
+    "selection_protocol": "No hyperparameter, threshold, checkpoint, or post-result model selection is permitted.",
+    "failure_definition": "Closed-loop failure means final absolute goal distance exceeds 0.11 after 24 steps."
+  },
+  "metrics": [
+    {
+      "id": "METRIC-09-01",
+      "name": "one_step_rmse",
+      "layer": "E1",
+      "role": "diagnostic",
+      "direction": "minimize",
+      "unit": "scalar position",
+      "split": "12-pair low-motion fixture",
+      "aggregation": "square root of the mean squared prediction error over all 12 paired transitions",
+      "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:prediction_rmse",
+      "implementation_version": "fixture-v1",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "This is an exhaustive deterministic teaching fixture, not a sample used to estimate population performance."
+      }
+    },
+    {
+      "id": "METRIC-09-02",
+      "name": "closed_loop_success_rate",
+      "layer": "E4",
+      "role": "primary",
+      "direction": "maximize",
+      "unit": "ratio",
+      "split": "two-goal fixture",
+      "aggregation": "arithmetic mean of two Boolean episode outcomes",
+      "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:evaluate",
+      "implementation_version": "fixture-v1",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "Two authored counterexamples are the complete fixture and do not support a population confidence interval."
+      }
+    },
+    {
+      "id": "METRIC-09-03",
+      "name": "mean_final_distance",
+      "layer": "E4",
+      "role": "diagnostic",
+      "direction": "minimize",
+      "unit": "scalar position",
+      "split": "two-goal fixture",
+      "aggregation": "arithmetic mean of final absolute goal distance over both episodes",
+      "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:evaluate",
+      "implementation_version": "fixture-v1",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "The deterministic fixture is not a statistical sample of tasks or environments."
+      }
+    }
+  ],
+  "distribution_shift": {
+    "enabled": false,
+    "rationale": "The fixture tests action sensitivity and metric ordering only; it has no learned uncertainty estimator, calibration split, or OOD population."
+  },
+  "reporting": {
+    "per_system": true,
+    "per_task": false,
+    "disaggregations": ["predictor", "E1 versus E4 evaluation layer"],
+    "raw_predictions": "Recompute from the deterministic source; no large prediction artifact is emitted.",
+    "failure_artifacts": "The action-blind predictor's two failed episode summaries are represented by the result metrics; no video exists.",
+    "confounders": [
+      "The action-faithful predictor has an authored fixed bias.",
+      "Planner tie-breaking intentionally favors no-op.",
+      "E1 has 12 transitions while E4 has two authored episodes."
+    ],
+    "missing_value_policy": "Missing systems, metrics, or episode outcomes invalidate the run; no imputation or case dropping is allowed."
+  },
+  "resources": {
+    "tier": "S",
+    "hardware": "CPU with Python standard library",
+    "gpu_required": false,
+    "download_bytes": 0,
+    "runtime_limit_seconds": 10
+  },
+  "experiment_ids": ["EXP-09-01"],
+  "artifacts": ["results/ch09/EXP-09-01-smoke.json"],
+  "limitations": [
+    "The predictors are deterministic hand-written functions rather than learned world models.",
+    "The state and action spaces are one-dimensional and omit perception, contact, stochasticity, and dynamics mismatch.",
+    "The card demonstrates protocol traceability and a logical counterexample, not external validity or safety."
+  ]
+}

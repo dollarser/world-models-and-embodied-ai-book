@@ -20,6 +20,7 @@
 ## 工程与治理
 
 - [实验卡 Schema](experiment-card.schema.json)
+- [Benchmark Card Schema](benchmark-card.schema.json)
 - [全书清单 Schema](book-manifest.schema.json)
 - [许可、数据与密钥政策](license-and-data-policy.md)
 - [全书质量门禁](book-quality-gates.md)

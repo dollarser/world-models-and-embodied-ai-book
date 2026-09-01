@@ -331,4 +331,4 @@ M 档选做路径才会在用户确认后审计一个锁定版本的真实数据
 - 教学审查：通过；
 - 审查记录路径：`reviews/batch-a-review.md`；
 - 已知限制：真实 LeRobot/驾驶数据审计尚未执行；
-- 下一步：将协议字段映射到 benchmark card Schema，并增加 episode 截断、缺帧 mask 和多传感器时钟测试。
+- 下一步：benchmark card Schema 已接入第6/9/20章；本章仍需增加 episode 截断、缺帧 mask 和多传感器时钟测试。

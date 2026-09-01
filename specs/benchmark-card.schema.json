@@ -1,0 +1,355 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cv2embodied:schema:benchmark-card:v1",
+  "title": "CV2Embodied Benchmark Card",
+  "description": "A frozen evaluation protocol. Run-specific provenance and measured values remain in experiment cards and result artifacts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "chapter",
+    "title",
+    "status",
+    "purpose",
+    "claim_ids",
+    "evaluation_layers",
+    "allowed_claims",
+    "forbidden_claims",
+    "systems",
+    "datasets",
+    "protocol",
+    "metrics",
+    "distribution_shift",
+    "reporting",
+    "resources",
+    "experiment_ids",
+    "artifacts",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^BENCH-[0-9]{2}-[0-9]{2}$"},
+    "chapter": {"type": "integer", "minimum": 1, "maximum": 22},
+    "title": {"$ref": "#/$defs/nonempty"},
+    "status": {"type": "string", "enum": ["draft", "frozen", "executed"]},
+    "purpose": {"$ref": "#/$defs/nonempty"},
+    "claim_ids": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^CLAIM-[0-9]{2}-[0-9]{2}$"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "evaluation_layers": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["E0", "E1", "E2", "E3", "E4"]},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "allowed_claims": {"$ref": "#/$defs/nonempty_list"},
+    "forbidden_claims": {"$ref": "#/$defs/nonempty_list"},
+    "systems": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "role", "type", "revision", "inputs", "outputs", "preprocessing"],
+        "properties": {
+          "name": {"$ref": "#/$defs/nonempty"},
+          "role": {"type": "string", "enum": ["system_under_test", "baseline", "oracle", "adapter", "safety_layer"]},
+          "type": {"$ref": "#/$defs/nonempty"},
+          "revision": {"$ref": "#/$defs/nonempty"},
+          "inputs": {"$ref": "#/$defs/nonempty_list"},
+          "outputs": {"$ref": "#/$defs/nonempty_list"},
+          "preprocessing": {"$ref": "#/$defs/nonempty"}
+        }
+      }
+    },
+    "datasets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/dataset"}
+    },
+    "protocol": {"$ref": "#/$defs/protocol"},
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/metric"}
+    },
+    "distribution_shift": {"$ref": "#/$defs/distribution_shift"},
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "per_system",
+        "per_task",
+        "disaggregations",
+        "raw_predictions",
+        "failure_artifacts",
+        "confounders",
+        "missing_value_policy"
+      ],
+      "properties": {
+        "per_system": {"type": "boolean"},
+        "per_task": {"type": "boolean"},
+        "disaggregations": {"$ref": "#/$defs/nonempty_list"},
+        "raw_predictions": {"$ref": "#/$defs/nonempty"},
+        "failure_artifacts": {"$ref": "#/$defs/nonempty"},
+        "confounders": {"$ref": "#/$defs/nonempty_list"},
+        "missing_value_policy": {"$ref": "#/$defs/nonempty"}
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier", "hardware", "gpu_required", "download_bytes", "runtime_limit_seconds"],
+      "properties": {
+        "tier": {"type": "string", "enum": ["S", "M", "L1", "L2"]},
+        "hardware": {"$ref": "#/$defs/nonempty"},
+        "gpu_required": {"type": "boolean"},
+        "download_bytes": {"type": "integer", "minimum": 0},
+        "runtime_limit_seconds": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "experiment_ids": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^EXP-[0-9]{2}-[0-9]{2}$"},
+      "uniqueItems": true
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/nonempty"},
+      "uniqueItems": true
+    },
+    "limitations": {"$ref": "#/$defs/nonempty_list"}
+  },
+  "$defs": {
+    "nonempty": {"type": "string", "minLength": 1},
+    "nonempty_list": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/nonempty"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "license",
+        "classification",
+        "fixture",
+        "download_bytes",
+        "role",
+        "split_definition",
+        "unit_of_analysis",
+        "grouping_keys",
+        "leakage_controls"
+      ],
+      "properties": {
+        "name": {"$ref": "#/$defs/nonempty"},
+        "version": {"$ref": "#/$defs/nonempty"},
+        "license": {"$ref": "#/$defs/nonempty"},
+        "classification": {
+          "type": "string",
+          "enum": ["fixture", "downloadable", "application_required", "restricted", "private"]
+        },
+        "fixture": {"type": "boolean"},
+        "download_bytes": {"type": "integer", "minimum": 0},
+        "checksum": {"type": ["string", "null"]},
+        "role": {"type": "string", "enum": ["train", "calibration", "validation", "test", "stress", "fixture"]},
+        "split_definition": {"$ref": "#/$defs/nonempty"},
+        "unit_of_analysis": {"$ref": "#/$defs/nonempty"},
+        "grouping_keys": {"$ref": "#/$defs/nonempty_list"},
+        "leakage_controls": {"$ref": "#/$defs/nonempty_list"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"fixture": {"const": true}}, "required": ["fixture"]},
+          "then": {
+            "properties": {
+              "classification": {"const": "fixture"},
+              "role": {"const": "fixture"},
+              "download_bytes": {"const": 0}
+            }
+          },
+          "else": {
+            "properties": {
+              "classification": {"not": {"const": "fixture"}},
+              "role": {"not": {"const": "fixture"}}
+            }
+          }
+        }
+      ]
+    },
+    "randomness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deterministic", "seeds", "rationale"],
+      "properties": {
+        "deterministic": {"type": "boolean"},
+        "seeds": {"type": "array", "items": {"type": "integer"}, "uniqueItems": true},
+        "rationale": {"$ref": "#/$defs/nonempty"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"deterministic": {"const": true}}, "required": ["deterministic"]},
+          "then": {"properties": {"seeds": {"maxItems": 0}}},
+          "else": {"properties": {"seeds": {"minItems": 1}}}
+        }
+      ]
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "comparison_unit",
+        "sample_count",
+        "randomness",
+        "horizons",
+        "action_space",
+        "timing",
+        "termination_conditions",
+        "baselines",
+        "comparison_design",
+        "selection_protocol",
+        "failure_definition"
+      ],
+      "properties": {
+        "version": {"$ref": "#/$defs/nonempty"},
+        "comparison_unit": {"$ref": "#/$defs/nonempty"},
+        "sample_count": {"type": "integer", "minimum": 1},
+        "randomness": {"$ref": "#/$defs/randomness"},
+        "horizons": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "action_space": {"$ref": "#/$defs/nonempty"},
+        "timing": {"$ref": "#/$defs/nonempty"},
+        "termination_conditions": {"$ref": "#/$defs/nonempty_list"},
+        "baselines": {"$ref": "#/$defs/nonempty_list"},
+        "comparison_design": {"$ref": "#/$defs/nonempty"},
+        "selection_protocol": {"$ref": "#/$defs/nonempty"},
+        "failure_definition": {"$ref": "#/$defs/nonempty"}
+      }
+    },
+    "statistical_uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "rationale"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["not_applicable", "bootstrap", "wilson", "t_interval", "repeated_seeds", "other"]
+        },
+        "confidence_level": {"type": "number", "exclusiveMinimum": 0.5, "exclusiveMaximum": 1},
+        "rationale": {"$ref": "#/$defs/nonempty"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"method": {"const": "not_applicable"}}, "required": ["method"]},
+          "then": {"not": {"required": ["confidence_level"]}},
+          "else": {"required": ["confidence_level"]}
+        }
+      ]
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "layer",
+        "role",
+        "direction",
+        "unit",
+        "split",
+        "aggregation",
+        "implementation",
+        "implementation_version",
+        "statistical_uncertainty"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^METRIC-[0-9]{2}-[0-9]{2}$"},
+        "name": {"$ref": "#/$defs/nonempty"},
+        "layer": {"type": "string", "enum": ["E0", "E1", "E2", "E3", "E4"]},
+        "role": {"type": "string", "enum": ["primary", "safety", "diagnostic", "resource"]},
+        "direction": {"type": "string", "enum": ["minimize", "maximize", "target", "none"]},
+        "unit": {"$ref": "#/$defs/nonempty"},
+        "split": {"$ref": "#/$defs/nonempty"},
+        "aggregation": {"$ref": "#/$defs/nonempty"},
+        "implementation": {"$ref": "#/$defs/nonempty"},
+        "implementation_version": {"$ref": "#/$defs/nonempty"},
+        "statistical_uncertainty": {"$ref": "#/$defs/statistical_uncertainty"}
+      }
+    },
+    "distribution_shift": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "rationale": {"$ref": "#/$defs/nonempty"},
+        "score": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "direction",
+            "estimator_version",
+            "calibration_split",
+            "threshold_selection",
+            "required_reports",
+            "fallback"
+          ],
+          "properties": {
+            "name": {"$ref": "#/$defs/nonempty"},
+            "direction": {"type": "string", "enum": ["higher_is_more_uncertain", "lower_is_more_uncertain"]},
+            "estimator_version": {"$ref": "#/$defs/nonempty"},
+            "calibration_split": {"$ref": "#/$defs/nonempty"},
+            "threshold_selection": {"$ref": "#/$defs/nonempty"},
+            "required_reports": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "coverage",
+                  "selective_risk",
+                  "failure_recall_by_rejection",
+                  "false_rejection_cost",
+                  "fallback_outcome"
+                ]
+              },
+              "minItems": 5,
+              "uniqueItems": true
+            },
+            "fallback": {"$ref": "#/$defs/nonempty"}
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"enabled": {"const": true}}, "required": ["enabled"]},
+          "then": {"required": ["score"]},
+          "else": {"required": ["rationale"]}
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "executed"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "experiment_ids": {"minItems": 1},
+          "artifacts": {"minItems": 1}
+        }
+      }
+    }
+  ]
+}

@@ -11,7 +11,7 @@
 | 命令 | 环境 | 检查范围 | 失败等级 |
 | --- | --- | --- | --- |
 | `make check-local` | 宿主标准库 | 文件、JSON、链接、manifest 与 22 组 smoke—结果精确一致性 | `BLOCK` |
-| `make check-strict` | Docker | JSON Schema、manifest、实验卡条件规则 | `BLOCK` |
+| `make check-strict` | Docker | JSON Schema、manifest、实验卡/benchmark card 条件与跨资产规则 | `BLOCK` |
 | `make check` | 宿主 + Docker | 依次执行 local 与 strict | `BLOCK` |
 | `make docs-build` | Docker | MkDocs 严格构建、导航、Markdown 扩展 | `BLOCK` |
 | `make docs-preview-check` | Docker + 宿主标准库 | 严格构建后检查 22 章产物、内部 href/src 与预览入口 | `BLOCK`，发布候选必跑 |

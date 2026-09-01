@@ -44,6 +44,7 @@
 | selective coverage | 在给定拒绝阈值下被系统接受并继续执行/预测的样本比例 | 置信区间覆盖率或任务成功率 |
 | selective risk | 只在被接受样本上计算的预注册损失或 failure rate | 全体样本风险；零 coverage 时该值未定义 |
 | risk–coverage curve | 扫描冻结拒绝分数阈值得到的 selective risk 与 coverage 关系 | 单个阈值、AUROC 或拒绝率 |
+| benchmark card | 运行前冻结用途、声明边界、系统/数据角色、比较协议、指标统计和报告要求的机器可读评测合同 | 单次运行元数据、结果表或排行榜摘要 |
 | Diffusion Policy | 在观测条件下通过动作去噪过程采样动作或动作块的策略族 | 任意含噪训练或图像扩散模型 |
 | Flow Matching | 通过回归条件向量场连接 base 与目标分布的生成建模方法 | 自动等于一步采样或 rectified flow |
 | prediction horizon | 策略一次预测的未来动作长度 | 实际盲执行的动作步数 |

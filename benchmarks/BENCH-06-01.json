@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "id": "BENCH-06-01",
+  "chapter": 6,
+  "title": "Posterior filtering versus prior-only rollout",
+  "status": "executed",
+  "purpose": "Keep observation-corrected filtering error separate from prior-only rollout error in a partially observed action-conditioned state-space fixture.",
+  "claim_ids": ["CLAIM-06-02", "CLAIM-06-03"],
+  "evaluation_layers": ["E1"],
+  "allowed_claims": [
+    "The fixed seeded fixture has higher prior-only open-loop RMSE than observation-corrected filtering RMSE.",
+    "Filtering, open-loop, and persistence measurements use the same generated trajectory."
+  ],
+  "forbidden_claims": [
+    "The fixture is a trained neural RSSM or reproduces PlaNet or Dreamer.",
+    "The fixture estimates population performance, training convergence, GPU use, planning utility, or deployment safety.",
+    "Low filtering error proves that prior-only imagined rollouts are accurate."
+  ],
+  "systems": [
+    {
+      "name": "ToyRSSM",
+      "role": "system_under_test",
+      "type": "hand-written scalar predict-correct state-space model",
+      "revision": "fixture-v1",
+      "inputs": ["scalar action", "scalar observation for posterior branch"],
+      "outputs": ["scalar latent position", "scalar latent velocity"],
+      "preprocessing": "none"
+    },
+    {
+      "name": "persistence",
+      "role": "baseline",
+      "type": "previous-observation next-position predictor",
+      "revision": "fixture-v1",
+      "inputs": ["previous scalar observation"],
+      "outputs": ["scalar next-position prediction"],
+      "preprocessing": "none"
+    }
+  ],
+  "datasets": [
+    {
+      "name": "procedural 1D partially observed trajectory",
+      "version": "v1-seed-7",
+      "license": "MIT",
+      "classification": "fixture",
+      "fixture": true,
+      "download_bytes": 0,
+      "checksum": null,
+      "role": "fixture",
+      "split_definition": "One 32-state trajectory generated once with seed 7; the same 31 transitions are used for all compared branches.",
+      "unit_of_analysis": "action-conditioned transition",
+      "grouping_keys": ["trajectory seed", "prediction branch"],
+      "leakage_controls": [
+        "No parameters are fitted to the generated trajectory.",
+        "Filtering, open-loop, and persistence use identical actions and ground-truth positions.",
+        "Future observations are unavailable to the open-loop branch."
+      ]
+    }
+  ],
+  "protocol": {
+    "version": "fixture-v1",
+    "comparison_unit": "three paired prediction branches on the same 31 transitions",
+    "sample_count": 31,
+    "randomness": {
+      "deterministic": false,
+      "seeds": [7],
+      "rationale": "Trajectory process and observation noise are stochastic, but the authored smoke freezes seed 7; one seed does not estimate seed variability."
+    },
+    "horizons": [1, 31],
+    "action_space": "scalar deterministic sinusoidal action schedule with an authored periodic offset",
+    "timing": "one abstract transition per step; no wall-clock or controller-frequency claim",
+    "termination_conditions": ["Generate exactly 32 states and evaluate the following 31 transitions."],
+    "baselines": ["previous-observation persistence predictor"],
+    "comparison_design": "Compute filtering, prior-only open-loop, and persistence errors against the same latent positions without dropping steps.",
+    "selection_protocol": "Observation and velocity gains, seed, and step count are fixed before evaluation; no result-dependent selection is allowed.",
+    "failure_definition": "A run is invalid if it emits a non-finite metric, a transition count other than 31, or exposes a future observation to the open-loop branch."
+  },
+  "metrics": [
+    {
+      "id": "METRIC-06-01",
+      "name": "filtering_rmse",
+      "layer": "E1",
+      "role": "diagnostic",
+      "direction": "minimize",
+      "unit": "scalar position",
+      "split": "seed-7 procedural fixture",
+      "aggregation": "root mean squared filtered-position error over all 31 transitions",
+      "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:evaluate",
+      "implementation_version": "fixture-v1",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "A single frozen seed is a regression fixture, not a repeated-seed estimate."
+      }
+    },
+    {
+      "id": "METRIC-06-02",
+      "name": "open_loop_rmse",
+      "layer": "E1",
+      "role": "primary",
+      "direction": "minimize",
+      "unit": "scalar position",
+      "split": "seed-7 procedural fixture",
+      "aggregation": "root mean squared prior-only position error over all 31 transitions",
+      "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:evaluate",
+      "implementation_version": "fixture-v1",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "The fixed trajectory supports exact regression comparison only; it does not support a population interval."
+      }
+    },
+    {
+      "id": "METRIC-06-03",
+      "name": "persistence_rmse",
+      "layer": "E1",
+      "role": "diagnostic",
+      "direction": "minimize",
+      "unit": "scalar position",
+      "split": "seed-7 procedural fixture",
+      "aggregation": "root mean squared previous-observation error over all 31 transitions",
+      "implementation": "labs/track-a-world-model-control/ch06-rssm/src/toy_rssm.py:evaluate",
+      "implementation_version": "fixture-v1",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "The baseline is evaluated on one frozen regression fixture rather than sampled deployments."
+      }
+    }
+  ],
+  "distribution_shift": {
+    "enabled": false,
+    "rationale": "No train/calibration/test population or uncertainty estimator exists in this data-flow smoke."
+  },
+  "reporting": {
+    "per_system": true,
+    "per_task": false,
+    "disaggregations": ["filtering versus prior-only branch", "ToyRSSM versus persistence baseline"],
+    "raw_predictions": "Recompute from the seeded source; no large prediction artifact is emitted.",
+    "failure_artifacts": "Invalid shape, action-conditioning, posterior-correction, and rollout-gap behavior is covered by chapter unit tests.",
+    "confounders": [
+      "One authored dynamics process and one seed are used.",
+      "The model gains are hand-set rather than learned.",
+      "Filtering has observation access that prior-only rollout deliberately lacks."
+    ],
+    "missing_value_policy": "All 31 transitions and all three metrics are required; no imputation, truncation, or failed-step filtering is allowed."
+  },
+  "resources": {
+    "tier": "S",
+    "hardware": "CPU with Python standard library",
+    "gpu_required": false,
+    "download_bytes": 0,
+    "runtime_limit_seconds": 10
+  },
+  "experiment_ids": ["EXP-06-01"],
+  "artifacts": ["results/ch06/EXP-06-01-smoke.json"],
+  "limitations": [
+    "The model and trajectory are one-dimensional teaching constructions.",
+    "One seed cannot characterize stochastic variability or confidence intervals.",
+    "The benchmark does not measure closed-loop planning, neural training, GPU resources, or real-system validity."
+  ]
+}

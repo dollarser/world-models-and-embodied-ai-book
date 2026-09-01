@@ -51,7 +51,7 @@ make check-local           # manifest、实验卡、22 组结果一致
 make ch21-smoke            # Docker 内 9 tests 与结果通过
 make smoke-all             # 22 章 Docker CPU smoke，144 tests
 make check                 # 严格 schema、结果和服务检查通过
-make docs-preview-check    # 27 HTML、22 章、981 个内部目标
+make docs-preview-check    # 当前累计 27 HTML、22 章、982 个内部目标
 git diff --check           # 通过
 ```
 

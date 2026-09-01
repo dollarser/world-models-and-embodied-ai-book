@@ -72,7 +72,7 @@
 | `S` | 零下载或极小 CPU fixture，当前无 GPU 设备也可完成 |
 | `M` | 默认训练路径，设计目标不超过 24 GB 单卡 |
 | `L1` / `L2` | 可选扩展；最高路径不超过 2×80 GB，且不是读完全书的前提 |
-| benchmark card | 记录系统、任务、协议、指标、资源、失败样本和许可的结果合同，见[第20章](part-06-systems/ch20-embodied-evaluation.md) |
+| benchmark card | 在运行前冻结用途、系统、数据划分、协议、指标、统计、声明边界和报告要求的评测合同；单次运行与测量值分别进入 experiment card 和 result，见[第9章](part-02-world-models/ch09-evaluation.md)与[第20章](part-06-systems/ch20-embodied-evaluation.md) |
 | 最小风险动作（MRM） | 系统异常时进入受约束安全状态的动作或流程；不是学习策略的普通输出，见[第21章](part-06-systems/ch21-deployment-realtime-and-safety.md) |
 
 ## 查词时的三个检查

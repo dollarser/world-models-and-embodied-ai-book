@@ -175,6 +175,8 @@ make ch06-smoke
 
 原始结果记录在 `results/ch06/EXP-06-01-smoke.json`。这些数字只属于 `EXP-06-01` 的固定教学 fixture，不与论文分数比较，也不用于声称学习方法优于其他模型。
 
+同一协议已冻结为 `benchmarks/BENCH-06-01.json`：它把 31 个有效转移、seed 7、filtering/open-loop 的观测可见性、persistence 基线、三项指标实现和禁止声明写成机器可校验字段。`experiment-card.json` 继续记录本次运行的代码、资源和命令，结果 JSON 只保存测量值。三类文件分开后，改变 seed、horizon 或未来观测可见性就属于协议变更，不能仍以同一 benchmark 版本横向比较。
+
 `CLAIM-06-03`（result）：在 `EXP-06-01` 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
 
 ## 6.8 一个必须保留的反例

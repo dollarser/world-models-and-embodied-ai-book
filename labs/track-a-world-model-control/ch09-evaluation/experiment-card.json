@@ -4,6 +4,7 @@
   "chapter": 9,
   "status": "smoke",
   "claim_ids": ["CLAIM-09-01", "CLAIM-09-02"],
+  "benchmark_ids": ["BENCH-09-01"],
   "claim_scope": [
     "lower one-step prediction error need not imply better closed-loop action selection",
     "action sensitivity must be evaluated when a model is used under intervention"

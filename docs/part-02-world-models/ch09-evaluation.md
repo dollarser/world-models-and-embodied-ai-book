@@ -3,7 +3,7 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-09-01`
-> 关联声明：`CLAIM-09-01`～`CLAIM-09-06`
+> 关联声明：`CLAIM-09-01`～`CLAIM-09-07`
 > 关联图表：`FIG-09-01`
 > 资源档位：S / M
 > GPU 状态：不需要
@@ -191,20 +191,32 @@ OOD AUROC 回答分数能否把两个冻结总体排序，却没有直接回答�
 
 ## 9.9 benchmark card：让结果能够被审计
 
-每次评测至少保存以下字段：
+Benchmark card 不是结果表，也不是 `experiment-card.json` 的改名版本。三者分别回答不同问题：
+
+| 资产 | 冻结什么 | 何时变化 |
+| --- | --- | --- |
+| benchmark card | 用途、允许/禁止声明、系统角色、数据划分、指标、统计与退出协议 | 比较问题或协议发生实质变化时升版本 |
+| experiment card | 某次运行的 benchmark ID、代码/checkpoint、数据版本、环境、命令、资源和产物 | 每次独立运行或复现都可新增 |
+| result artifact | 按冻结协议得到的原始/汇总测量值和运行状态 | 每次执行生成，不反向改协议 |
+
+机器卡至少保存以下字段：
 
 ```text
-用途与允许声明
-模型、代码 commit、checkpoint、预处理
-数据来源、版本、许可、划分与去重
-动作空间、时间步长、horizon、终止条件
-指标实现、版本、特征网络、样本数、种子
-基线、oracle、反例与消融
-硬件、时延、显存、磁盘和失败日志
-均值、离散程度、置信区间与逐任务结果
-OOD、拒绝、安全层和人工干预协议
-uncertainty/OOD score 定义、方向、估计器版本、calibration split、risk–coverage 与 fallback 后果
+purpose + allowed_claims + forbidden_claims
+systems[]: role + revision + inputs/outputs + preprocessing
+datasets[]: version + license + split + unit + grouping + leakage controls
+protocol: comparison unit + sample count + seeds + horizon + timing + termination
+metrics[]: layer + role + direction + unit + aggregation + implementation/version + statistical uncertainty
+distribution_shift: score direction + estimator version + calibration + threshold + risk–coverage + fallback
+reporting: disaggregation + raw predictions + failures + confounders + missing-value policy
+resources + experiment_ids + artifacts + limitations
 ```
+
+仓库中的 `specs/benchmark-card.schema.json` 是 Draft 2020-12 Schema；`benchmarks/BENCH-06-01.json`、`BENCH-09-01.json` 和 `BENCH-20-01.json` 分别覆盖 prior/posterior 误差、指标排序反转和闭环比例/Wilson 区间。严格检查还验证 claim/experiment 的章节归属、benchmark 与 experiment 双向引用、metric layer、ID 前缀、产物路径、系统名唯一性和下载量总和。它能阻止字段缺失和跨资产漂移，不能判断指标是否科学充分，也不能替代领域评审。
+
+`BENCH-09-01` 明确把 E1 的 12 个 one-step 转移与 E4 的两个闭环 episode 分开，固定 24 步 horizon、动作集合、tie-breaking 和失败阈值，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。它没有 uncertainty estimator，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构校准数据或风险曲线。
+
+`CLAIM-09-07`（recommendation）：可审计比较应在运行前冻结 benchmark card，并把评测协议、单次运行来源和测量结果拆成可互相引用的资产；机器 Schema 只证明结构与追溯关系成立，不证明 benchmark 有外部效度。
 
 综合分数可用于浏览排行榜，但发布时必须保留分项结果。权重会把价值判断藏进公式：一个重视视觉质量的综合分数，不适合直接选择安全关键规划器。
 
@@ -219,6 +231,7 @@ uncertainty/OOD score 定义、方向、估计器版本、calibration split、ri
 | 外部案例 | 幻觉与覆盖缺口可被量化关联 | arXiv:2606.27326 | `[A,R0]` | 仅限论文设置 |
 | 方法建议 | 决策用途至少需要干预与功能评测 | 本章综合 | recommendation | 尚无单一通用协议 |
 | 方法建议 | OOD 执行门报告 risk–coverage 与 fallback 后果 | 本章/第21章 | recommendation | 分数本身可能失准 |
+| 协议资产 | 三张机器可读 benchmark card 通过 Schema 与跨资产检查 | `BENCH-06-01/09-01/20-01` | executed fixture | 结构有效不等于科学有效 |
 
 ### 资源、数据与许可
 
@@ -232,7 +245,7 @@ uncertainty/OOD score 定义、方向、估计器版本、calibration split、ri
 
 1. **概念判断**：一个模型 FVD 更低，但策略排序相关性更差。若用途分别是视频展示和动作规划，应如何选择？
 2. **代码实验**：修改 `EXP-09-01` 的动作分布，让非零动作占比逐渐升高，画出两个预测器 one-step 排名何时翻转。
-3. **协议设计**：为一个抓取视频世界模型填写 benchmark card，并分别给出 E1、E2 和 E4 的退出条件。
+3. **协议设计**：复制 `BENCH-09-01` 为一个抓取视频世界模型填写 benchmark card，分别给出 E1、E2 和 E4 的退出条件；若使用随机任务，说明 seed、group split 和置信区间方法。
 4. **自动驾驶迁移**：设计一个平均 ADE 很低却高风险的驾驶数据分布，说明需要增加哪些分桶指标。
 5. **反例审查**：解释为何“闭环成功率高”仍可能掩盖安全问题，并给出至少两个补充指标。
 
@@ -267,4 +280,4 @@ uncertainty/OOD score 定义、方向、估计器版本、calibration split、ri
 - 教学审查：通过；
 - 审查记录路径：`reviews/batch-a-review.md`；
 - 已知限制：WorldArena 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；
-- 下一步：为 benchmark card 增加机器可读 Schema，并进行第 6/9 章交叉一致性审查。
+- 下一步：用真实但可合法获取的小型数据试运行一张 `draft/frozen` benchmark card；当前无 GPU 阶段不伪造该结果。

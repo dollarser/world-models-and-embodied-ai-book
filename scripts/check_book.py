@@ -20,6 +20,7 @@ REQUIRED = (
     "specs/writing-style.md",
     "specs/evidence-policy.md",
     "specs/experiment-card.schema.json",
+    "specs/benchmark-card.schema.json",
     "specs/chapter-status.schema.json",
     "specs/book-manifest.schema.json",
     "specs/book-manifest.json",
@@ -41,7 +42,11 @@ def check_required() -> list[str]:
 
 def check_json() -> list[str]:
     errors: list[str] = []
-    paths = list((ROOT / "specs").glob("*.json")) + list(ROOT.glob("labs/**/experiment-card.json"))
+    paths = (
+        list((ROOT / "specs").glob("*.json"))
+        + list(ROOT.glob("labs/**/experiment-card.json"))
+        + list(ROOT.glob("benchmarks/*.json"))
+    )
     for path in paths:
         try:
             json.loads(path.read_text(encoding="utf-8"))
