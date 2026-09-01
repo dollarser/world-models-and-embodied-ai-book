@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-15-01`
-> 关联声明：`CLAIM-15-01`～`CLAIM-15-10`
-> 关联图表：`FIG-15-01` / `TAB-15-01`～`TAB-15-05`
+> 关联声明：`CLAIM-15-01`～`CLAIM-15-11`
+> 关联图表：`FIG-15-01` / `TAB-15-01`～`TAB-15-06`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -144,7 +144,7 @@ VLA 可能在内部表示物体、因果或未来，但 probe 读得出状态不
 
 ## 15.6 EXP-15-01：统一动作合同与执行网关
 
-S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测最多 3 步但每次最多执行 1 步、命令最大年龄 100 ms，并要求单调 `command_id`、共同的 `control_monotonic_ms` clock，以及与当前调度槽一致的 `observation_timestep` 和 `first_action_timestep`。该 schema 现在只有一个可执行定义 `labs/shared/action_schema.py`；第15章负责生成/packet 合同，第21章直接导入同一对象做部署范围、逐字段变化与前序身份检查，不再复制第二份常量。
+S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测最多 3 步但每次最多执行 1 步、命令最大年龄 100 ms，并要求单调 `command_id`、共同的 `control_monotonic_ms` clock、与当前调度槽一致的 `observation_timestep` 和 `first_action_timestep`，以及从首动作槽开始逐一递增的完整 `action_timesteps`。该 schema 现在只有一个可执行定义 `labs/shared/action_schema.py`；第15章负责生成/packet 合同，第21章直接导入同一对象做部署范围、逐字段变化与前序身份检查，不再复制第二份常量。
 
 共享字段还登记教学单步变化上限：线速度 `0.25 m/s/step`、角速度 `0.25 rad/s/step`。它们只为第21章状态化负对照提供带量纲接口，不是某个真实底盘的数据手册、加速度/jerk 上限或安全参数。
 
@@ -164,7 +164,7 @@ make ch15-smoke
 | --- | ---: | --- |
 | 三种可执行头通过 schema | 3/3 | 手工 packet，不是模型输出 |
 | 五档 token 平均归一化误差 | 0.1 | 不是 OpenVLA/FAST tokenizer |
-| malformed 拒绝率 | 12/12（100%） | 只覆盖十二种程序化合同错误 |
+| malformed 拒绝率 | 14/14（100%） | 只覆盖十四种程序化合同错误 |
 | 高层文本可直接执行 | false | 必须先 grounding |
 | flow chunk 预测/执行 | 3 / 1 步 | 验证 receding horizon 字段 |
 
@@ -172,7 +172,7 @@ make ch15-smoke
 
 `CLAIM-15-03`（result）：五档逐维 tokenizer 将 `(0.6,-0.4)` 量化为 `(0.5,-0.5)`，平均归一化绝对误差为 `0.1`。该值只属于教学词表，不能外推 FAST 或真实 VLA。
 
-`CLAIM-15-04`（result）：高层文本、过期命令、错误 frame、错误单位、越界动作与 step 错位等十二类 packet 全部被网关拒绝。范围和时间身份检查不是碰撞检查、时钟同步或功能安全证明。
+`CLAIM-15-04`（result）：高层文本、过期命令、错误 frame、错误单位、越界动作、首动作错位与 chunk 内 timetable 重复/跳步等十四类 packet 全部被网关拒绝。范围和时间身份检查不是碰撞检查、时钟同步或功能安全证明。
 
 错误集合包括 clock/字段顺序错配、packet 擅自把执行前缀从 1 扩为 3、重复/乱序命令，以及墙钟时间戳仍新鲜但观测或首动作 timestep 错位。新命令 `command_id=8` 在已接受 7 后通过；重复 7 与旧命令 6 都被拒绝。布尔值、非有限动作和伪造 prediction horizon 另由单元测试覆盖。
 
@@ -184,13 +184,26 @@ make ch15-smoke
 
 *TAB-15-05：`EXP-15-01` 的墙钟新鲜度—逻辑 timestep 负对照。fixture 预登记当前观测与首动作槽均为42；它不表示所有系统都必须采用同号 timestep。*
 
-`CLAIM-15-10`（result）：`EXP-15-01` v3 中，两个错误 packet 的生成时间年龄均只有10 ms、低于100 ms上限，但因观测 timestep 为40或首动作 timestep 为43而被拒绝；对齐 packet 的年龄为50 ms且 `42→42`，能够通过。该结果只证明本 fixture 的双重时间身份会拒绝两类错位，不证明跨机时钟同步、真实队列时序、deadline 或控制安全。
+`CLAIM-15-10`（result）：`EXP-15-01` v4 中，两个错误 packet 的生成时间年龄均只有10 ms、低于100 ms上限，但因观测 timestep 为40或首动作 timestep 为43而被拒绝；对齐 packet 的年龄为50 ms且 `42→42`，能够通过。该结果只证明本 fixture 的双重时间身份会拒绝两类错位，不证明跨机时钟同步、真实队列时序、deadline 或控制安全。
+
+首动作对齐仍不足以定义整个 action chunk。`EXP-15-01` v4 为每个预测动作携带一个逻辑执行槽，并要求与 `first_action_timestep` 和动作长度共同形成连续序列：
+
+| chunk | first action timestep | 完整 `action_timesteps` | 结果 |
+| --- | ---: | --- | --- |
+| 连续三步 | 42 | `(42,43,44)` | 通过 |
+| 第二步重复 | 42 | `(42,42,44)` | `action_timestep_sequence_noncontiguous` |
+| 第二步跳槽 | 42 | `(42,44,45)` | `action_timestep_sequence_noncontiguous` |
+
+*TAB-15-06：`EXP-15-01` v4 的首动作—完整 chunk timetable 负对照。整数槽是教学调度身份，不是墙钟时间，也不证明 runtime 会在对应周期真正执行。*
+
+`CLAIM-15-11`（result）：`EXP-15-01` v4 中，合法三步 chunk 的动作槽为 `(42,43,44)`；两个错误 chunk 的 `first_action_timestep` 都仍为42，但因后续序列分别重复或跳过槽位而被拒绝。该固定反例只证明首步对齐不能替代逐动作 timetable，不估计真实队列故障率、deadline、丢帧、动作消费进度或控制安全。
 
 | 动作包字段 | 作用 | 仍未提供的保证 |
 | --- | --- | --- |
 | `schema_id`、`field_names`、`units`、`frame_id` | 固定维度语义和坐标合同 | 不验证真实标定或控制器 |
 | `clock_id`、`timestamp_ms`、`control_hz` | 在共同单调时钟上检查生成时间新鲜度 | 不完成跨机时钟同步 |
 | `observation_timestep`、`first_action_timestep` | 绑定生成依据与预期首动作槽 | 不证明观测内容正确或动作按时到达 |
+| `action_timesteps` | 把每个预测动作绑定到唯一连续逻辑槽 | 不证明队列消费、墙钟执行或动力学可行 |
 | `command_id` | 拒绝当前会话内 replay/乱序 | 不提供认证、防篡改或跨重启持久性 |
 | prediction / execution horizon | 限制 chunk 长度和执行前缀 | 不检查连续碰撞或动力学 |
 
@@ -229,6 +242,8 @@ make ch15-smoke
 
 普通 VLM API 输出的 JSON 或文本不能直接当转向/制动。即使结构字段合法，也可能使用错误 frame、过时观察或不存在的道路。提示注入、语言歧义和外部服务中断也必须落入故障合同。
 
+若驾驶 VLA 输出带时间的轨迹点或控制序列，仅检查首点时间也不够：后续点重复同一时刻会产生零时长段，跳过时刻会改变隐含速度/加速度，乱序则可能让插值器回退。进入轨迹规划器前应检查完整时间向量的长度、单调性、期望采样周期和允许抖动，再由动力学模块计算速度、加速度、jerk 与 swept-volume；本章的整数 timetable 只覆盖第一层身份合同。
+
 `CLAIM-15-06`（recommendation）：自动驾驶中的通用 VLM/VLA 提示基线只应产生低频候选意图或轨迹约束；任何连续控制都必须通过版本化 schema、时效、动力学、碰撞与最小风险门禁。
 
 评测要同时报告路线完成、碰撞/越界、干预、舒适度、P50/P95 延迟、超时、成本和拒绝率。语言任务成功或离线 action accuracy 不能代替闭环驾驶证据。
@@ -262,7 +277,7 @@ OpenVLA 官方 README 的传统 LoRA 示例称至少约 27 GB，超出默认 24 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 本书结果 | 三类动作头统一进入动作合同 | `EXP-15-01` | CPU smoke | 手工移动底盘 packet |
-| 本书结果 | 十二类错误包、执行时域越权、step 错位与 replay/乱序被拒绝 | `EXP-15-01` | CPU smoke | 不是时钟同步、认证或功能安全验证 |
+| 本书结果 | 十四类错误包、完整 chunk timetable、执行时域越权、step 错位与 replay/乱序被拒绝 | `EXP-15-01` | CPU smoke | 不是时钟同步、真实队列、认证或功能安全验证 |
 | 论文案例 | RT-1/RT-2 与 FAST action token | 论文/项目 | `[A,R0/R1]` | 本书未运行 |
 | 开源案例 | OpenVLA、SmolVLA、openpi | 官方仓库/论文 | `[A/O,R1]` | checkpoint/训练未运行 |
 | 最新案例 | GR00T N1.7 双系统与 flow head | 官方仓库 | `[O,R1]` | 官方声明，版本会漂移 |
@@ -280,6 +295,7 @@ VLA 把视觉语言知识连接到动作，但真正可执行的系统还需要�
 4. **双系统时序**：慢层 2 Hz、快层 20 Hz 时，设计指令变化和急停的缓存失效协议。
 5. **自动驾驶迁移**：定义 VLM 输出的低频意图 JSON，以及它进入规划器前必须通过的字段检查。
 6. **异步时序**：构造一个生成时间仍新鲜、但基于旧观测的 action chunk；说明 wall-clock timestamp、observation timestep 和 first-action timestep 各自回答什么问题。
+7. **chunk timetable**：保持 `first_action_timestep=42`，分别构造重复、跳步和乱序的三步 timetable；说明还需哪些字段才能映射到真实执行时间。
 
 ## 自检要点
 
@@ -327,6 +343,13 @@ Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-15-07：首动作对齐不代表完整 chunk 对齐</summary>
+
+合法三步序列应为 `(42,43,44)`；`(42,42,44)` 重复第二槽，`(42,44,45)` 跳过43，`(42,44,43)` 还发生乱序。三者的首元素都为42，所以只检查 `first_action_timestep` 会漏检。真实时间映射还需共同 `clock_id`、控制周期或每步目标 timestamp、允许 jitter、packet/session/command identity、队列接收与消费进度、取消/过期规则和执行 ACK；随后仍要检查连续轨迹的速度、加速度、jerk、碰撞与控制器可行性。连续整数槽只证明结构一致，不证明动作按时或安全执行。
+
+</details>
+
 ## 延伸阅读
 
 - Brohan et al., [RT-1](https://arxiv.org/abs/2212.06817)，`[A,R0]`；
@@ -354,6 +377,6 @@ Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺
 - 代码审查：通过；
 - 一致性审查：通过（已与第10/12/13/14/16/17章及第20/21章合同对齐）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch15-command-integrity-review-2026-09-01.md`、`reviews/ch15-observation-action-timestep-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch15-full-chunk-timetable-review-2026-09-02.md`、`reviews/ch15-command-integrity-review-2026-09-01.md`、`reviews/ch15-observation-action-timestep-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载或运行任何 VLA、VLM API、机器人、仿真或 GPU；
 - 下一步：可沿第17章核对世界模型与 VLA 的组合边界，再用第20、21章完成评测与部署证据检查。

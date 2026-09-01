@@ -79,6 +79,7 @@ def make_packet(
         "command_id": command_id,
         "observation_timestep": observation_timestep,
         "first_action_timestep": first_action_timestep,
+        "action_timesteps": tuple(first_action_timestep + offset for offset in range(len(actions))),
         "actions": actions,
     }
 
@@ -166,6 +167,21 @@ def validate_packet(
         issues.append("prediction_horizon_mismatch")
     if len(actions) > schema.prediction_horizon:
         issues.append("prediction_horizon_exceeded")
+    action_timesteps = packet.get("action_timesteps")
+    if not isinstance(action_timesteps, tuple) or len(action_timesteps) != len(actions):
+        issues.append("action_timestep_sequence_length_mismatch")
+    elif any(
+        isinstance(timestep, bool) or not isinstance(timestep, int) or timestep < 0
+        for timestep in action_timesteps
+    ):
+        issues.append("invalid_action_timestep_sequence")
+    elif (
+        isinstance(first_action_timestep, int)
+        and not isinstance(first_action_timestep, bool)
+        and action_timesteps
+        != tuple(first_action_timestep + offset for offset in range(len(actions)))
+    ):
+        issues.append("action_timestep_sequence_noncontiguous")
     execution_horizon = packet.get("execution_horizon")
     if (
         isinstance(execution_horizon, bool)
@@ -226,6 +242,14 @@ def evaluate() -> dict[str, object]:
         "wrong_action_timestep": make_packet(
             "continuous", (continuous,), timestamp_ms=990, first_action_timestep=43
         ),
+        "duplicate_action_timestep": {
+            **make_packet("flow_chunk", (continuous, continuous, continuous)),
+            "action_timesteps": (42, 42, 44),
+        },
+        "skipped_action_timestep": {
+            **make_packet("flow_chunk", (continuous, continuous, continuous)),
+            "action_timesteps": (42, 44, 45),
+        },
     }
     valid_issues = {name: validate_packet(packet) for name, packet in valid_packets.items()}
     malformed_issues = {
@@ -256,6 +280,7 @@ def evaluate() -> dict[str, object]:
         "high_level_text_directly_executable": not bool(malformed_issues["high_level_text"]),
         "flow_chunk_predicted_steps": len(valid_packets["flow_chunk"]["actions"]),
         "flow_chunk_executed_prefix_steps": len(executed_prefix),
+        "flow_chunk_action_timesteps": valid_packets["flow_chunk"]["action_timesteps"],
         "valid_packet_issues": valid_issues,
         "malformed_packet_issues": malformed_issues,
         "next_ordered_command_accepted": not bool(next_command_issues),
@@ -264,4 +289,8 @@ def evaluate() -> dict[str, object]:
         "execution_horizon_bypass_rejected": bool(malformed_issues["execution_horizon_bypass"]),
         "fresh_but_stale_observation_rejected": bool(malformed_issues["fresh_but_stale_observation"]),
         "wrong_action_timestep_rejected": bool(malformed_issues["wrong_action_timestep"]),
+        "duplicate_action_timestep_rejected": bool(
+            malformed_issues["duplicate_action_timestep"]
+        ),
+        "skipped_action_timestep_rejected": bool(malformed_issues["skipped_action_timestep"]),
     }

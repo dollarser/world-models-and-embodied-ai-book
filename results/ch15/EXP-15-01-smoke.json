@@ -10,15 +10,24 @@
       3,
       1
     ],
+    "duplicate_action_timestep_rejected": true,
     "execution_horizon_bypass_rejected": true,
     "flow_chunk_executed_prefix_steps": 1,
+    "flow_chunk_action_timesteps": [
+      42,
+      43,
+      44
+    ],
     "flow_chunk_predicted_steps": 3,
     "fresh_but_stale_observation_rejected": true,
     "high_level_text_directly_executable": false,
-    "malformed_packet_count": 12,
+    "malformed_packet_count": 14,
     "malformed_packet_issues": {
       "execution_horizon_bypass": [
         "execution_horizon_exceeded"
+      ],
+      "duplicate_action_timestep": [
+        "action_timestep_sequence_noncontiguous"
       ],
       "fresh_but_stale_observation": [
         "observation_timestep_mismatch"
@@ -35,6 +44,9 @@
       ],
       "replay": [
         "replay_or_out_of_order_command"
+      ],
+      "skipped_action_timestep": [
+        "action_timestep_sequence_noncontiguous"
       ],
       "stale": [
         "stale_or_future_timestamp"
@@ -59,6 +71,7 @@
     "next_ordered_command_accepted": true,
     "out_of_order_command_rejected": true,
     "replay_command_rejected": true,
+    "skipped_action_timestep_rejected": true,
     "token_mean_absolute_normalized_error": 0.1,
     "valid_packet_count": 3,
     "valid_packet_issues": {

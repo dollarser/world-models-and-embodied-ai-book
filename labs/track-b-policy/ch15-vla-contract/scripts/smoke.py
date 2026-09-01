@@ -32,6 +32,10 @@ def main() -> int:
         raise AssertionError("a fresh packet timestamp must not hide a stale observation timestep")
     if not metrics["wrong_action_timestep_rejected"]:
         raise AssertionError("the first action timestep must match the execution slot")
+    if not metrics["duplicate_action_timestep_rejected"] or not metrics["skipped_action_timestep_rejected"]:
+        raise AssertionError("every predicted action must bind to one contiguous execution slot")
+    if metrics["flow_chunk_action_timesteps"] != (42, 43, 44):
+        raise AssertionError("the valid three-step chunk must expose its complete timetable")
 
     report = {
         "experiment_id": "EXP-15-01",

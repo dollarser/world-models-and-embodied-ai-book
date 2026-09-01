@@ -10,6 +10,7 @@ from action_contract import (  # noqa: E402
     MOBILE_BASE_SCHEMA,
     decode_tokens,
     encode_tokens,
+    evaluate,
     make_packet,
     unnormalize_action,
     validate_packet,
@@ -104,6 +105,41 @@ class ActionContractTests(unittest.TestCase):
         packet = make_packet("continuous", (action,), observation_timestep=42, first_action_timestep=42)
         self.assertEqual(packet["observation_timestep"], 42)
         self.assertEqual(packet["first_action_timestep"], 42)
+        self.assertEqual(packet["action_timesteps"], (42,))
+
+    def test_packet_factory_assigns_every_chunk_step_to_a_contiguous_slot(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("flow_chunk", (action, action, action), first_action_timestep=42)
+        self.assertEqual(packet["action_timesteps"], (42, 43, 44))
+        self.assertEqual(validate_packet(packet), tuple())
+
+    def test_gateway_rejects_duplicate_and_skipped_chunk_timesteps(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("flow_chunk", (action, action, action))
+        duplicate = {**packet, "action_timesteps": (42, 42, 44)}
+        skipped = {**packet, "action_timesteps": (42, 44, 45)}
+        self.assertIn("action_timestep_sequence_noncontiguous", validate_packet(duplicate))
+        self.assertIn("action_timestep_sequence_noncontiguous", validate_packet(skipped))
+
+    def test_gateway_rejects_missing_malformed_or_wrong_length_timestep_sequences(self):
+        action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
+        packet = make_packet("flow_chunk", (action, action, action))
+        missing = {key: value for key, value in packet.items() if key != "action_timesteps"}
+        self.assertIn("action_timestep_sequence_length_mismatch", validate_packet(missing))
+        self.assertIn(
+            "action_timestep_sequence_length_mismatch",
+            validate_packet({**packet, "action_timesteps": (42, 43)}),
+        )
+        self.assertIn(
+            "invalid_action_timestep_sequence",
+            validate_packet({**packet, "action_timesteps": (42, True, 44)}),
+        )
+
+    def test_evaluate_registers_both_internal_timestep_failures(self):
+        result = evaluate()
+        self.assertEqual(result["malformed_packet_count"], 14)
+        self.assertTrue(result["duplicate_action_timestep_rejected"])
+        self.assertTrue(result["skipped_action_timestep_rejected"])
 
     def test_fresh_timestamp_does_not_hide_stale_observation_timestep(self):
         action = unnormalize_action((0.6, -0.4), MOBILE_BASE_SCHEMA)
