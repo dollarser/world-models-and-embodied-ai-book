@@ -213,9 +213,11 @@ make ch22-smoke
 
 最终交接应让另一位读者在无私有上下文下完成：阅读问题、运行 S smoke、找到结果和失败、理解未验证项，并知道需要何种授权才能继续 M/L1/L2。若必须口头解释路径、手工找 checkpoint 或猜动作单位，项目仍未完成。
 
-## 小结与练习
+## 小结
 
 端到端不等于模型端到端，而是证据链端到端：问题、数据、代码、结果、失败、资源、许可、评测和安全相互追溯。无 GPU 也能完成高质量项目，因为最先需要验证的是问题和协议是否成立。
+
+## 练习
 
 1. 从 `TAB-22-01` 选一轨，写一个只含一个主变量的研究问题。
 2. 给有效项目包删除一个字段，预测并验证 audit issue。
@@ -223,7 +225,7 @@ make ch22-smoke
 4. 写一个“应停止而不是继续加算力”的失败场景。
 5. 为驾驶项目划分互斥 route，并定义碰撞、干预和最小风险 gate。
 
-## 延伸阅读与仓库入口
+## 延伸阅读
 
 - 仓库文件 `specs/PRD/书籍编写与审查执行流程.md`；
 - 仓库文件 `specs/book-quality-gates.md`；
@@ -235,9 +237,11 @@ make ch22-smoke
 - [RO-Crate 1.2](https://www.researchobject.org/ro-crate/specification/1.2/introduction.html)，研究对象、工作流与 provenance 的聚合描述；
 - [NeurIPS Paper Checklist](https://blog.neurips.cc/2021/03/26/introducing-the-neurips-2021-paper-checklist/)，复现信息、限制和透明度清单。
 
-## 全书出口与审查记录
+## 全书出口
 
 本章没有“自动部署”出口。项目通过后进入人工发布审查；任何真实机器人或车辆实验仍需单独授权、风险评估、硬件流程和现场安全协议。
+
+## 验收与审查记录
 
 - 内容审查：通过；
 - 代码审查：通过；

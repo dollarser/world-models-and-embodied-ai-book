@@ -45,6 +45,24 @@ MERMAID_ACC_TITLE_PATTERN = re.compile(r"^\s*accTitle:\s*(FIG-(\d{2})-(\d{2}))\s
 MERMAID_ACC_DESCR_PATTERN = re.compile(r"^\s*accDescr:\s*(.+)$", re.MULTILINE)
 FENCED_BLOCK_PATTERN = re.compile(r"^```[^\n]*\n.*?^```\s*$", re.MULTILINE | re.DOTALL)
 HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
+REQUIRED_CHAPTER_SECTIONS = ("本章契约", "小结", "练习", "延伸阅读", "验收与审查记录")
+REQUIRED_READER_TERMS = (
+    "RSSM",
+    "MPC",
+    "CEM",
+    "VLM",
+    "OOD",
+    "IDM",
+    "ESS",
+    "RLOO",
+    "RTC",
+    "KL divergence",
+    "NLL",
+    "MAE / RMSE",
+    "IoU",
+    "LPIPS",
+    "FVD",
+)
 
 
 def check_required() -> list[str]:
@@ -190,6 +208,42 @@ def check_heading_hierarchy(chapter_number: int, document_text: str) -> list[str
     return errors
 
 
+def check_chapter_sections(chapter_number: int, document_text: str) -> list[str]:
+    """Enforce stable teaching and handoff sections without forbidding numbered headings."""
+
+    text_without_code = FENCED_BLOCK_PATTERN.sub("", document_text)
+    titles = [
+        match.group(2).strip()
+        for match in HEADING_PATTERN.finditer(text_without_code)
+        if len(match.group(1)) == 2
+    ]
+    canonical_titles = {
+        re.sub(rf"^{chapter_number}\.\d+(?:\.\d+)*\s+", "", title)
+        for title in titles
+    }
+    errors = [
+        f"chapter {chapter_number} is missing required H2 section: {section}"
+        for section in REQUIRED_CHAPTER_SECTIONS
+        if section not in canonical_titles
+    ]
+    handoff = "全书出口" if chapter_number == 22 else "下一章接口"
+    if handoff not in canonical_titles:
+        errors.append(f"chapter {chapter_number} is missing required H2 section: {handoff}")
+    return errors
+
+
+def check_glossary_contract(terminology_text: str, glossary_text: str) -> list[str]:
+    """Keep frequently used abbreviations visible in both the author and reader references."""
+
+    errors: list[str] = []
+    for term in REQUIRED_READER_TERMS:
+        if term not in terminology_text:
+            errors.append(f"author terminology baseline is missing reader-critical term: {term}")
+        if term not in glossary_text:
+            errors.append(f"reader glossary is missing reader-critical term: {term}")
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -245,6 +299,7 @@ def check_manifest() -> list[str]:
                 errors.extend(check_figure_contract(number, chapter.get("figures", []), document_text))
                 errors.extend(check_mermaid_accessibility(number, chapter.get("figures", []), document_text))
                 errors.extend(check_heading_hierarchy(number, document_text))
+                errors.extend(check_chapter_sections(number, document_text))
             if manifest_phase in {"reviewed", "reproducible", "published"}:
                 for review_name in ("内容审查", "代码审查", "一致性审查", "教学审查"):
                     if f"- {review_name}：通过" not in document_text:
@@ -282,16 +337,33 @@ def check_prd_chapters() -> list[str]:
     return [] if chapter_count == 22 else [f"expected 22 PRD chapters, found {chapter_count}"]
 
 
+def check_glossary_files() -> list[str]:
+    terminology_path = ROOT / "specs/terminology.md"
+    glossary_path = ROOT / "docs/glossary.md"
+    if not terminology_path.is_file() or not glossary_path.is_file():
+        return []
+    return check_glossary_contract(
+        terminology_path.read_text(encoding="utf-8"),
+        glossary_path.read_text(encoding="utf-8"),
+    )
+
+
 def main() -> int:
-    errors = check_required() + check_json() + check_manifest() + check_markdown_links() + check_prd_chapters()
+    errors = (
+        check_required()
+        + check_json()
+        + check_manifest()
+        + check_markdown_links()
+        + check_prd_chapters()
+        + check_glossary_files()
+    )
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
     print(
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
-        "heading hierarchy, "
-        "manifest, local links, 22-chapter PRD"
+        "heading hierarchy, chapter teaching sections, reader terminology, manifest, local links, 22-chapter PRD"
     )
     return 0
 

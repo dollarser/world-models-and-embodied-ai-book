@@ -73,7 +73,7 @@ flowchart LR
 
 高层策略、低层控制与安全网关应分离。VLA 可以低频生成子目标或 action chunk，低层控制器高频跟踪；硬限位、碰撞检查、watchdog 和急停不应依赖同一个生成模型继续正常推理。
 
-## 21.3 同步、异步与 RTC：延迟被搬到了哪里
+## 21.3 同步、异步与 Real-Time Chunking（RTC）：延迟被搬到了哪里
 
 同步推理在每个 tick 阻塞等待动作，语义简单但慢模型会让机器人停顿。异步 server/client 在执行当前 action chunk 时计算下一块；RTC 在后台生成并融合 chunk。它们减少等待，却新增三类状态：
 

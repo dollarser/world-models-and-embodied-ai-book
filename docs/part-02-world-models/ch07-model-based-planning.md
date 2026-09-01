@@ -17,7 +17,7 @@
 ### 先修知识
 
 - 已具备：第3章 MDP/POMDP 与反馈，第4章实验协议，第6章 latent state、prior 和 rollout；
-- 本章补齐：有限时域优化、MPC/CEM、tree search、terminal value、价值等价和规划失败诊断；
+- 本章补齐：有限时域优化、模型预测控制（Model Predictive Control, MPC）、交叉熵方法（Cross-Entropy Method, CEM）、tree search、terminal value、价值等价和规划失败诊断；
 - 不要求：控制理论推导、RL 优化、MCTS/CEM 实现经验、3D 视觉、GPU 或真实硬件。
 
 ### 非目标
@@ -166,9 +166,11 @@ S 档 `EXP-07-01` 使用标准库、CPU、零下载。M 档可在第19章的 MuJ
 
 PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commit 复核；论文、模型、环境、数据和录屏各自遵循许可。本章不要求 2×80 GB 或硬件。
 
-## 小结与练习
+## 小结
 
 模型规划是有限计算下的闭环优化。horizon、terminal value、候选预算与 replanning 共同决定动作；价值等价只在声明作用域内成立。
+
+## 练习
 
 1. 给 fixture 增加 discount，找出 H=3 首步变化条件。
 2. 将穷举替换为固定 seed random shooting，画预算—最优值曲线。
@@ -182,9 +184,11 @@ PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commi
 - [The Value Equivalence Principle](https://arxiv.org/abs/2011.03506)；
 - [TD-MPC2 官方仓库](https://github.com/nicklashansen/tdmpc2)。
 
-## 下一章接口与审查记录
+## 下一章接口
 
 第8章将从“在线搜索动作”转到“在 imagined trajectories 中训练 actor-critic”；第17章再审查模型被优化器利用的风险。
+
+## 验收与审查记录
 
 - 内容审查：通过；
 - 代码审查：通过；

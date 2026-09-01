@@ -88,7 +88,7 @@ flowchart LR
 
 权重可以来自 episode success、return、advantage、preference 或人工评级。它仍是加权监督学习；没有 Bellman backup、policy interaction 或 actor objective 时，不应标成 offline RL。
 
-上式是按 transition 归一化；若所有轨迹长度相同，才与 fixture 的“每个 phase 按 trajectory weight 求均值”一致。长度不同时，按 episode 等权、按 transition 等权和截断到固定 horizon 会得到不同 target。ESS 也必须注明是在 trajectory、transition、task group 还是 token 层计算，不能把四条轨迹的 ESS 直接解释为动作样本数。
+上式是按 transition 归一化；若所有轨迹长度相同，才与 fixture 的“每个 phase 按 trajectory weight 求均值”一致。长度不同时，按 episode 等权、按 transition 等权和截断到固定 horizon 会得到不同 target。有效样本量（effective sample size, ESS）也必须注明是在 trajectory、transition、task group 还是 token 层计算，不能把四条轨迹的 ESS 直接解释为动作样本数。
 
 稀疏 episode reward 会把同一权重施加给长轨迹内所有动作：成功轨迹中的偶然动作被奖励，失败轨迹中正确前缀和恢复动作被惩罚。解决 credit assignment 需要阶段状态、dense progress、value/advantage、counterfactual 或更细粒度 verifier，但每一种又可能引入 reward misspecification。
 
@@ -134,7 +134,7 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 
 [RIPT-VLA](https://arxiv.org/abs/2505.17016)用稀疏二元 success 做 VLA interactive post-training，并采用动态 rollout sampling 与 leave-one-out advantage estimation；作者[代码仓库](https://github.com/Ariostgx/ript-vla/blob/main/train_ript.py)当前入口显式传递 `rloo_batch_size`、dynamic sampling、PPO epoch/batch 和 clipping 配置，提供 QueST/OpenVLA-OFT + LIBERO 路线 `[A/O,R1]`。它展示的是交互环境中的 RL，不是 learned world model 路线。
 
-二元 success 避免手工 dense reward 的部分偏置，却没有消除 credit assignment：需要同任务/初态下足够多的成功与失败 rollout 才能形成可用组内相对信号。若一组全失败或全成功，fixture 所示的 RLOO 相对优势退化。dynamic sampling 丢弃并重采这类组可以恢复梯度信号，却会改变实际 task/难度分布、增加 rollout 成本，并可能长期饿死过难或过易任务；必须报告 attempted、discarded、resampled 和 used group 数。若 policy 更新太快，旧 rollout 与新 policy 不匹配；若 simulator success 使用 privileged state，真实部署未必拥有同一 verifier。
+二元 success 避免手工 dense reward 的部分偏置，却没有消除 credit assignment：需要同任务/初态下足够多的成功与失败 rollout 才能形成可用组内相对信号。若一组全失败或全成功，fixture 所示的 REINFORCE Leave-One-Out（RLOO）相对优势退化。dynamic sampling 丢弃并重采这类组可以恢复梯度信号，却会改变实际 task/难度分布、增加 rollout 成本，并可能长期饿死过难或过易任务；必须报告 attempted、discarded、resampled 和 used group 数。若 policy 更新太快，旧 rollout 与新 policy 不匹配；若 simulator success 使用 privileged state，真实部署未必拥有同一 verifier。
 
 人类纠正可记录 intervention 前观察、模型原动作、纠正动作、触发原因和恢复结果。只保存纠正动作会丢失“为何接管”和 policy-induced state，无法区分动作学习与数据选择效应。高风险机器人/车辆必须先用保守 controller 和安全员协议限定探索范围。
 
@@ -215,9 +215,11 @@ reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预�
 
 出现以下任一情况就停止升级 policy：ESS 或分桶 coverage 低于预注册阈值；真实/独立仿真 return 与 model return 排序反转；碰撞/干预/安全尾部恶化；reward audit 发现捷径；action schema 或时间戳不匹配；结果无法追溯 policy、world model、reward 和 seed。
 
-## 小结与练习
+## 小结
 
 VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义与交互环境。离线重加权能移动 target，却可能缩小有效样本和恢复覆盖；world-model rollout 能降低真实交互成本，却给 policy 新增可利用的模型漏洞。长时能力需要层级、记忆、进度与恢复，WAM 则必须回到实际接口判断。
+
+## 练习
 
 1. 给 fixture 增加一条“最终失败但第一阶段最优”的轨迹，比较 episode 与 step-level 权重。
 2. 为全成功/全失败 rollout group 写 leave-one-out advantage 的退化测试。
@@ -235,9 +237,11 @@ VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义�
 - Zhang et al., [From World Models to World Action Models](https://github.com/clearlab-sustech/WorldModelSurvey)；
 - [SimWAM 作者仓库](https://github.com/H-EmbodVis/SimWAM)与 [WorldRFT](https://arxiv.org/abs/2512.19133)。
 
-## 下一章接口与审查记录
+## 下一章接口
 
 第19章提供物理 simulator 与 sim-gap 锚点；第20章固定 policy 评测协议；第21章把更新后的 policy 放入时延、watchdog 和 fallback 边界。第22章将把这些合同收束成一个可审计综合项目。
+
+## 验收与审查记录
 
 - 内容审查：通过；
 - 代码审查：通过；

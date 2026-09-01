@@ -3,8 +3,10 @@ from __future__ import annotations
 import unittest
 
 from scripts.check_book import (
+    check_chapter_sections,
     check_claim_contract,
     check_figure_contract,
+    check_glossary_contract,
     check_heading_hierarchy,
     check_mermaid_accessibility,
 )
@@ -99,6 +101,40 @@ class HeadingHierarchyTest(unittest.TestCase):
         errors = check_heading_hierarchy(6, text)
         self.assertTrue(any("exactly one H1" in item for item in errors))
         self.assertTrue(any("heading level skips" in item for item in errors))
+
+
+class ChapterSectionContractTest(unittest.TestCase):
+    def test_accepts_numbered_summary_and_terminal_handoff(self) -> None:
+        shared = "\n".join(
+            [
+                "# Chapter",
+                "## 本章契约",
+                "## 22.10 小结",
+                "## 练习",
+                "## 延伸阅读",
+                "## 全书出口",
+                "## 验收与审查记录",
+            ]
+        )
+        self.assertEqual([], check_chapter_sections(22, shared))
+
+    def test_rejects_combined_or_missing_teaching_sections(self) -> None:
+        text = "# Chapter\n\n## 本章契约\n\n## 小结与练习\n\n## 下一章接口与审查记录\n"
+        errors = check_chapter_sections(7, text)
+        self.assertTrue(any("小结" in item for item in errors))
+        self.assertTrue(any("练习" in item for item in errors))
+        self.assertTrue(any("验收与审查记录" in item for item in errors))
+
+
+class GlossaryContractTest(unittest.TestCase):
+    def test_accepts_all_reader_critical_terms(self) -> None:
+        terms = "RSSM MPC CEM VLM OOD IDM ESS RLOO RTC KL divergence NLL MAE / RMSE IoU LPIPS FVD"
+        self.assertEqual([], check_glossary_contract(terms, terms))
+
+    def test_reports_author_and_reader_omissions_separately(self) -> None:
+        errors = check_glossary_contract("RSSM", "MPC")
+        self.assertTrue(any("author terminology" in item and "MPC" in item for item in errors))
+        self.assertTrue(any("reader glossary" in item and "RSSM" in item for item in errors))
 
 
 if __name__ == "__main__":

@@ -220,9 +220,11 @@ reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和�
 
 本书原创代码、图表和 fixture 使用 MIT；论文文本、上游仓库、环境、数据、模型权重和录屏仍按各自许可。引用仓库不等于把其代码并入本书。
 
-## 小结与练习
+## 小结
 
 Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中的 behavior learning 连接起来。它减少的是环境交互，不是模型偏差；λ-return、continuation 与外部闭环评测决定 target 是否有基本可信度。
+
+## 练习
 
 1. 在 fixture 中加入 $\gamma=0.99$，手算并测试三个 start target。
 2. 同时注入 reward +1 和 continuation 泄漏，判断两种 gap 是否线性相加。
@@ -236,9 +238,11 @@ Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中�
 - [DreamerV3 Nature 论文](https://www.nature.com/articles/s41586-025-08744-2)与[作者仓库](https://github.com/danijar/dreamerv3)；
 - [Dreamer 4 预印本](https://arxiv.org/abs/2509.24527)。
 
-## 下一章接口与审查记录
+## 下一章接口
 
 第9章用外部指标检查“模型预测得好”是否真的支持决策；第17章专门展示 actor/planner 利用模型漏洞；第18章把 imagined rollout、reward/critic 与后训练连接到 VLA 和长时任务。
+
+## 验收与审查记录
 
 - 内容审查：通过；
 - 代码审查：通过；

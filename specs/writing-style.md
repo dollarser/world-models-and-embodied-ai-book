@@ -10,7 +10,8 @@
 ## 2. 中英文与术语
 
 - 中文正文使用全角标点；代码、路径、命令、变量和 ID 使用反引号；
-- 术语首次出现写“中文（English）”，后续使用 `terminology.md` 规定的主名称；
+- 术语首次出现写“中文（English）”；存在常用缩写时写“中文（English, ABBR）”或“中文（English，ABBR）”，后续使用 `terminology.md` 规定的主名称；
+- 高频缩写必须同时进入作者侧 `terminology.md` 与读者侧 `docs/glossary.md`，不能只在单章上下文中解释；
 - 模型名、项目名和论文标题保留官方拼写；
 - `benchmark`、`rollout`、`checkpoint` 等高频工程词可以保留英文，但全书写法一致；
 - 数字与单位之间留空格，例如 `24 GB`、`30 min`，版本号和百分号除外。

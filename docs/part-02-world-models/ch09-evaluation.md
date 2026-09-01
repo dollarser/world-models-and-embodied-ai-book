@@ -244,7 +244,7 @@ resources + experiment_ids + artifacts + limitations
 | 本书结果 | one-step/闭环与缺失分母分别造成排序反转 | `EXP-09-01` | CPU smoke | 手工一维反例与预注册惩罚 |
 | 外部事实 | WorldArena 分开评估感知与功能用途 | 官方仓库 | `[O,R1]` | 本书未运行 |
 | 外部案例 | WorldArena 2.0 扩展模态、用途与平台维度 | 论文/官方项目 | `[P/O,R0–R1]` | 接口与排行榜会变化 |
-| 外部案例 | KineBench 显式移除额外 IDM 的归因混淆 | arXiv:2607.19876 | `[P,R0]` | 本书未运行，仅限论文设置 |
+| 外部案例 | KineBench 显式移除额外逆动力学模型（inverse dynamics model, IDM）的归因混淆 | arXiv:2607.19876 | `[P,R0]` | 本书未运行，仅限论文设置 |
 | 外部案例 | 幻觉与覆盖缺口可被量化关联 | arXiv:2606.27326 | `[A,R0]` | 仅限论文设置 |
 | 方法建议 | 决策用途至少需要干预与功能评测 | 本章综合 | recommendation | 尚无单一通用协议 |
 | 方法建议 | OOD 执行门报告 risk–coverage 与 fallback 后果 | 本章/第21章 | recommendation | 分数本身可能失准 |

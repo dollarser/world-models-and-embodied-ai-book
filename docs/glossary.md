@@ -13,6 +13,8 @@
 | 动作（action） | 施加到环境或下层控制器的决策量 | 文本计划只有经过 grounding 才是可执行动作 | [第3章](part-01-loop/ch03-minimal-robotics-and-decision.md) |
 | 策略（policy） | 从观测、状态或信念映射到动作分布的规则 | 不等于世界模型 | [第13章](part-04-policies/ch13-imitation-and-action-chunks.md) |
 | rollout | 从初始条件连续推进环境或模型得到的轨迹 | 不等于单次前向 | [第7章](part-02-world-models/ch07-model-based-planning.md) |
+| 模型预测控制（MPC） | 在有限时域内用模型优化动作序列，执行部分动作后根据新观测再次规划 | 不是一次生成整段动作并盲执行；重规划也不能修复错误模型 | [第7章](part-02-world-models/ch07-model-based-planning.md) |
+| 交叉熵方法（CEM） | 反复采样候选、保留高分 elite 并更新采样分布的近似优化器 | 名称中的“交叉熵”不表示它是分类损失，也不保证找到全局最优 | [第7章](part-02-world-models/ch07-model-based-planning.md) |
 | 开环评测（open-loop） | 模型输出不会持续改变后续输入的评测 | 离线数据不必然意味着评测逻辑是开环 | [第4章](part-01-loop/ch04-data-and-protocols.md) |
 | 闭环评测（closed-loop） | 动作改变环境，后续观测再反馈给策略 | 不等于单步动作准确率 | [第9章](part-02-world-models/ch09-evaluation.md) |
 | 反事实（counterfactual） | 固定历史及其余条件，只改变指定干预变量所得的替代未来 | 不等于任意随机生成的另一未来 | [第11章](part-03-representations/ch11-action-conditioned-video.md) |
@@ -27,12 +29,15 @@
 | --- | --- | --- | --- |
 | 世界模型（world model） | 对任务相关状态及其随动作演化规律的可学习表示 | 不是任意视频生成器 | [第2章](part-01-loop/ch02-what-is-a-world-model.md) |
 | 转移模型（transition model） | 预测状态在动作条件下如何变化 | 不等于无动作条件编码器 | [第6章](part-02-world-models/ch06-rssm.md) |
+| 循环状态空间模型（RSSM） | 用循环确定性状态汇总历史，并以随机潜变量表达观测修正与不确定性的状态空间模型族 | RSSM 的 prior/posterior 数据流较稳定，潜变量形式和损失实现并不唯一 | [第6章](part-02-world-models/ch06-rssm.md) |
+| 逆动力学模型（IDM） | 根据相邻状态、观测或表征推断可能动作的模型 | 转移到动作可能一对多；额外 IDM 会改变方法的归因与比较成本 | [第9章](part-02-world-models/ch09-evaluation.md) |
 | renderer | 从给定状态、场景或描述生成传感器外观 | 不自动含交互规则或状态转移 | [第11章](part-03-representations/ch11-action-conditioned-video.md) |
 | 仿真器（simulator） | 用显式规则、数值方法或学习模型推进环境 | 与世界模型可以重叠，但不是同义词 | [第19章](part-06-systems/ch19-physical-simulation-and-sim2real.md) |
 | learned simulator | 根据动作推进学习状态，并向交互方提供后续观测 | 不是只生成一次无反馈视频 | [第17章](part-05-fusion/ch17-world-model-policy-utility.md) |
 | 模型利用（model exploitation） | 规划器主动选择模型错误预测为高回报的区域 | 不只是通常意义的训练过拟合 | [第9章](part-02-world-models/ch09-evaluation.md) |
 | aleatoric 不确定性 | 给定完整任务条件后仍存在的结果随机性或多模态性 | 不等于模型不知道 | [第5章](part-02-world-models/ch05-generative-foundations.md) |
 | epistemic 不确定性 | 数据覆盖、参数或模型知识不足造成的不确定性 | 单个模型重复采样不会自动暴露它 | [第5章](part-02-world-models/ch05-generative-foundations.md) |
+| 分布外（OOD） | 相对明确的训练、校准或参考分布，输入、状态或动作落在其覆盖之外 | 不是“看起来奇怪”的同义词；OOD 分数也不自动等于失败概率 | [第9章](part-02-world-models/ch09-evaluation.md) |
 | selective coverage / risk | 拒绝阈值下被接受的样本比例 / 只在接受样本上计算的风险 | 不等于置信区间 coverage；零接受时 risk 未定义 | [第9章](part-02-world-models/ch09-evaluation.md) |
 | risk–coverage curve | 扫描冻结不确定性阈值得到的 coverage 与接受样本风险关系 | 不等于单个 AUROC 或拒绝率 | [第21章](part-06-systems/ch21-deployment-realtime-and-safety.md) |
 | JEPA | 从上下文预测目标区域表示的联合嵌入预测架构族 | 不等于所有无像素解码器的编码器 | [第10章](part-03-representations/ch10-jepa-representations.md) |
@@ -69,10 +74,25 @@
 | execution horizon | 一个预测块实际执行多少步后重新规划 | 不一定执行完整预测块 | [第13章](part-04-policies/ch13-imitation-and-action-chunks.md) |
 | Diffusion Policy | 在观测条件下通过去噪过程采样动作或动作块的策略族 | 不等于任意含噪训练 | [第14章](part-04-policies/ch14-generative-actions.md) |
 | Flow Matching | 回归条件向量场以连接 base 与目标分布的方法 | 不自动等于一步生成 | [第14章](part-04-policies/ch14-generative-actions.md) |
+| 视觉语言模型（VLM） | 以视觉与语言为主要输入、产生文本或结构化语义输出的模型族 | 未经动作训练、grounding 和闭环验证的 VLM 不是 VLA | [第15章](part-04-policies/ch15-vla-architecture-patterns.md) |
 | VLA | 将视觉、语言和机器人状态映射为动作的策略架构族 | 不自动具有世界模型 | [第15章](part-04-policies/ch15-vla-architecture-patterns.md) |
 | action schema | 规定字段、顺序、frame、单位、频率、horizon、范围和版本的动作合同 | 不只是 tensor shape | [第15章](part-04-policies/ch15-vla-architecture-patterns.md) |
 | action grounding | 把语义输出映射成指定本体可执行动作 | 可解析文本不代表动力学可执行 | [第15章](part-04-policies/ch15-vla-architecture-patterns.md) |
 | canonical action | 为跨数据或本体对齐定义的版本化中间动作语义 | 不是所有本体都能直接执行的万能动作 | [第16章](part-04-policies/ch16-data-scaling-and-adaptation.md) |
+| 有效样本量（ESS） | 对非负权重常用 $(\sum_i w_i)^2/\sum_i w_i^2$ 衡量权重集中程度 | 必须说明样本单位；trajectory 级 ESS 不能解释为 transition 或 token 数 | [第18章](part-05-fusion/ch18-vla-post-training-and-wam.md) |
+| REINFORCE Leave-One-Out（RLOO） | 用同组其他 rollout 的平均 reward 作为当前样本 baseline 的相对优势估计 | 全组 reward 相同时信号退化；重采样会改变实际任务分布 | [第18章](part-05-fusion/ch18-vla-post-training-and-wam.md) |
+| Real-Time Chunking（RTC） | 后台持续生成并按时间对齐、融合动作块的在线执行方式 | 减少阻塞不等于动作新鲜；仍需监控队列、观测年龄与 deadline | [第21章](part-06-systems/ch21-deployment-realtime-and-safety.md) |
+
+## 常用优化量与评测指标
+
+| 缩写/术语 | 回答的问题 | 不能单独证明 | 首读章节 |
+| --- | --- | --- | --- |
+| KL divergence | 一个概率分布相对另一个分布的有向差异；RSSM 中还必须结合 stop-gradient 与阈值看更新路径 | 分布之间的任务效用、对称距离或梯度实际流向 | [第6章](part-02-world-models/ch06-rssm.md) |
+| 负对数似然（NLL） | 模型给已观测样本分配了多少概率质量 | 样本视觉质量、mode coverage、连续变量下跨表示的公平比较 | [第5章](part-02-world-models/ch05-generative-foundations.md) |
+| MAE / RMSE | 逐元素绝对误差 / 均方根误差；RMSE 对大误差更敏感 | 时序因果、动作语义、闭环成功或安全后果 | [第1章](part-01-loop/ch01-from-seeing-to-acting.md) |
+| IoU | 两个区域交集与并集之比，常用于检测、分割或 occupancy | 未观测空间语义、几何可达性或闭环效用 | [第12章](part-03-representations/ch12-actionable-space.md) |
+| LPIPS | 在特征空间比较两幅图像的感知距离 | 物理一致性、动作条件正确或控制效用 | [第9章](part-02-world-models/ch09-evaluation.md) |
+| FVD | 比较两组视频在固定特征空间中的分布差异 | 单条视频正确、因果动力学、规划排序或闭环安全 | [第9章](part-02-world-models/ch09-evaluation.md) |
 
 ## 证据、资源与安全
 

@@ -167,9 +167,11 @@ make ch01-smoke
 
 全书用相同纠偏方法：明确输入输出和 frame/单位/时间，保留外部真值，按用途选指标，记录失败与资源，不让模型动作绕过独立 gate。任何 fixture 的阈值、reward 或规则都只属于其声明作用域。
 
-## 小结与练习
+## 小结
 
 从“看见”到“行动”增加的不是一个 action head，而是一整条反馈和证据链。动作改变未来输入，时序结构和错误后果因此不能被逐帧平均分数替代。
+
+## 练习
 
 1. **概念判断**：一个模型只生成未来视频、没有动作条件或递归交互，它位于 `FIG-01-01` 哪一段？
 2. **代码实验**：保持 MAE=0.1，构造第三组 residual，使最终 state 为 -0.3，并说明边界语义。
@@ -183,9 +185,11 @@ make ch01-smoke
 - Tedrake, [MIT Robotic Manipulation](https://manipulation.csail.mit.edu/)，模型、规划与操作课程；
 - Sutton & Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html)，RL 开放教材。
 
-## 下一章接口与审查记录
+## 下一章接口
 
 第2章将定义 state、belief、transition、reward、continuation 和 world model，避免把所有“预测未来”的系统混成一类；若暂时只想走 VLA 路线，也应先读第2章术语卡再跳转。
+
+## 验收与审查记录
 
 - 内容审查：通过；
 - 代码审查：通过；

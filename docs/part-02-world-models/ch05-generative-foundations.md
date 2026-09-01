@@ -200,9 +200,11 @@ S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数�
 
 本章公式和 fixture 按 MIT 发布；论文、代码、模型和数据遵循各自许可。不能因实现库为 Apache/MIT 就推断 checkpoint 或训练数据同许可。
 
-## 小结与练习
+## 小结
 
 生成式预测在未来不唯一时建模分布。latent、token、自回归、masked、diffusion 和 flow 提供不同接口，最终仍要由条件敏感性、自由 rollout 和下游闭环验证。
+
+## 练习
 
 1. 给 fork 增加第三个 mode，比较均值、mode recall 和观察 support 外质量。
 2. 解释 VAE posterior、RSSM posterior 与 learned dynamics prior 的区别。
@@ -218,9 +220,11 @@ S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数�
 - [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747)；
 - [Hugging Face Diffusers](https://github.com/huggingface/diffusers)，实现参考，未在本章运行。
 
-## 下一章接口与审查记录
+## 下一章接口
 
 第6章把连续 stochastic latent 放入循环状态模型；第10章用 JEPA 对照“不要求生成”；第11章把 token/diffusion/flow 接到动作条件视频；第14章把分布目标迁移到动作。
+
+## 验收与审查记录
 
 - 内容审查：通过；
 - 代码审查：通过；
