@@ -34,6 +34,7 @@ nav:
   - 编写状态: status.md
   - 发布候选说明: release-notes.md
   - 读者术语表: glossary.md
+  - 研究雷达: research-radar.md
   - 第一部分：从视觉识别到闭环智能:
       - 第1章 从看见到行动: part-01-loop/ch01-from-seeing-to-acting.md
       - 第2章 世界模型到底是什么: part-01-loop/ch02-what-is-a-world-model.md

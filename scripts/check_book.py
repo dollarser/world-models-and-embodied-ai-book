@@ -22,6 +22,7 @@ REQUIRED = (
     "specs/fact-evidence.json",
     "specs/inference-evidence.json",
     "specs/critical-recommendations.json",
+    "specs/research-radar.json",
     "specs/experiment-card.schema.json",
     "specs/benchmark-card.schema.json",
     "specs/chapter-status.schema.json",
@@ -33,6 +34,7 @@ REQUIRED = (
     "docs/index.md",
     "docs/status.md",
     "docs/glossary.md",
+    "docs/research-radar.md",
     "docs/part-02-world-models/ch06-rssm.md",
 )
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
@@ -84,6 +86,10 @@ ALLOWED_RECOMMENDATION_CATEGORIES = {
     "evaluation_publication",
     "deployment_safety",
 }
+ALLOWED_RADAR_SOURCE_KINDS = {"paper", "official_repository", "project_page", "vendor_page"}
+ALLOWED_RADAR_ACTIONS = {"monitor", "case_card", "body_candidate"}
+ALLOWED_RADAR_ASSET_STATES = {"open", "partial", "unknown", "closed", "not_applicable"}
+ALLOWED_RADAR_REPRODUCTION = {"R0", "R1", "R2", "R3", "R4", "R0-R1"}
 RESULT_BOUNDARY_MARKERS = ("不", "不能", "只", "未", "无法", "并非", "不是", "没有")
 
 
@@ -489,6 +495,88 @@ def check_experiment_asset_contract(
     return errors
 
 
+def check_research_radar_contract(registry: object) -> list[str]:
+    """Keep fast-moving research entries dated, scoped, and separate from book results."""
+
+    if not isinstance(registry, dict):
+        return ["research radar must be a JSON object"]
+    errors: list[str] = []
+    if registry.get("version") != 1:
+        errors.append("research radar version must be 1")
+    audit_date = registry.get("audit_date")
+    if not isinstance(audit_date, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}", audit_date) is None:
+        errors.append("research radar must have an ISO audit_date")
+    entries = registry.get("entries")
+    if not isinstance(entries, list) or not entries:
+        return errors + ["research radar entries must be a non-empty list"]
+
+    entry_ids = [entry.get("id") for entry in entries if isinstance(entry, dict)]
+    duplicates = sorted({entry_id for entry_id in entry_ids if entry_ids.count(entry_id) > 1})
+    for entry_id in duplicates:
+        errors.append(f"research radar contains duplicate entry: {entry_id}")
+
+    for entry in entries:
+        if not isinstance(entry, dict):
+            errors.append("research radar entry must be an object")
+            continue
+        entry_id = entry.get("id", "<missing>")
+        if not isinstance(entry_id, str) or re.fullmatch(r"RADAR-\d{4}-\d{2}", entry_id) is None:
+            errors.append(f"research radar has invalid entry id: {entry_id!r}")
+        title = entry.get("title")
+        if not isinstance(title, str) or len(title.strip()) < 8:
+            errors.append(f"research radar {entry_id} must have a useful title")
+        chapters = entry.get("chapters")
+        if (
+            not isinstance(chapters, list)
+            or not chapters
+            or any(not isinstance(chapter, int) or chapter < 1 or chapter > 22 for chapter in chapters)
+        ):
+            errors.append(f"research radar {entry_id} must reference book chapters 1..22")
+        if entry.get("book_action") not in ALLOWED_RADAR_ACTIONS:
+            errors.append(f"research radar {entry_id} has invalid book_action")
+        if entry.get("reproduction") not in ALLOWED_RADAR_REPRODUCTION:
+            errors.append(f"research radar {entry_id} has invalid reproduction state")
+        for field in ("problem", "why_it_matters", "resource_path", "scope_boundary"):
+            value = entry.get(field)
+            if not isinstance(value, str) or len(value.strip()) < 40:
+                errors.append(f"research radar {entry_id} must explain {field}")
+        last_verified = entry.get("last_verified")
+        if not isinstance(last_verified, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}", last_verified) is None:
+            errors.append(f"research radar {entry_id} must have an ISO last_verified date")
+        sources = entry.get("sources")
+        if not isinstance(sources, list) or not sources:
+            errors.append(f"research radar {entry_id} must have at least one primary or official source")
+        else:
+            for source in sources:
+                if not isinstance(source, dict):
+                    errors.append(f"research radar {entry_id} source must be an object")
+                    continue
+                url = source.get("url")
+                if not isinstance(url, str) or not url.startswith("https://"):
+                    errors.append(f"research radar {entry_id} source must use an https URL")
+                if source.get("kind") not in ALLOWED_RADAR_SOURCE_KINDS:
+                    errors.append(f"research radar {entry_id} source has invalid kind")
+                maturity = source.get("maturity")
+                if maturity not in ALLOWED_SOURCE_MATURITY - {"internal"}:
+                    errors.append(f"research radar {entry_id} source has invalid maturity")
+                revision = source.get("revision")
+                if not isinstance(revision, str) or len(revision.strip()) < 3:
+                    errors.append(f"research radar {entry_id} source must lock a revision or dated snapshot")
+        assets = entry.get("assets")
+        if not isinstance(assets, dict) or set(assets) != {"code", "weights", "data"}:
+            errors.append(f"research radar {entry_id} must state code/weights/data openness")
+        elif any(value not in ALLOWED_RADAR_ASSET_STATES for value in assets.values()):
+            errors.append(f"research radar {entry_id} has invalid asset openness")
+        triggers = entry.get("review_triggers")
+        if (
+            not isinstance(triggers, list)
+            or not triggers
+            or any(not isinstance(trigger, str) or len(trigger.strip()) < 15 for trigger in triggers)
+        ):
+            errors.append(f"research radar {entry_id} must define explicit review triggers")
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -727,6 +815,17 @@ def check_critical_recommendation_files() -> list[str]:
     return check_critical_recommendation_contract(recommendation_claim_ids, registry)
 
 
+def check_research_radar_file() -> list[str]:
+    path = ROOT / "specs/research-radar.json"
+    if not path.is_file():
+        return []
+    try:
+        registry = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    return check_research_radar_contract(registry)
+
+
 def main() -> int:
     errors = (
         check_required()
@@ -739,6 +838,7 @@ def main() -> int:
         + check_fact_evidence_files()
         + check_inference_evidence_files()
         + check_critical_recommendation_files()
+        + check_research_radar_file()
     )
     if errors:
         for error in errors:
@@ -748,7 +848,7 @@ def main() -> int:
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
         "experiment asset packages, heading hierarchy, chapter teaching sections, reader terminology, "
         "fact/inference evidence, critical "
-        "recommendation policy, manifest, "
+        "recommendation policy, research radar, manifest, "
         "local links, 22-chapter PRD tier mapping"
     )
     return 0

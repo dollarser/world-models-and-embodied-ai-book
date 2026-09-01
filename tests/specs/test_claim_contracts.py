@@ -16,6 +16,7 @@ from scripts.check_book import (
     check_inference_evidence_contract,
     check_mermaid_accessibility,
     check_prd_experiment_tiers,
+    check_research_radar_contract,
 )
 
 
@@ -382,6 +383,68 @@ class ExperimentAssetContractTest(unittest.TestCase):
             self.assertTrue(any("missing README.md" in item for item in errors))
             self.assertTrue(any("no testable src" in item for item in errors))
             self.assertTrue(any("missing result artifact" in item for item in errors))
+
+
+class ResearchRadarContractTest(unittest.TestCase):
+    def test_accepts_dated_scoped_entry(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "entries": [
+                {
+                    "id": "RADAR-2026-01",
+                    "title": "A current embodied world-model study",
+                    "chapters": [9, 17],
+                    "book_action": "case_card",
+                    "problem": "The study asks whether learned rollouts can support a declared downstream evaluation use.",
+                    "why_it_matters": "It tests a boundary already taught by the book without replacing stable chapter definitions.",
+                    "sources": [
+                        {
+                            "url": "https://arxiv.org/abs/2601.00001",
+                            "kind": "paper",
+                            "maturity": "A",
+                            "revision": "arXiv v1",
+                        }
+                    ],
+                    "assets": {"code": "unknown", "weights": "unknown", "data": "unknown"},
+                    "reproduction": "R0",
+                    "resource_path": "Read and audit the paper at S tier; any model execution remains an optional M or L path.",
+                    "scope_boundary": "The entry records an author-reported method and does not convert its metrics into book results.",
+                    "review_triggers": ["A new paper revision changes the method or evaluation scope."],
+                    "last_verified": "2026-09-01",
+                }
+            ],
+        }
+        self.assertEqual([], check_research_radar_contract(registry))
+
+    def test_rejects_undated_unscoped_or_unlocked_entry(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "today",
+            "entries": [
+                {
+                    "id": "latest",
+                    "title": "new",
+                    "chapters": [23],
+                    "book_action": "rewrite_everything",
+                    "problem": "short",
+                    "why_it_matters": "short",
+                    "sources": [{"url": "http://example.org", "kind": "blog", "maturity": "P"}],
+                    "assets": {"code": "maybe"},
+                    "reproduction": "done",
+                    "resource_path": "short",
+                    "scope_boundary": "short",
+                    "review_triggers": [],
+                    "last_verified": "unknown",
+                }
+            ],
+        }
+        errors = check_research_radar_contract(registry)
+        self.assertTrue(any("ISO audit_date" in item for item in errors))
+        self.assertTrue(any("invalid entry id" in item for item in errors))
+        self.assertTrue(any("lock a revision" in item for item in errors))
+        self.assertTrue(any("code/weights/data openness" in item for item in errors))
+        self.assertTrue(any("review triggers" in item for item in errors))
 
 
 if __name__ == "__main__":

@@ -2,13 +2,14 @@
 
 | 资产 | 状态 | 已验证 | 待验证 |
 | --- | --- | --- | --- |
-| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、47 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；165 条声明及全部 `FIG/TAB` 双向登记，26 条 `fact` 与 8 条 `inference` 均有证据合同，76 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
+| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、49 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；165 条声明及全部 `FIG/TAB` 双向登记，26 条 `fact` 与 8 条 `inference` 均有证据合同，76 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
 | 批次 B：第13、14、15、20章 | `reviewed` | 第13–15章在批次 B 通过；第20章由批次 D 关闭第17/19章一致性门 | 上游策略、仿真、真实数据和 GPU 未运行 |
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
 | 批次 D：第8、16、17、18、20、21章 | `reviewed` | 六章四类审查通过；40 个单元测试；imagined target—后训练—评测—部署合同闭合 | Dreamer/VLA/world model、仿真、真实系统和 GPU 未运行 |
 | 全书终审：第1、5、7、22章 | `reviewed` | 四章内容、代码、一致性和教学审查通过；29 个单元测试；记录见 `reviews/final-book-review.md` | GPU、大数据、真实仿真与硬件限制保持未验证 |
 | 快速演进来源审查 | `reviewed` | 第9–11、15、18–21章一手来源复核；修正 WorldArena 2.0/RoboArena 成熟度，确认 KineBench ECCV 2026，补入 Cosmos 3 与 GR00T 四层 horizon | 上游 commit 尚未全部归档；供应商能力和目标环境均未独立验证 |
+| 快速演进研究雷达 | `reviewed` | 8 张一手来源活页卡按问题、章节、source revision、资产开放度、复现状态、资源路径、范围边界和复核触发器登记；读者页归纳 simulator、representation、policy utility 与 evaluator attribution 四条趋势 | 当前只完成论文/官方资产审计；仓库 `main` 尚未全部锁 commit，模型、数据、GPU、仿真与真实系统均未运行 |
 | 编辑结构与图表无障碍审查 | `reviewed` | 22 章单一 H1、标题不越级；23 张 Mermaid 图加入 `accTitle/accDescr` 并在编译产物保留；未发现 100 字以上整段跨章重复 | 深浅色、窄屏、缩放、键盘与屏幕阅读器仍需人工巡检 |
 | 术语与章节接口审查 | `reviewed` | 15 个读者关键缩写/指标同时进入作者基线与读者术语表；6 章合并标题拆为独立教学/接口区段；22 章结构契约自动检查 | 自动覆盖只保证关键项存在，不能替代逐段术语语义、译名偏好和跨学科读者测试 |
 | 事实声明来源审查 | `reviewed` | 26 条 `fact` 与机器证据登记双向相等；区分论文、官方资产、供应商声明、本书定义、仓库合同和数学恒等式；3 条方法选择改为 `recommendation` | URL 可访问和登记完整不等于来源蕴含成立；后续仍需周期性人工复核快速演进资产 |
@@ -60,6 +61,6 @@
 | EXP-21-01 | `smoke` | 14 个单元测试；mean 45 ms 掩盖尾部；同 miss rate 的 burst 长度 2/1；8 步 schedule 有 1 stale/1 underflow；3-failure/2-health 状态机 | 手工 latency/packet/score/chunk/状态，不是实时、OOD、MRM 可达性或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、五段跨章证据 trace、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 模型、数据、仿真、GPU、机器人、车辆与部署均未运行 |
 | EXP-22-01 | `smoke` | 20 个单元测试；完整包 5 段 trace/5 个 artifact binding/2 个 failure injection/0 issue，无效包 20 个具名 issue，缺段、错误依赖、数据重叠、评测未冻结与缺失安全网关均被拒绝 | metadata 图检查，不验证 artifact 内容、科学正确性或安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、22 张实验卡、3 张 benchmark card、259 个章节单元测试、22 组结果精确比对、27 个 HTML/23 张可访问 Mermaid 图/1009 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸、深浅色、键盘与屏幕阅读器巡检仍待人工确认 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、研究雷达、22 张实验卡、3 张 benchmark card、259 个章节单元测试、22 组结果精确比对、28 个 HTML/23 张可访问 Mermaid 图/1073 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸、深浅色、键盘与屏幕阅读器巡检仍待人工确认 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。

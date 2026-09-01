@@ -32,5 +32,6 @@
 - [第7章随机传播与风险目标审查](ch07-stochastic-risk-planning-review-2026-09-01.md)
 - [PRD—正文—实验档位一致性审查](prd-experiment-tier-alignment-review-2026-09-01.md)
 - [实验资产最小合同审查](experiment-asset-contract-review-2026-09-01.md)
+- [快速演进研究雷达审查](research-radar-review-2026-09-01.md)
 
 `reviewed` 只表示正文和当前可执行路径通过内容、代码、一致性与教学审查，不自动表示 GPU、大数据或上游完整复现已经完成。

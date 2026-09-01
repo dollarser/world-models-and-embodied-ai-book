@@ -1,0 +1,219 @@
+{
+  "version": 1,
+  "audit_date": "2026-09-01",
+  "policy": "Fast-moving work enters this registry before stable chapters. An entry records source claims and book relevance, not an independent reproduction.",
+  "entries": [
+    {
+      "id": "RADAR-2025-01",
+      "title": "Dreamer 4: Training Agents Inside of Scalable World Models",
+      "chapters": [6, 8, 17],
+      "book_action": "case_card",
+      "problem": "Scale a video world model far enough to train a behavior in imagination while retaining interactive action-conditioned rollout speed.",
+      "why_it_matters": "It connects the stable RSSM and imagination-learning chapters to a transformer-scale successor and exposes the difference between inference speed and training feasibility.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2509.24527",
+          "kind": "paper",
+          "maturity": "A",
+          "revision": "arXiv:2509.24527v1"
+        }
+      ],
+      "assets": {"code": "unknown", "weights": "unknown", "data": "unknown"},
+      "reproduction": "R0",
+      "resource_path": "S tier audits the paper and interfaces only; model training or checkpoint execution remains an optional L path and is not a reading prerequisite.",
+      "scope_boundary": "The paper reports Minecraft results and single-GPU interactive inference; neither statement establishes 24 GB training feasibility or robot and driving validity.",
+      "review_triggers": [
+        "A new paper version changes the architecture or reported evaluation scope.",
+        "Official runnable assets expose a resource profile that can be audited without inventing results."
+      ],
+      "last_verified": "2026-09-01"
+    },
+    {
+      "id": "RADAR-2026-01",
+      "title": "V-JEPA 2.1: Dense Video Predictive Representations",
+      "chapters": [10, 12, 17],
+      "book_action": "case_card",
+      "problem": "Learn dense spatial and temporal video representations without making pixel reconstruction the only predictive objective.",
+      "why_it_matters": "It sharpens the book's separation between representation prediction, state readability and action-conditioned transition evidence.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2603.14482",
+          "kind": "paper",
+          "maturity": "A",
+          "revision": "arXiv:2603.14482v3"
+        },
+        {
+          "url": "https://github.com/facebookresearch/vjepa2",
+          "kind": "official_repository",
+          "maturity": "O",
+          "revision": "main snapshot checked 2026-09-01"
+        }
+      ],
+      "assets": {"code": "open", "weights": "open", "data": "partial"},
+      "reproduction": "R0-R1",
+      "resource_path": "S tier uses the chapter's analytic probe; optional M work may audit frozen features, while full upstream training remains outside the default resource route.",
+      "scope_boundary": "Author-reported dense and robot results do not prove that a frozen feature contains every control state or supports counterfactual planning in this book.",
+      "review_triggers": [
+        "The official repository changes checkpoints, licenses or dense-feature interfaces.",
+        "A peer-reviewed venue or independent reproduction changes the evidence maturity."
+      ],
+      "last_verified": "2026-09-01"
+    },
+    {
+      "id": "RADAR-2026-02",
+      "title": "NVIDIA Cosmos 3 Unified Physical-AI Generation Interface",
+      "chapters": [11, 15, 17],
+      "book_action": "case_card",
+      "problem": "Expose text, vision, sound and action through a common world-generation platform for multiple physical-AI use cases.",
+      "why_it_matters": "It is a useful open interface case for teaching why action support, simulator fidelity and downstream control validity remain separate claims.",
+      "sources": [
+        {
+          "url": "https://github.com/NVIDIA/cosmos",
+          "kind": "official_repository",
+          "maturity": "O",
+          "revision": "main snapshot checked 2026-09-01"
+        }
+      ],
+      "assets": {"code": "open", "weights": "partial", "data": "partial"},
+      "reproduction": "R1",
+      "resource_path": "S tier audits the repository contract and declared limitations; any checkpoint, data or post-training run is optional and must first pass license and resource checks.",
+      "scope_boundary": "An official unified action interface does not independently validate action-state consistency, 3D structure, physical plausibility, policy ranking or safety.",
+      "review_triggers": [
+        "The repository changes model generations, action schemas, licenses or limitation statements.",
+        "A smaller frozen checkpoint becomes feasible within a measured optional resource tier."
+      ],
+      "last_verified": "2026-09-01"
+    },
+    {
+      "id": "RADAR-2026-03",
+      "title": "WorldArena 2.0 Embodied World-Model Benchmark",
+      "chapters": [9, 17, 20],
+      "book_action": "case_card",
+      "problem": "Extend world-model evaluation across modalities, downstream functions and simulated plus real robotic platforms.",
+      "why_it_matters": "It reinforces the book's evidence ladder from visual perception through interactive utility while making protocol and platform scope explicit.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2605.17912",
+          "kind": "paper",
+          "maturity": "A",
+          "revision": "arXiv:2605.17912v1"
+        },
+        {
+          "url": "https://world-arena.ai",
+          "kind": "project_page",
+          "maturity": "O",
+          "revision": "project snapshot checked 2026-09-01"
+        }
+      ],
+      "assets": {"code": "partial", "weights": "unknown", "data": "partial"},
+      "reproduction": "R0-R1",
+      "resource_path": "S tier compares benchmark contracts and claim scopes; running models, visuotactile data or real platforms is optional and remains unverified here.",
+      "scope_boundary": "The benchmark proposal and public page describe intended coverage; this book has not run the assets and does not adopt its aggregate score as universal validity.",
+      "review_triggers": [
+        "A new benchmark version changes modality, functionality, platform or aggregation scope.",
+        "Public assets and protocol files become sufficiently complete for an independent audit."
+      ],
+      "last_verified": "2026-09-01"
+    },
+    {
+      "id": "RADAR-2026-04",
+      "title": "KineBench IDM-Free Kinematic Grounding",
+      "chapters": [9, 12, 20],
+      "book_action": "body_candidate",
+      "problem": "Reduce attribution ambiguity when generated videos must be converted into executable robot motion for closed-loop evaluation.",
+      "why_it_matters": "It provides a concrete evaluator-of-evaluator example: pose extraction and kinematic grounding are measured components rather than invisible plumbing.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2607.19876",
+          "kind": "paper",
+          "maturity": "P",
+          "revision": "arXiv:2607.19876v1; comments state ECCV 2026 acceptance"
+        }
+      ],
+      "assets": {"code": "unknown", "weights": "unknown", "data": "unknown"},
+      "reproduction": "R0",
+      "resource_path": "S tier uses the attribution lesson in Chapter 9; executing the cascaded vision models and ManiSkill3 suites remains optional and unverified.",
+      "scope_boundary": "Replacing an inverse dynamics model with pose extraction reduces one ambiguity but does not make the extractor error-free or prove real-world physical validity.",
+      "review_triggers": [
+        "The accepted paper receives a revision or official artifact release.",
+        "Independent studies quantify pose-extraction error separately from world-model error."
+      ],
+      "last_verified": "2026-09-01"
+    },
+    {
+      "id": "RADAR-2026-05",
+      "title": "GE-Sim 2.0 Closed-Loop Video World Simulator",
+      "chapters": [11, 17, 18, 20],
+      "book_action": "case_card",
+      "problem": "Combine action-conditioned video rollout, decoded state, learned outcome scoring and faster inference for robot-policy learning and evaluation.",
+      "why_it_matters": "It is a compact case for tracing three distinct error sources: learned transition, state expert and world judge, before trusting policy updates.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2605.27491",
+          "kind": "paper",
+          "maturity": "A",
+          "revision": "arXiv:2605.27491v1"
+        }
+      ],
+      "assets": {"code": "unknown", "weights": "unknown", "data": "unknown"},
+      "reproduction": "R0",
+      "resource_path": "S tier audits the component graph and reported protocol; the paper's H100 inference setting is not a default experiment or local measurement.",
+      "scope_boundary": "Leaderboard position, author-reported real gains and H100 speed remain paper results; they do not establish independent calibration or 24 GB feasibility.",
+      "review_triggers": [
+        "Official code, weights, data or evaluator definitions are released.",
+        "Independent robot outcomes test whether simulator rankings hold for new policies and tasks."
+      ],
+      "last_verified": "2026-09-01"
+    },
+    {
+      "id": "RADAR-2026-06",
+      "title": "Interactive World Simulator for Policy Training and Evaluation",
+      "chapters": [11, 17, 19, 20],
+      "book_action": "case_card",
+      "problem": "Use consistency models for faster long-horizon robot interaction and then compare world-model-trained or evaluated policies with real outcomes.",
+      "why_it_matters": "It directly targets the book's simulator-utility question and shows why throughput, long-horizon stability and real-policy ranking need separate evidence.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2603.08546",
+          "kind": "paper",
+          "maturity": "A",
+          "revision": "arXiv:2603.08546v1"
+        }
+      ],
+      "assets": {"code": "unknown", "weights": "unknown", "data": "unknown"},
+      "reproduction": "R0",
+      "resource_path": "S tier records the evaluation design; reported RTX 4090 throughput and real-robot comparisons remain upstream measurements, not local resource results.",
+      "scope_boundary": "Long generated rollouts and author-reported correlation do not guarantee calibrated absolute success, unseen-policy ranking or safety outside the evaluated tasks.",
+      "review_triggers": [
+        "Runnable artifacts expose the exact data, policy population and real-evaluation protocol.",
+        "A later revision changes the reported throughput, duration or generalization scope."
+      ],
+      "last_verified": "2026-09-01"
+    },
+    {
+      "id": "RADAR-2026-07",
+      "title": "OSCAR Cross-Embodiment Action-Conditioned World Model",
+      "chapters": [11, 16, 17, 20],
+      "book_action": "case_card",
+      "problem": "Represent actions across robot embodiments with a shared visual skeleton condition for world-model policy evaluation.",
+      "why_it_matters": "It gives the cross-embodiment chapter a concrete hypothesis while preserving the distinction between representational alignment and executable action semantics.",
+      "sources": [
+        {
+          "url": "https://arxiv.org/abs/2606.04463",
+          "kind": "paper",
+          "maturity": "A",
+          "revision": "arXiv:2606.04463v2"
+        }
+      ],
+      "assets": {"code": "unknown", "weights": "unknown", "data": "unknown"},
+      "reproduction": "R0",
+      "resource_path": "S tier compares action-schema hypotheses; the reported GH200 fine-tuning path is outside the default 24 GB route and is not required for reading.",
+      "scope_boundary": "A 2D skeleton can align visible kinematics but does not by itself encode force, contact, actuator limits, latency or invertible control across embodiments.",
+      "review_triggers": [
+        "Official assets expose the skeleton renderer, data mixtures or policy-evaluation protocol.",
+        "Independent cross-embodiment tests separate visual alignment from executable control transfer."
+      ],
+      "last_verified": "2026-09-01"
+    }
+  ]
+}

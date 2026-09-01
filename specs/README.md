@@ -18,6 +18,7 @@
 - [事实声明证据登记](fact-evidence.json)
 - [推断声明前提登记](inference-evidence.json)
 - [关键建议适用性登记](critical-recommendations.json)
+- [快速演进研究雷达](research-radar.json)
 - [图表规范](figure-guidelines.md)
 
 ## 工程与治理
