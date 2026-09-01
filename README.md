@@ -59,6 +59,14 @@ make docs-build
 
 首次构建 Docker 镜像会下载轻量 Python/文档依赖，不会下载模型权重或实验数据集。
 
+查看严格编译后的在线书：
+
+```bash
+make docs-preview
+```
+
+该命令先用 Docker 执行 `mkdocs build --strict`，再将生成的 `site/` 只绑定到 `http://127.0.0.1:8000/`。它用于发布前视觉审查；需要边写边刷新的开发模式仍使用 `make docs-serve`。
+
 ## 状态边界
 
 - `reviewed`：正文和 CPU smoke 已审查，但可能仍待 GPU 验证；

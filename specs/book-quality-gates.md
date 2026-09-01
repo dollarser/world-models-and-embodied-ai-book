@@ -14,6 +14,7 @@
 | `make check-strict` | Docker | JSON Schema、manifest、实验卡条件规则 | `BLOCK` |
 | `make check` | 宿主 + Docker | 依次执行 local 与 strict | `BLOCK` |
 | `make docs-build` | Docker | MkDocs 严格构建、导航、Markdown 扩展 | `BLOCK` |
+| `make docs-preview-check` | Docker + 宿主标准库 | 严格构建后检查 22 章产物、内部 href/src 与预览入口 | `BLOCK`，发布候选必跑 |
 | `make chNN-smoke` | Docker/CPU | 章节最小数据流、指标与测试 | `BLOCK`，仅针对已实现章节 |
 | `make smoke-all` | Docker/CPU | 依次运行 22 章单元测试与固定 smoke | `BLOCK`，发布候选必跑 |
 
