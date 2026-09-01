@@ -7,15 +7,42 @@ import unittest
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from imitation_fixture import chunk_tradeoff, compounding_error, evaluate, temporal_ensemble  # noqa: E402
+from imitation_fixture import (  # noqa: E402
+    action_error_correlation_audit,
+    chunk_tradeoff,
+    compounding_error,
+    evaluate,
+    temporal_ensemble,
+)
 
 
 class ImitationFixtureTests(unittest.TestCase):
     def test_action_bias_accumulates_over_rollout(self):
         result = compounding_error(horizon=20, action_bias=0.02)
         self.assertAlmostEqual(result["open_loop_action_rmse"], 0.02)
-        self.assertAlmostEqual(result["closed_loop_final_state_error"], 0.4)
-        self.assertAlmostEqual(result["amplification_factor"], 20.0)
+        self.assertAlmostEqual(result["integrated_final_state_error"], 0.4)
+        self.assertAlmostEqual(result["integration_gain_steps"], 20.0)
+
+    def test_equal_pointwise_errors_can_have_different_integrated_outcomes(self):
+        result = action_error_correlation_audit()
+        persistent = result["persistent_same_sign"]
+        alternating = result["alternating_sign"]
+        self.assertAlmostEqual(persistent["action_rmse"], alternating["action_rmse"])
+        self.assertAlmostEqual(
+            persistent["mean_absolute_action_error"], alternating["mean_absolute_action_error"]
+        )
+        self.assertAlmostEqual(persistent["integrated_final_state_error"], 0.4)
+        self.assertAlmostEqual(alternating["integrated_final_state_error"], 0.0)
+
+    def test_alternating_error_still_has_nonzero_transient_state_error(self):
+        alternating = action_error_correlation_audit()["alternating_sign"]
+        self.assertAlmostEqual(alternating["maximum_absolute_state_error"], 0.02)
+
+    def test_action_error_correlation_audit_rejects_invalid_inputs(self):
+        invalid_cases = ((0, 0.02), (3, 0.02), (True, 0.02), (20, -0.01), (20, float("inf")), (20, True))
+        for horizon, magnitude in invalid_cases:
+            with self.subTest(horizon=horizon, magnitude=magnitude), self.assertRaises(ValueError):
+                action_error_correlation_audit(horizon, magnitude)
 
     def test_chunk_one_reacts_without_stale_delay(self):
         result = chunk_tradeoff()[0]

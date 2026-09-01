@@ -16,6 +16,7 @@
 - [第4/8/20章结束语义与评测分母交叉审查](episode-end-semantics-review-2026-09-01.md)
 - [第22章跨章证据 Trace 审查](capstone-traceability-review-2026-09-01.md)
 - [第13章执行时域与时间集成审查](ch13-execution-temporal-review-2026-09-01.md)
+- [第13章动作误差时间相关性与查询语义审查](ch13-action-error-correlation-review-2026-09-02.md)
 - [第6章 KL 路由与 free-nats 审查](ch06-kl-routing-review-2026-09-01.md)
 - [第6章 benchmark KL 合同一致性审查](ch06-benchmark-kl-contract-review-2026-09-02.md)
 - [第9章长时分母与动作干预审查](ch09-horizon-denominator-review-2026-09-01.md)

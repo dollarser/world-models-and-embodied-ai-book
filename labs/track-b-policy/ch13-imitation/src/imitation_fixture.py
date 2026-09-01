@@ -7,7 +7,12 @@ from typing import Sequence
 
 
 def compounding_error(horizon: int = 20, action_bias: float = 0.02) -> dict[str, float]:
-    """Compare teacher-forced action error with its integrated rollout effect."""
+    """Integrate a constant action error in a unit-gain scalar system.
+
+    This is an open-loop error-propagation fixture: no observation-dependent
+    feedback policy is evaluated, so its state error is not a closed-loop
+    performance measurement.
+    """
     if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon <= 0:
         raise ValueError("horizon must be positive")
     if isinstance(action_bias, bool) or not isinstance(action_bias, (int, float)) or not isfinite(action_bias):
@@ -17,8 +22,48 @@ def compounding_error(horizon: int = 20, action_bias: float = 0.02) -> dict[str,
     return {
         "horizon": horizon,
         "open_loop_action_rmse": sqrt(sum(error * error for error in errors) / horizon),
-        "closed_loop_final_state_error": abs(state),
-        "amplification_factor": abs(state) / abs(action_bias) if action_bias else 0.0,
+        "integrated_final_state_error": abs(state),
+        "integration_gain_steps": abs(state) / abs(action_bias) if action_bias else 0.0,
+    }
+
+
+def action_error_correlation_audit(
+    horizon: int = 20,
+    action_error_magnitude: float = 0.02,
+) -> dict[str, dict[str, float]]:
+    """Compare equal-magnitude action errors with different temporal signs."""
+    if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon <= 0 or horizon % 2:
+        raise ValueError("horizon must be a positive even integer")
+    if (
+        isinstance(action_error_magnitude, bool)
+        or not isinstance(action_error_magnitude, (int, float))
+        or not isfinite(action_error_magnitude)
+        or action_error_magnitude < 0.0
+    ):
+        raise ValueError("action_error_magnitude must be a finite non-negative number")
+
+    def summarize(errors: Sequence[float]) -> dict[str, float]:
+        state = 0.0
+        absolute_states = []
+        for error in errors:
+            state += error
+            absolute_states.append(abs(state))
+        return {
+            "action_rmse": round(sqrt(sum(error * error for error in errors) / horizon), 12),
+            "mean_absolute_action_error": round(sum(abs(error) for error in errors) / horizon, 12),
+            "signed_action_error_sum": round(sum(errors), 12),
+            "integrated_final_state_error": round(abs(state), 12),
+            "maximum_absolute_state_error": round(max(absolute_states), 12),
+        }
+
+    persistent = [float(action_error_magnitude)] * horizon
+    alternating = [
+        float(action_error_magnitude) if step % 2 == 0 else -float(action_error_magnitude)
+        for step in range(horizon)
+    ]
+    return {
+        "persistent_same_sign": summarize(persistent),
+        "alternating_sign": summarize(alternating),
     }
 
 
@@ -106,6 +151,7 @@ def evaluate() -> dict[str, object]:
     changed_ensemble = temporal_ensemble(changed_predictions)
     return {
         "compounding_error": compounding_error(),
+        "action_error_correlation_audit": action_error_correlation_audit(),
         "chunk_tradeoff": chunk_tradeoff(),
         "temporal_ensemble": {
             "coefficient": 0.01,

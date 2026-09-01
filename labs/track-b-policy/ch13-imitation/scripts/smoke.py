@@ -17,9 +17,16 @@ from imitation_fixture import evaluate  # noqa: E402
 def main() -> int:
     metrics = evaluate()
     compounding = metrics["compounding_error"]
+    correlation = metrics["action_error_correlation_audit"]
     chunks = metrics["chunk_tradeoff"]
-    if compounding["closed_loop_final_state_error"] <= compounding["open_loop_action_rmse"]:
-        raise AssertionError("fixture must expose integrated closed-loop error")
+    if compounding["integrated_final_state_error"] <= compounding["open_loop_action_rmse"]:
+        raise AssertionError("fixture must expose integrated state error")
+    persistent = correlation["persistent_same_sign"]
+    alternating = correlation["alternating_sign"]
+    if persistent["action_rmse"] != alternating["action_rmse"]:
+        raise AssertionError("the temporal-correlation control must hold action RMSE fixed")
+    if persistent["integrated_final_state_error"] <= alternating["integrated_final_state_error"]:
+        raise AssertionError("persistent errors must accumulate more than alternating errors")
     if not chunks[0]["policy_queries"] > chunks[-1]["policy_queries"]:
         raise AssertionError("larger execution horizons must reduce policy queries")
     if not chunks[0]["mean_reaction_delay_steps"] < chunks[-1]["mean_reaction_delay_steps"]:

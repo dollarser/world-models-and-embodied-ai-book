@@ -2,12 +2,16 @@
   "experiment_id": "EXP-13-01",
   "gpu_verified": false,
   "metrics": {
+    "action_error_correlation_audit": {
+      "alternating_sign": {"action_rmse": 0.02, "integrated_final_state_error": 0.0, "maximum_absolute_state_error": 0.02, "mean_absolute_action_error": 0.02, "signed_action_error_sum": 0.0},
+      "persistent_same_sign": {"action_rmse": 0.02, "integrated_final_state_error": 0.4, "maximum_absolute_state_error": 0.4, "mean_absolute_action_error": 0.02, "signed_action_error_sum": 0.4}
+    },
     "chunk_tradeoff": [
       {"deadline_pass_rate": 1.0, "deadline_steps": 2, "discarded_prediction_steps_per_full_query": 7, "execution_horizon_steps": 1, "max_reaction_delay_steps": 0, "mean_reaction_delay_steps": 0.0, "policy_queries": 16, "prediction_horizon_steps": 8},
       {"deadline_pass_rate": 0.7333333333333333, "deadline_steps": 2, "discarded_prediction_steps_per_full_query": 4, "execution_horizon_steps": 4, "max_reaction_delay_steps": 3, "mean_reaction_delay_steps": 1.6, "policy_queries": 4, "prediction_horizon_steps": 8},
       {"deadline_pass_rate": 0.3333333333333333, "deadline_steps": 2, "discarded_prediction_steps_per_full_query": 0, "execution_horizon_steps": 8, "max_reaction_delay_steps": 7, "mean_reaction_delay_steps": 3.7333333333333334, "policy_queries": 2, "prediction_horizon_steps": 8}
     ],
-    "compounding_error": {"amplification_factor": 20.0, "closed_loop_final_state_error": 0.4, "horizon": 20, "open_loop_action_rmse": 0.02},
+    "compounding_error": {"horizon": 20, "integrated_final_state_error": 0.4, "integration_gain_steps": 20.0, "open_loop_action_rmse": 0.02},
     "temporal_ensemble": {"changed_ensemble_absolute_error": 0.753737406774, "changed_ensembled_action": 0.246262593226, "changed_latest_absolute_error": 0.0, "changed_latest_action": 1.0, "changed_target": 1.0, "coefficient": 0.01, "stationary_ensemble_absolute_error": 0.000999991667, "stationary_ensembled_action": 0.999000008333, "stationary_latest_absolute_error": 0.2, "stationary_latest_action": 1.2, "stationary_target": 1.0}
   },
   "scope": "deterministic protocol fixture; not a learned policy comparison",
