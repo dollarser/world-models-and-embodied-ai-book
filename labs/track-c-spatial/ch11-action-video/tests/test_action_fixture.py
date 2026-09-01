@@ -37,12 +37,47 @@ class ActionConditionedFixtureTests(unittest.TestCase):
 
     def test_blind_model_fails_action_sensitivity(self):
         metrics = evaluate()
-        self.assertEqual(metrics["action_blind"]["action_sensitivity"], 0.25)
-        self.assertEqual(metrics["action_conditioned"]["action_sensitivity"], 1.0)
+        self.assertEqual(metrics["action_blind"]["action_sensitivity"], 0.0)
+        self.assertEqual(metrics["action_conditioned"]["action_sensitivity"], 2.0)
+
+    def test_sensitivity_does_not_prove_action_direction(self):
+        metrics = evaluate()
+        self.assertEqual(metrics["left_right_swapped"]["action_sensitivity"], 2.0)
+        self.assertEqual(metrics["left_right_swapped"]["left_right_separation"], 2.0)
+        self.assertEqual(metrics["left_right_swapped"]["left_to_right_signed_separation"], -2.0)
+        self.assertEqual(metrics["action_conditioned"]["left_to_right_signed_separation"], 2.0)
+
+    def test_counterfactual_vector_error_detects_swapped_actions(self):
+        metrics = evaluate()
+        self.assertGreater(metrics["left_right_swapped"]["counterfactual_vector_rmse"], 0.0)
+        self.assertEqual(metrics["action_conditioned"]["counterfactual_vector_rmse"], 0.0)
+
+    def test_rollout_reports_fixed_sequence_and_transition_denominators(self):
+        metrics = evaluate()["action_conditioned"]
+        self.assertEqual(metrics["unseen_sequence_count"], 3)
+        self.assertEqual(metrics["unseen_transition_count"], 9)
+        self.assertEqual(metrics["unseen_sequence_trajectory_rmse"], 0.0)
+
+    def test_swapped_actions_fail_held_out_trajectory(self):
+        metrics = evaluate()["left_right_swapped"]
+        self.assertGreater(metrics["unseen_sequence_trajectory_rmse"], 0.0)
+        self.assertGreater(metrics["mean_unseen_sequence_endpoint_error"], 0.0)
 
     def test_unknown_action_is_rejected(self):
         with self.assertRaises(ValueError):
             transition((1.0, 1.0), "teleport")
+
+    def test_invalid_state_and_render_size_are_rejected(self):
+        with self.assertRaises(ValueError):
+            transition((float("nan"), 1.0), "forward")
+        with self.assertRaises(ValueError):
+            render_state((1.0, 1.0), size=0)
+
+    def test_empty_action_sequence_and_unknown_model_are_rejected(self):
+        with self.assertRaises(ValueError):
+            rollout((1.0, 1.0), ())
+        with self.assertRaises(ValueError):
+            predict_next((1.0, 1.0), "forward", "unknown")
 
 
 if __name__ == "__main__":

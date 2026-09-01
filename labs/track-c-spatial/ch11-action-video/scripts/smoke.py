@@ -16,11 +16,19 @@ from action_fixture import evaluate  # noqa: E402
 
 def main() -> int:
     metrics = evaluate()
-    blind, conditioned = metrics["action_blind"], metrics["action_conditioned"]
+    blind = metrics["action_blind"]
+    swapped = metrics["left_right_swapped"]
+    conditioned = metrics["action_conditioned"]
     if blind["action_sensitivity"] >= conditioned["action_sensitivity"]:
         raise AssertionError("action-conditioned model must distinguish counterfactual actions")
     if blind["mean_unseen_sequence_endpoint_error"] <= conditioned["mean_unseen_sequence_endpoint_error"]:
         raise AssertionError("action-conditioned model must improve held-out sequence rollout")
+    if swapped["action_sensitivity"] != conditioned["action_sensitivity"]:
+        raise AssertionError("swapped control labels must preserve action sensitivity in this diagnostic")
+    if swapped["left_to_right_signed_separation"] >= 0.0:
+        raise AssertionError("swapped control labels must reverse the signed left-to-right effect")
+    if swapped["counterfactual_vector_rmse"] <= conditioned["counterfactual_vector_rmse"]:
+        raise AssertionError("direction-aware counterfactual error must detect swapped actions")
 
     report = {
         "experiment_id": "EXP-11-01",

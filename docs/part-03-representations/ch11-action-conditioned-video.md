@@ -1,10 +1,10 @@
 # 第11章 动作条件视频世界模型
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-11-01`
-> 关联声明：`CLAIM-11-01`～`CLAIM-11-06`
-> 关联图表：`FIG-11-01` / `TAB-11-01` / `TAB-11-02`
+> 关联声明：`CLAIM-11-01`～`CLAIM-11-09`
+> 关联图表：`FIG-11-01` / `TAB-11-01` / `TAB-11-02` / `TAB-11-03` / `TAB-11-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -125,14 +125,23 @@ E(h)=\frac{1}{N}\sum_i d\bigl(g(\hat{o}^{(i)}_{t+h}),s^{(i)}_{t+h}\bigr),
 S(a_i,a_j)=d\bigl(\hat{s}_{t+h}(a_i),\hat{s}_{t+h}(a_j)\bigr).
 \]
 
-`S=0` 可能表示忽略动作；很大也可能是无约束幻觉。必须与真实仿真器、保留日志或规则 oracle 比较方向和幅度。
+本书对有限动作集报告预测未来的直径 \(S_{max}=\max_{i,j}S(a_i,a_j)\)。它保留状态距离单位：全部候选未来相同时为 0，但数值不能跨坐标尺度直接比较。用“唯一未来数量 / 动作数”冒充敏感度会让完全动作盲模型得到 \(1/|A|>0\)，因此本章 fixture 已弃用该定义。
+
+`S_{max}>0` 仍只说明输出发生变化，不说明方向或幅度正确。还要比较带符号的效果（例如右转横向位移减左转横向位移），并对所有动作对报告 counterfactual vector error：
+
+\[
+E_{cf}=\sqrt{\frac{1}{d|P|}\sum_{(i,j)\in P}\left\|[(\hat{s}_j-\hat{s}_i)-(s_j-s_i)]\right\|_2^2},
+\]
+
+其中 \(P\) 是预先登记的动作对，\(d\) 是状态维数。敏感度很大也可能来自标签交换或无约束幻觉，必须与真实仿真器、保留日志或规则 oracle 比较方向和幅度。
 
 ## 11.6 EXP-11-01：学习动作表，再组合未见序列
 
 S 档 fixture 是 `7×7` 网格。训练数据覆盖 forward、left、right、brake 的单步转移，但不含评测中的三步组合。模型从样本拟合位移：
 
 - `action_blind` 忽略动作，使用所有训练转移的平均位移；
-- `action_conditioned` 为每个动作学习独立位移；
+- `left_right_swapped` 响应动作，但模拟标签/对齐错误，把 left 与 right 语义交换；
+- `action_conditioned` 为每个动作学习正确的独立位移；
 - 状态被渲染为 ASCII 帧，便于同时检查状态与观察输出。
 
 ```bash
@@ -141,16 +150,31 @@ make ch11-smoke-local
 make ch11-smoke
 ```
 
-| 模型 | one-step 状态 RMSE ↓ | 帧准确率 ↑ | 动作敏感性 ↑ | 左右分离 ↑ | 未见序列终点误差 ↓ |
+| 模型 | one-step 状态 RMSE ↓ | 帧准确率 ↑ | 动作敏感度/直径 ↑ | 左→右有符号分离 | counterfactual vector RMSE ↓ |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| action-blind | 0.58630 | 25% | 0.25 | 0.0 | 1.33852 |
-| action-conditioned | **0.00000** | **100%** | **1.00** | **2.0** | **0.00000** |
+| action-blind | 0.58630 | 25% | 0.0 | 0.0 | 0.95743 |
+| left-right-swapped | 1.00000 | 50% | **2.0** | **-2.0（反向）** | 1.63299 |
+| action-conditioned | **0.00000** | **100%** | **2.0** | **+2.0（正确）** | **0.00000** |
 
-*TAB-11-02：`EXP-11-01` 固定网格结果。动作条件模型只是查表式转移，不是视频神经网络。*
+*TAB-11-02：`EXP-11-01` 的单步与同状态反事实结果。敏感度和无符号分离都无法单独检出左右语义交换。*
 
-`CLAIM-11-02`（result）：`EXP-11-01` 的 action-blind 模型对四个动作只产生一个未来，动作敏感性为 0.25，左右分离为 0；action-conditioned 模型分别为 1.00 和 2.0。
+`CLAIM-11-02`（result）：按预测未来最大两两距离计算，`EXP-11-01` 的 action-blind 动作敏感度为 0，action-conditioned 为 2；前者对四个动作产生同一未来。该量有网格单位，不是归一化性能分数。
 
 `CLAIM-11-03`（result）：在只保留动作组合的三条序列上，conditioned 模型平均终点误差为 0，blind 模型为 1.33852。该结果来自确定性可组合动力学，不能外推复杂视频的组合泛化。
+
+`CLAIM-11-07`（result）：left-right-swapped 与正确模型的动作敏感度、无符号左右分离都为 2，但有符号左右效果分别为 -2 和 +2，counterfactual vector RMSE 分别为 1.63299 和 0。这一标签置换负对照证明“响应动作”不足以支持“动作语义正确”。
+
+多步评测同时报告固定分母的全轨迹 RMSE。三条序列各三步，因此每个模型都有 3 个终点、9 个预测转移；没有缺失 rollout。
+
+| 模型 | 序列数 | 转移数 | 未见序列全轨迹 RMSE ↓ | 平均终点误差 ↓ |
+| --- | ---: | ---: | ---: | ---: |
+| action-blind | 3 | 9 | 0.76830 | 1.33852 |
+| left-right-swapped | 3 | 9 | 1.33333 | 2.00000 |
+| action-conditioned | 3 | 9 | **0.00000** | **0.00000** |
+
+*TAB-11-03：`EXP-11-01` 的多步结果。全轨迹 RMSE 以 9 个转移、每步两个状态坐标为分母；终点误差以 3 条序列为分母。*
+
+`CLAIM-11-08`（result）：在固定的 3 条未见序列、9 个转移上，blind、swapped、conditioned 的全轨迹 RMSE 分别为 0.76830、1.33333、0。显式报告轨迹与终点能阻止中间错误被终点抵消，但仍不是随机环境的统计泛化证据。
 
 ## 11.7 renderer、simulator、planner：同一视频，不同合同
 
@@ -166,11 +190,24 @@ make ch11-smoke
 
 物理仿真器通常有显式状态、碰撞与确定性规则；学习模拟器从数据估计未来，可能更真实地渲染复杂外观，也可能幻觉或遗漏约束。两者可以组合，而不是二选一。
 
-## 11.8 开源研究锚点：可以审计，但不在本机训练
+## 11.8 开源研究锚点：按接口与维护状态选择
 
-[DIAMOND](https://github.com/eloialonso/diamond) 是公开代码、agent 和可玩 checkpoint 的扩散世界模型案例；[GameNGen](https://gamengen.github.io/) 公开论文和演示，使用历史帧与动作生成 DOOM 后续。它们说明动作条件像素/latent 模型可以形成交互环境，但任务、数据、硬件和指标都与机器人/驾驶不同。
+[DIAMOND](https://github.com/eloialonso/diamond) 是公开代码、agent 和可玩 checkpoint 的扩散世界模型案例；[GameNGen](https://gamengen.github.io/) 公开论文和演示，使用历史帧与动作生成 DOOM 后续。它们说明动作条件像素模型可以形成交互环境，但任务、数据、硬件和指标都与机器人/驾驶不同。DIAMOND 官方 README 还明确提醒 Atari ROM 下载要求使用者拥有相应许可；MIT 代码许可不会覆盖游戏资产。
 
-本书当前不下载 checkpoint，不执行其训练或试玩。若后续作为 M/L1 实验，必须锁定 commit、环境 ROM/数据权利、checkpoint 许可、GPU、采样步数、真实 FPS 定义和自由 rollout horizon。论文速度不能直接换算当前设备性能。
+截至 2026-09-01，几个开源锚点承担的角色并不相同：
+
+| 项目 | 预测/生成对象 | 动作与用途 | 当前可审计资产 | 本书边界 |
+| --- | --- | --- | --- | --- |
+| DIAMOND | 游戏像素/环境未来 | 离散游戏动作、imagination 中训练 agent | 代码、checkpoint、逐游戏/seed 结果 | ROM 另行授权；不是机器人/驾驶 |
+| V-JEPA 2-AC | latent future | 机器人动作、图像目标规划 | 代码、action-conditioned checkpoint、示例 | 不输出可观看视频；本书未运行 |
+| Cosmos-Predict2.5 | 视频 future | 2B robot/action-cond 等专用模型 | Apache-2.0 代码、Open Model License 权重、推理/后训练文档 | 仓库已转有限维护并建议迁移 Cosmos 3；资源未测 |
+| Cosmos-Drive-Dreams | 多视角 RGB/LiDAR 合成数据 | HD map、3D box、LiDAR 等空间条件 | pipeline、权重、toolkit、合成数据 | 场景条件生成不自动等于 ego-action 闭环 simulator |
+
+*TAB-11-04：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*
+
+`CLAIM-11-09`（fact）：Cosmos-Predict2.5 官方仓库列有 2B robot/action-cond 模型及推理、后训练路径，但截至核查日已声明只做有限维护并建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
+
+本书当前不下载 checkpoint，不执行其训练或试玩。若后续作为 M/L1 实验，必须锁定 commit、模型代际、环境 ROM/数据权利、checkpoint 许可、GPU、采样步数、真实 FPS 定义和自由 rollout horizon。论文速度不能直接换算当前设备性能；2B 参数也不能直接推出 24 GB 可行。
 
 V-JEPA 2-AC 是非像素动作条件路线的另一个锚点；它与视频扩散模型的共同点是接收动作并预测未来，输出空间和规划接口不同。第17章会在统一用途框架下比较。
 
@@ -228,8 +265,9 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 动作条件查表通过反事实与组合 smoke | `EXP-11-01` | CPU smoke | 确定性网格/ASCII |
+| 本书结果 | 动作盲、左右交换与正确查表的反事实/组合诊断 | `EXP-11-01` | CPU smoke | 确定性网格/ASCII |
 | 开源案例 | DIAMOND 提供动作条件可玩扩散模型资产 | 官方项目 | `[O,R1]` | 本书未运行 |
+| 开源案例 | Cosmos 2.5 action-cond 与 Drive-Dreams 条件生成资产 | 官方项目 | `[O,R1]` | 代际、许可、用途和资源不同 |
 | 论文案例 | GameNGen 用帧与动作生成交互未来 | 论文/项目页 | `[A,R1]` | 本书未运行 |
 | 闭源案例 | Genie 3、Waymo WM、GAIA-4 的交互/驾驶声明 | 官方页面 | `[V,R0/R1]` | 无独立复现 |
 | 未验证 | 小型视频/latent predictor | 后续 M 档 | planned | GPU、数据与资源待测 |
@@ -254,6 +292,7 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - Wayve, [GAIA-2 技术报告](https://arxiv.org/abs/2503.20523) 与 [GAIA-4 官方页面](https://wayve.ai/thinking/gaia-4/)，`[A/V,R0/R1]`；
 - Waymo, [Waymo World Model 官方博客](https://waymo.com/blog/2026/02/the-waymo-world-model-a-new-frontier-for-autonomous-driving-simulation/)，`[V,R0]`；
 - Meta FAIR, [V-JEPA 2-AC 官方仓库](https://github.com/facebookresearch/vjepa2)，`[O,R1]`，latent 动作条件路线。
+- NVIDIA, [Cosmos-Predict2.5](https://github.com/nvidia-cosmos/cosmos-predict2.5) 与 [Cosmos-Drive-Dreams](https://github.com/nv-tlabs/Cosmos-Drive-Dreams)，`[O,R1]`，机器人动作条件视频与驾驶条件合成数据的不同接口。
 
 ## 下一章接口
 
@@ -272,6 +311,6 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`；
+- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`；
 - 已知限制：没有训练视频模型、下载 checkpoint、运行仿真或验证任何闭源案例；
-- 下一步：视频训练与仿真验证保持待办；生成式谱系已与第5章核对。
+- 下一步：视频训练与仿真验证保持待办；Cosmos/DIAMOND 等上游资产只完成一手资料核验，未下载或运行。

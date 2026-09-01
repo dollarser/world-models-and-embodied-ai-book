@@ -3,18 +3,40 @@
   "gpu_verified": false,
   "metrics": {
     "action_blind": {
-      "action_sensitivity": 0.25,
+      "action_sensitivity": 0.0,
+      "counterfactual_vector_rmse": 0.9574271077563381,
       "left_right_separation": 0.0,
+      "left_to_right_signed_separation": 0.0,
       "mean_unseen_sequence_endpoint_error": 1.3385214790248792,
       "one_step_frame_accuracy": 0.25,
-      "one_step_state_rmse": 0.5863019699779287
+      "one_step_state_rmse": 0.5863019699779287,
+      "unseen_sequence_count": 3,
+      "unseen_sequence_trajectory_rmse": 0.768295371441074,
+      "unseen_transition_count": 9
     },
     "action_conditioned": {
-      "action_sensitivity": 1.0,
+      "action_sensitivity": 2.0,
+      "counterfactual_vector_rmse": 0.0,
       "left_right_separation": 2.0,
+      "left_to_right_signed_separation": 2.0,
       "mean_unseen_sequence_endpoint_error": 0.0,
       "one_step_frame_accuracy": 1.0,
-      "one_step_state_rmse": 0.0
+      "one_step_state_rmse": 0.0,
+      "unseen_sequence_count": 3,
+      "unseen_sequence_trajectory_rmse": 0.0,
+      "unseen_transition_count": 9
+    },
+    "left_right_swapped": {
+      "action_sensitivity": 2.0,
+      "counterfactual_vector_rmse": 1.632993161855452,
+      "left_right_separation": 2.0,
+      "left_to_right_signed_separation": -2.0,
+      "mean_unseen_sequence_endpoint_error": 2.0,
+      "one_step_frame_accuracy": 0.5,
+      "one_step_state_rmse": 1.0,
+      "unseen_sequence_count": 3,
+      "unseen_sequence_trajectory_rmse": 1.3333333333333333,
+      "unseen_transition_count": 9
     }
   },
   "scope": "learned transition-table and ASCII-frame fixture; not a video world model",
