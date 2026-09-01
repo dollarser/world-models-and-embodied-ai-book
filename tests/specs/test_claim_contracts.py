@@ -5,6 +5,7 @@ import unittest
 from scripts.check_book import (
     check_chapter_sections,
     check_claim_contract,
+    check_fact_evidence_contract,
     check_figure_contract,
     check_glossary_contract,
     check_heading_hierarchy,
@@ -135,6 +136,76 @@ class GlossaryContractTest(unittest.TestCase):
         errors = check_glossary_contract("RSSM", "MPC")
         self.assertTrue(any("author terminology" in item and "MPC" in item for item in errors))
         self.assertTrue(any("reader glossary" in item and "RSSM" in item for item in errors))
+
+
+class FactEvidenceContractTest(unittest.TestCase):
+    def test_accepts_primary_source_with_boundary(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-06-01",
+                    "basis": "primary_source",
+                    "maturity": ["P"],
+                    "anchors": ["https://example.org/paper"],
+                    "scope_note": "This source supports the named algorithm interface but not a book reproduction result.",
+                }
+            ],
+        }
+        self.assertEqual([], check_fact_evidence_contract({"CLAIM-06-01"}, registry))
+
+    def test_rejects_missing_and_stale_claim_entries(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-07-01",
+                    "basis": "primary_source",
+                    "maturity": ["P"],
+                    "anchors": ["https://example.org/paper"],
+                    "scope_note": "This source supports the named method but not any unregistered claim or result.",
+                }
+            ],
+        }
+        errors = check_fact_evidence_contract({"CLAIM-06-01"}, registry)
+        self.assertTrue(any("no evidence registry entry" in item for item in errors))
+        self.assertTrue(any("non-fact or missing claim" in item for item in errors))
+
+    def test_rejects_source_basis_without_matching_anchor(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-06-01",
+                    "basis": "vendor_statement",
+                    "maturity": ["V"],
+                    "anchors": ["specs/terminology.md"],
+                    "scope_note": "A vendor statement must remain a vendor claim and cannot become independent validation.",
+                }
+            ],
+        }
+        errors = check_fact_evidence_contract({"CLAIM-06-01"}, registry)
+        self.assertTrue(any("requires an external anchor" in item for item in errors))
+
+    def test_rejects_vendor_statement_without_vendor_maturity(self) -> None:
+        registry = {
+            "version": 1,
+            "audit_date": "2026-09-01",
+            "claims": [
+                {
+                    "claim_id": "CLAIM-11-05",
+                    "basis": "vendor_statement",
+                    "maturity": ["O"],
+                    "anchors": ["https://example.org/product"],
+                    "scope_note": "The product page records only the vendor's statement and is not independent validation.",
+                }
+            ],
+        }
+        errors = check_fact_evidence_contract({"CLAIM-11-05"}, registry)
+        self.assertTrue(any("must be labeled V" in item for item in errors))
 
 
 if __name__ == "__main__":

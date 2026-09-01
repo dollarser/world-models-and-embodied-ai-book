@@ -10,7 +10,7 @@
 
 | 命令 | 环境 | 检查范围 | 失败等级 |
 | --- | --- | --- | --- |
-| `make check-local` | 宿主标准库 | 文件、JSON、链接、manifest、声明/图表双向登记、Mermaid 无障碍元数据、标题层级、章节教学/接口区段、读者关键术语、`result`—实验卡绑定与 22 组 smoke—结果精确一致性 | `BLOCK` |
+| `make check-local` | 宿主标准库 | 文件、JSON、链接、manifest、声明/图表双向登记、`fact`—证据登记、Mermaid 无障碍元数据、标题层级、章节教学/接口区段、读者关键术语、`result`—实验卡绑定与 22 组 smoke—结果精确一致性 | `BLOCK` |
 | `make check-strict` | Docker | JSON Schema、manifest、实验卡/benchmark card 条件与跨资产规则 | `BLOCK` |
 | `make check` | 宿主 + Docker | 依次执行 local 与 strict | `BLOCK` |
 | `make docs-build` | Docker | MkDocs 严格构建、导航、Markdown 扩展 | `BLOCK` |
@@ -27,6 +27,7 @@
 | 章节模板 | 自动 + 人工 `BLOCK` | “本章契约、小结、练习、延伸阅读、验收记录”使用独立 H2；第1–21章有“下一章接口”，第22章有“全书出口”；非适用项明确说明而非静默删除 |
 | 读者术语 | 自动 + 人工 `BLOCK` | 高频缩写同时出现在作者术语基线与读者术语表；定义说明作用域和不能单独证明的结论 |
 | 声明追溯 | 自动 + 人工 `BLOCK` | `CLAIM` 定义与 manifest 双向相等、类型规范、章节归属正确；每个 `result` 由同章实验卡反向绑定，外部报告数字不冒充本书结果 |
+| 事实证据 | 自动 + 人工 `BLOCK` | 每个 `fact` 在 `fact-evidence.json` 登记证据基类、成熟度、锚点和支持边界；登记集与正文事实集双向相等，供应商声明不升级为独立验证 |
 | 来源成熟度 | 人工 `BLOCK` | `P` 有已接收/发表的一手元数据；只有 arXiv、项目页或投稿状态时标为 `A`，官方资产 `O` 不替论文成熟度 |
 | 图表追溯 | 自动 + 人工 `BLOCK` | 正文 `FIG/TAB` 与 manifest 双向相等、章节归属正确；Mermaid 有登记 ID 开头的 `accTitle` 和关系型 `accDescr`；caption、来源、许可和解释边界完整 |
 | 大文件与密钥 | 自动 `BLOCK` | 不含数据、权重、缓存、密钥和敏感日志 |

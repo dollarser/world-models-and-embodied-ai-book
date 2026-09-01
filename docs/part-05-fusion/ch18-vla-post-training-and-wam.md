@@ -44,7 +44,7 @@ SFT 最大化示范动作在观察和指令下的似然：
 
 它回答“数据中的操作者做了什么”，不直接回答动作导致的后果、失败能否恢复、多个可行动作哪个回报更高，或闭环偏离示范后怎样回到任务。后训练引入 outcome，但也增加了新的污染源：reward 定义、数据收集 policy、优势估计、环境真实性和更新后 distribution shift。
 
-`CLAIM-18-01`（fact）：VLA 后训练的完成定义至少包含 interaction source、reward/verifier、credit/advantage、policy support、更新算法和独立闭环评测；“用了 RL”不是足够的实验说明。
+`CLAIM-18-01`（recommendation）：VLA 后训练的完成定义至少应包含 interaction source、reward/verifier、credit/advantage、policy support、更新算法和独立闭环评测；“用了 RL”不是足够的实验说明。
 
 ```mermaid
 flowchart LR

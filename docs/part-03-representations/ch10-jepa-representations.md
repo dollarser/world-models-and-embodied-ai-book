@@ -92,7 +92,7 @@ V-JEPA 2 的官方论文和仓库把流程分为两部分：先用大规模图�
 
 ## 10.4 V-JEPA 2.1：dense 特征是新分支，不是简单版本号
 
-2026 年 V-JEPA 2.1 预印本与官方代码更新聚焦 dense、时空一致表示。论文描述四个组成：可见与 masked token 都参与的 dense predictive loss、多层 deep self-supervision、图像/视频 tokenizer，以及模型与数据扩展。官方仓库同时提供 80M 到 2B 的多个 checkpoint 入口。
+2026 年 [V-JEPA 2.1 预印本](https://arxiv.org/abs/2603.14482)与[官方代码](https://github.com/facebookresearch/vjepa2)更新聚焦 dense、时空一致表示。论文描述四个组成：可见与 masked token 都参与的 dense predictive loss、多层 deep self-supervision、图像/视频 tokenizer，以及模型与数据扩展。官方仓库同时提供 80M 到 2B 的多个 checkpoint 入口。
 
 论文报告了动作预期、深度、分割、机器人规划等结果，但本书不抄录排行榜作为结论。它们使用不同 probe、数据、模型规模和任务，不能被一句“2.1 更好”替代。尤其是：
 

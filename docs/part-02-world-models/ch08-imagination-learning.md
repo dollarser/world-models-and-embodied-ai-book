@@ -34,7 +34,7 @@
 
 ## 8.1 两个循环：真实数据学模型，模型内部学行为
 
-Dreamer 的关键不是“生成一段看起来真实的视频”，而是把学习拆成两个相互依赖的循环：
+[Dreamer 原论文](https://arxiv.org/abs/1912.01603)的关键不是“生成一段看起来真实的视频”，而是把学习拆成两个相互依赖的循环：
 
 1. **真实/仿真环境循环**：policy 产生动作，环境返回观测、reward 与 termination，transition 进入 replay；
 2. **学习循环**：从 replay 训练 world model，再从 posterior state 出发，用 actor 和 world-model prior 展开 imagined trajectory，训练 critic 与 actor。

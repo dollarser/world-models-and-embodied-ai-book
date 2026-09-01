@@ -1,0 +1,211 @@
+{
+  "version": 1,
+  "audit_date": "2026-09-01",
+  "scope": "All claims whose canonical type is fact",
+  "claims": [
+    {
+      "claim_id": "CLAIM-01-01",
+      "basis": "primary_source",
+      "maturity": ["P"],
+      "anchors": ["https://proceedings.mlr.press/v15/ross11a.html"],
+      "scope_note": "DAgger supports policy-induced state-distribution shift; the book adds the broader closed-loop consequence framing."
+    },
+    {
+      "claim_id": "CLAIM-02-02",
+      "basis": "book_definition",
+      "maturity": ["internal"],
+      "anchors": ["specs/terminology.md", "docs/part-01-loop/ch02-what-is-a-world-model.md"],
+      "scope_note": "This is the book's explicit VLA/world-model boundary, not a claim that all external taxonomies use the same labels."
+    },
+    {
+      "claim_id": "CLAIM-03-04",
+      "basis": "book_definition",
+      "maturity": ["internal"],
+      "anchors": ["specs/terminology.md", "docs/part-01-loop/ch03-minimal-robotics-and-decision.md"],
+      "scope_note": "The statement fixes the book's state, observation, and belief vocabulary for partially observable tasks."
+    },
+    {
+      "claim_id": "CLAIM-04-02",
+      "basis": "official_asset",
+      "maturity": ["O"],
+      "anchors": ["https://docs.ros.org/en/ros2_packages/rolling/api/message_filters/message_filters.html"],
+      "scope_note": "ROS message-filter semantics anchor the timestamp and alignment distinction; they do not validate the book's synthetic data."
+    },
+    {
+      "claim_id": "CLAIM-04-05",
+      "basis": "repository_contract",
+      "maturity": ["internal"],
+      "anchors": ["specs/experiment-card.schema.json", "scripts/validate_experiment_card.py"],
+      "scope_note": "The claim describes validation rules in this repository and must be updated whenever the schema or validator changes."
+    },
+    {
+      "claim_id": "CLAIM-04-06",
+      "basis": "official_asset",
+      "maturity": ["O"],
+      "anchors": [
+        "https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/",
+        "https://github.com/Farama-Foundation/Gymnasium/blob/main/gymnasium/wrappers/common.py"
+      ],
+      "scope_note": "Gymnasium documents terminated/truncated bootstrap semantics; the book fixture checks only its own storage and aggregation contract."
+    },
+    {
+      "claim_id": "CLAIM-05-01",
+      "basis": "primary_source",
+      "maturity": ["A", "P"],
+      "anchors": [
+        "https://arxiv.org/abs/1312.6114",
+        "https://proceedings.neurips.cc/paper/2020/hash/4c5bcfec8584af0d967f1ab10179ca4b-Abstract.html",
+        "https://openreview.net/forum?id=PqvMRDCJT9t"
+      ],
+      "scope_note": "The sources anchor representative VAE, diffusion, and flow objectives; the negative claim about physical or closed-loop validity is a boundary, not a reported benchmark result."
+    },
+    {
+      "claim_id": "CLAIM-06-01",
+      "basis": "primary_source",
+      "maturity": ["P"],
+      "anchors": ["https://proceedings.mlr.press/v97/hafner19a.html"],
+      "scope_note": "PlaNet anchors the deterministic/stochastic latent dynamics and observation-conditioned inference distinction used by the chapter."
+    },
+    {
+      "claim_id": "CLAIM-06-05",
+      "basis": "official_asset",
+      "maturity": ["O"],
+      "anchors": [
+        "https://github.com/danijar/dreamerv3/blob/main/dreamerv3/rssm.py",
+        "https://github.com/danijar/dreamerv3/blob/main/dreamerv3/configs.yaml"
+      ],
+      "scope_note": "This is a dated implementation fact about the current DreamerV3 repository, not a defining property of every RSSM."
+    },
+    {
+      "claim_id": "CLAIM-07-01",
+      "basis": "book_definition",
+      "maturity": ["internal"],
+      "anchors": ["docs/part-02-world-models/ch07-model-based-planning.md", "specs/terminology.md"],
+      "scope_note": "The chapter defines the minimum experiment contract for planning; it does not assert a universal optimizer ranking."
+    },
+    {
+      "claim_id": "CLAIM-08-01",
+      "basis": "primary_source",
+      "maturity": ["P"],
+      "anchors": ["https://openreview.net/forum?id=S1lOTC4tDS"],
+      "scope_note": "The Dreamer paper anchors replay-trained dynamics and latent imagination for behavior learning; external evaluation remains separate."
+    },
+    {
+      "claim_id": "CLAIM-09-03",
+      "basis": "official_asset",
+      "maturity": ["A", "O"],
+      "anchors": [
+        "https://github.com/tsinghua-fib-lab/WorldArena",
+        "https://arxiv.org/abs/2605.17912"
+      ],
+      "scope_note": "The claim records the benchmark's published category split, not independent validation of its metrics or results."
+    },
+    {
+      "claim_id": "CLAIM-10-01",
+      "basis": "primary_source",
+      "maturity": ["P"],
+      "anchors": ["https://openaccess.thecvf.com/content/CVPR2023/html/Assran_Self-Supervised_Learning_From_Images_With_a_Joint-Embedding_Predictive_Architecture_CVPR_2023_paper.html"],
+      "scope_note": "I-JEPA anchors target-representation prediction without pixel reconstruction; downstream task completeness is deliberately not inferred."
+    },
+    {
+      "claim_id": "CLAIM-10-04",
+      "basis": "official_asset",
+      "maturity": ["A", "O"],
+      "anchors": ["https://arxiv.org/abs/2603.14482", "https://github.com/facebookresearch/vjepa2"],
+      "scope_note": "The entry records the V-JEPA 2.1 recipe and public assets as checked on the audit date; no upstream score is treated as a book result."
+    },
+    {
+      "claim_id": "CLAIM-11-05",
+      "basis": "vendor_statement",
+      "maturity": ["V"],
+      "anchors": ["https://wayve.ai/thinking/gaia-4/"],
+      "scope_note": "The source proves only Wayve's positioning of GAIA-4; it does not independently establish fidelity, correlation, or safety validity."
+    },
+    {
+      "claim_id": "CLAIM-11-09",
+      "basis": "official_asset",
+      "maturity": ["O"],
+      "anchors": ["https://github.com/nvidia-cosmos/cosmos-predict2.5"],
+      "scope_note": "The repository documents its model paths and limited-maintenance migration notice; resource feasibility remains untested."
+    },
+    {
+      "claim_id": "CLAIM-11-10",
+      "basis": "official_asset",
+      "maturity": ["O"],
+      "anchors": ["https://github.com/NVIDIA/cosmos"],
+      "scope_note": "The current README supports the unified action interface and lists limitations; it does not validate physical consistency."
+    },
+    {
+      "claim_id": "CLAIM-12-06",
+      "basis": "book_definition",
+      "maturity": ["internal"],
+      "anchors": ["specs/terminology.md", "docs/part-03-representations/ch12-actionable-space.md"],
+      "scope_note": "This is the book's embodiment-conditioned affordance definition and explicitly excludes category-only executability claims."
+    },
+    {
+      "claim_id": "CLAIM-13-01",
+      "basis": "primary_source",
+      "maturity": ["P"],
+      "anchors": ["https://proceedings.mlr.press/v15/ross11a.html"],
+      "scope_note": "DAgger anchors the mismatch between expert-data training and learner-induced state distributions; the chapter does not claim DAgger is always required."
+    },
+    {
+      "claim_id": "CLAIM-13-05",
+      "basis": "official_asset",
+      "maturity": ["O"],
+      "anchors": [
+        "https://github.com/huggingface/lerobot/blob/main/src/lerobot/policies/act/configuration_act.py",
+        "https://github.com/huggingface/lerobot/blob/main/src/lerobot/policies/act/modeling_act.py"
+      ],
+      "scope_note": "The statement is tied to the current LeRobot ACT configuration and implementation, not to every ACT implementation."
+    },
+    {
+      "claim_id": "CLAIM-14-01",
+      "basis": "mathematical_identity",
+      "maturity": ["internal"],
+      "anchors": ["docs/part-04-policies/ch14-generative-actions.md"],
+      "scope_note": "The conditional-mean result follows from the squared-error objective under the stated expectation and feasibility assumptions."
+    },
+    {
+      "claim_id": "CLAIM-15-01",
+      "basis": "book_definition",
+      "maturity": ["internal"],
+      "anchors": ["specs/terminology.md", "docs/part-04-policies/ch15-vla-architecture-patterns.md"],
+      "scope_note": "The claim applies the book's VLA/world-model interface boundary and does not rename external projects against their authors' terminology."
+    },
+    {
+      "claim_id": "CLAIM-16-01",
+      "basis": "official_asset",
+      "maturity": ["O"],
+      "anchors": [
+        "https://github.com/google-deepmind/open_x_embodiment",
+        "https://github.com/huggingface/lerobot/blob/main/docs/source/lerobot-dataset-v3.mdx"
+      ],
+      "scope_note": "The public data interfaces anchor storage compatibility; semantic action alignment and licensing remain dataset-specific audits."
+    },
+    {
+      "claim_id": "CLAIM-17-01",
+      "basis": "book_definition",
+      "maturity": ["internal"],
+      "anchors": ["docs/part-05-fusion/ch17-world-model-policy-utility.md"],
+      "scope_note": "The five-use taxonomy is a book organization device whose completion criteria are intentionally non-interchangeable."
+    },
+    {
+      "claim_id": "CLAIM-19-01",
+      "basis": "official_asset",
+      "maturity": ["O"],
+      "anchors": ["https://www.nist.gov/publications/summary-industrial-verification-validation-and-uncertainty-quantification-procedures"],
+      "scope_note": "NIST V&V guidance distinguishes solving a model consistently from validating it for an intended real-world use."
+    },
+    {
+      "claim_id": "CLAIM-22-04",
+      "basis": "book_definition",
+      "maturity": ["internal", "O"],
+      "anchors": [
+        "docs/part-07-capstone/ch22-auditable-capstone.md",
+        "https://www.acm.org/publications/policies/artifact-review-and-badging-current"
+      ],
+      "scope_note": "The book adopts a stricter traceability entry rule inspired by artifact review; it does not claim ACM uses this exact schema."
+    }
+  ]
+}

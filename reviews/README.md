@@ -26,5 +26,6 @@
 - [快速演进来源与版本接口审查：第9–11、15、18–21章](fast-moving-source-audit-2026-09-01.md)
 - [全书编辑结构与图表无障碍审查](editorial-accessibility-review-2026-09-01.md)
 - [全书术语与章节接口审查](terminology-crosschapter-review-2026-09-01.md)
+- [全书事实声明来源追溯审查](fact-source-traceability-review-2026-09-01.md)
 
 `reviewed` 只表示正文和当前可执行路径通过内容、代码、一致性与教学审查，不自动表示 GPU、大数据或上游完整复现已经完成。

@@ -19,6 +19,7 @@ REQUIRED = (
     "specs/terminology.md",
     "specs/writing-style.md",
     "specs/evidence-policy.md",
+    "specs/fact-evidence.json",
     "specs/experiment-card.schema.json",
     "specs/benchmark-card.schema.json",
     "specs/chapter-status.schema.json",
@@ -63,6 +64,15 @@ REQUIRED_READER_TERMS = (
     "LPIPS",
     "FVD",
 )
+ALLOWED_FACT_EVIDENCE_BASES = {
+    "primary_source",
+    "official_asset",
+    "vendor_statement",
+    "book_definition",
+    "repository_contract",
+    "mathematical_identity",
+}
+ALLOWED_SOURCE_MATURITY = {"P", "A", "O", "V", "T", "internal"}
 
 
 def check_required() -> list[str]:
@@ -244,6 +254,76 @@ def check_glossary_contract(terminology_text: str, glossary_text: str) -> list[s
     return errors
 
 
+def check_fact_evidence_contract(
+    fact_claim_ids: set[str], registry: object, root: Path = ROOT
+) -> list[str]:
+    """Require every canonical fact to name its evidence basis, anchors, and scope boundary."""
+
+    if not isinstance(registry, dict):
+        return ["fact evidence registry must be a JSON object"]
+    errors: list[str] = []
+    if registry.get("version") != 1:
+        errors.append("fact evidence registry version must be 1")
+    audit_date = registry.get("audit_date")
+    if not isinstance(audit_date, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}", audit_date) is None:
+        errors.append("fact evidence registry must have an ISO audit_date")
+    entries = registry.get("claims")
+    if not isinstance(entries, list):
+        return errors + ["fact evidence registry claims must be a list"]
+
+    entry_ids = [entry.get("claim_id") for entry in entries if isinstance(entry, dict)]
+    duplicates = sorted({claim_id for claim_id in entry_ids if entry_ids.count(claim_id) > 1})
+    for claim_id in duplicates:
+        errors.append(f"fact evidence registry contains duplicate claim: {claim_id}")
+    registered_ids = {claim_id for claim_id in entry_ids if isinstance(claim_id, str)}
+    for claim_id in sorted(fact_claim_ids - registered_ids):
+        errors.append(f"fact claim has no evidence registry entry: {claim_id}")
+    for claim_id in sorted(registered_ids - fact_claim_ids):
+        errors.append(f"fact evidence registry contains non-fact or missing claim: {claim_id}")
+
+    for entry in entries:
+        if not isinstance(entry, dict):
+            errors.append("fact evidence registry entry must be an object")
+            continue
+        claim_id = entry.get("claim_id", "<missing>")
+        basis = entry.get("basis")
+        if basis not in ALLOWED_FACT_EVIDENCE_BASES:
+            errors.append(f"fact evidence {claim_id} has invalid basis: {basis!r}")
+        maturity = entry.get("maturity")
+        if (
+            not isinstance(maturity, list)
+            or not maturity
+            or any(item not in ALLOWED_SOURCE_MATURITY for item in maturity)
+        ):
+            errors.append(f"fact evidence {claim_id} has invalid maturity labels")
+        elif basis == "primary_source" and not {"P", "A"}.intersection(maturity):
+            errors.append(f"fact evidence {claim_id} primary source must be labeled P or A")
+        elif basis == "official_asset" and "O" not in maturity:
+            errors.append(f"fact evidence {claim_id} official asset must be labeled O")
+        elif basis == "vendor_statement" and "V" not in maturity:
+            errors.append(f"fact evidence {claim_id} vendor statement must be labeled V")
+        elif basis in {"book_definition", "repository_contract", "mathematical_identity"} and "internal" not in maturity:
+            errors.append(f"fact evidence {claim_id} internal basis must be labeled internal")
+        anchors = entry.get("anchors")
+        if not isinstance(anchors, list) or not anchors or any(not isinstance(item, str) for item in anchors):
+            errors.append(f"fact evidence {claim_id} must have string anchors")
+            continue
+        external_anchors = [item for item in anchors if "://" in item]
+        local_anchors = [item for item in anchors if "://" not in item]
+        if basis in {"primary_source", "official_asset", "vendor_statement"} and not external_anchors:
+            errors.append(f"fact evidence {claim_id} basis {basis} requires an external anchor")
+        if basis in {"book_definition", "repository_contract", "mathematical_identity"} and not local_anchors:
+            errors.append(f"fact evidence {claim_id} basis {basis} requires a local anchor")
+        for anchor in local_anchors:
+            local_path = anchor.split("#", 1)[0]
+            if not local_path or not (root / local_path).is_file():
+                errors.append(f"fact evidence {claim_id} has missing local anchor: {anchor}")
+        note = entry.get("scope_note")
+        if not isinstance(note, str) or len(note.strip()) < 40:
+            errors.append(f"fact evidence {claim_id} must explain its support boundary")
+    return errors
+
+
 def check_manifest() -> list[str]:
     path = ROOT / "specs/book-manifest.json"
     try:
@@ -348,6 +428,29 @@ def check_glossary_files() -> list[str]:
     )
 
 
+def check_fact_evidence_files() -> list[str]:
+    manifest_path = ROOT / "specs/book-manifest.json"
+    registry_path = ROOT / "specs/fact-evidence.json"
+    if not manifest_path.is_file() or not registry_path.is_file():
+        return []
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    fact_claim_ids: set[str] = set()
+    for chapter in manifest.get("chapters", []):
+        if not isinstance(chapter, dict) or not isinstance(chapter.get("document"), str):
+            continue
+        document_path = ROOT / chapter["document"]
+        if not document_path.is_file():
+            continue
+        for match in CLAIM_DEFINITION_PATTERN.finditer(document_path.read_text(encoding="utf-8")):
+            if match.group(4) == "fact":
+                fact_claim_ids.add(match.group(1))
+    return check_fact_evidence_contract(fact_claim_ids, registry)
+
+
 def main() -> int:
     errors = (
         check_required()
@@ -356,6 +459,7 @@ def main() -> int:
         + check_markdown_links()
         + check_prd_chapters()
         + check_glossary_files()
+        + check_fact_evidence_files()
     )
     if errors:
         for error in errors:
@@ -363,7 +467,8 @@ def main() -> int:
         return 1
     print(
         "book checks passed: required files, JSON, bidirectional claim/figure contracts, Mermaid accessibility, "
-        "heading hierarchy, chapter teaching sections, reader terminology, manifest, local links, 22-chapter PRD"
+        "heading hierarchy, chapter teaching sections, reader terminology, fact evidence, manifest, local links, "
+        "22-chapter PRD"
     )
     return 0
 

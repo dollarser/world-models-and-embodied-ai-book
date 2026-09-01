@@ -60,7 +60,7 @@ flowchart LR
 
 *FIG-11-01：动作条件视频模型进入规划环路的最小接口。生成未来只是中间环节；规划器还需要状态/效用读出与真实环境验证。来源：本书原创，MIT，2026-08-31。*
 
-`CLAIM-11-01`（fact）：动作作为条件输入只是必要接口；若同一状态下改变动作不能产生方向正确且可测的未来差异，就不能支持动作反事实声明。
+`CLAIM-11-01`（recommendation）：动作作为条件输入只是必要接口；若同一状态下改变动作不能产生方向正确且可测的未来差异，就不应支持动作反事实声明。
 
 ## 11.2 动作到底是什么
 
@@ -210,7 +210,7 @@ make ch11-smoke
 
 *TAB-11-04：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*
 
-`CLAIM-11-09`（fact）：Cosmos-Predict2.5 官方仓库列有 2B robot/action-cond 模型及推理、后训练路径，但截至核查日已声明只做有限维护并建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
+`CLAIM-11-09`（fact）：[Cosmos-Predict2.5 官方仓库](https://github.com/nvidia-cosmos/cosmos-predict2.5)列有 2B robot/action-cond 模型及推理、后训练路径，但截至核查日已声明只做有限维护并建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
 
 [Cosmos 3 官方仓库](https://github.com/NVIDIA/cosmos)把 Generator 描述为可联合处理或生成 text、vision、sound 与 action 的 omnimodal world model，并公开推理和 post-training 入口；同一 README 也明确列出长时一致性、action-state consistency、3D 结构和物理合理性等限制。这里按 `[O,R1]` 记录“公开接口与资产存在”，不把官方的能力概述升级为独立效果验证。
 
@@ -234,7 +234,7 @@ Waymo 2026 年官方博客称其驾驶世界模型基于 Genie 3 做领域适配
 
 ### GAIA 2→4
 
-GAIA-2 有公开技术报告，描述多相机、文本、动作和结构条件的 latent/flow 视频模型；GAIA-3/4 的最新闭环与安全评测内容主要来自 Wayve 官方研究页面。2026 年 8 月发布的 GAIA-4 页面强调把 AI Driver 放回闭环、world-on-rails 与多模态生成。
+GAIA-2 有公开技术报告，描述多相机、文本、动作和结构条件的 latent/flow 视频模型；GAIA-3/4 的最新闭环与安全评测内容主要来自 Wayve 官方研究页面。2026 年 8 月发布的 [GAIA-4 页面](https://wayve.ai/thinking/gaia-4/)强调把 AI Driver 放回闭环、world-on-rails 与多模态生成。
 
 `CLAIM-11-05`（fact）：截至核查日期，Wayve 官方页面把 GAIA-4 定位为闭环驾驶模拟与安全评测组件；本书只把它记录为供应商声明 `[V,R0]`，不把相关性、保真或安全结论视为独立验证。
 
