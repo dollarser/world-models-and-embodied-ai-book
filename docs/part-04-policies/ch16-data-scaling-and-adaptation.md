@@ -1,10 +1,10 @@
 # 第16章 数据规模化、跨本体迁移与高效适配
 
 > 状态：`reviewed`
-> 资料核查日期：2026-08-31
+> 资料核查日期：2026-09-01
 > 关联实验：`EXP-16-01`
-> 关联声明：`CLAIM-16-01`～`CLAIM-16-06`
-> 关联图表：`FIG-16-01` / `TAB-16-01` / `TAB-16-02` / `TAB-16-03`
+> 关联声明：`CLAIM-16-01`～`CLAIM-16-07`
+> 关联图表：`FIG-16-01` / `TAB-16-01` / `TAB-16-02` / `TAB-16-03` / `TAB-16-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -103,6 +103,19 @@ canonical schema 至少包含字段名称/顺序、frame、单位、时间定义
 
 无法无损对齐时，不应填零冒充共享维度。可保留 embodiment-specific head、mask 或 skill-level 共享，并把低层执行交给各本体 controller。
 
+开源系统中的“统一动作”实际包含多条不同路线：
+
+| 路线 | 共享对象 | 本体差异放在哪里 | 尚未解决的问题 |
+| --- | --- | --- | --- |
+| 物理 canonical action | 末端增量、轨迹或技能合同 | raw adapter 与本体 controller | IK、动力学、接触与不可逆转换 |
+| pad + mask | 固定最大维度 tensor | action mask、dataset tag、统计量 | 相同槽位仍可能语义不同 |
+| embodiment-conditioned head | 共享视觉/语言主干 | tag、processor、head/decoder | 未见本体的 zero-shot grounding |
+| learned tokenizer/latent | 离散 token 或连续 latent | tokenizer 条件与本体 decoder | 重建误差、codebook 覆盖和闭环可执行性 |
+
+*TAB-16-02：四种“统一动作”路径。它们可以组合，但不能互相替代。*
+
+[Octo](https://github.com/octo-models/octo/blob/main/octo/data/dataset.py) 的官方数据管线会标准化各数据集、把动作/本体状态 pad 到最大维度，并保留 normalization mask 与 dataset name；这说明固定 tensor 只是装载接口，mask 和来源身份仍是模型输入合同 `[O,R1]`。[Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T/blob/main/gr00t/data/stats.py) 当前实现则把 embodiment tag、relative/absolute 表示、字段格式、delta indices 和关联 state key 哈希为统计量 fingerprint，避免配置变化后静默复用旧缓存 `[O,R1]`。learned action tokenizer 可以进一步共享表示，但其 decoder 仍要还原到具体本体动作，token reconstruction 或 perplexity 不能替代闭环成功率。
+
 ## 16.4 归一化也属于动作协议
 
 常见变换是按训练集统计量标准化：
@@ -111,7 +124,9 @@ canonical schema 至少包含字段名称/顺序、frame、单位、时间定义
 \tilde a_j=\frac{a_j-\mu_j}{\sigma_j+\epsilon}.
 \]
 
-`μ,σ` 必须只由训练 split 计算，并与 dataset revision、embodiment、字段顺序一起保存。全局统计可能让大范围本体支配小范围本体；逐本体统计提高数值可比性，却要求推理时知道正确 embodiment。min/max 对异常值敏感，quantile clipping 会改变可达范围，也必须记录。
+`μ,σ` 在本书受控评测中必须只由训练 split 计算，并与 dataset revision、split hash、embodiment、字段顺序、absolute/delta 配置和 action horizon 一起保存。某些上游管线会发布全数据统计或随 checkpoint 附带统计量，使用时必须记录其统计范围，不能默认它等于本书的训练切分。全局统计可能让大范围本体支配小范围本体；逐本体统计提高数值可比性，却要求推理时知道正确 embodiment。min/max 对异常值敏感，quantile clipping 会改变可达范围，也必须记录。
+
+[openpi](https://github.com/Physical-Intelligence/openpi/blob/main/docs/norm_stats.md) 明确要求目标数据遵守预训练 action-space 定义，并建议在“复用已有本体统计”与“为新数据重算统计”之间做实证比较；[LeRobot](https://github.com/huggingface/lerobot/blob/main/src/lerobot/processor/normalize_processor.py) 的 processor 则允许 checkpoint stats、dataset stats 或显式 override `[O,R1]`。因此 normalization asset 不是可随意替换的数值文件，而是模型—数据—动作 schema 的版本化依赖。
 
 不能把训练数据归一化后的 `[-1,1]` 当物理安全范围。反归一化后仍要通过第15章的 frame、单位、bounds 和时效网关。
 
@@ -123,6 +138,8 @@ S 档 fixture 有两个二维动作 schema，任务语义相同：
 - `arm_b`：`delta_x` 是厘米，乘 `0.01` 得米；夹爪 `-1` 表示打开。
 
 两个任务的 canonical target 分别是 `(0.02 m, 1.0 open)` 与 `(-0.01 m, 0.0 open)`。直接平均两个 raw action，再错误地按 `arm_a` 解码；对照则先由各自 adapter 转到 canonical 空间再平均。
+
+每条记录还携带由本体 ID、字段顺序、单位、缩放、夹爪极性和 canonical schema 计算的 SHA-256 fingerprint。fixture 注入缺失本体、缺失 fingerprint 和陈旧 fingerprint 三类合同错误；只要转换语义变化，fingerprint 就必须变化。它不是安全签名，也不能证明数据内容真实，只用于阻止“配置已变、旧记录仍被静默解码”。
 
 ```bash
 make ch16-test-local
@@ -136,15 +153,18 @@ make ch16-smoke
 | naive raw pooling 规范语义 MAE | 0.28375 | 混合单位/极性改变动作意义 |
 | schema-aware pooling MAE | 0.0 | 手工 adapter 对齐已知 fixture |
 | 最大 adapter round-trip 误差 | 0.0 | 四条记录可逆 |
-| 缺失 embodiment metadata | rejected | 不猜测转换规则 |
+| 合同错误拒绝率 | 3/3 | 缺失本体、缺失/陈旧 fingerprint 均拒绝 |
+| 语义变化是否改变 fingerprint | true | scale 或字段合同改变后不再命中旧身份 |
 
-*TAB-16-02：`EXP-16-01` 结果。没有训练模型，因此 `0.28375` 是接口反例，不是负迁移性能。*
+*TAB-16-03：`EXP-16-01` 结果。没有训练模型，因此 `0.28375` 是接口反例，不是负迁移性能。*
 
 `CLAIM-16-02`（result）：`EXP-16-01` 中两个 raw action 都是二维，但位移单位和夹爪极性不同；相同 tensor shape 未提供语义兼容证据。
 
 `CLAIM-16-03`（result）：直接 raw pooling 的 canonical MAE 为 `0.28375`，schema-aware pooling 为 `0`，adapter 最大 round-trip 误差为 `0`。这个确定性结果不能外推 learned adapter 或真实策略效果。
 
-`CLAIM-16-04`（result）：fixture 对缺失/未知 `embodiment_id` 的记录拒绝转换，而不是套用默认本体；这只验证 metadata 门禁。
+`CLAIM-16-04`（result）：fixture 对缺失/未知 `embodiment_id`、缺失 fingerprint 和陈旧 fingerprint 的 3 条错误记录全部拒绝转换，而不是套用默认本体或当前 adapter；这只验证 metadata 与版本门禁。
+
+`CLAIM-16-07`（result）：fixture 中缩放或字段合同改变会产生不同 schema fingerprint；该结果只证明确定性身份绑定，不提供防篡改、数据真实性、跨语言序列化兼容或 controller 安全保证。
 
 ## 16.6 正迁移与负迁移必须用矩阵判断
 
@@ -159,6 +179,8 @@ make ch16-smoke
 
 每格报告目标任务闭环成功、恢复、动作约束、置信区间和训练成本；按任务/本体分别展示，不能只报宏平均。来源数据让目标分数下降才是该协议下的负迁移证据；raw schema 不兼容只是更早的工程错误，应先修复再研究迁移。
 
+还要先声明“跨本体”是哪一种问题：训练 mixture 中见过目标本体的多任务学习、预训练后用少量目标数据适配、还是完全未见目标本体的 zero-shot。前三种实验不能共用一个“泛化”标签。对新形态机器人，除了任务与场景，还需按运动学拓扑、自由度、工作空间、末端执行器和 controller 能力描述与训练分布的距离；只留出一个数据集名称，可能仍泄漏相同硬件与控制栈。
+
 `CLAIM-16-05`（recommendation）：跨本体训练应以“目标单独训练”为基线，用固定预算的来源×目标迁移矩阵报告正/负迁移；只有混合模型分数或总体平均无法定位贡献。
 
 ## 16.7 从 action head 到 full fine-tune：逐级扩大权限
@@ -172,7 +194,7 @@ make ch16-smoke
 | full fine-tune | 全模型 | 大数据且域差异大 | 成本、遗忘、版本耦合 |
 | 蒸馏/小策略 | teacher→student | 部署延迟/显存受限 | teacher 错误与行为覆盖丢失 |
 
-*TAB-16-03：适配权限阶梯。先用最小可证实的修改，不代表永远不能 full fine-tune。*
+*TAB-16-04：适配权限阶梯。先用最小可证实的修改，不代表永远不能 full fine-tune。*
 
 [OpenVLA-OFT](https://github.com/moojink/openvla-oft) 研究动作解码、连续 action chunk、proprioception 和 fine-tuning 目标的组合 `[A/O,R1]`。其上游结果说明适配配方会显著影响指定 benchmark，不证明 OFT 对所有 VLA、本体和数据都优。官方 README 当前给出约 16–18 GB 推理、27–80 GB 训练范围；这是上游配置说明，本书未实测。
 
@@ -224,7 +246,7 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | raw pooling 与 schema-aware pooling 反例 | `EXP-16-01` | CPU smoke | 两维手工动作，不训练策略 |
+| 本书结果 | raw pooling、schema-aware pooling 与 adapter 身份反例 | `EXP-16-01` | CPU smoke | 两维手工动作，不训练策略 |
 | 开放生态 | Open X-Embodiment RLDS mixture | 论文/官方仓库 | `[P/O,R1]` | 本书未下载或运行 |
 | 开放数据 | DROID 分布式操作数据 | 论文/官方项目 | `[P/O,R1]` | 本书未下载或审计 |
 | 数据格式 | LeRobot Dataset v3 | 官方文档 | `[O,R1]` | 版本会漂移 |
@@ -233,11 +255,11 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 
 ## 小结
 
-数据规模化的核心不是拼文件，而是保持 episode、来源和许可，并把动作语义转换到可审计合同。canonical action、embodiment tag 和 mixture 权重决定共享主干究竟学到共同能力还是接口噪声。LoRA/OFT、蒸馏和异步执行只是适配与部署工具，必须通过目标本体闭环和资源实测验收。
+数据规模化的核心不是拼文件，而是保持 episode、来源和许可，并把动作语义转换到可审计合同。canonical action、mask/head/tokenizer、embodiment tag、schema fingerprint 和 mixture 权重分别解决不同层次的问题。LoRA/OFT、蒸馏和异步执行只是适配与部署工具，必须通过明确属于 seen、few-shot 还是 zero-shot 的目标本体闭环与资源实测验收。
 
 ## 练习
 
-1. **schema 练习**：把 `arm_b` 的厘米改成毫米但不改 metadata，计算误差。
+1. **schema 练习**：把 `arm_b` 的厘米改成毫米但不更新 fingerprint，解释为何必须拒绝，而不是继续计算误差。
 2. **mixture 权重**：三个数据集分别有 100、1,000、10,000 episode，设计等数据集与温度采样权重。
 3. **迁移矩阵**：为三个本体写出单独、两两、全量与 leave-one-out 的最小实验表。
 4. **适配选择**：分别为“新夹爪”“新相机”“新语言域”选择 action head、LoRA 或部分解冻，并说明证据。
@@ -248,6 +270,9 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 - Open X-Embodiment Collaboration, [论文](https://arxiv.org/abs/2310.08864)与[官方仓库](https://github.com/google-deepmind/open_x_embodiment)，`[P/O,R1]`；
 - Khazatsky et al., [DROID](https://arxiv.org/abs/2403.12945) 与[项目页](https://droid-dataset.github.io/)，`[P/O,R1]`；
 - Hugging Face, [LeRobot Dataset v3](https://github.com/huggingface/lerobot/blob/main/docs/source/lerobot-dataset-v3.mdx)，`[O,R1]`；
+- Octo Model Team, [Octo 数据标准化与 mixture 管线](https://github.com/octo-models/octo/blob/main/octo/data/dataset.py)，`[O,R1]`；
+- NVIDIA, [Isaac-GR00T 数据配置](https://github.com/NVIDIA/Isaac-GR00T/blob/main/getting_started/data_config.md)与[统计量 fingerprint 实现](https://github.com/NVIDIA/Isaac-GR00T/blob/main/gr00t/data/stats.py)，`[O,R1]`；
+- Physical Intelligence, [openpi normalization statistics](https://github.com/Physical-Intelligence/openpi/blob/main/docs/norm_stats.md)，`[O,R1]`；
 - Kim et al., [OpenVLA-OFT](https://arxiv.org/abs/2502.19645) 与[官方代码](https://github.com/moojink/openvla-oft)，`[A/O,R1]`；
 - Hu et al., [LoRA](https://arxiv.org/abs/2106.09685)，`[P]`。
 
@@ -268,6 +293,6 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-d-review.md`；
+- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`；
 - 已知限制：没有下载真实数据、训练 adapter/VLA、运行仿真或 GPU；
 - 下一步：在可用 GPU/真实数据时执行迁移矩阵；当前证据保持 S 档 reviewed。

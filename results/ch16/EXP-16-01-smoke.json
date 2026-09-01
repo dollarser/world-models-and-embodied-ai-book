@@ -2,6 +2,10 @@
   "experiment_id": "EXP-16-01",
   "gpu_verified": false,
   "metrics": {
+    "adapter_schema_fingerprints": {
+      "arm_a": "sha256:f76e26149027a7284f4e4486a6b4db65dc8c448ef8b4de20be30764da8796e26",
+      "arm_b": "sha256:c274c08e11e723a60aaaf9f7891ffa825c3b2c36fc3e6f3093db9e17b36f19ec"
+    },
     "canonical_actions": {
       "a-1": [
         0.02,
@@ -20,13 +24,20 @@
         0.0
       ]
     },
+    "canonical_schema_version": "ee-delta-v1",
+    "contract_rejection_rate": 1.0,
     "maximum_adapter_round_trip_error": 0.0,
-    "missing_embodiment_metadata_rejected": true,
     "naive_raw_pooling_semantic_mae": 0.28375,
     "raw_action_dimension": 2,
     "record_count": 4,
+    "rejected_contract_records": {
+      "missing_embodiment": "missing or unknown embodiment metadata",
+      "missing_fingerprint": "missing or stale adapter schema fingerprint",
+      "stale_fingerprint": "missing or stale adapter schema fingerprint"
+    },
     "same_shape_but_semantics_differ": true,
-    "schema_aware_pooling_semantic_mae": 0.0
+    "schema_aware_pooling_semantic_mae": 0.0,
+    "semantic_change_changes_fingerprint": true
   },
   "scope": "cross-embodiment action-schema fixture; not learned transfer or policy performance",
   "status": "smoke"

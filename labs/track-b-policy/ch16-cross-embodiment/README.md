@@ -8,4 +8,6 @@ make ch16-smoke-local
 make ch16-smoke
 ```
 
-它不训练策略，也不证明跨本体正迁移；只验证 schema adapter、round-trip 与缺失 metadata 拒绝。代码和程序化 fixture 按仓库 MIT 许可发布。
+每条记录绑定由本体 ID、字段顺序、单位、缩放、夹爪极性和 canonical schema 计算的 adapter fingerprint；缺失本体、缺失 fingerprint 与陈旧 fingerprint 均被拒绝。
+
+它不训练策略，也不证明跨本体正迁移；只验证 schema adapter、round-trip 与版本身份门禁。fingerprint 不是安全签名，也不证明数据真实性或 controller 可执行性。代码和程序化 fixture 按仓库 MIT 许可发布。

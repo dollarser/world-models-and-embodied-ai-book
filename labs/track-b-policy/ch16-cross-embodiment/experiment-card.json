@@ -3,11 +3,12 @@
   "id": "EXP-16-01",
   "chapter": 16,
   "status": "smoke",
-  "claim_ids": ["CLAIM-16-02", "CLAIM-16-03", "CLAIM-16-04"],
+  "claim_ids": ["CLAIM-16-02", "CLAIM-16-03", "CLAIM-16-04", "CLAIM-16-07"],
   "claim_scope": [
     "two equal-shape raw action tensors can encode different units and gripper polarity",
     "schema-aware adapters align the procedural actions while naive raw pooling changes semantics",
-    "records missing embodiment metadata are rejected before mixture construction"
+    "records with missing embodiment metadata or missing/stale adapter fingerprints are rejected before mixture construction",
+    "changes to action conversion semantics change the deterministic adapter schema fingerprint"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -16,7 +17,7 @@
   },
   "data": {
     "name": "procedural arm_a and arm_b action records",
-    "version": "v1",
+    "version": "v2",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -39,13 +40,15 @@
     {"name": "naive_raw_pooling_semantic_mae", "value": 0.28375, "unit": "canonical-action", "split": "two-task-mixture"},
     {"name": "schema_aware_pooling_semantic_mae", "value": 0.0, "unit": "canonical-action", "split": "two-task-mixture"},
     {"name": "maximum_adapter_round_trip_error", "value": 0.0, "unit": "raw-action", "split": "four-records"},
-    {"name": "missing_metadata_rejection_rate", "value": 1.0, "unit": "ratio", "split": "missing-embodiment-id"}
+    {"name": "contract_rejection_rate", "value": 1.0, "unit": "ratio", "split": "three-malformed-records"},
+    {"name": "semantic_change_fingerprint_detection_rate", "value": 1.0, "unit": "ratio", "split": "altered-arm-a-schema"}
   ],
   "artifacts": ["results/ch16/EXP-16-01-smoke.json"],
   "limitations": [
     "two scalar action fields and two synthetic tasks",
     "hand-authored invertible adapters rather than learned cross-embodiment alignment",
     "naive pooling error is an interface counterexample, not measured negative transfer",
-    "no images, language, robot dynamics, policy training, or closed-loop evaluation"
+    "no images, language, robot dynamics, policy training, or closed-loop evaluation",
+    "schema fingerprint is deterministic cache identity, not authentication, data integrity, or controller validation"
   ]
 }

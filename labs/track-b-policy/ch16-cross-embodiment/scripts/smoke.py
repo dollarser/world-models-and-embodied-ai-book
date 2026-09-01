@@ -20,8 +20,10 @@ def main() -> int:
         raise AssertionError("canonical adapters must align both embodiment fixtures")
     if metrics["naive_raw_pooling_semantic_mae"] <= 0.0:
         raise AssertionError("naive raw pooling must expose a semantic mismatch")
-    if not metrics["missing_embodiment_metadata_rejected"]:
-        raise AssertionError("records without embodiment metadata must be rejected")
+    if metrics["contract_rejection_rate"] != 1.0:
+        raise AssertionError("missing or stale adapter contracts must be rejected")
+    if not metrics["semantic_change_changes_fingerprint"]:
+        raise AssertionError("action semantic changes must change the adapter fingerprint")
 
     report = {
         "experiment_id": "EXP-16-01",

@@ -38,6 +38,31 @@ class EmbodimentAdapterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             canonicalize({"episode_id": "x", "task": "forward_open", "raw_action": (0.2, 1.0)})
 
+    def test_missing_or_stale_adapter_fingerprint_is_rejected(self):
+        for fingerprint in (None, "sha256:" + "0" * 64):
+            record = {
+                "episode_id": "x",
+                "task": "forward_open",
+                "embodiment_id": "arm_a",
+                "raw_action": (0.2, 1.0),
+            }
+            if fingerprint is not None:
+                record["adapter_schema_fingerprint"] = fingerprint
+            with self.subTest(fingerprint=fingerprint), self.assertRaises(ValueError):
+                canonicalize(record)
+
+    def test_semantic_adapter_change_changes_fingerprint(self):
+        changed_scale = EmbodimentAdapter("arm_a", "controller_delta", 0.01, 1)
+        changed_fields = EmbodimentAdapter(
+            "arm_a", "controller_delta", 0.1, 1, raw_action_fields=("gripper", "delta_x")
+        )
+        self.assertNotEqual(changed_scale.schema_fingerprint, ADAPTERS["arm_a"].schema_fingerprint)
+        self.assertNotEqual(changed_fields.schema_fingerprint, ADAPTERS["arm_a"].schema_fingerprint)
+
+    def test_non_dictionary_record_is_rejected(self):
+        with self.assertRaises(ValueError):
+            canonicalize(("arm_a", (0.2, 1.0)))
+
     def test_gripper_ranges_are_validated(self):
         with self.assertRaises(ValueError):
             ADAPTERS["arm_a"].to_canonical((0.0, 2.0))
@@ -58,6 +83,13 @@ class EmbodimentAdapterTests(unittest.TestCase):
             {"embodiment_id": "x", "delta_x_unit": "m", "delta_x_scale_to_m": 0.0, "gripper_polarity": 1},
             {"embodiment_id": "x", "delta_x_unit": "m", "delta_x_scale_to_m": math.inf, "gripper_polarity": 1},
             {"embodiment_id": "x", "delta_x_unit": "m", "delta_x_scale_to_m": 1.0, "gripper_polarity": True},
+            {
+                "embodiment_id": "x",
+                "delta_x_unit": "m",
+                "delta_x_scale_to_m": 1.0,
+                "gripper_polarity": 1,
+                "raw_action_fields": ("action", "action"),
+            },
         )
         for config in invalid_configs:
             with self.subTest(config=config), self.assertRaises(ValueError):

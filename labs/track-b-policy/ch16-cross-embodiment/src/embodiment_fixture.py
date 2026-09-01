@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
 from math import isfinite
 
 
@@ -16,10 +18,19 @@ class EmbodimentAdapter:
     delta_x_unit: str
     delta_x_scale_to_m: float
     gripper_polarity: int
+    canonical_schema_version: str = "ee-delta-v1"
+    raw_action_fields: tuple[str, str] = ("delta_x", "gripper")
 
     def __post_init__(self) -> None:
-        if not self.embodiment_id or not self.delta_x_unit:
-            raise ValueError("embodiment_id and delta_x_unit must be explicit")
+        if not self.embodiment_id or not self.delta_x_unit or not self.canonical_schema_version:
+            raise ValueError("embodiment_id, delta_x_unit, and canonical_schema_version must be explicit")
+        if (
+            not isinstance(self.raw_action_fields, tuple)
+            or len(self.raw_action_fields) != 2
+            or any(not isinstance(field, str) or not field for field in self.raw_action_fields)
+            or len(set(self.raw_action_fields)) != 2
+        ):
+            raise ValueError("raw_action_fields must contain two distinct non-empty names")
         if (
             isinstance(self.delta_x_scale_to_m, bool)
             or not isinstance(self.delta_x_scale_to_m, (int, float))
@@ -29,6 +40,20 @@ class EmbodimentAdapter:
             raise ValueError("delta_x_scale_to_m must be a finite positive number")
         if isinstance(self.gripper_polarity, bool) or self.gripper_polarity not in (-1, 1):
             raise ValueError("gripper_polarity must be -1 or 1")
+
+    @property
+    def schema_fingerprint(self) -> str:
+        """Bind records to every field that changes raw-to-canonical semantics."""
+        payload = {
+            "canonical_schema_version": self.canonical_schema_version,
+            "delta_x_scale_to_m": self.delta_x_scale_to_m,
+            "delta_x_unit": self.delta_x_unit,
+            "embodiment_id": self.embodiment_id,
+            "gripper_polarity": self.gripper_polarity,
+            "raw_action_fields": self.raw_action_fields,
+        }
+        canonical = json.dumps(payload, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+        return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     @staticmethod
     def _validated_action(action: tuple[float, float], name: str) -> tuple[float, float]:
@@ -65,22 +90,37 @@ TARGETS = {
     "back_close": (-0.01, 0.0),
 }
 
+def _record(episode_id: str, task: str, embodiment_id: str, raw_action: RawAction) -> dict[str, object]:
+    return {
+        "episode_id": episode_id,
+        "task": task,
+        "embodiment_id": embodiment_id,
+        "adapter_schema_fingerprint": ADAPTERS[embodiment_id].schema_fingerprint,
+        "raw_action": raw_action,
+    }
+
+
 RECORDS = (
-    {"episode_id": "a-1", "task": "forward_open", "embodiment_id": "arm_a", "raw_action": (0.2, 1.0)},
-    {"episode_id": "a-2", "task": "back_close", "embodiment_id": "arm_a", "raw_action": (-0.1, -1.0)},
-    {"episode_id": "b-1", "task": "forward_open", "embodiment_id": "arm_b", "raw_action": (2.0, -1.0)},
-    {"episode_id": "b-2", "task": "back_close", "embodiment_id": "arm_b", "raw_action": (-1.0, 1.0)},
+    _record("a-1", "forward_open", "arm_a", (0.2, 1.0)),
+    _record("a-2", "back_close", "arm_a", (-0.1, -1.0)),
+    _record("b-1", "forward_open", "arm_b", (2.0, -1.0)),
+    _record("b-2", "back_close", "arm_b", (-1.0, 1.0)),
 )
 
 
-def canonicalize(record: dict[str, object]) -> CanonicalAction:
+def canonicalize(record: object) -> CanonicalAction:
+    if not isinstance(record, dict):
+        raise ValueError("record must be a dictionary")
     embodiment_id = record.get("embodiment_id")
     if embodiment_id not in ADAPTERS:
         raise ValueError("missing or unknown embodiment metadata")
+    adapter = ADAPTERS[embodiment_id]
+    if record.get("adapter_schema_fingerprint") != adapter.schema_fingerprint:
+        raise ValueError("missing or stale adapter schema fingerprint")
     raw_action = record.get("raw_action")
     if not isinstance(raw_action, tuple) or len(raw_action) != 2:
         raise ValueError("invalid raw action")
-    return ADAPTERS[embodiment_id].to_canonical(raw_action)
+    return adapter.to_canonical(raw_action)
 
 
 def mean_action(actions: tuple[RawAction, ...]) -> RawAction:
@@ -127,11 +167,34 @@ def maximum_round_trip_error() -> float:
 
 
 def evaluate() -> dict[str, object]:
-    rejected_missing_metadata = False
-    try:
-        canonicalize({"episode_id": "unknown-1", "task": "forward_open", "raw_action": (0.2, 1.0)})
-    except ValueError:
-        rejected_missing_metadata = True
+    malformed_records = {
+        "missing_embodiment": {
+            "episode_id": "unknown-1",
+            "task": "forward_open",
+            "raw_action": (0.2, 1.0),
+        },
+        "missing_fingerprint": {
+            "episode_id": "a-old-1",
+            "task": "forward_open",
+            "embodiment_id": "arm_a",
+            "raw_action": (0.2, 1.0),
+        },
+        "stale_fingerprint": {
+            "episode_id": "a-stale-1",
+            "task": "forward_open",
+            "embodiment_id": "arm_a",
+            "adapter_schema_fingerprint": "sha256:" + "0" * 64,
+            "raw_action": (0.2, 1.0),
+        },
+    }
+    rejected_contract_records = {}
+    for name, record in malformed_records.items():
+        try:
+            canonicalize(record)
+        except ValueError as error:
+            rejected_contract_records[name] = str(error)
+
+    altered_arm_a = EmbodimentAdapter("arm_a", "controller_delta", 0.01, 1)
 
     canonical_actions = {
         record["episode_id"]: tuple(round(value, 12) for value in canonicalize(record))
@@ -140,10 +203,18 @@ def evaluate() -> dict[str, object]:
     return {
         "record_count": len(RECORDS),
         "raw_action_dimension": 2,
+        "canonical_schema_version": ADAPTERS["arm_a"].canonical_schema_version,
+        "adapter_schema_fingerprints": {
+            name: adapter.schema_fingerprint for name, adapter in ADAPTERS.items()
+        },
         "canonical_actions": canonical_actions,
         "same_shape_but_semantics_differ": True,
         "naive_raw_pooling_semantic_mae": round(naive_raw_pooling_error(), 12),
         "schema_aware_pooling_semantic_mae": round(schema_aware_pooling_error(), 12),
         "maximum_adapter_round_trip_error": round(maximum_round_trip_error(), 12),
-        "missing_embodiment_metadata_rejected": rejected_missing_metadata,
+        "rejected_contract_records": rejected_contract_records,
+        "contract_rejection_rate": len(rejected_contract_records) / len(malformed_records),
+        "semantic_change_changes_fingerprint": (
+            altered_arm_a.schema_fingerprint != ADAPTERS["arm_a"].schema_fingerprint
+        ),
     }
