@@ -263,11 +263,57 @@ resources + experiment_ids + artifacts + limitations
 ## 练习
 
 1. **概念判断**：一个模型 FVD 更低，但策略排序相关性更差。若用途分别是视频展示和动作规划，应如何选择？
-2. **代码实验**：修改 `EXP-09-01` 的动作分布，让非零动作占比逐渐升高，画出两个预测器 one-step 排名何时翻转。
+2. **代码实验**：修改 `EXP-09-01` 的动作分布，让非零动作占比逐渐升高，先判断两个预测器的 one-step 排名能否翻转；若不能，推导还需改变哪个量并验证临界点。
 3. **分母审计**：分别把 fragile rollout 的缺失处理为运行无效、任务失败和条件于幸存输出，写出三种 estimand 及允许声明。
 4. **协议设计**：复制 `BENCH-09-01` 为一个抓取视频世界模型填写 benchmark card，分别给出 E1、E2 和 E4 的退出条件；若使用随机任务，说明 seed、group split 和置信区间方法。
 5. **自动驾驶迁移**：设计一个平均 ADE 很低却高风险的驾驶数据分布，说明需要增加哪些分桶指标。
 6. **反例审查**：解释为何“闭环成功率高”仍可能掩盖安全问题，并给出至少两个补充指标。
+
+## 自检要点
+
+评测答案必须先写用途和 estimand，再写指标与分母。低层指标不能自动替代动作干预、策略排序或外部闭环证据。
+
+<details>
+<summary>SELF-CHECK-09-01：展示用途与规划用途</summary>
+
+视频展示优先检查感知质量、时间一致性和人评，可在预先声明的展示分布上偏向 FVD 更低者，但仍需防 cherry-pick。动作规划应优先选择能保持动作响应与策略排序的模型；排序相关性更差的低 FVD 模型不能仅凭画面质量进入 planner。两种用途可以选择不同模型，也可以用生成头负责展示、决策 latent 负责规划；发布时分别限定 E1 展示声明与 E2/E3/E4 决策声明。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-09-02：动作占比与排名临界点</summary>
+
+当前非零动作幅度为 `a=0.1`。若其占比为 `p`，action-blind 的 RMSE 为 `a√p`，action-faithful-biased 的误差恒为 0.12；翻转要求 `p>(0.12/a)^2=1.44`，不可能。因此只提高占比不会翻转，这正是应先发现的边界。若把非零幅度改为 `a>0.12`，临界占比为 `p*=(0.12/a)^2`；例如 `a=0.2` 时 `p*=0.36`，打平时还需预先声明 tie rule。代码应扫描整数样本可实现的 p，并与解析阈值的离散邻点核对。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-09-03：缺失 rollout 的三个 estimand</summary>
+
+若缺失视为运行无效，estimand 是“满足预注册有效性条件的完整 runs 上的性能”，整次 run 排除并报告 invalid rate，不能称 attempted-run 性能。若缺失视为任务失败，estimand 是“所有 attempted tasks 的端到端性能”，缺失进入固定分母并用预注册 failure score/事件计数。若条件于幸存输出，estimand 是“仍能产生有效预测的 rollout 在 horizon h 的误差”，必须同时报告 coverage，声明不能外推到所有任务或比较稳定性。三者不能在看完排名后再选。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-09-04：抓取 benchmark card</summary>
+
+E1 可冻结对象/相机 group test split，要求多 horizon pose/keypoint error 的 CI 上界低于阈值且 coverage 达标；E2 固定同一前缀替换 grasp action，要求预测接触点/物体位移方向与 simulator counterfactual 一致，并设 sensitivity 下限与错误方向上限；E4 在未参与选择的对象组执行闭环，要求成功率 CI 下界、碰撞/掉落 CI 上界和 intervention 阈值同时通过。随机任务保存 master seed、每 episode seed 与生成器版本；同一对象资产及派生纹理只进一个 group；二项率用预注册 Wilson 或 bootstrap-by-group 区间，连续指标按独立 group cluster bootstrap，禁止按 frame 当独立样本。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-09-05：低平均 ADE 的高风险分布</summary>
+
+例如 99% 直道常见帧 ADE 为 0.05 m，1% 行人横穿/高速 cut-in 的 ADE 为 3 m，总平均仍约 0.0795 m，却把风险集中在关键事件。至少按交互类型、TTC、速度、遮挡、天气/光照和预测 horizon 分桶，分别报告 ADE/FDE、miss rate、碰撞或轨迹重叠率、最坏分位/下尾与每桶样本数/coverage。切分应按 scenario group 隔离，稀有桶需置信区间；不能用大量静态帧 micro average 稀释风险。
+
+</details>
+
+<details>
+<summary>SELF-CHECK-09-06：高成功率隐藏的安全问题</summary>
+
+成功率只看是否最终完成，可能把一次险些碰撞、频繁急刹、越界后恢复或依赖安全员接管的 episode 仍记为成功，也可能被大量简单场景主导。至少补充碰撞/接触率与独立网关干预率；驾驶还应报告最小 TTC/阈值违例、规则违规、jerk/急减速和严重度分层，机器人可报力/力矩超限、掉落和 near-miss。所有指标都要有 attempted episode 分母、场景分桶和区间，不能只在成功子集上统计。
+
+</details>
 
 ## 延伸阅读
 
@@ -298,6 +344,6 @@ resources + experiment_ids + artifacts + limitations
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`、`reviews/fast-moving-source-audit-2026-09-01.md`；
+- 审查记录路径：`reviews/batch-a-review.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：WorldArena 系列、KineBench 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；
 - 下一步：用真实但可合法获取的小型数据试运行一张 `draft/frozen` benchmark card；当前无 GPU 阶段不伪造该结果。
