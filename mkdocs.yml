@@ -12,9 +12,6 @@ theme:
     - navigation.indexes
     - content.code.copy
 
-extra_css:
-  - stylesheets/book.css
-
 markdown_extensions:
   - admonition
   - attr_list
@@ -59,18 +56,20 @@ nav:
       - 第15章 VLA 的架构模式: part-04-policies/ch15-vla-architecture-patterns.md
       - 第16章 数据规模化、跨本体迁移与高效适配: part-04-policies/ch16-data-scaling-and-adaptation.md
   - 第五部分：世界模型与策略融合:
-      - 第17章 世界模型帮助策略的五种方式: part-05-fusion/ch17-world-model-policy-utility.md
+      - 第17章 世界模型帮助策略的五条路径与一条风险旁路: part-05-fusion/ch17-world-model-policy-utility.md
       - 第18章 VLA 后训练、长时序与 World-Action Models: part-05-fusion/ch18-vla-post-training-and-wam.md
   - 第六部分：仿真、评测与部署:
       - 第19章 物理仿真、Real2Sim 与 Sim2Real: part-06-systems/ch19-physical-simulation-and-sim2real.md
       - 第20章 具身评测：从成功率到部署证据: part-06-systems/ch20-embodied-evaluation.md
       - 第21章 部署、实时性与安全边界: part-06-systems/ch21-deployment-realtime-and-safety.md
   - 第七部分：综合项目与持续研究:
-      - 第22章 端到端综合项目：一个可审计的具身研究闭环: part-07-capstone/ch22-auditable-capstone.md
+      - 第22章 综合论证：一个可审计的具身研究闭环: part-07-capstone/ch22-auditable-capstone.md
   - 持续更新:
       - 核心参考文献与一手资料: references.md
       - 研究雷达: research-radar.md
       - 开放出版、引用与勘误: open-book.md
+      - 出版与版本策略: publication.md
+      - 读者试读方案: reader-study.md
   - 版本与维护:
       - 发布候选说明: release-notes.md
       - 勘误与内容反馈: errata.md

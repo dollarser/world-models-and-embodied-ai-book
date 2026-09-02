@@ -6,7 +6,7 @@ authors:
   - name: dollars
 version: 0.1.0-rc1
 date-released: 2026-08-31
-license: MIT
+license: CC-BY-NC-4.0
 abstract: >-
   面向计算机视觉工程师与具身智能学习者的中文开源教材，系统讨论
   世界模型、预测表征、动作策略、VLA、仿真、评测与部署证据。

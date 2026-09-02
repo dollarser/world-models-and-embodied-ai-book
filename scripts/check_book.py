@@ -41,9 +41,11 @@ REQUIRED = (
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 CHAPTER_STATUS_PATTERN = re.compile(r"^> 状态：`([^`]+)`", re.MULTILINE)
 CLAIM_DEFINITION_PATTERN = re.compile(
-    r"`(CLAIM-(\d{2})-(\d{2}))`（([^）]+)）："
+    r"<!--\s*CLAIM_META:\s*(CLAIM-(\d{2})-(\d{2}))\s+([a-z]+)\s*-->"
 )
-RESULT_DEFINITION_PATTERN = re.compile(r"`(CLAIM-\d{2}-\d{2})`（result）：([^\n]+)")
+RESULT_DEFINITION_PATTERN = re.compile(
+    r"<!--\s*CLAIM_META:\s*(CLAIM-\d{2}-\d{2})\s+result\s*-->\s*([^\n]+)"
+)
 CLAIM_ID_PATTERN = re.compile(r"^CLAIM-(\d{2})-(\d{2})$")
 ALLOWED_CLAIM_TYPES = {"fact", "result", "inference", "recommendation", "unverified"}
 FIGURE_ID_PATTERN = re.compile(r"\b((?:FIG|TAB)-(\d{2})-(\d{2}))\b")
@@ -68,7 +70,7 @@ EXPERIMENT_ID_PATTERN = re.compile(r"\bEXP-\d{2}-\d{2}\b")
 DOCUMENTED_ASSET_VERSION_PATTERN = re.compile(
     r"\b((?:EXP|BENCH)-\d{2}-\d{2})(?:\.json)?`?(?:\s+的)?\s+((?:fixture-)?v\d+)\b"
 )
-REQUIRED_CHAPTER_SECTIONS = ("本章契约", "小结", "练习", "延伸阅读", "验收与审查记录")
+REQUIRED_CHAPTER_SECTIONS = ("本章契约", "小结", "练习", "延伸阅读")
 REQUIRED_READER_TERMS = (
     "RSSM",
     "MPC",

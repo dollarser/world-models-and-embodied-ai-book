@@ -33,7 +33,7 @@
 JEPA 不要求从 latent 解码原始像素。它让上下文编码器读取可见区域，预测器根据上下文和目标位置预测目标编码器产生的 latent 表示。
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-10-01 JEPA 的最小训练数据流
     accDescr: 输入被拆成上下文和目标区域；上下文编码器与预测器估计目标 latent，目标编码器提供停止梯度的训练目标，两者在 latent loss 中比较。
     X[图像/视频 x] --> MC[上下文 mask]
@@ -47,7 +47,7 @@ flowchart LR
     Z --> L
 ```
 
-*FIG-10-01：JEPA 的最小训练数据流。目标编码器分支不由预测误差直接反向更新，具体更新与 masking 方案取决于实现。来源：本书原创，MIT，2026-08-31。*
+*FIG-10-01：JEPA 的最小训练数据流。目标编码器分支不由预测误差直接反向更新，具体更新与 masking 方案取决于实现。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
 
 一个抽象目标是：
 
@@ -57,8 +57,8 @@ flowchart LR
 
 其中 `M` 是目标 token，`i` 携带目标位置，`sg` 表示停止梯度。距离、归一化、目标编码器更新和 mask 形状都属于实验定义，不能只写“feature loss”。
 
-`CLAIM-10-01`（fact）：JEPA 类方法预测目标区域的表示而不是直接重建其像素；这改变了训练目标，但不自动证明表示包含全部任务相关状态。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-10-01 fact -->
+JEPA 类方法预测目标区域的表示而不是直接重建其像素；这改变了训练目标，但不自动证明表示包含全部任务相关状态。
 
 ### 10.1.1 预测的是表示等价类，不是隐藏像素的唯一答案
 
@@ -120,8 +120,8 @@ V-JEPA 2 的官方论文和仓库把流程分为两部分：先用大规模图�
 - 机器人任务成功不保证驾驶安全；
 - 2B 结果不证明 24 GB 单卡可训练或可实时部署。
 
-`CLAIM-10-04`（fact）：V-JEPA 2.1 论文把 dense predictive loss 与 deep self-supervision 列为相对 V-JEPA 2 的关键训练变化；其性能数字仍是论文报告，当前复现状态为 `R0/R1` 而非本书实测。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-10-04 fact -->
+V-JEPA 2.1 论文把 dense predictive loss 与 deep self-supervision 列为相对 V-JEPA 2 的关键训练变化；其性能数字仍是论文报告，当前复现状态为 `R0/R1` 而非本书实测。
 
 ### 10.4.1 Global 与 dense 是不同的信息合同
 
@@ -192,14 +192,14 @@ make ch10-smoke
 
 *TAB-10-02：`EXP-10-01` 的固定排名反转。表征为手工标量函数，不是 JEPA checkpoint。*
 
-`CLAIM-10-02`（result）：在 `EXP-10-01` 中，appearance 表征以 1.25 对 125.00 赢得重建 MSE，却在纹理相关性反转后取得 0% probe accuracy；task-predictive 表征取得 100%。这只证明两个指标可以给出相反排序。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-10-02 result -->
+在 `EXP-10-01` 中，appearance 表征以 1.25 对 125.00 赢得重建 MSE，却在纹理相关性反转后取得 0% probe accuracy；task-predictive 表征取得 100%。这只证明两个指标可以给出相反排序。
 
-`CLAIM-10-03`（result）：同一实验的 collapsed 表征在平衡测试集上取得 50% accuracy，作为 probe 管线的负对照；若它异常高，应先查标签泄漏、样本重复或度量实现。该数值只来自二分类平衡 fixture，不是通用 chance baseline。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-10-03 result -->
+同一实验的 collapsed 表征在平衡测试集上取得 50% accuracy，作为 probe 管线的负对照；若它异常高，应先查标签泄漏、样本重复或度量实现。该数值只来自二分类平衡 fixture，不是通用 chance baseline。
 
-`CLAIM-10-06`（result）：appearance 与 task-predictive 在未参与拟合的 ID 集上都取得 100%，但纹理相关性反转后前者降至 0%、后者保持 100%。该固定反例表明，单独报告 ID probe 会把 nuisance shortcut 与稳定任务信息混为一谈；四样本结果不估计真实模型的 OOD 性能。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-10-06 result -->
+appearance 与 task-predictive 在未参与拟合的 ID 集上都取得 100%，但纹理相关性反转后前者降至 0%、后者保持 100%。该固定反例表明，单独报告 ID probe 会把 nuisance shortcut 与稳定任务信息混为一谈；四样本结果不估计真实模型的 OOD 性能。
 
 ### 10.6.1 可读状态不等于动作条件转移
 
@@ -212,8 +212,8 @@ make ch10-smoke
 
 *TAB-10-03：`EXP-10-01` 的动作接口诊断。数值来自八条手工确定性转移，不是学习模型、因果发现或规划实验。*
 
-`CLAIM-10-07`（result）：两个手工接口的当前状态 probe RMSE 都为 0，但 action-blind 接口的反事实转移 RMSE 为 1、动作敏感度为 0；action-conditioned 接口对应为 0 和 2。这只证明状态可读性不足以验证 predictor 是否使用动作，不证明动作条件模型会规划。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-10-07 result -->
+两个手工接口的当前状态 probe RMSE 都为 0，但 action-blind 接口的反事实转移 RMSE 为 1、动作敏感度为 0；action-conditioned 接口对应为 0 和 2。这只证明状态可读性不足以验证 predictor 是否使用动作，不证明动作条件模型会规划。
 
 ### 10.6.2 中间状态可读不等于保留时间方向
 
@@ -226,8 +226,8 @@ make ch10-smoke
 
 *TAB-10-04：`EXP-10-01` 的时间顺序诊断。反转敏感度是原序与反序的手写 delta 特征绝对差；八条三标量序列不是视频、learned representation 或物理理解 benchmark。*
 
-`CLAIM-10-08`（result）：在 `EXP-10-01` 的平衡方向 fixture 中，middle-frame 与 ordered-delta 都以 RMSE 0 读出中间状态，但前者的方向 accuracy 为 50% 且反转敏感度为 0，后者分别为 100% 和 4。这只证明当前状态可读、时间方向可辨和反转敏感是不同验收项；数值不能外推到 V-JEPA 或真实视频。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-10-08 result -->
+在 `EXP-10-01` 的平衡方向 fixture 中，middle-frame 与 ordered-delta 都以 RMSE 0 读出中间状态，但前者的方向 accuracy 为 50% 且反转敏感度为 0，后者分别为 100% 和 4。这只证明当前状态可读、时间方向可辨和反转敏感是不同验收项；数值不能外推到 V-JEPA 或真实视频。
 
 该实验没有图像、视频、模型参数或训练，不估计 V-JEPA 的能力。其价值是建立官方特征到来前就能测试的评测合同，并把“静态表示信息”“时间顺序”“动作接口”和“规划用途”拆成不同验收项。
 
@@ -250,6 +250,8 @@ make ch10-smoke
 
 M 档可在经许可的少量第一人称视频上训练轻量 masked predictor 或 probe，不训练大型 backbone。Ego4D 需要先接受其许可协议并获得访问凭据；EPIC-KITCHENS-100 官方资料标注 CC BY-NC 4.0。两者都不能被当作本书可直接再分发素材，也不应下载完整数据作为必读前置。
 
+**杯子任务。** 冻结表征的 probe 可以分别查询杯子相对夹爪的位置、杯柄是否可见、夹爪开合状态和接触阶段；这些标签应按 object 或 episode 分组切分，并加入标签置乱和背景捷径负对照。若 probe 只能在同一桌面纹理上读出状态，它证明的是数据相关性，不是可迁移的行动表征；即使真实状态可读，也仍未证明预测器会按候选动作产生方向正确的未来。表征证据因此停在“信息是否存在”，动作干预和闭环效用继续交给第11章和第9章检验。
+
 ## 10.8 自动驾驶：表征能否读出决策状态
 
 驾驶视频 probe 不应停在道路或天气分类。更接近决策的目标包括 ego-motion、前车相对速度、车道偏移、交通灯状态、time-to-collision、遮挡对象存在性和未来轨迹分叉。
@@ -262,8 +264,8 @@ M 档可在经许可的少量第一人称视频上训练轻量 masked predictor 
 - 遮挡、相机抖动与传感器缺帧；
 - 稀有但安全关键的局部对象。
 
-`CLAIM-10-05`（recommendation）：驾驶表征若要支持规划，至少要在 route-disjoint 的状态 probe、时间扰动和下游闭环/干预测试中通过；道路场景分类分数不能替代这些证据。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-10-05 recommendation -->
+驾驶表征若要支持规划，至少要在 route-disjoint 的状态 probe、时间扰动和下游闭环/干预测试中通过；道路场景分类分数不能替代这些证据。
 
 2026 年预印本 WA-JEPA 将 JEPA 思路用于自动驾驶 world-action 建模。它是值得跟踪的 `[A,R0]` 案例，但发布时间很近，本书不采用其性能数字、不安排复现，也不把单篇工作固化为稳定架构。
 
@@ -292,7 +294,7 @@ M 档可在经许可的少量第一人称视频上训练轻量 masked predictor 
 | 方法更新 | V-JEPA 2.1 加入 dense loss 与深层监督 | 2026 预印本/官方代码 | `[A/O,R1]` | 论文结果未复现 |
 | 未验证 | 官方 ViT-B 特征的微型 probing | 可选 S1 | blocked-by-upstream-loader | 默认 Hub URL 指向 localhost；checkpoint 未下载 |
 
-S0 使用 Python 标准库、CPU、0 字节下载和 MIT fixture，不需要 GPU。S1/M 的模型、数据、磁盘、时间和显存都保持待验证；默认不得超过 24 GB 单卡，2×80 GB 只保留为研究扩展且不是阅读前置。
+全书资源档位见[术语表](../glossary.md)。本章的手工表征反例用于区分可读性、不变性、时间方向和动作条件性；官方特征或小型 probe 只有在输入处理、checkpoint 与数据许可可追溯时才构成更高层证据。上游 loader 不可用时应保留“无法验证”，而不是用硬件预算替代缺失的特征结果。
 
 ## 小结
 
@@ -371,18 +373,3 @@ Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复�
 ## 下一章接口
 
 第11章将给 predictor 加入动作条件并要求 counterfactual 未来；第12章会检查 dense token 是否保留深度、occupancy 和可行动空间。`EXP-10-01` 的 ID/shift 对照、collapsed 负对照、temporal reversal 与 action sensitivity 继续作为两章准入门禁。
-
-## 验收与审查记录
-
-```text
-本地检查：make check-local
-严格检查：make check
-章节 smoke：make ch10-smoke
-文档构建：make docs-build
-```
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过；
-- 教学审查：通过；
-- 已知限制：没有下载或运行任何 I-JEPA/V-JEPA checkpoint，也没有第一人称或驾驶数据；

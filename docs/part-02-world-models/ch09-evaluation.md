@@ -48,7 +48,7 @@
 层级不是“越高就替代越低”。E4 成功仍需要 E0 保证管线没有错位，E1/E2 用来定位闭环失败原因；但只通过 E1，不能声称 E3 或 E4。
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-09-01 从模型用途到可发布声明
     accDescr: 先声明模型用途、目标分布与动作干预层级，再选择预测、反事实、长时和闭环证据，最后限定能够发布的结论。
     U[声明的用途] --> D[目标分布与干预]
@@ -59,7 +59,7 @@ flowchart LR
     C -.失败定位.-> M
 ```
 
-*FIG-09-01：从用途到可发布声明的评测链。指标不是起点；用途、分布和干预共同决定需要哪些证据。来源：本书原创，MIT，2026-08-31。*
+*FIG-09-01：从用途到可发布声明的评测链。指标不是起点；用途、分布和干预共同决定需要哪些证据。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
 
 ### 9.1.1 从问题到数字，中间还有两层
 
@@ -124,8 +124,8 @@ MSE、PSNR 和 SSIM 对局部像素误差敏感，便于定位模糊、漂移和
 
 uniform 行在这四例上只复述 base rate，预测方差为0；informative 行把正负例分开，预测方差为0.16。单 bin ECE 看不到这一差别；改成 `[0,0.5)` 与 `[0.5,1]` 两个预注册 bin 后，informative 行的经验 gap 为0.1。不能由此反过来宣称 uniform “更校准”或“更好”：四例不足以估计总体 calibration，而 ECE 单独不奖励有用的分辨率。合格报告应并列 proper score、reliability diagram/分箱定义、样本数和按 horizon/场景分桶，并在独立 calibration split 上选择任何温度或阈值，再到未参与选择的 final split 评估。
 
-`CLAIM-09-09`（result）：`EXP-09-01` v4 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-09-09 result -->
+`EXP-09-01` v4 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
 
 平均 proper score 也不是完整的失败分布。v4 在同一 `y=(1,1,0,0)` 上构造 `diffuse=(0.6,0.6,0.4,0.4)` 与 `concentrated=(0.3,0.7,0.2,sqrt(0.02))`；两行四个 squared error 的总和都为0.64，因此 mean Brier 都是0.16，但误差位置不同：
 
@@ -136,8 +136,8 @@ uniform 行在这四例上只复述 base rate，预测方差为0；informative �
 
 *TAB-09-04：`EXP-09-01` v4 的 equal-mean-Brier 误差集中负对照。概率按构造给出，不是模型输出或总体 tail estimate。*
 
-`CLAIM-09-10`（result）：固定四 outcome 表中，diffuse 与 concentrated forecast 的 mean Brier 都为0.16；前者0.5阈值准确率为1且最大单例 log loss 为0.510826，后者准确率为0.75且最大单例 log loss 为1.203973。该结果只证明相同平均 Brier 不能恢复误差是否集中在单个样本，不估计总体概率质量、tail risk、calibration、真实事件严重度或安全性。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-09-10 result -->
+固定四 outcome 表中，diffuse 与 concentrated forecast 的 mean Brier 都为0.16；前者0.5阈值准确率为1且最大单例 log loss 为0.510826，后者准确率为0.75且最大单例 log loss 为1.203973。该结果只证明相同平均 Brier 不能恢复误差是否集中在单个样本，不估计总体概率质量、tail risk、calibration、真实事件严重度或安全性。
 
 ### one-step 与 multi-step
 
@@ -173,8 +173,8 @@ E(h)=\frac{1}{N}\sum_{i=1}^{N} d\!\left(\hat{s}^{(i)}_{t+h},s^{(i)}_{t+h}\right)
 
 `Δ` 很小可能意味着模型忽略动作；`Δ` 很大也不保证正确，因为模型可能对 OOD 动作产生任意变化。应把动作覆盖划分为训练分布内、边界附近和分布外三组，并分别报告误差、校准和失败率。
 
-`CLAIM-09-02`（recommendation）：凡是用于规划或策略评估的模型，至少应通过 E2 干预门禁；只有观察数据上的平均预测误差不足以支撑决策用途。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-09-02 recommendation -->
+凡是用于规划或策略评估的模型，至少应通过 E2 干预门禁；只有观察数据上的平均预测误差不足以支撑决策用途。
 
 ### 9.3.1 反事实通常没有现成真值
 
@@ -229,8 +229,8 @@ make ch09-smoke
 
 *TAB-09-01：`EXP-09-01` 的 one-step—干预—闭环排序反转。action sensitivity 是同一状态下三个候选动作预测值的极差。*
 
-`CLAIM-09-01`（result）：在 `EXP-09-01` 的固定 fixture 中，one-step RMSE 与闭环成功率给出了相反的模型排序；这只构成指标错位反例，不证明真实世界模型必然发生同一排序反转。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-09-01 result -->
+在 `EXP-09-01` 的固定 fixture 中，one-step RMSE 与闭环成功率给出了相反的模型排序；这只构成指标错位反例，不证明真实世界模型必然发生同一排序反转。
 
 这项结果只证明排序反转在逻辑上可以发生。它使用两个确定性函数、两个目标和一维动力学，不能估计这种现象在真实世界模型中的频率，也不能证明所有感知指标与控制性能负相关。它的作用是给评测代码建立一个必须能识别的反例。
 
@@ -243,8 +243,8 @@ make ch09-smoke
 
 *TAB-09-02：`EXP-09-01` 的长时缺失分母反例。缺失惩罚 2.0 是本 fixture 的预注册失败语义，不是推荐给其他任务的通用常数。*
 
-`CLAIM-09-08`（result）：在 `EXP-09-01` 的固定三 rollout 反例中，available-case 聚合选择 fragile，而预注册缺失惩罚的固定分母聚合选择 stable。该结果证明分母语义可以改变排序，不估计真实模型崩溃率，也不证明任意惩罚值都合理。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-09-08 result -->
+在 `EXP-09-01` 的固定三 rollout 反例中，available-case 聚合选择 fragile，而预注册缺失惩罚的固定分母聚合选择 stable。该结果证明分母语义可以改变排序，不估计真实模型崩溃率，也不证明任意惩罚值都合理。
 
 ## 9.6 WorldArena：同时测感知与功能，但不要抹平任务边界
 
@@ -279,14 +279,16 @@ OOD AUROC 回答分数能否把两个冻结总体排序，却没有直接回答�
 
 第5章 `EXP-05-01` 的 correlated-error 负对照给出最小实例：三个成员对 OOD target 同时错 4，却因预测完全相同而得到 range 0。评测不能只统计“高分歧 OOD 被拒绝多少”，还要报告低分歧高损失 false negative、按 shift 类型/严重度分桶，并检查成员是否共享训练数据捷径、架构盲点或 simulator bias。
 
-`CLAIM-09-06`（recommendation）：用于动作拒绝的 uncertainty/OOD score 应报告完整 risk–coverage 关系、预注册工作点、分桶失败捕获率与 fallback 后果，并保存分数方向、估计器版本和校准数据；单一 AUROC 或拒绝率不能替代部署用途证据。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-09-06 recommendation -->
+用于动作拒绝的 uncertainty/OOD score 应报告完整 risk–coverage 关系、预注册工作点、分桶失败捕获率与 fallback 后果，并保存分数方向、估计器版本和校准数据；单一 AUROC 或拒绝率不能替代部署用途证据。
 
 ### 9.7.2 压力测试不是部署频率估计
 
 对抗搜索、稀有场景生成和极端参数扫描的目标是暴露失效边界，而不是估计这些事件在真实部署中的自然频率。压力集中采样得到的“失败率”受生成器分布支配，不能与道路里程上的事件率直接比较。
 
 因此应把两类问题分开：代表性评测估计目标分布上的平均或分桶表现，压力评测寻找系统在哪些条件下失效。前者要求抽样框和权重可信，后者要求覆盖维度、搜索预算和失败去重清楚。压力测试发现一个反例足以否定“从不失败”，却不足以估计“多久失败一次”。
+
+**杯子任务。** 一段生成视频看起来更清晰，只能加强 E1 的观测预测证据；它可能仍在替换“左移夹爪”和“右移夹爪”后生成同一未来，因而过不了 E2。若模型能对动作作方向正确的响应，还要检查它能否在 E3 正确排序候选抓取，并最终在未参与选择的对象和初态上以 E4 闭环成功率、掉落率和安全干预率验收。漂亮视频、动作敏感、候选排序和真实抓取改善是四个递进问题，不能用其中一个替代其余三个。
 
 ## 9.8 自动驾驶：开环分数不能替代闭环安全证据
 
@@ -303,8 +305,8 @@ OOD AUROC 回答分数能否把两个冻结总体排序，却没有直接回答�
 | 舒适性 | 加速度与曲率预测误差 | jerk、急刹和横向加速度 |
 | 稀有事件 | 场景覆盖与条件命中率 | 各场景桶的失败率和置信区间 |
 
-`CLAIM-09-04`（inference）：如果模型用于驾驶规划，闭环路线完成和安全指标比单独的视频质量更接近部署用途；但仿真闭环仍不能替代真实车辆安全验证。正文后续默认用 MetaDrive 做 S/M 档决策评测，CARLA 仅作为 L2 高保真扩展，不要求读者购买硬件。
-{: .book-claim .claim-inference }
+<!-- CLAIM_META: CLAIM-09-04 inference -->
+如果模型用于驾驶规划，闭环路线完成和安全指标比单独的视频质量更接近部署用途；但仿真闭环仍不能替代真实车辆安全验证。正文后续默认用 MetaDrive 做 S/M 档决策评测，CARLA 仅作为 L2 高保真扩展，不要求读者购买硬件。
 
 闭环也不是一个不可再分的“最终真值”。世界模型、状态估计、规划器、低层控制器、安全网关和仿真器共同产生结果。只替换世界模型并冻结其他组件，有助于估计其增量作用；整套系统同时变化，更接近产品比较，却无法把差异单独归因给模型。两种设计回答不同问题。
 
@@ -337,8 +339,8 @@ resources + experiment_ids + artifacts + limitations
 
 `BENCH-09-01` v4 明确把 E1 的 12 个 one-step 转移、6 条多步误差行与4行二元概率表、E2 action sensitivity、E4 的两个闭环 episode 分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值、缺失惩罚与概率 bin edge，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。概率表只是评分机制 fixture，不是 learned uncertainty estimator、calibration split 或 OOD 总体，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构风险曲线。
 
-`CLAIM-09-07`（recommendation）：可审计比较应在运行前冻结 benchmark card，并把评测协议、单次运行来源和测量结果拆成可互相引用的资产；机器 Schema 只证明结构与追溯关系成立，不证明 benchmark 有外部效度。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-09-07 recommendation -->
+可审计比较应在运行前冻结 benchmark card，并把评测协议、单次运行来源和测量结果拆成可互相引用的资产；机器 Schema 只证明结构与追溯关系成立，不证明 benchmark 有外部效度。
 
 综合分数可用于浏览排行榜，但发布时必须保留分项结果。权重会把价值判断藏进公式：一个重视视觉质量的综合分数，不适合直接选择安全关键规划器。
 
@@ -462,18 +464,3 @@ diffuse 行四个概率误差绝对值都是0.4，所以 squared error 都是0.1
 ## 下一章接口
 
 第10章将讨论不直接重建像素的预测表征。届时，本章的 E1 latent probing、E2 动作敏感性和 E3 下游效用将用于判断：一个表征虽然不生成漂亮视频，是否仍保留了决策所需的信息。
-
-## 验收与审查记录
-
-```text
-本地检查：make check-local
-严格检查：make check
-章节 smoke：make ch09-smoke
-文档构建：make docs-build
-```
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过；
-- 教学审查：通过；
-- 已知限制：WorldArena 系列、KineBench 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；概率 fixture 只有四行作者构造结果，不能估计总体 calibration、真实事件概率、uncertainty 或安全性；

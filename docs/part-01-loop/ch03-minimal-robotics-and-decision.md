@@ -36,7 +36,7 @@
 具身系统从传感器获得观测，根据内部状态估计选择动作，环境被动作改变后再产生新观测。几何回答“量在哪里、相对于谁”，运动学回答“动作会把本体带到哪里”，决策模型回答“在不确定性下该选哪个动作”。
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-03-01 具身智能的观测决策闭环
     accDescr: 不可直接获得的真实状态产生观测，智能体由观测形成状态或信念并选择动作，环境转移后再返回新观测。
     E[真实状态 e_t] --> S[传感器]
@@ -49,12 +49,12 @@ flowchart LR
     E2 --> S
 ```
 
-*FIG-03-01：本章统一的具身闭环接口。真实状态通常不可直接获得；学习模型使用观测构造任务相关的状态或信念。来源：本书原创，MIT，2026-08-31。*
+*FIG-03-01：本章统一的具身闭环接口。真实状态通常不可直接获得；学习模型使用观测构造任务相关的状态或信念。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
 
 在图像分类中，像素坐标和标签通常足够；在机器人或车辆中，“目标在 `(1, 0, 0)`”如果没有坐标系、单位和时间戳就没有可执行含义。后续所有数组都应当被看成“数值 + frame + unit + timestamp + convention”。
 
-`CLAIM-03-01`（recommendation）：任何几何、状态或动作张量的接口，都应显式记录坐标系、单位、时间戳和轴向约定；shape 相同不代表语义兼容。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-03-01 recommendation -->
+任何几何、状态或动作张量的接口，都应显式记录坐标系、单位、时间戳和轴向约定；shape 相同不代表语义兼容。
 
 ### 3.1.1 初学者先分清六种量
 
@@ -173,8 +173,8 @@ p_world = T_world_body @ T_body_camera @ p_camera
 
 *TAB-03-05：角度 wrap 的确定性反例。20 m 来自作者构造的 10 m 点和对向角度，不是定位误差分布。*
 
-`CLAIM-03-10`（result）：`EXP-03-01 v5` 的两帧 wrapped-yaw fixture 中，最短角弧插值与预登记中点完全一致，而直接平均 `+170°/-170°` 得到的 world point 相差 20 m；实现同时拒绝无 bracket 的外推和非严格递增时间戳。该结果只验证 planar yaw wrap 与固定点，不证明一般 `SE(3)` 插值、pose 质量、同步、deskew 或真实车辆误差。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-03-10 result -->
+`EXP-03-01 v5` 的两帧 wrapped-yaw fixture 中，最短角弧插值与预登记中点完全一致，而直接平均 `+170°/-170°` 得到的 world point 相差 20 m；实现同时拒绝无 bracket 的外推和非严格递增时间戳。该结果只验证 planar yaw wrap 与固定点，不证明一般 `SE(3)` 插值、pose 质量、同步、deskew 或真实车辆误差。
 
 ## 3.4 点云、遮挡与简化 BEV
 
@@ -183,7 +183,7 @@ p_world = T_world_body @ T_body_camera @ p_camera
 鸟瞰图（bird's-eye view, BEV）把选定空间范围划分为网格，再将点投影到水平面。最简 occupancy 可以记录每格“有观测占用”，更完整的表示还需要区分 free、occupied、unknown，记录高度、语义、速度和时间。
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-03-02 从二维像素到三维可行动空间
     accDescr: 像素与深度先反投影到相机坐标，再经外参变换到机器人或世界坐标，形成点云、占用和可行动空间；每步保留坐标系、单位和时间。
     R[RGB-D 像素] --> I[内参反投影]
@@ -195,7 +195,7 @@ flowchart LR
     O --> V[轴向、尺度、遮挡可视化]
 ```
 
-*FIG-03-02：零基础 3D 桥接流水线。每个箭头都保留 frame、unit 和 timestamp；未知空间不能由“没有点”直接推断为空闲。来源：本书原创，MIT，2026-08-31。*
+*FIG-03-02：零基础 3D 桥接流水线。每个箭头都保留 frame、unit 和 timestamp；未知空间不能由“没有点”直接推断为空闲。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
 
 ## 3.5 从关节到末端：只掌握动作接口
 
@@ -242,8 +242,8 @@ y=l_1\sin q_1+l_2\sin(q_1+q_2).
 
 策略直接给出动作分布；规划器通常使用模型搜索未来动作序列。工程系统可以用规划器生成参考轨迹、策略提供先验、控制器执行、安全层否决。它们是接口关系，不是互斥阵营。
 
-`CLAIM-03-04`（fact）：在部分可观测任务中，单次观测通常不足以等同真实状态；历史或状态估计器用于形成任务相关信念。该定义与第2章术语契约一致。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-03-04 fact -->
+在部分可观测任务中，单次观测通常不足以等同真实状态；历史或状态估计器用于形成任务相关信念。该定义与第2章术语契约一致。
 
 ## 3.8 几何、时间与反馈的四个精确 smoke（EXP-03-01）
 
@@ -279,23 +279,23 @@ make ch03-smoke
 
 *TAB-03-03：`EXP-03-01` 的固定 CPU smoke。所有数字来自理想程序化模型，不是相机或机器人精度。*
 
-`CLAIM-03-02`（result）：`EXP-03-01` 的精确针孔 round trip 为 0 px，同时能够检出 1000× 深度尺度错误和 0.10 m 外参平移注入；这只验证理想针孔与手工注入的几何合同，不代表真实标定精度。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-03-02 result -->
+`EXP-03-01` 的精确针孔 round trip 为 0 px，同时能够检出 1000× 深度尺度错误和 0.10 m 外参平移注入；这只验证理想针孔与手工注入的几何合同，不代表真实标定精度。
 
-`CLAIM-03-03`（result）：在同一实验的二维机械臂 fixture 中，固定执行偏差使开环末端误差为 0.12595 m；带确定性观测噪声的比例反馈将其降为 0.01905 m。这个差值只适用于本书固定参数，不能外推实机控制效果。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-03-03 result -->
+在同一实验的二维机械臂 fixture 中，固定执行偏差使开环末端误差为 0.12595 m；带确定性观测噪声的比例反馈将其降为 0.01905 m。这个差值只适用于本书固定参数，不能外推实机控制效果。
 
-`CLAIM-03-06`（result）：`EXP-03-01` 显式把 optical `(right, down, forward)` 映射到 body `(forward, left, up)`，外参正逆 round trip 最大误差为 8.67×10⁻¹⁸ m；用单位旋转跳过轴映射时，三个点的平均 body 坐标误差为 2.35718 m。该数值只由固定三点和安装平移决定。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-03-06 result -->
+`EXP-03-01` 显式把 optical `(right, down, forward)` 映射到 body `(forward, left, up)`，外参正逆 round trip 最大误差为 8.67×10⁻¹⁸ m；用单位旋转跳过轴映射时，三个点的平均 body 坐标误差为 2.35718 m。该数值只由固定三点和安装平移决定。
 
-`CLAIM-03-07`（result）：在归一化离轴坐标 `(1,0)` 上，把数值 1 m 当作 z-depth 得到的射线距离为 1.41421 m；这证明 z-depth 与 range 的接口不可混用，不估计真实深度传感器误差。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-03-07 result -->
+在归一化离轴坐标 `(1,0)` 上，把数值 1 m 当作 z-depth 得到的射线距离为 1.41421 m；这证明 z-depth 与 range 的接口不可混用，不估计真实深度传感器误差。
 
-`CLAIM-03-08`（result）：`EXP-03-01` v5 保留了 v3 的刚体链检查：将 `T_world_body @ T_body_camera` 的组合结果与逐段作用于三个点的结果比较，最大差为 0 m；测试同时拒绝缩放、镜像和剪切矩阵作为 rotation。它验证固定变换实现与输入合同，不证明真实外参或定位正确。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-03-08 result -->
+`EXP-03-01` v5 保留了 v3 的刚体链检查：将 `T_world_body @ T_body_camera` 的组合结果与逐段作用于三个点的结果比较，最大差为 0 m；测试同时拒绝缩放、镜像和剪切矩阵作为 rotation。它验证固定变换实现与输入合同，不证明真实外参或定位正确。
 
-`CLAIM-03-09`（result）：`EXP-03-01` v5 在常数 world-x 平移与常数 yaw 的解析夹具中，分别把 100 ms 过期位姿映射为 0.20 m 平移误差，以及 10 m 点上的 0.499947918294 m 转动误差；匹配时间戳时误差为 0 m。这只验证单点、精确时间戳和手工运动参数下的变换合同，不是 localization、pose interpolation、scan deskew、clock synchronization 或真实传感器精度结果。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-03-09 result -->
+`EXP-03-01` v5 在常数 world-x 平移与常数 yaw 的解析夹具中，分别把 100 ms 过期位姿映射为 0.20 m 平移误差，以及 10 m 点上的 0.499947918294 m 转动误差；匹配时间戳时误差为 0 m。这只验证单点、精确时间戳和手工运动参数下的变换合同，不是 localization、pose interpolation、scan deskew、clock synchronization 或真实传感器精度结果。
 
 ## 3.9 六类错误的定位顺序
 
@@ -316,8 +316,8 @@ make ch03-smoke
 
 一个车辆在弯道中移动时，静态相机外参可以保持不变，`T_map_vehicle(t)` 却随时间变化。将不同时间的点云变到同一地图坐标前必须做运动补偿。错误时间戳可能表现为动态对象拖影或道路边界弯曲，容易被误诊为 3D 模型能力不足。
 
-`CLAIM-03-05`（recommendation）：自动驾驶训练与评测应把实际使用的传感器 frame、车辆/map 变换、时间基准和动作持续时间写成数据 schema 的必填字段，并用固定轨迹做变换与同步 smoke；缺失或无法验证的变换不得凭默认值补造，应显式标为无效并排除依赖该字段的样本或任务。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-03-05 recommendation -->
+自动驾驶训练与评测应把实际使用的传感器 frame、车辆/map 变换、时间基准和动作持续时间写成数据 schema 的必填字段，并用固定轨迹做变换与同步 smoke；缺失或无法验证的变换不得凭默认值补造，应显式标为无效并排除依赖该字段的样本或任务。
 
 学习策略输出车辆动作时，必须经过道路边界、碰撞、动态约束、控制限幅和最小风险动作；本章程序化几何不构成任何道路安全证据。
 
@@ -376,7 +376,7 @@ episode:
 | 开放教材 | `SE(3)`、运动学与操作系统框架 | Modern Robotics / MIT notes | `[O,R1]` | 本书未运行配套栈 |
 | 官方规范 | ROS 单位和移动 frame 约定 | REP-103/105 | `[O,R1]` | 数据源可采用不同约定 |
 
-实验下载量 0、无需 GPU、无外部数据或硬件；代码、fixture、结果和本书原创图按 MIT 发布。外部教材和规范保持各自许可，只提供链接，不复制其图表。
+实验下载量 0、无需 GPU、无外部数据或硬件；代码和 fixture 按 MIT 发布，本书原创图按 CC BY-NC 4.0 发布。外部教材和规范保持各自许可，只提供链接，不复制其图表。
 
 真实系统还会受到畸变、滚动快门、深度空洞、温漂、外参变化、clock drift、位姿插值误差、扫描内运动、关节回差、接触、延迟和急停链路影响。S 档 smoke 只证明公式和接口在固定输入上运行，不能证明标定、时间同步、deskew、控制稳定性、实时性或功能安全。
 
@@ -460,18 +460,3 @@ episode:
 ## 下一章接口
 
 第4章将把本章 schema 放进 trajectory、episode、同步和数据切分协议；第12章直接复用反投影、坐标变换和 occupancy 桥接门；第13章的动作块将补上这里定义的单位、频率与安全层接口。
-
-## 验收与审查记录
-
-```text
-本地检查：make check-local
-严格检查：make check
-章节 smoke：make ch03-smoke
-文档构建：make docs-build
-```
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过；
-- 教学审查：通过；
-- 已知限制：没有真实相机、机器人、畸变、动力学、接触、clock synchronization、一般 `SE(3)` pose interpolation 或 scan deskew 运行；

@@ -1,14 +1,15 @@
 # Token-efficient book workflow
 
-This repository is a 22-chapter technical book with executable labs. Optimize for correct, bounded progress, not continuous repository-wide activity.
+This repository is a 22-chapter technical book with optional executable labs. Optimize for the quality of the book's explanations, conceptual structure, and reader experience. Labs support the text; they do not define the editorial workflow.
 
-## Scope each chapter stage
+## Scope editorial work
 
-- Work on exactly one chapter, one lab, or one named quality gate at a time. Finish its edit, acceptance, and commit before opening the next item.
-- A user may explicitly authorize an ordered multi-chapter sequence such as "optimize all remaining chapters". Treat it as a sequence of bounded chapter stages, never as one repository-wide edit or audit.
-- Never create or resume an unbounded Goal such as "keep improving whatever remains" without a named chapter range and per-stage acceptance command.
-- A Goal is allowed only when the user explicitly requests it and its completion condition names a bounded chapter, named chapter range, lab, or quality gate plus the acceptance command. For a chapter range, preserve one chapter per acceptance and one chapter per commit.
-- Do not repeat a whole-book audit after a local change. Use the manifest and existing status as indexes.
+- Keep each edit attributable to one chapter or one named cross-chapter quality gate, but do not stop merely because one chapter is complete.
+- When the user authorizes continued review, a chapter range, or the remaining known issues, proceed through an explicit editorial queue in the same task. Preserve clear per-chapter diffs; one chapter may still be one commit, but acceptance and commits are not mandatory pause points.
+- Cross-chapter terminology, reading routes, references, licensing, navigation, and publication structure may be edited together when a single quality gate requires consistent changes across several files.
+- Do not turn continued review into indiscriminate rewriting. Use the manifest, handoff, reader feedback, and existing audits as indexes; inspect the current text before accepting an old finding.
+- A Goal is allowed only when the user explicitly requests it and its completion condition names a bounded chapter range or quality gate. An editorial queue may contain several bounded items and continue until the queue is complete or context requires a handoff.
+- Do not repeat a whole-book audit after every local change.
 
 ## Minimal context startup
 
@@ -27,7 +28,7 @@ Do not preload `docs/status.md`, every chapter, all reviews, all experiment card
 - Default to no subagents and no web research. Use them only when the bounded task requires independent work or current external evidence.
 - Keep command output small: use quiet modes, focused tests, or redirect verbose output to a log and show at most the final 80 relevant lines.
 - Never place full Docker/build/test logs in chat. Report the command, exit status, and concise failure excerpt.
-- Run the narrowest relevant check first. Run `make check`, `make smoke-all`, Docker rebuilds, or site-wide review only for an explicit release milestone or user request.
+- Run the narrowest relevant check first. Batch documentation checks at a coherent editorial milestone instead of forcing a build and commit after every chapter. Run `make check`, `make smoke-all`, Docker rebuilds, or site-wide review only for an explicit release milestone or user request.
 - Do not rerun a passing check unless inputs affecting it changed.
 
 ## Evidence boundaries
@@ -38,9 +39,9 @@ Do not preload `docs/status.md`, every chapter, all reviews, all experiment card
 
 ## Session boundary
 
-- If the current chapter stage is complete and the user has explicitly authorized an ordered next chapter or chapter range, proceed directly to the next named chapter after the current chapter is accepted and committed.
-- If no next chapter or range was explicitly authorized, stop when the current stage is complete. Do not search for additional improvements.
-- If context reaches roughly 60%, do not start another chapter or broad audit. Finish the current atomic edit, update `BOOK_HANDOFF.md`, and recommend a fresh task (`/new`) using that handoff.
+- If continued review is authorized, proceed from one bounded queue item to the next without asking the user to repeat “continue”.
+- If no continuation or range was authorized, stop when the named item is complete; do not invent a new broad audit.
+- If context reaches roughly 60%, finish the current atomic edit, update `BOOK_HANDOFF.md`, and recommend a fresh task (`/new`) using that handoff rather than beginning another large queue item.
 - Use `/compact` only to finish the current bounded task, not to prolong a multi-chapter session.
 - Keep `BOOK_HANDOFF.md` under 25 lines and overwrite stale state instead of appending history. Record only target, changed files, checks/evidence, blockers, and the exact next action.
 

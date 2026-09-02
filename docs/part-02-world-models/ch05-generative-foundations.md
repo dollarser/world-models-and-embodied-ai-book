@@ -34,13 +34,13 @@ p(x_{t+1:t+H}\mid x_{\le t}, a_{t:t+H-1}, c),
 - 概率难以可靠估计但必须保留多个假设，可输出集合、粒子或场景树；
 - 下游只需要任务充分状态，不必为了“生成式”而重建所有像素。
 
-`CLAIM-05-01`（fact）：生成式预测的共同目标是表达条件数据分布或其可采样近似；VAE、token、自回归、masked、diffusion 和 flow 是不同参数化，架构名称本身不保证物理、动作或闭环有效。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-05-01 fact -->
+生成式预测的共同目标是表达条件数据分布或其可采样近似；VAE、token、自回归、masked、diffusion 和 flow 是不同参数化，架构名称本身不保证物理、动作或闭环有效。
 
 分布模型也不能只展示一个幸运样本。至少报告 likelihood/校准、mode coverage、条件一致性、多样性、重复性，以及第9章定义的下游用途指标。
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-05-01 生成式预测的共同合同
     accDescr: 历史、上下文和可选动作条件进入生成模型，模型产生分布或样本；样本还要按覆盖、校准、任务效用和安全等用途分别验证。
     C[历史/动作/上下文] --> E[可选 encoder/tokenizer]
@@ -56,7 +56,7 @@ flowchart LR
     S --> X[条件/校准/rollout/下游检查]
 ```
 
-*FIG-05-01：生成式预测的共同合同。来源：本书原创，MIT，2026-08-31。分支可组合，输出样本仍需用途驱动验证。*
+*FIG-05-01：生成式预测的共同合同。来源：本书原创，CC BY-NC 4.0，2026-08-31。分支可组合，输出样本仍需用途驱动验证。*
 
 ### 5.1.1 “生成式”至少包含四个不同问题
 
@@ -179,21 +179,21 @@ make ch05-smoke
 
 *TAB-05-02：`EXP-05-01` 解析结果。它不是神经生成模型 benchmark。*
 
-`CLAIM-05-02`（result）：固定 fork 中 MSE 最优均值为 0，但距两个观测到的未来都为 1。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-05-02 result -->
+固定 fork 中 MSE 最优均值为 0，但距两个观测到的未来都为 1。
 
-`CLAIM-05-03`（result）：显式条件分布保留两个 mode；在完整 fixture 上，条件 NLL 为 0.346574，低于忽略 context 的 0.562335。数字只适用于八个手工样本。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-05-03 result -->
+显式条件分布保留两个 mode；在完整 fixture 上，条件 NLL 为 0.346574，低于忽略 context 的 0.562335。数字只适用于八个手工样本。
 
-`CLAIM-05-04`（result）：解析 diffusion forward process 在 `alpha_bar=1/0` 返回 data/noise；直线 flow 在 `t=0/1` 返回 noise/data 且速度恒定。这验证公式端点，不比较训练或采样性能。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-05-04 result -->
+解析 diffusion forward process 在 `alpha_bar=1/0` 返回 data/noise；直线 flow 在 `t=0/1` 返回 noise/data 且速度恒定。这验证公式端点，不比较训练或采样性能。
 
 ## 5.8 条件、latent 与动力学不能混为一谈
 
 模型可能生成逼真图像却忽略动作；也可能 latent rollout 正确但 decoder 不够锐利。应分别检查：条件是否生效、latent 是否保留任务状态、转移是否动作敏感、decoder 是否忠实、自由 rollout 是否漂移。
 
-`CLAIM-05-05`（recommendation）：世界预测实验应至少包含 action/context shuffle、确定性点预测、分布模型、oracle/真实转移和自由 rollout 对照；只比较单帧视觉质量不能证明世界模型用途。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-05-05 recommendation -->
+世界预测实验应至少包含 action/context shuffle、确定性点预测、分布模型、oracle/真实转移和自由 rollout 对照；只比较单帧视觉质量不能证明世界模型用途。
 
 ### 5.8.1 条件相关不等于动作干预
 
@@ -244,8 +244,8 @@ D_{TV}(p,q)=\frac{1}{2}\sum_x |p(x)-q(x)|.
 
 *TAB-05-03：离散 fixture 的互补诊断。这里的“观察 support”只指八个手工样本，不是真实连续数据分布的完整 support。*
 
-`CLAIM-05-07`（result）：在固定 fixture 中，条件模型跨 `fork/left_only` 的 TV 为 `0.5`，条件忽略模型为 `0`；mode collapse 与虚构 mode 又分别表现为 50% mode recall 和 10% 观察 support 外概率质量。任一单项指标都无法识别全部三类错误。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-05-07 result -->
+在固定 fixture 中，条件模型跨 `fork/left_only` 的 TV 为 `0.5`，条件忽略模型为 `0`；mode collapse 与虚构 mode 又分别表现为 50% mode recall 和 10% 观察 support 外概率质量。任一单项指标都无法识别全部三类错误。
 
 ### 5.8.3 aleatoric 与 epistemic 不确定性
 
@@ -269,8 +269,8 @@ u(x)=\max_m \hat y_m(x)-\min_m \hat y_m(x),
 
 *TAB-05-04：ensemble range 的有用拒绝与共同错误假阴性。所有值均为手写教学 fixture。*
 
-`CLAIM-05-08`（result）：固定 range gate 拒绝了成员分歧为 2 的 `diverse_ood`，却接受了三个成员完全一致、ensemble mean 绝对误差仍为 4 的 `shared_error_ood`。该结果只证明低 disagreement 不蕴含正确，也不测量 learned ensemble、OOD 检出率、校准、真实错误相关性或安全性。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-05-08 result -->
+固定 range gate 拒绝了成员分歧为 2 的 `diverse_ood`，却接受了三个成员完全一致、ensemble mean 绝对误差仍为 4 的 `shared_error_ood`。该结果只证明低 disagreement 不蕴含正确，也不测量 learned ensemble、OOD 检出率、校准、真实错误相关性或安全性。
 
 v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为2，但 ensemble mean error 为0；于是 score 排序同时包含“低分但错”和“高分但对”。令绝对误差大于1为手工 failure，range 不超过阈值才接受：
 
@@ -282,8 +282,8 @@ v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为
 
 *TAB-05-05：`EXP-05-01` v4 的四例 disagreement risk–coverage 扫描。failure 标签、误差容差1和阈值均由作者设定，不是总体风险估计。*
 
-`CLAIM-05-09`（result）：固定四例 panel 中，range 阈值0只接受 `shared_error_ood`，coverage 为0.25且接受 failure rate 为1；阈值0.25接受低误差 ID 与共同错误，coverage/risk 为0.5/0.5；阈值2接受全部，coverage/risk 为1/0.5。它只证明该手工排序中收紧 disagreement gate 可降低 coverage 却提高接受错误比例，不能估计 learned ensemble 的 risk–coverage、阈值泛化、OOD 检出率、校准或安全收益。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-05-09 result -->
+固定四例 panel 中，range 阈值0只接受 `shared_error_ood`，coverage 为0.25且接受 failure rate 为1；阈值0.25接受低误差 ID 与共同错误，coverage/risk 为0.5/0.5；阈值2接受全部，coverage/risk 为1/0.5。它只证明该手工排序中收紧 disagreement gate 可降低 coverage 却提高接受错误比例，不能估计 learned ensemble 的 risk–coverage、阈值泛化、OOD 检出率、校准或安全收益。
 
 因此，成员训练数据、初始化、架构和 checkpoint 数量必须登记，且要在冻结的 ID/shift/OOD/stress split 上把 score 与真实错误配对。若所有成员共享数据捷径、标签错误、架构盲点或 simulator bias，它们可能一致地自信犯错；此时仍需覆盖测试、外部 detector、约束检查与真实/高保真后果验证。
 
@@ -291,16 +291,18 @@ v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为
 
 第9章进一步用 risk–coverage 评估“不知道”的排序是否真的集中失败；第21章把冻结阈值、估计器版本和 fallback 后果接入执行网关。概念上的 epistemic uncertainty 只有经过这两级协议，才成为可审计的拒绝机制。
 
+**杯子任务。** 杯柄被手或机械臂遮挡时，未来可能是夹爪已经对准杯柄、只接触杯身，或尚未形成稳定接触。把这些互斥状态回归成一张平均图，可能得到视觉上平滑、行动上却不存在的“半接触”状态；分布模型应保留会改变抓取决策的 mode，而不是为每个像素制造无关多样性。是否值得建模完整分布，最终由掉落风险、重抓成本和候选动作排序是否因此改变来决定。
+
 ## 5.9 自动驾驶：多未来不等于随机驾驶
 
 遮挡车辆可能保持、减速或切入；ego 候选动作也改变未来。驾驶模型应把 ego action、他车行为、地图和信号灯分开条件化，并报告 mode coverage、碰撞/越界、时间一致性和概率校准。采样出多个未来是表达不确定性，不是让控制器随机挑一条。
 
-`CLAIM-05-06`（recommendation）：自动驾驶生成式预测必须区分 aleatoric 多模态与 OOD/模型无知，并把候选未来交给有风险约束的 planner；生成概率不能越过第21章安全网关。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-05-06 recommendation -->
+自动驾驶生成式预测必须区分 aleatoric 多模态与 OOD/模型无知，并把候选未来交给有风险约束的 planner；生成概率不能越过第21章安全网关。
 
 ## 5.10 资源、许可与边界
 
-S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数据或小图像上训练微型 VAE/token/diffusion/flow，默认不超过 24 GB 单卡；当前没有 GPU，故训练、显存和生成质量均为 `pending`。2×80 GB 大视频生成不属于本章必需路径。
+全书资源档位见[术语表](../glossary.md)。本章的最低证据只需用解析分布和小反例区分 likelihood、reconstruction、sampling 与 decision utility；训练微型 VAE、tokenizer、diffusion 或 flow 只在需要检验优化与近似误差时才有价值。大型视频生成不是理解这些共同数学接口的前置条件，本书也不据此声明模型训练、生成质量或硬件成本。
 
 本章公式和 fixture 按 MIT 发布；论文、代码、模型和数据遵循各自许可。不能因实现库为 Apache/MIT 就推断 checkpoint 或训练数据同许可。
 
@@ -386,11 +388,3 @@ VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并�
 ## 下一章接口
 
 第6章把连续 stochastic latent 放入循环状态模型；第10章用 JEPA 对照“不要求生成”；第11章把 token/diffusion/flow 接到动作条件视频；第14章把分布目标迁移到动作。
-
-## 验收与审查记录
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过；
-- 教学审查：通过；
-- 已知限制：只有解析标量 fixture；mode recall 与 support 外质量只相对手工观察集合定义，ensemble 成员、OOD/failure 标签、误差容差和阈值也是手写的，没有训练神经网络、估计 risk/calibration、图像/视频或 GPU。

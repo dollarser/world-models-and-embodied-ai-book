@@ -54,7 +54,7 @@ Verification 问软件是否正确实现了所声明的方程与算法，例如�
 ## 19.2 把 reality gap 拆成可以定位的误差
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-19-01 Real2Sim2Real 的证据闭环
     accDescr: 真实日志或受控观测用于校准仿真，仿真支持训练和压力测试，策略再由独立真实证据回查；回查失败会反向更新参数与实验边界。
     R[目标世界/日志] --> C[校准集]
@@ -71,7 +71,7 @@ flowchart LR
     V --> C
 ```
 
-*FIG-19-01：Real2Sim2Real 的证据闭环。来源：本书原创，MIT，2026-09-01。真实回查可使用已有日志、影子模式或受控平台，不表示必须购买硬件。*
+*FIG-19-01：Real2Sim2Real 的证据闭环。来源：本书原创，CC BY-NC 4.0，2026-09-01。真实回查可使用已有日志、影子模式或受控平台，不表示必须购买硬件。*
 
 常见 gap 至少分六类：
 
@@ -154,8 +154,8 @@ Real2Sim 不一定从手机扫描重建完整 3D。最小路径可以从已有�
 
 *TAB-19-04：`EXP-19-01` v4 的相同边际—不同联合支持负对照。support 是两个手工离散点，不是连续相关分布。*
 
-`CLAIM-19-09`（result）：两套各2点的手工 support 具有完全相同的逐参数边际值，逐维范围检查都接受目标，但 crossed support 不包含目标三元组。该结果只证明边际范围不能识别这两个有限联合 support，不估计真实概率质量、相关性、随机化覆盖率、策略鲁棒性或 Sim2Real 性能。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-19-09 result -->
+两套各2点的手工 support 具有完全相同的逐参数边际值，逐维范围检查都接受目标，但 crossed support 不包含目标三元组。该结果只证明边际范围不能识别这两个有限联合 support，不估计真实概率质量、相关性、随机化覆盖率、策略鲁棒性或 Sim2Real 性能。
 
 ### 19.5.1 随机化分布定义了策略要对谁稳健
 
@@ -189,17 +189,17 @@ make ch19-smoke
 
 *TAB-19-02：`EXP-19-01` 的留出动作结果。observation 一致不保证隐藏 state 或参数一致。*
 
-`CLAIM-19-02`（result）：名义参数在留出动作上的 state MAE 为 `0.6625`、observation MAE 为 `0.625`、终态误差为 `1.0`；这些数值只描述固定标量动力学与留出动作，不是物理引擎或 Sim2Real 误差估计。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-19-02 result -->
+名义参数在留出动作上的 state MAE 为 `0.6625`、observation MAE 为 `0.625`、终态误差为 `1.0`；这些数值只描述固定标量动力学与留出动作，不是物理引擎或 Sim2Real 误差估计。
 
-`CLAIM-19-03`（result）：observation-only 网格搜索在 12 个候选中发现两个零误差 minimizer。非目标解 `(gain=1.0, delay=1, scale=1.0)` 在留出动作上仍有 observation MAE `0`，但 state MAE `0.1625`、终态误差 `0.25`；单靠更换动作序列没有解决乘积混淆。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-19-03 result -->
+observation-only 网格搜索在 12 个候选中发现两个零误差 minimizer。非目标解 `(gain=1.0, delay=1, scale=1.0)` 在留出动作上仍有 observation MAE `0`，但 state MAE `0.1625`、终态误差 `0.25`；单靠更换动作序列没有解决乘积混淆。
 
-`CLAIM-19-07`（result）：加入校准 state anchor 后，网格中只剩目标参数一个 minimizer，并在留出动作上得到零 state/observation gap。该结果来自无噪目标参数恰在离散网格，不证明真实系统参数、连续优化或任意传感器组合可辨识。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-19-07 result -->
+加入校准 state anchor 后，网格中只剩目标参数一个 minimizer，并在留出动作上得到零 state/observation gap。该结果来自无噪目标参数恰在离散网格，不证明真实系统参数、连续优化或任意传感器组合可辨识。
 
-`CLAIM-19-04`（result）：手工窄随机化范围没有覆盖目标参数，手工宽范围覆盖了目标。它说明 support 应被显式检查，不比较随机化策略性能。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-19-04 result -->
+手工窄随机化范围没有覆盖目标参数，手工宽范围覆盖了目标。它说明 support 应被显式检查，不比较随机化策略性能。
 
 fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量响应只由 `force_gain/(base_load+known_payload)` 决定。在 9 个候选点中，零载荷只能识别这个比值；把同一条零载荷序列重复两次不会增加参数方向。第二条序列将已知载荷改为 `1.0`，才为当前离散网格提供另一条独立约束。
 
@@ -211,8 +211,8 @@ fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量
 
 *TAB-19-03：多工况校准反例。独立载荷数按 fixture 中不同的已知 payload 值计数，不代表统计独立性或真实实验的有效样本量。*
 
-`CLAIM-19-08`（result）：零载荷校准存在 3 个等价解，重复同一载荷后仍为 3 个；加入第二个不同的已知载荷后，当前 9 点网格只剩目标 `(force_gain=1.0, base_load=1.0)`，而单载荷替代解 `(0.5,0.5)` 在载荷 `1.0` 上的 MAE 为 `0.197916666667`。这是解析标量 fixture 的实验设计反例，不证明两个工况足以辨识一般连续、带噪、接触或时变系统。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-19-08 result -->
+零载荷校准存在 3 个等价解，重复同一载荷后仍为 3 个；加入第二个不同的已知载荷后，当前 9 点网格只剩目标 `(force_gain=1.0, base_load=1.0)`，而单载荷替代解 `(0.5,0.5)` 在载荷 `1.0` 上的 MAE 为 `0.197916666667`。这是解析标量 fixture 的实验设计反例，不证明两个工况足以辨识一般连续、带噪、接触或时变系统。
 
 结果文件为 `results/ch19/EXP-19-01-smoke.json`。测试还检查非法参数、一步延迟、等价 minimizer、state anchor、校准/留出分离、观测—状态误差归因，以及重复/不同载荷工况的可辨识性。
 
@@ -220,8 +220,8 @@ fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量
 
 [MJX 官方文档](https://mujoco.readthedocs.io/en/stable/mjx.html) 当前区分 MJX-JAX 和 MJX-Warp：两者功能覆盖、批处理方式和自动微分能力不同；Warp 更接近完整 MuJoCo 功能但不提供自动微分，JAX 仍有缺失特性。把 XML 加载成功不能当作行为等价。
 
-`CLAIM-19-05`（recommendation）：切换 MuJoCo CPU、MJX-JAX、MJX-Warp 或其他求解后端时，应固定模型、初态和动作序列，逐步比较状态、接触、约束、奖励、终止和最终任务结果，再报告吞吐与显存。若差异超过预注册容差或改变任务结论，就不得合并成同一性能比较，应分别报告并把后端视为实验变量。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-19-05 recommendation -->
+切换 MuJoCo CPU、MJX-JAX、MJX-Warp 或其他求解后端时，应固定模型、初态和动作序列，逐步比较状态、接触、约束、奖励、终止和最终任务结果，再报告吞吐与显存。若差异超过预注册容差或改变任务结论，就不得合并成同一性能比较，应分别报告并把后端视为实验变量。
 
 吞吐测试还必须说明并行环境数、是否渲染、步长、模型复杂度、编译时间是否计入以及硬件。单环境延迟和大批量 steps/s 回答不同问题。
 
@@ -239,8 +239,8 @@ CARLA 用于高保真多相机、天气、城市资产和传感器管线扩展�
 4. 交通密度和参与者行为；
 5. reset、路线和终止规则。
 
-`CLAIM-19-06`（recommendation）：驾驶评测先用 MetaDrive 建立便宜、可重复的闭环与失败分类，再按研究问题升级到 CARLA；不得把两个环境的成功率直接拼表。导入真实日志还要检查数据许可，并区分固定回放交通与会响应自车的行为代理。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-19-06 recommendation -->
+驾驶评测先用 MetaDrive 建立便宜、可重复的闭环与失败分类，再按研究问题升级到 CARLA；不得把两个环境的成功率直接拼表。导入真实日志还要检查数据许可，并区分固定回放交通与会响应自车的行为代理。
 
 世界模型生成的视频可补充稀有场景，但不能替代车辆动力学、道路边界和参与者响应。第17章的 learned simulator 结果必须在本章这类独立环境或真实日志锚点上回查。
 
@@ -250,12 +250,9 @@ Sim2Real 还可能暴露策略对仿真伪特征的依赖，例如利用固定 r
 
 ## 19.9 资源边界与停止条件
 
-- **S**：`EXP-19-01`，Python 标准库、CPU、零下载、零 GPU；
-- **M**：MuJoCo CPU 小任务或 MetaDrive headless 小场景；镜像、版本和小资产需另行锁定；
-- **L1**：24 GB 单卡以内的轻量渲染、向量化或小规模策略实验，必须实测显存和时延；
-- **L2**：CARLA、Isaac Lab、MJX 大批量或较大视觉管线，最高 2×80 GB，仅按需要执行。
+全书资源档位见[术语表](../glossary.md)。本章的升级顺序由真实性问题决定：标量反例用于理解不可辨识性；MuJoCo或MetaDrive适合检查动力学与闭环协议；CARLA、Isaac Lab和MJX只在高保真传感器、复杂资产或大规模并行确实改变研究问题时使用。更昂贵的仿真器不自动更接近目标现实。
 
-没有 GPU 不妨碍完成 S 档正文与接口。M/L 路径在运行前应估算镜像、资产、数据、显存和磁盘；不得自动下载大型资源。若坐标/动作合同不清、reset 不稳定、目标参数不在随机化范围、留出 gap 恶化、跨后端终止不一致或许可不明，应停止性能比较并先修复证据链。
+运行前应核验镜像、资产、数据、缓存和许可。若坐标/动作合同不清、reset不稳定、目标参数不在随机化范围、留出gap恶化、跨后端终止不一致或许可不明，应停止性能比较并先修复证据链。
 
 ## 19.10 结果与证据边界
 
@@ -342,18 +339,3 @@ gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限�
 ## 下一章接口
 
 第20章将把本章的引擎/资产版本、reset、扰动、终止、gap 和场景覆盖写入 benchmark card。第21章再把 control step、传感器延迟、吞吐和降级策略转换成部署门禁。
-
-## 验收与审查记录
-
-```text
-本地检查：make check-local
-严格检查：make check
-章节 smoke：make ch19-smoke
-文档构建：make docs-build
-```
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过；
-- 教学审查：通过；
-- 已知限制：只运行标准库标量 fixture；没有安装仿真器、下载资产、运行 GPU 或真实硬件。

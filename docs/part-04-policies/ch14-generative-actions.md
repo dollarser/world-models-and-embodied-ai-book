@@ -37,7 +37,7 @@
 若绕过障碍的左、右轨迹都有效，均值却可能正对障碍；若两种抓取姿态分别满足接触约束，逐关节平均可能两者都不可达。这不是 MSE 算错，而是单个点估计无法表达多峰分布。加入历史、目标、语言或地图可能消除部分歧义；仍存在的随机性才需要条件分布。
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-14-01 生成式动作策略的滚动时域接口
     accDescr: 生成模型从观测采样多个动作块，候选经任务代价、动力学和独立安全筛选后选择执行前缀，再用新观测重新生成。
     O[观测/状态/目标] --> C[条件编码]
@@ -50,10 +50,10 @@ flowchart LR
     E --> C
 ```
 
-*FIG-14-01：生成式动作策略的 receding-horizon 接口。采样器产生候选，安全与执行协议仍在模型之外。来源：本书原创，MIT，2026-08-31。*
+*FIG-14-01：生成式动作策略的 receding-horizon 接口。采样器产生候选，安全与执行协议仍在模型之外。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
 
-`CLAIM-14-01`（fact）：确定性 MSE 回归学习条件均值；只有当条件动作分布、损失和可行域满足相应条件时，均值才是有效动作。多峰存在不意味着每个任务都必须使用生成式策略。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-14-01 fact -->
+确定性 MSE 回归学习条件均值；只有当条件动作分布、损失和可行域满足相应条件时，均值才是有效动作。多峰存在不意味着每个任务都必须使用生成式策略。
 
 ### 14.1.1 多峰从哪里来
 
@@ -112,19 +112,32 @@ Diffusion 与 flow 不应按营销标签做速度结论。公平比较至少固�
 
 概率路径也不是物理动作轨迹。Flow 中从 base action 到 data action 的中间 A_t 是生成空间中的插值状态，通常不会被执行，也不必满足机器人动力学；diffusion 中间噪声动作同理。安全检查应作用于最终候选及其物理时间序列，不能把生成过程的中间变量误读为系统将经过的状态。
 
-## 14.4 动作 horizon、执行 horizon 与重规划
+## 14.4 从动作时域到采样预算
 
-三个长度必须分开：
+第13章已经把动作策略的时域统一为预测时域 `K_pred`、执行时域 `K_exec`、重规划间隔和 temporal ensemble，本章不再另立一套定义。配置中的 `prediction_horizon` 对应 `K_pred`，`execution_horizon` 或 `n_action_steps` 对应 `K_exec`；`observation_horizon` 描述输入历史长度，不属于动作时域。生成式策略在这套物理时间合同之外，还多出一条独立的**计算轴**：一次动作查询要进行多少次去噪或 ODE 求解，并生成多少个候选。
 
-- `observation_horizon`：策略读取多少历史；
-- `prediction_horizon`：一次生成多少未来动作；
-- `execution_horizon` / `n_action_steps`：生成后实际执行多少步再重规划。
+因此，预测 32 个控制步不等于盲执行 32 步，也不等于进行 32 次去噪。系统可以生成长度为 `K_pred=32` 的 chunk，只执行 `K_exec=4` 步后便用新观测重规划；与此同时，每个 chunk 可能经过若干次求解器更新。缩短 `K_exec` 能更快吸收反馈，却会提高查询频率；增加求解步数可能改善离散化精度，却会侵占每次查询的实时预算。这两个取舍必须分别说明。
 
-预测 32 步不等于盲执行 32 步。receding horizon 可以每次只执行前 4 步，再用新观测生成新 chunk。较短执行 horizon 响应快，却增加生成调用；较多去噪/ODE 步可能提高样本精度，也增加端到端延迟。必须测量完整路径：传感器就绪、预处理、编码、采样、反归一化、安全检查、传输到首个动作，而非只测网络 kernel。
+设求解器顺序步数为 `K`，同一观测下生成的候选数为 `N`，一次 forward 可容纳的候选数为 `B`。若每个求解步都按 batch 处理候选，抽象的顺序 forward 数为
 
-控制预算可写成 `T_control - T_nonmodel`，再除以一次目标 batch forward 的 P95 时间，得到最多可用的顺序 forward 数。这里必须同时记录 solver 步数 `K`、候选数 `N` 和 batch 容量 `B`。若每一步都能把候选放入 batch，抽象 forward 数是 `K⌈N/B⌉`；逐候选串行则是 `KN`。两者都有 `KN` 次 sample-model evaluation，但墙钟和显存不同。batch 变大后的 P95 不会自动等于单样本 P95，最终仍须实测端到端 deadline。
+\[
+F_{\mathrm{seq}}=K\left\lceil\frac{N}{B}\right\rceil,
+\qquad
+F_{\mathrm{sample}}=KN.
+\]
 
-若超预算，应明确选择更少 solver 步、减少候选、缓存视觉特征、降低模型/输入、异步推理或安全降级；不能只用平均 FPS 掩盖尾延迟，也不能只比较 `K` 而漏掉 `N` 与 batch 策略。
+前者更接近墙钟关键路径，后者表示总 sample-model evaluations；两者不能互相替代。若候选逐个串行，`B=1`，二者都退化为 `KN`。增大 batch 可能减少顺序调用，却会增加显存，并改变单次 forward 的延迟分布。
+
+实时约束还应覆盖完整动作查询，而不只是模型 kernel。把控制周期记为 `T_control`，感知同步、预处理、反归一化、安全检查和传输等非生成开销记为 `T_nonmodel`，目标 batch 下单次 forward 的高分位延迟记为 `t_fwd`，则下面的关系只能作为设计筛查：
+
+\[
+K\left\lceil\frac{N}{B}\right\rceil t_{\mathrm{fwd}}
+\le T_{\mathrm{control}}-T_{\mathrm{nonmodel}}.
+\]
+
+例如控制周期为 50 ms、非模型开销为 18 ms，且全部候选可放入同一 batch；若该 batch 的单次 forward P95 为 7 ms，算术上最多容纳 `floor((50-18)/7)=4` 个顺序求解步。第 5 步需要 35 ms，已超出剩余的 32 ms。这个计算不是实时部署保证，因为多次调用的尾延迟可能相关，P95 也不能简单相加；它的作用是尽早排除明显超预算的设计。最终证据必须来自目标 runtime 上完整查询链路的 P50/P95/P99、deadline miss rate 与安全余量。
+
+若超预算，应明确选择减少求解步、减少候选、调整 batch、缓存条件编码、降低模型或输入规模，或者触发确定性的安全降级。异步推理只有在动作新鲜度、提交身份和过期取消规则都明确时才成立；平均 FPS 不能掩盖尾延迟，单独报告 `K` 也会漏掉 `N` 与 batch 策略。
 
 ### 14.4.1 滚动生成还需要跨查询一致性
 
@@ -166,14 +179,14 @@ make ch14-smoke
 
 *TAB-14-01：`EXP-14-01` 固定解析结果。后两类知道或使用手工模式方向，不是 learned diffusion/flow 性能。*
 
-`CLAIM-14-02`（result）：`EXP-14-01` 中，MSE 均值为 0，样本均值也为 0，但相对 `±1` 两个有效模式的无效率为 100%。样本均值“平衡”没有证明动作有效。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-14-02 result -->
+`EXP-14-01` 中，MSE 均值为 0，样本均值也为 0，但相对 `±1` 两个有效模式的无效率为 100%。样本均值“平衡”没有证明动作有效。
 
-`CLAIM-14-03`（result）：手工 refinement 从 1 步增加到 4 步时，平均最近模式距离从 `0.275` 降到 `0.034375`，每样本模型求值从 1 增到 4。它只展示求值—精度接口，不代表 DDPM 的收敛率。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-14-03 result -->
+手工 refinement 从 1 步增加到 4 步时，平均最近模式距离从 `0.275` 降到 `0.034375`，每样本模型求值从 1 增到 4。它只展示求值—精度接口，不代表 DDPM 的收敛率。
 
-`CLAIM-14-04`（result）：oracle straight flow 在一步后到达两个指定模式，因为目标配对和常速度都已知；该结果不能用于比较 learned flow 与 learned diffusion。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-14-04 result -->
+oracle straight flow 在一步后到达两个指定模式，因为目标配对和常速度都已知；该结果不能用于比较 learned flow 与 learned diffusion。
 
 实验另设每次重规划最多 8 个顺序 forward 的抽象预算，并固定 10 个候选：
 
@@ -185,8 +198,8 @@ make ch14-smoke
 
 *TAB-14-03：候选数、solver 步数与 batching 的抽象预算。它不测 batch 相关 P95、显存或并行效率，不能写成实时性能。*
 
-`CLAIM-14-07`（result）：`EXP-14-01` 的 10 候选、4 步 refinement 共有 40 次 sample-model evaluation；逐候选串行需要 40 个 forward，而一次容纳 10 个候选时为 4 个 forward。旧的“只比较步数与预算”规则会漏算候选数。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-14-07 result -->
+`EXP-14-01` 的 10 候选、4 步 refinement 共有 40 次 sample-model evaluation；逐候选串行需要 40 个 forward，而一次容纳 10 个候选时为 4 个 forward。旧的“只比较步数与预算”规则会漏算候选数。
 
 ### 14.5.1 best-of-N 的可靠性增益取决于候选相关性
 
@@ -206,8 +219,8 @@ P(\text{any accepted})=1-(1-q)^N.
 
 *TAB-14-06：固定边际 `q=0.2` 下的候选依赖结构负对照。q、iid 和完全相关结构均为手写解析端点；forward 只是抽象 batch 计数，不是实测时延。*
 
-`CLAIM-14-10`（result）：`EXP-14-01` v4 中，单候选接受概率固定为0.2时，16个 iid 候选的至少一个接受概率为0.971852502329、fallback 概率为0.028147497671；16个完全相关候选对应数值仍为0.2和0.8。该反例只证明 best-of-N 可靠性计算需要候选联合依赖假设，不估计生成器多样性、真实接受率、在线 selector、碰撞风险或闭环成功率。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-14-10 result -->
+`EXP-14-01` v4 中，单候选接受概率固定为0.2时，16个 iid 候选的至少一个接受概率为0.971852502329、fallback 概率为0.028147497671；16个完全相关候选对应数值仍为0.2和0.8。该反例只证明 best-of-N 可靠性计算需要候选联合依赖假设，不估计生成器多样性、真实接受率、在线 selector、碰撞风险或闭环成功率。
 
 fixture 还把“接近演示模式”和“当前场景允许执行”分开。手工安全门把左模式 `[-1.25,-0.75]` 设为当前场景阻塞区：
 
@@ -218,8 +231,8 @@ fixture 还把“接近演示模式”和“当前场景允许执行”分开。
 
 *TAB-14-04：生成有效性与独立安全筛选的分母。阻塞区和 fallback 是手工教学合同，不是碰撞器或安全策略。*
 
-`CLAIM-14-08`（result）：fixture 中 10 个候选全部靠近数据模式，但独立门禁只接受 5 个；当两个模式有效候选都落入阻塞区时，系统不继续随机重采样，而是使用确定性 fallback。模式有效率不能替代场景安全接受率。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-14-08 result -->
+fixture 中 10 个候选全部靠近数据模式，但独立门禁只接受 5 个；当两个模式有效候选都落入阻塞区时，系统不继续随机重采样，而是使用确定性 fallback。模式有效率不能替代场景安全接受率。
 
 fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全模式有效的10个样本。对经验模式频率 `p_hat` 与已知目标频率 `p`，这里只计算描述性距离
 
@@ -234,8 +247,8 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 
 *TAB-14-05：`EXP-14-01` 的模式覆盖—频率负对照。两组样本都覆盖全部模式且每个动作都有效，但对已知等权目标的经验频率距离不同；10个手工样本不估计总体校准。*
 
-`CLAIM-14-09`（result）：`EXP-14-01` v4 中，`5:5` 与 `9:1` 两组样本的动作有效率均为100%、模式覆盖均为2，但相对已知等权目标的经验 total variation 为 `0/0.4`。该反例只证明 support coverage 丢失模式频率信息，不证明真实策略失配程度、训练 mode collapse、总体 calibration 或统计显著性。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-14-09 result -->
+`EXP-14-01` v4 中，`5:5` 与 `9:1` 两组样本的动作有效率均为100%、模式覆盖均为2，但相对已知等权目标的经验 total variation 为 `0/0.4`。该反例只证明 support coverage 丢失模式频率信息，不证明真实策略失配程度、训练 mode collapse、总体 calibration 或统计显著性。
 
 ## 14.6 怎么评测多峰动作
 
@@ -254,8 +267,8 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 
 评估单个观测时应保存多个随机样本；评估策略时，每个 seed 必须进入独立闭环 episode，不能从多个候选中用真实未来“事后挑最好”。若用 critic、规划器或碰撞器选样本，要把选择器算进系统并单独消融，同时报告 `generated / model-valid / safety-accepted / executed` 四个分母和无候选时的 fallback 次数。
 
-`CLAIM-14-05`（recommendation）：生成式策略比较应同时报告单样本有效性、模式覆盖、闭环 outcome 与完整采样时延；用 oracle 从多个样本事后选优只能作为候选集上界诊断，不能作为可部署结果。若系统实际会多采样，还必须单独报告在线可执行选择器的性能、选择成本和失败回退。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-14-05 recommendation -->
+生成式策略比较应同时报告单样本有效性、模式覆盖、闭环 outcome 与完整采样时延；用 oracle 从多个样本事后选优只能作为候选集上界诊断，不能作为可部署结果。若系统实际会多采样，还必须单独报告在线可执行选择器的性能、选择成本和失败回退。
 
 评测的条件粒度同样重要。把许多不同场景混在一起统计“总体模式覆盖”，可能把条件被忽略误报为多样性良好：模型在场景 A 只应左转、场景 B 只应右转，却在两个场景都随机生成左右动作时，总体频率仍可能看似平衡。生成式策略应在语义相同或明确分桶的条件内检查有效性与频率，再评估跨条件聚合表现。
 
@@ -270,8 +283,8 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 
 如果训练日志里左右变道都出现，逐点平均轨迹可能压线；diffusion/flow 可以保留分支，却也可能采到道路外、违反动力学或互相矛盾的动作。工程上更常让模型生成有限时域轨迹/控制 chunk，再由道路边界、车辆动力学、碰撞预测和舒适性代价筛选，并只执行短前缀。
 
-`CLAIM-14-06`（recommendation）：自动驾驶生成式动作头应把轨迹 frame、时间步、曲率/加速度约束、其他主体预测协议和独立安全筛选写进合同；随机种子不能决定是否执行紧急制动。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-14-06 recommendation -->
+自动驾驶生成式动作头应把轨迹 frame、时间步、曲率/加速度约束、其他主体预测协议和独立安全筛选写进合同；随机种子不能决定是否执行紧急制动。
 
 急刹、避碰和最小风险停车不能依赖“多采几个样本或许会出现安全动作”。若所有候选无效、推理超时或观测过期，系统应进入确定性的安全降级。正文评测同时报告路线完成、碰撞、舒适度、干预、模式覆盖和 deadline miss，而不是只用 trajectory ADE/FDE。
 
@@ -285,15 +298,13 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 
 图像生成中轻微抖动可能只是纹理误差，动作 chunk 中的高频抖动会激发控制器或破坏接触。时间平滑不能盲目后处理：它可能把两种离散策略平均成不可行路径。优先让模型生成时间一致的 chunk，并在任务约束下筛选。
 
-## 14.9 开源实现、资源与证据边界
+## 14.9 开源实现与证据边界
 
-S 档 `EXP-14-01` 使用 Python 标准库、CPU、零下载与 MIT fixture，只验证多峰、候选—batch 预算和独立安全筛选接口。
+理解本章不依赖下载数据、权重或配置大型环境。`EXP-14-01` 只是用于隔离多峰、候选预算和安全筛选概念的解析反例，不是 Diffusion Policy 或 Flow Matching 的缩小复现。
 
-M 档优先使用 [LeRobot](https://github.com/huggingface/lerobot) 中的 Diffusion Policy 接口，在同一 Push-T 或小型许可数据划分上比较 MSE chunk policy 与 diffusion policy。[官方配置快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/diffusion/configuration_diffusion.py)明确区分 `n_obs_steps`、`horizon`、`n_action_steps`、`num_train_timesteps` 与 `num_inference_steps`；未指定推理步数时会回落到训练 timestep 数，sample clipping 还要求动作归一化范围与之匹配，padding loss mask 则需显式选择 `[O,R1]`。这些是必须冻结的配置，不是通用推荐值。默认目标为 24 GB 单卡以内；先跑状态输入或低分辨率视觉、小 batch、少量 episode 和 2–3 seeds。当前未下载、未训练、未验证显存。
+[LeRobot Diffusion Policy 配置快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/diffusion/configuration_diffusion.py)提供了一个有用的配置实例：`n_obs_steps`、`horizon`、`n_action_steps`、训练噪声步数和推理步数是不同对象 `[O,R1]`。它说明本节为何要分开输入历史、动作时域和生成计算轴，但其中的默认值不是跨任务推荐。
 
-L1 可加入 flow-matching action head，并在固定 backbone/数据下按模型调用数和墙钟时延比较。[openpi README 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/README.md)的上游估算是推理需大于 8 GB、LoRA 微调大于 22.5 GB、全量微调大于 70 GB；这是该版本官方配置说明 `[O,R1]`，不是本书实测。仓库同时提供 JAX 与 PyTorch 路线，但该快照的 PyTorch 说明仍列出不支持 π0-FAST、mixed precision、FSDP、LoRA 与 EMA 等差异，不能跨后端照搬显存结论。LoRA 已贴近 24 GB 边界，必须先做显存预检；full fine-tune 属于可选 L2，最多 2×80 GB，不是必做，也不要求购置硬件。
-
-Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分别核验许可和体积。Docker 镜像只负责环境锁定，不应在默认 smoke 中自动下载大数据或权重。
+[openpi README 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/README.md)则作为 flow-based action head 已进入大型 VLA 的公开案例 `[O,R1]`。本书只借它建立方法到系统的接口，不把上游显存估算、后端支持矩阵或 checkpoint 表现写成本书实测结论。任何进一步比较都应冻结数据、动作合同、backbone、求解器、候选策略、硬件和闭环协议，并分别核验代码、数据、checkpoint 与仿真资产的许可。
 
 ## 14.10 失效模式与安全边界
 
@@ -353,7 +364,7 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 <details markdown="1">
 <summary>SELF-CHECK-14-03：Push-T 三策略公平对照</summary>
 
-至少冻结十项：①原始 demonstrations/许可与 train-selection-test seed；②观察模态、历史长度、图像预处理；③动作 frame、单位、频率、归一化；④prediction/execution horizon；⑤backbone、conditioning 与参数预算；⑥训练更新数、batch、optimizer/schedule；⑦数据增广与采样权重；⑧候选数、solver steps、随机 seed 和选择规则；⑨硬件、precision、batching/runtime 与端到端时延测法；⑩闭环初态、任务 horizon、成功/失败分母和统计区间。MSE 头无需生成32候选也应在相同执行协议下比较，不能靠给某一方法额外 oracle 或计算预算取胜。
+至少冻结十项：①原始 demonstrations/许可与 train-selection-test seed；②观察模态、历史长度、图像预处理；③动作 frame、单位、频率、归一化；④预测时域 `K_pred`、执行时域 `K_exec` 与重规划规则；⑤backbone、conditioning 与参数预算；⑥训练更新数、batch、optimizer/schedule；⑦数据增广与采样权重；⑧候选数、solver steps、随机 seed 和选择规则；⑨硬件、precision、batching/runtime 与端到端时延测法；⑩闭环初态、任务 horizon、成功/失败分母和统计区间。MSE 头无需生成32候选也应在相同执行协议下比较，不能靠给某一方法额外 oracle 或计算预算取胜。
 
 </details>
 
@@ -395,18 +406,3 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 ## 下一章接口
 
 第15章把这里的动作 horizon、采样预算、随机性、闭环和安全合同复用到离散 action token、连续回归、diffusion/flow action expert 与双系统架构中。
-
-## 验收与审查记录
-
-```text
-本地检查：make check-local
-严格检查：make check
-章节 smoke：make ch14-smoke
-文档构建：make docs-build
-```
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过（第5章生成基础、第13章执行时域与第15章动作 schema 接口已核对）；
-- 教学审查：通过；
-- 已知限制：没有训练 Diffusion Policy/flow policy、下载数据或 checkpoint，也未验证 GPU 与真实时延；

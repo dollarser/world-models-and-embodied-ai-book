@@ -69,8 +69,8 @@
 
 prior 回答“如果只知道过去和动作，我预期现在是什么状态”；posterior 回答“看到新观测以后，我应该怎样修正这个预期”。训练阶段通常两者都存在；真正向未来想象时没有未来观测，只能连续使用 prior。
 
-`CLAIM-06-01`（fact）：RSSM 的 prior 只使用历史状态和动作推进信念，posterior 在此基础上额外使用当前观测进行修正；两者承担的证据角色不同。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-06-01 fact -->
+RSSM 的 prior 只使用历史状态和动作推进信念，posterior 在此基础上额外使用当前观测进行修正；两者承担的证据角色不同。
 
 这一区别非常重要：模型可能在每一步都依靠新观测纠错，因此 one-step 指标很好；一旦拿走观测做十步 rollout，误差就开始复合。后续章节讨论模型规划和 Dreamer 时，会反复回到这条边界。
 
@@ -114,7 +114,7 @@ $$
 一个简化的数据流是：
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-06-01 RSSM 的 prior 与 posterior 数据流
     accDescr: 上一循环状态、随机状态和动作产生当前循环状态及 prior；训练时观测编码器形成 posterior，未来想象时只能沿 prior 推进。
     H0[上一循环状态 h_t-1] --> T[确定性转移]
@@ -130,7 +130,7 @@ flowchart LR
     Q --> D[观测/奖励/终止预测]
 ```
 
-*FIG-06-01：教学版 RSSM 的 prior/posterior 数据流。训练阶段可以使用观测形成 posterior，未来想象阶段只能沿 prior 推进。来源：本书原创，MIT，2026-08-31。*
+*FIG-06-01：教学版 RSSM 的 prior/posterior 数据流。训练阶段可以使用观测形成 posterior，未来想象阶段只能沿 prior 推进。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
 
 确定性状态并不意味着环境确定；随机状态也不等于简单地给网络加噪声。二者分工的动机是：循环路径保留跨时间的信息，随机变量表示单一历史下仍无法消除的不确定性。
 
@@ -184,8 +184,8 @@ D_{KL}\!\left(q\,\|\,\operatorname{sg}(p)\right)\right)
 
 `free_nats` 还容易被日志误读：`max(raw_KL, τ)` 会让阈值以下的报告值停在 `τ`，但该常数区的 KL 梯度为零（边界点除外）。因此“KL loss 显示为 1”不能单独证明 prior 与 posterior 仍在被该项拉近，必须同时查看 raw KL、阈值、权重和梯度路由。
 
-`CLAIM-06-05`（fact）：DreamerV3 官方快照 `e3f0224` 的 dynamics/representation KL 在前向计算中数值相同，但 stop-gradient 使二者更新不同参数；`free_nats` 又使阈值以下的 KL 成为常数区。该结论只描述所锁实现，而不是所有 RSSM 或未来 commit 的必备形式。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-06-05 fact -->
+DreamerV3 官方快照 `e3f0224` 的 dynamics/representation KL 在前向计算中数值相同，但 stop-gradient 使二者更新不同参数；`free_nats` 又使阈值以下的 KL 成为常数区。该结论只描述所锁实现，而不是所有 RSSM 或未来 commit 的必备形式。
 
 ## 6.5 训练数据流与想象数据流
 
@@ -210,8 +210,8 @@ D_{KL}\!\left(q\,\|\,\operatorname{sg}(p)\right)\right)
 
 只报告第一项，会掩盖模型在规划时真正暴露的问题。
 
-`CLAIM-06-02`（recommendation）：用于规划或 imagined learning 的状态空间模型，至少应分别报告观测修正后的 filtering 误差和关闭未来观测后的 multi-step prior 误差。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-06-02 recommendation -->
+用于规划或 imagined learning 的状态空间模型，至少应分别报告观测修正后的 filtering 误差和关闭未来观测后的 multi-step prior 误差。
 
 ### 6.5.1 一步一致不等于多步充分
 
@@ -278,8 +278,8 @@ make ch06-smoke
 
 同一协议已冻结为 `benchmarks/BENCH-06-01.json` v3：它除登记31个有效转移、seed 7、四种预测视图、五个 open-loop horizon 与未来观测可见性负对照，还登记两组 categorical posterior/prior、`KL(q‖p)` 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、状态是否从 posterior 重置、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
 
-`CLAIM-06-03`（result）：在 `EXP-06-01` 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-06-03 result -->
+在 `EXP-06-01` 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
 
 ### 一步 prior 仍可能偷看历史中的未来观测
 
@@ -297,8 +297,8 @@ make ch06-smoke
 
 同一条 no-reset rollout 的绝对位置误差在 h1/h4/h8/h16/h31 分别约为 `0.0384/0.0503/0.1719/0.2393/0.6010`。这五个点确认代码没有在中途从 posterior 重置，并展示本 fixture 的长时偏离；它不证明误差对所有 horizon 单调增加，也不估计其他 seed、神经模型或真实系统误差。
 
-`CLAIM-06-07`（result）：`EXP-06-01` v3 中，posterior-anchored one-step prior RMSE 为 0.078419，位于 filtering 的 0.060842 与 no-reset open-loop 的 0.333167 之间；后续观测统一偏移 `+1` 后，前两类指标显著改变，而 open-loop RMSE 精确保持 0.333167。这只验证三条代码路径的观测可见性与命名边界，不估计真实 posterior leakage 频率、学习性能或规划价值。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-06-07 result -->
+`EXP-06-01` v3 中，posterior-anchored one-step prior RMSE 为 0.078419，位于 filtering 的 0.060842 与 no-reset open-loop 的 0.333167 之间；后续观测统一偏移 `+1` 后，前两类指标显著改变，而 open-loop RMSE 精确保持 0.333167。这只验证三条代码路径的观测可见性与命名边界，不估计真实 posterior leakage 频率、学习性能或规划价值。
 
 | posterior / prior | raw KL（nat） | `free_nats` 后的 dyn/rep 值 | 权重后总值 |
 | --- | ---: | ---: | ---: |
@@ -307,8 +307,8 @@ make ch06-smoke
 
 *TAB-06-02：`EXP-06-01` 的解析 KL 阈值反例。权重采用核查日期下官方配置的 dyn=1.0、rep=0.1；数值不包含神经网络或自动微分。*
 
-`CLAIM-06-06`（result）：`EXP-06-01` 中，小失配 raw KL 约为 0.005，在 `free_nats=1` 时进入常数区；大失配 raw KL 约为 1.614，超过阈值。该结果只验证阈值算术，梯度接收方由合同标签表达而非由本实验测量。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-06-06 result -->
+`EXP-06-01` 中，小失配 raw KL 约为 0.005，在 `free_nats=1` 时进入常数区；大失配 raw KL 约为 1.614，超过阈值。该结果只验证阈值算术，梯度接收方由合同标签表达而非由本实验测量。
 
 ## 6.8 一个必须保留的反例
 
@@ -336,14 +336,16 @@ make ch06-smoke
 
 这些问题不能只靠调低训练损失解决。第7章会让规划器直接使用模型，从而观察模型误差怎样改变动作；第9章再建立系统评测协议。
 
+**杯子任务。** 夹爪合拢后，手臂可能遮住杯柄和接触点；此时 belief 不能退化为“当前画面里没有杯子”，而要结合抓取前的相对位姿、已执行动作和接触历史维持多个可能状态。短时遮挡期间由 prior 推进“仍夹持、正在滑落、从未夹稳”等假设，重新看见杯子或获得触觉证据后再由 posterior 修正。若模型在没有新观测时把最希望发生的状态写成事实，循环记忆只是在积累自信错误。
+
 ## 6.10 自动驾驶：相同画面，不同闭合速度
 
 跟车场景可以直接说明单帧观测为何不是完整状态。两张图像中，前车的像素框可能大小相近：第一种情况两车同速，第二种情况自车正在快速接近前车。若只看当前框，模型可能给出相同表示；制动决策却应不同。
 
 驾驶信念状态至少可能需要融合：历史图像、ego speed、yaw rate、方向盘/油门/制动、前车相对速度、遮挡对象的轨迹，以及地图和信号灯状态。动作也必须进入转移：制动会改变下一时刻的 ego motion 和未来观测，不能只把动作当作展示标签。
 
-`CLAIM-06-04`（inference）：在自动驾驶中，单帧 RGB 无法唯一确定闭合速度、遮挡对象轨迹和车辆动态；将历史观测与车辆动作纳入信念状态，是预测制动和变道后果的必要建模步骤，但仍需第9章的闭环协议验证是否足够。
-{: .book-claim .claim-inference }
+<!-- CLAIM_META: CLAIM-06-04 inference -->
+在自动驾驶中，单帧 RGB 无法唯一确定闭合速度、遮挡对象轨迹和车辆动态；将历史观测与车辆动作纳入信念状态，是预测制动和变道后果的必要建模步骤，但仍需第9章的闭环协议验证是否足够。
 
 本章不要求安装驾驶仿真器。第19章才用 MetaDrive 做 S/M 档闭环决策实验，并将 CARLA 保留为 L2 高保真选做项。
 
@@ -359,7 +361,7 @@ make ch06-smoke
 | 本书结果 | open-loop 误差高于 filtering；KL 阈值两侧算术 | `EXP-06-01` | CPU smoke | 手工状态更新器与解析分布，不是神经训练或梯度验证 |
 | 未验证 | mini-RSSM 在目标任务上的收敛与资源 | 无 | pending | 尚未实现和测量训练路径 |
 
-S 档 smoke 使用 MIT 许可的程序化一维 fixture、Python 标准库和 CPU，下载量为 0。M 档未来实现小型 PyTorch RSSM，默认上限为 24 GB 单卡；L1 只用于经过资源审计的官方 debug 配置。当前不购置硬件，也不从 smoke 推断 GPU 显存、训练时间或收敛。
+全书资源档位见[术语表](../glossary.md)。本章的程序化序列只用于区分 filtering、posterior-anchored prediction、free rollout 与 KL 接口；若升级到 learned RSSM，应新增训练稳定性、长期状态充分性和独立闭环效用证据。解析反例不能推出模型收敛、训练时间、显存或真实任务效果。
 
 ## 6.12 小结
 
@@ -448,18 +450,3 @@ filtering 在预测后读取当前观测；posterior-anchored one-step prior 的
 ## 下一章接口
 
 第7章将固定一个已学习或程序化的动力学模型，用 CEM 等方法选择动作。届时，本章的 prior 不再只是预测工具，而会直接影响策略；任何被规划器利用的模型误差都会变成闭环失败。
-
-## 验收与审查记录
-
-```text
-本地检查：make check-local
-严格检查：make check
-章节 smoke：make ch06-smoke
-文档构建：make docs-build
-```
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过；
-- 教学审查：通过；
-- 证据边界：PyTorch mini-RSSM、24 GB 单卡资源和完整训练均未验证，也不是理解本章状态递推与损失接口的前提。

@@ -39,11 +39,11 @@
 
 模型至少提供动作条件转移、reward/cost 和终止；terminal value 可近似 horizon 之外的收益。若只生成视频却没有可靠 reward、风险或状态读出，规划目标仍不完整。
 
-`CLAIM-07-01`（fact）：规划结果由模型、目标、horizon、terminal value、候选生成/搜索预算和执行方式共同决定；“使用世界模型”不是足够的算法说明。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-07-01 fact -->
+规划结果由模型、目标、horizon、terminal value、候选生成/搜索预算和执行方式共同决定；“使用世界模型”不是足够的算法说明。
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-07-01 滚动时域模型规划闭环
     accDescr: 新观测更新信念状态，候选动作经模型 rollout 和代价风险评价后被搜索器选择，只执行通过独立安全网关的首步，再根据新观测重规划。
     O[新观测] --> B[belief/state 更新]
@@ -58,7 +58,7 @@ flowchart LR
     G[独立安全网关] --> A
 ```
 
-*FIG-07-01：receding-horizon 规划闭环。来源：本书原创，MIT，2026-08-31。首步执行仍须经过独立安全网关。*
+*FIG-07-01：receding-horizon 规划闭环。来源：本书原创，CC BY-NC 4.0，2026-08-31。首步执行仍须经过独立安全网关。*
 
 ### 7.1.1 规划不是“让模型自由生成未来”
 
@@ -83,6 +83,23 @@ flowchart LR
 Open-loop planning 一次生成完整序列并全部执行；MPC/receding horizon 每次观察后重规划，通常只执行首步。MIT *Underactuated Robotics* 给出的 MPC 基本循环也是“测量当前状态—从当前状态优化—执行首个动作—演化一步后重复” `[O,R1]`。后者能纠正扰动和状态估计更新，但会增加在线计算，也不能修复第一步就错误的模型。
 
 Horizon 太短会错过延迟收益；太长则扩大候选空间、模型复合误差和耗时。terminal value 可把 horizon 外收益压缩进末端，但 value 本身可能偏置或 OOD。
+
+```mermaid
+flowchart TB
+    accTitle: FIG-07-02 滚动时域中的计划、执行与重规划
+    accDescr: 时刻 t 根据新观测规划 H 步，只执行首步或短前缀；环境返回新观测后，未执行的旧后缀被废弃或仅作热启动，并从新状态重新规划 H 步。
+    O0[时刻 t 的新观测与 belief] --> P0[规划 H 步: a_t 到 a_t+H-1]
+    P0 --> X0[执行前缀: 通常只执行 a_t]
+    P0 -.未执行旧后缀.-> S0[a_t+1 到 a_t+H-1]
+    X0 --> E0[环境推进与扰动]
+    E0 --> O1[时刻 t+1 的新观测与 belief]
+    O1 --> P1[从新状态重新规划 H 步]
+    S0 -.废弃或仅作 warm start.-> P1
+```
+
+*FIG-07-02：MPC 的滚动时域时间关系。`H` 是 prediction/planning horizon，实际连续执行的步数是 execution horizon；旧后缀不能绕过新观测自动取得执行权。来源：本书原创，CC BY-NC 4.0，2026-09-02。*
+
+图中的两种长度回答不同问题：planning horizon 决定一次比较多远的候选后果，execution horizon 决定两次反馈之间连续承诺多少动作。后者大于 1 时，即使每轮都重新规划，系统仍存在多步开环窗口；旧后缀最多作为下一轮优化的 warm start，必须重新经过状态更新、约束和安全网关。
 
 对离散小空间可穷举；连续高维动作常用 shooting、random shooting、CEM 或梯度优化。候选数、迭代数、elite 比例、warm start、动作平滑和墙钟 deadline 都属于结果的一部分。
 
@@ -161,11 +178,11 @@ make ch07-smoke
 
 *TAB-07-01：`EXP-07-01` 的 horizon 结果。回报无量纲，规则和 value 均为手工设定。*
 
-`CLAIM-07-02`（result）：H=1 选择立即 harvest 得 0；H=3 找到延迟收益序列得 0.8。它证明这个 fixture 对 horizon 敏感，不表示更长永远更好。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-07-02 result -->
+H=1 选择立即 harvest 得 0；H=3 找到延迟收益序列得 0.8。它证明这个 fixture 对 horizon 敏感，不表示更长永远更好。
 
-`CLAIM-07-03`（result）：加入手工精确 terminal value 后，H=1 首步变为 advance，预测 return 为 0.8；这验证 bootstrap 接口，不证明 learned value 无偏。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-07-03 result -->
+加入手工精确 terminal value 后，H=1 首步变为 advance，预测 return 为 0.8；这验证 bootstrap 接口，不证明 learned value 无偏。
 
 原 fixture 还曾把“执行两步旧 suffix 得 -0.2”与“重新规划三步并完成 harvest 得 0.7”并列。这个比较同时改变了反馈方式与扰动后的动作预算，**不能**把 0.9 的差归因于重规划。`EXP-07-01` v4 保留该结果作为 protocol negative control，并增加两个固定为 2 个动作槽的受控比较：
 
@@ -180,11 +197,11 @@ make ch07-smoke
 
 *TAB-07-02：扰动重规划的 protocol audit。环境 reward 包含扰动前已经执行的 `advance=-0.1`；冻结 terminal value 只在预算耗尽且未终止时加入目标。旧协议两行预算不同，只是不可归因的负对照。*
 
-`CLAIM-07-04`（result）：固定两个扰动后动作槽且只累计观测到的环境 reward 时，stale suffix 得 -0.2，重新规划得 -0.1；该受控 fixture 只证明反馈可改变动作并在此目标下提高 0.1，不证明到达目标、普遍优于 open loop 或抵消模型误差。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-07-04 result -->
+固定两个扰动后动作槽且只累计观测到的环境 reward 时，stale suffix 得 -0.2，重新规划得 -0.1；该受控 fixture 只证明反馈可改变动作并在此目标下提高 0.1，不证明到达目标、普遍优于 open loop 或抵消模型误差。
 
-`CLAIM-07-08`（result）：同样固定两个动作槽并冻结手工 terminal value 时，重规划的环境 reward 为 -0.3、terminal-value contribution 为 1.0、规划目标为 0.7；因此 `0.7` 是带 bootstrap 的 objective，不是已经观测到的环境回报。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-07-08 result -->
+同样固定两个动作槽并冻结手工 terminal value 时，重规划的环境 reward 为 -0.3、terminal-value contribution 为 1.0、规划目标为 0.7；因此 `0.7` 是带 bootstrap 的 objective，不是已经观测到的环境回报。
 
 ## 7.7 受限价值等价反例
 
@@ -231,10 +248,10 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 | steady | 0.6, 0.6, 0.6, 0.6, 0.6 | 0.6 | 0.6 | 0.0 | 可行 |
 | risky | 1.5, 1.5, 1.5, 1.5, -2.0 | 0.8 | -2.0 | 0.2 | 不可行 |
 
-*TAB-07-04：固定五场景风险目标反例。来源：本书原创，MIT，2026-09-01。场景概率是手工设定，不代表真实机器人或驾驶事件频率。*
+*TAB-07-04：固定五场景风险目标反例。来源：本书原创，CC BY-NC 4.0，2026-09-01。场景概率是手工设定，不代表真实机器人或驾驶事件频率。*
 
-`CLAIM-07-07`（result）：在五个等权手工场景中，期望回报选择 risky（0.8 > 0.6），经验最差 20% 均值和失败概率上限 0.1 都选择 steady；该固定排序反例只证明聚合目标会改变动作选择，不估计真实尾部概率、不证明 CVaR 校准或系统安全。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-07-07 result -->
+在五个等权手工场景中，期望回报选择 risky（0.8 > 0.6），经验最差 20% 均值和失败概率上限 0.1 都选择 steady；该固定排序反例只证明聚合目标会改变动作选择，不估计真实尾部概率、不证明 CVaR 校准或系统安全。
 
 同一 risky 样本再固定 `α=0.3`，尾部质量为 `1.5` 个等权样本。正式指标完整计入 `-2`，再给下一个 `1.5` 分配 `0.5` 权重；粗略 `ceil` 对照则完整平均两个样本：
 
@@ -243,10 +260,10 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 | 分位点边界按比例计权 | 0.3 | 1.5 | 0.3 | -0.833333 |
 | 最差 `ceil(αN)` 个样本 | 0.3 | 2 | 0.4 | -0.25 |
 
-*TAB-07-05：非整数经验尾部质量审计。来源：`EXP-07-01` v4，本书原创，MIT，2026-09-02。两个数都只是同一五点经验分布的描述量。*
+*TAB-07-05：非整数经验尾部质量审计。来源：`EXP-07-01` v4，本书原创，CC BY-NC 4.0，2026-09-02。两个数都只是同一五点经验分布的描述量。*
 
-`CLAIM-07-09`（result）：`EXP-07-01` v4 在五个等权固定 return、`α=0.3` 下得到按边界质量计权的经验下尾均值 `-0.833333`；`ceil` 粗略对照把尾部扩大为 40%，得到 `-0.25`，两者相差 `0.583333`。该解析对照只暴露离散化口径，不估计总体 CVaR、置信区间、真实稀有风险或系统安全。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-07-09 result -->
+`EXP-07-01` v4 在五个等权固定 return、`α=0.3` 下得到按边界质量计权的经验下尾均值 `-0.833333`；`ceil` 粗略对照把尾部扩大为 40%，得到 `-0.25`，两者相差 `0.583333`。该解析对照只暴露离散化口径，不估计总体 CVaR、置信区间、真实稀有风险或系统安全。
 
 这个表还揭示三个容易漏报的实验字段：场景/粒子如何生成，风险阈值在什么 split 上冻结，以及“没有采到失败”时分母是多少。驾驶中的碰撞、越界和不可恢复状态通常应作为独立约束或网关事件，不能只乘一个小权重后被路线进度抵消。
 
@@ -268,8 +285,10 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 
 缓解方式包括短 horizon、replanning、terminal value、action bounds、不确定性惩罚、真实数据回查和独立约束。第17章会完整讨论 model exploitation；本章只建立规划接口。
 
-`CLAIM-07-05`（recommendation）：报告 learned-model planning 时必须把“优化器没找到好序列”“模型把坏序列评高”“value 错”“执行/状态估计错”分开，而不是统称规划失败。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-07-05 recommendation -->
+报告 learned-model planning 时必须把“优化器没找到好序列”“模型把坏序列评高”“value 错”“执行/状态估计错”分开，而不是统称规划失败。
+
+**杯子任务。** 候选序列可以分别表示从杯柄接近、从杯身接近、先调整腕姿再闭合夹爪，以及放弃当前抓取后重新观测。模型 rollout 应比较接触可达性、碰撞、滑落和最终放置状态，terminal value 还要覆盖规划时域之外的抬升稳定性。规划器只执行通过安全检查的短前缀；视觉或触觉一旦表明杯子移动、抓取未闭合或候选排序改变，就用新 belief 重规划，而不是盲目执行整段动作。
 
 ## 7.10 自动驾驶：候选轨迹不是控制授权
 
@@ -281,14 +300,14 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 
 短 horizon 可能错过切入或停车距离，长 horizon 会扩大他车行为和地图不确定性。terminal value 可表达路线进度，但不能吞掉碰撞；replanning 能响应新观测，却受第21章 deadline 约束。
 
-`CLAIM-07-06`（recommendation）：自动驾驶 learned planner 的候选轨迹必须再经车辆动力学、道路边界、occupancy、碰撞、控制限幅和最小风险层检查；模型预测的高 return 不能直接下发执行器。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-07-06 recommendation -->
+自动驾驶 learned planner 的候选轨迹必须再经车辆动力学、道路边界、occupancy、碰撞、控制限幅和最小风险层检查；模型预测的高 return 不能直接下发执行器。
 
 ## 7.11 资源、许可与证据边界
 
-S 档 `EXP-07-01` 使用标准库、CPU、零下载。M 档可在第19章的 MuJoCo/MetaDrive 小任务上比较 random shooting、CEM 和无规划 policy，默认目标 24 GB 单卡以内；必须报告候选预算、规划墙钟、model/real return gap 和 seed。当前未运行，状态为 `pending`。
+全书资源档位见[术语表](../glossary.md)。本章的最低反例只验证候选、模型预测、目标和重规划之间的关系；进一步进入 MuJoCo、MetaDrive 或 learned dynamics 时，必须新增候选预算、规划墙钟、model/real return gap 和独立闭环结果。没有这些证据时，只能讨论规划接口，不能声称规划器改善了真实策略。
 
-PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commit 复核；论文、模型、环境、数据和录屏各自遵循许可。本章不要求 2×80 GB 或硬件。
+PlaNet 旧仓库为 Apache-2.0，TD-MPC2 仓库许可和依赖需按锁定 commit 复核；论文、模型、环境、数据和录屏各自遵循许可。
 
 ## 小结
 
@@ -370,11 +389,3 @@ CEM/shooting 与 tree search 以不同方式分配模型查询；搜索更强既
 ## 下一章接口
 
 第8章将从“在线搜索动作”转到“在 imagined trajectories 中训练 actor-critic”；第17章再审查模型被优化器利用的风险。
-
-## 验收与审查记录
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过；
-- 教学审查：通过；
-- 已知限制：穷举已知三状态规则和五个手工风险场景；fixed-budget 对照只覆盖一个扰动、一个 deadline 和手工 terminal value，没有 learned model、CEM/MCTS、概率校准、仿真、GPU 或真实闭环。

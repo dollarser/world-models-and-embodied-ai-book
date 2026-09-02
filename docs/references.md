@@ -12,6 +12,8 @@
 
 正文使用 `[P]`、`[A]`、`[O]` 和 `R0`–`R4` 区分来源与复现状态。它们描述“我们掌握了什么证据”，不是对论文或项目质量的排名。
 
+本页采用“作者或机构，标题，出版物/项目，年份”的统一顺序；官方仓库作为实现入口单列，不与论文合并成同一证据。网页会持续更新时，正文仍以具名版本或固定 commit 为准。本页是精选阅读书目，不追求覆盖正文每一个链接。
+
 ## 第一部分：从视觉到闭环
 
 ### 第1章 从“看见”到“行动”
@@ -123,6 +125,9 @@
 - Google DeepMind, [Open X-Embodiment](https://github.com/google-deepmind/open_x_embodiment).
 - Khazatsky et al., [DROID](https://droid-dataset.github.io/).
 - [Octo official repository](https://github.com/octo-models/octo).
+- AgiBot, [AGIBOT WORLD 2026](https://agibot-world.com/), 2026.
+- X-Humanoid, [RoboMIND 2.0](https://log2r.github.io/RoboMIND2.0/), 2026.
+- FlagOpen, [RoboCOIN](https://FlagOpen.github.io/RoboCOIN/), 2025.
 
 ## 第五部分：世界模型与策略融合
 
@@ -137,6 +142,7 @@
 - [RIPT-VLA](https://arxiv.org/abs/2505.17016).
 - [VLA-RFT](https://arxiv.org/abs/2510.00406).
 - [World-Gymnast](https://arxiv.org/abs/2602.02454).
+- Luo et al., [HIL-SERL: Precise and Dexterous Robotic Manipulation via Human-in-the-Loop Reinforcement Learning](https://hil-serl.github.io/), 2024.
 
 ## 第六部分：仿真、评测与部署
 
@@ -163,7 +169,7 @@
 
 ## 第七部分：综合研究闭环
 
-### 第22章 可审计综合项目
+### 第22章 综合论证
 
 - ACM, [Artifact Review and Badging](https://www.acm.org/publications/policies/artifact-review-and-badging-current).
 - SLSA, [Provenance specification](https://slsa.dev/spec/v1.2/provenance).

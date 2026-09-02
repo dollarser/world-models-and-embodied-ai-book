@@ -36,7 +36,7 @@ p_\theta(o_{t+1:t+H}\mid o_{\le t},a_{t:t+H-1},c),
 其中 `c` 可包含文本、地图、目标或场景条件。动作序列改变未来分布，模型才有机会回答“保持、左转、右转或制动分别会怎样”。但把动作送进网络不保证网络真正使用它；训练数据中的视觉历史往往已经能预测主流未来，模型可能忽略稀少或弱相关动作。
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-11-01 动作条件视频模型的规划接口
     accDescr: 历史观测与候选动作生成未来视频或 latent，状态与效用读出把未来交给规划器比较，选中动作仍需真实环境和独立安全层验证。
     O[历史观测 o_≤t] --> E[编码器/视频 tokenizer]
@@ -50,10 +50,10 @@ flowchart LR
     Q -.选择动作.-> A
 ```
 
-*FIG-11-01：动作条件视频模型进入规划环路的最小接口。生成未来只是中间环节；规划器还需要状态/效用读出与真实环境验证。来源：本书原创，MIT，2026-08-31。*
+*FIG-11-01：动作条件视频模型进入规划环路的最小接口。生成未来只是中间环节；规划器还需要状态/效用读出与真实环境验证。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
 
-`CLAIM-11-01`（recommendation）：动作作为条件输入只是必要接口；若同一状态下改变动作不能产生方向正确且可测的未来差异，就不应支持动作反事实声明。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-11-01 recommendation -->
+动作作为条件输入只是必要接口；若同一状态下改变动作不能产生方向正确且可测的未来差异，就不应支持动作反事实声明。
 
 ### 11.1.1 条件相关不等于干预效果
 
@@ -152,6 +152,26 @@ E(h)=\frac{1}{N}\sum_i d\bigl(g(\hat{o}^{(i)}_{t+h}),s^{(i)}_{t+h}\bigr),
 5. **组合性**：训练中见过单步动作，未见序列能否组合；
 6. **安全状态**：碰撞、越界和停止是否与视觉同步。
 
+```mermaid
+flowchart TB
+    accTitle: FIG-11-02 同一世界中的动作反事实分支
+    accDescr: 同一个历史状态复制为多个分支，所有分支共享地图、对象身份和干预前随机状态，只改变候选动作；比较时先看动作方向和状态差，再看生成画面，最后由真实或独立仿真锚点核对。
+    H[同一历史与当前状态<br/>共享地图/对象/干预前随机量] --> C{只改变候选动作}
+    C --> L[left<br/>预测状态与视频]
+    C --> F[forward<br/>预测状态与视频]
+    C --> R[right<br/>预测状态与视频]
+    C --> B[brake<br/>预测状态与视频]
+    L --> D[比较带符号状态差<br/>方向/幅度/事件/局部性]
+    F --> D
+    R --> D
+    B --> D
+    D --> A[真实日志、物理仿真<br/>或规则 oracle 锚点]
+```
+
+*FIG-11-02：动作条件反事实的配对结构。来源：本书原创，CC BY-NC 4.0，2026-09-02。分支共享的是干预前世界；动作产生的真实交互差异不应被强行抹平。*
+
+这张图把“生成四段不同视频”和“识别动作效果”分开。若 left 与 right 分支画面不同，只能通过敏感性检查；只有带符号位移、碰撞或停止等状态差与独立锚点方向一致，才支持动作语义正确。反之，所有分支共用完全相同的未来他车轨迹，也可能错误消除动作本应引起的交互响应。
+
 一种动作敏感性诊断是：
 
 \[
@@ -204,14 +224,14 @@ make ch11-smoke
 
 *TAB-11-02：`EXP-11-01` 的单步与同状态反事实结果。敏感度和无符号分离都无法单独检出左右语义交换。*
 
-`CLAIM-11-02`（result）：按预测未来最大两两距离计算，`EXP-11-01` 的 action-blind 动作敏感度为 0，action-conditioned 为 2；前者对四个动作产生同一未来。该量有网格单位，不是归一化性能分数。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-11-02 result -->
+按预测未来最大两两距离计算，`EXP-11-01` 的 action-blind 动作敏感度为 0，action-conditioned 为 2；前者对四个动作产生同一未来。该量有网格单位，不是归一化性能分数。
 
-`CLAIM-11-03`（result）：在只保留动作组合的三条序列上，conditioned 模型平均终点误差为 0，blind 模型为 1.33852。该结果来自确定性可组合动力学，不能外推复杂视频的组合泛化。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-11-03 result -->
+在只保留动作组合的三条序列上，conditioned 模型平均终点误差为 0，blind 模型为 1.33852。该结果来自确定性可组合动力学，不能外推复杂视频的组合泛化。
 
-`CLAIM-11-07`（result）：left-right-swapped 与正确模型的动作敏感度、无符号左右分离都为 2，但有符号左右效果分别为 -2 和 +2，counterfactual vector RMSE 分别为 1.63299 和 0。这一标签置换负对照证明“响应动作”不足以支持“动作语义正确”。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-11-07 result -->
+left-right-swapped 与正确模型的动作敏感度、无符号左右分离都为 2，但有符号左右效果分别为 -2 和 +2，counterfactual vector RMSE 分别为 1.63299 和 0。这一标签置换负对照证明“响应动作”不足以支持“动作语义正确”。
 
 多步评测同时报告固定分母的全轨迹 RMSE。三条序列各三步，因此每个模型都有 3 个终点、9 个预测转移；没有缺失 rollout。
 
@@ -223,8 +243,8 @@ make ch11-smoke
 
 *TAB-11-03：`EXP-11-01` 的多步结果。全轨迹 RMSE 以 9 个转移、每步两个状态坐标为分母；终点误差以 3 条序列为分母。*
 
-`CLAIM-11-08`（result）：在固定的 3 条未见序列、9 个转移上，blind、swapped、conditioned 的全轨迹 RMSE 分别为 0.76830、1.33333、0。显式报告轨迹与终点能阻止中间错误被终点抵消，但仍不是随机环境的统计泛化证据。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-11-08 result -->
+在固定的 3 条未见序列、9 个转移上，blind、swapped、conditioned 的全轨迹 RMSE 分别为 0.76830、1.33333、0。显式报告轨迹与终点能阻止中间错误被终点抵消，但仍不是随机环境的统计泛化证据。
 
 ### 11.6.1 endpoint 正确仍可能掩盖中间错误
 
@@ -237,10 +257,10 @@ make ch11-smoke
 | 2 | forward | (3, 2) | (3, 4) | 2 |
 | 3 | right | (4, 3) | (4, 3) | **0** |
 
-*TAB-11-05：`EXP-11-01` 的 endpoint-cancellation 负对照。状态和动作均为手写确定性网格规则；单条序列的终点正确不能替代逐步轨迹检查。*
+*TAB-11-04：`EXP-11-01` 的 endpoint-cancellation 负对照。状态和动作均为手写确定性网格规则；单条序列的终点正确不能替代逐步轨迹检查。*
 
-`CLAIM-11-11`（result）：`EXP-11-01` 的三条未见序列中，left-right-swapped 有 1 条终点误差为 0、但中间最大误差为 2；正确模型没有这种抵消。`1/3` 不是现实错误发生率，2 也不是视频或物理单位，只证明 endpoint-only 指标可以产生假阴性。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-11-11 result -->
+`EXP-11-01` 的三条未见序列中，left-right-swapped 有 1 条终点误差为 0、但中间最大误差为 2；正确模型没有这种抵消。`1/3` 不是现实错误发生率，2 也不是视频或物理单位，只证明 endpoint-only 指标可以产生假阴性。
 
 ## 11.7 renderer、simulator、planner：同一视频，不同合同
 
@@ -252,8 +272,8 @@ make ch11-smoke
 | planner model | 候选动作下保留决策量或效用排序 | 能交互不证明规划可靠 |
 | policy | 从观测/信念选择动作 | 含世界模型不证明安全执行 |
 
-`CLAIM-11-04`（recommendation）：将生成模型用于仿真或策略评测前，应分别验证状态转移、动作干预、自由 rollout、策略排序和闭环 outcome；renderer 的视觉指标不能越级支持这些声明。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-11-04 recommendation -->
+将生成模型用于仿真或策略评测前，应分别验证状态转移、动作干预、自由 rollout、策略排序和闭环 outcome；renderer 的视觉指标不能越级支持这些声明。
 
 物理仿真器通常有显式状态、碰撞与确定性规则；学习模拟器从数据估计未来，可能更真实地渲染复杂外观，也可能幻觉或遗漏约束。两者可以组合，而不是二选一。
 
@@ -279,17 +299,17 @@ make ch11-smoke
 | Cosmos 3 Generator | vision/sound/action 等统一序列 | 多模态生成、未来预测与 action 输出 | OpenMDW-1.1 仓库/模型材料、推理/后训练配方 | 默认路径需要 gated Guardrail；关闭它会改变安全处理；资源未测 |
 | Cosmos-Drive-Dreams | 多视角 RGB/LiDAR 合成数据 | HD map、3D box、LiDAR 等空间条件 | pipeline、权重、toolkit、合成数据 | 场景条件生成不自动等于 ego-action 闭环 simulator |
 
-*TAB-11-04：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*
+*TAB-11-05：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*
 
-`CLAIM-11-09`（fact）：[Cosmos-Predict2.5 官方仓库快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/tree/a2c298b0a3df3778b973fe65e9e58877b292d8a7)列有 2B robot/action-cond 模型及推理、后训练路径，并声明只做有限维护、建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-11-09 fact -->
+[Cosmos-Predict2.5 官方仓库快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/tree/a2c298b0a3df3778b973fe65e9e58877b292d8a7)列有 2B robot/action-cond 模型及推理、后训练路径，并声明只做有限维护、建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
 
 [Cosmos 3 官方仓库快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827)把 Generator 描述为可联合处理或生成 text、vision、sound 与 action 的 omnimodal world model，并公开推理和 post-training 入口；同一 README 也明确列出长时一致性、action-state consistency、3D 结构和物理合理性等限制。这里按 `[O,R1]` 记录“该快照中公开接口与资产存在”，不把官方的能力概述升级为独立效果验证。
 
 [同一快照的 action cookbook](https://github.com/NVIDIA/cosmos/blob/9aa98e5a0773a5558f07d2699e640858f7ca8827/cookbooks/cosmos3/generator/action/README.md)把 forward dynamics、inverse dynamics 与 policy 分成三个 mode，并声明 Generator 默认需要申请 gated `Cosmos-1.0-Guardrail`；三个后端也允许显式关闭 guardrail。后者不是无影响的安装技巧：实验包必须登记 `guardrail_enabled`、guardrail revision/授权状态和拒绝/模糊化行为，关闭时不能声称运行了默认安全路径。仓库根许可证为 OpenMDW-1.1，仍需逐项核对模型、数据和依赖，不能把它写成本书 MIT 或旧 Cosmos 2.5 的 Apache-2.0/Open Model License 组合。
 
-`CLAIM-11-10`（fact）：Cosmos 3 官方快照 `9aa98e5` 已将 action 纳入统一生成输入输出，同时仍明确列出 action-state、3D 与物理一致性限制；这是该快照的接口事实，不代表后续版本或独立有效性验证。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-11-10 fact -->
+Cosmos 3 官方快照 `9aa98e5` 已将 action 纳入统一生成输入输出，同时仍明确列出 action-state、3D 与物理一致性限制；这是该快照的接口事实，不代表后续版本或独立有效性验证。
 
 迁移代际时仍应重新登记输入输出模态、运行后端、checkpoint、许可与失败边界，不能沿用 2.5 的实验卡。
 
@@ -311,10 +331,12 @@ Waymo 2026 年官方博客称其驾驶世界模型基于 Genie 3 做领域适配
 
 GAIA-2 有公开技术报告，描述多相机、文本、动作和结构条件的 latent/flow 视频模型；GAIA-3/4 的最新闭环与安全评测内容主要来自 Wayve 官方研究页面。2026 年 8 月发布的 [GAIA-4 页面](https://wayve.ai/thinking/gaia-4/)强调把 AI Driver 放回闭环、world-on-rails 与多模态生成。
 
-`CLAIM-11-05`（fact）：截至 2026-09-02，Wayve 官方页面把 GAIA-4 定位为闭环驾驶模拟与安全评测组件；本书只把它记录为供应商声明 `[V,R0]`，不把相关性、保真或安全结论视为独立验证。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-11-05 fact -->
+截至 2026-09-02，Wayve 官方页面把 GAIA-4 定位为闭环驾驶模拟与安全评测组件；本书只把它记录为供应商声明 `[V,R0]`，不把相关性、保真或安全结论视为独立验证。
 
 这些闭源案例的教学价值是展示用途演进：视频生成 → 可控场景 → 闭环策略评测。版本越新，越需要更新案例卡，而不是改写稳定的动作条件公式。
+
+**杯子任务。** 固定同一段观测历史，分别输入“夹爪左移、右移、闭合、保持”时，预测未来至少应在相对位置、接触和杯子运动方向上产生可解释差异。配对干预先检查模型是否真正读取动作，再用状态或接触 oracle 判断变化方向是否正确；只看最终杯子位置，会漏掉先向错误方向移动、随后偶然回到同一终点的轨迹。这个映射正是本章网格反例在机械臂任务中的含义，而不是另一个独立实验。
 
 ## 11.10 自动驾驶：转向、制动与他车反应
 
@@ -328,8 +350,8 @@ GAIA-2 有公开技术报告，描述多相机、文本、动作和结构条件�
 - camera、lidar/radar、BEV occupancy 与碰撞状态一致；
 - rollout 超出训练支持时给出不确定性或拒绝。
 
-`CLAIM-11-06`（recommendation）：驾驶学习模拟器必须声明其他交通参与者是固定回放、规则响应还是学习响应；三种协议产生的碰撞和策略结果不能直接比较。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-11-06 recommendation -->
+驾驶学习模拟器必须声明其他交通参与者是固定回放、规则响应还是学习响应；三种协议产生的碰撞和策略结果不能直接比较。
 
 OpenDV 等视频数据可用于外观/运动预训练，但若缺少同步控制、ego-motion 或轨迹，就不能直接监督动作反事实。S/M 路线优先使用 MetaDrive/CARLA 程序化轨迹或许可明确的小型日志；大型真实驾驶下载需要用户单独确认。
 
@@ -341,9 +363,7 @@ OpenDV 等视频数据可用于外观/运动预训练，但若缺少同步控制
 
 ## 11.11 资源、许可与进一步验证
 
-S 档 `EXP-11-01` 使用 Python 标准库、CPU、0 字节下载和 MIT fixture。它只验证动作/状态/帧接口。
-
-M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，先使用程序化 rollout、低分辨率、短 horizon 和少量 seed；必须记录峰值显存、磁盘、视频预处理与自由 rollout 时间。L1 可增加扩散/flow、小规模驾驶仿真与多步不确定性。L2 最多 2×80 GB，仅用于明确选做的较大视频模型，不是后续阅读前置。
+全书资源档位采用[术语表](../glossary.md)中的统一定义，本节只说明本章升级时新增什么证据。`EXP-11-01` 的 S 档解析网格只验证动作、状态、帧与反事实接口；若升级到学习模型，应先用短时低维或低分辨率预测检验动作是否被使用，再逐步增加自由 rollout、生成建模和闭环仿真。扩展顺序由问题决定，不以模型规模或档位越高越好。
 
 第三方代码、checkpoint、游戏资产、驾驶视频和仿真资产分别核验许可。对 Cosmos 3 还要分别登记 OpenMDW-1.1 模型材料、gated Guardrail 和下游依赖；禁用可选安全组件必须进入结果配置和限制，不能默认为等价运行。闭源产品/API 还需记录模型快照、日期、费用、请求与数据治理，不能上传未经许可的真实驾驶视频。
 
@@ -443,18 +463,3 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 ## 下一章接口
 
 第12章将把未来视频/latent 读成 depth、occupancy、动态对象和可行动空间；第17章再比较视频模型作为表征、合成数据、模拟器、planner/critic 和安全验证器的五种用途。
-
-## 验收与审查记录
-
-```text
-本地检查：make check-local
-严格检查：make check
-章节 smoke：make ch11-smoke
-文档构建：make docs-build
-```
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过；
-- 教学审查：通过；
-- 已知限制：没有训练视频模型、下载 checkpoint、申请 gated Guardrail、运行仿真或验证任何闭源案例；

@@ -81,8 +81,22 @@
 
 [LeRobot Dataset v3 文档快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/lerobot-dataset-v3.mdx)把低维 Parquet、分相机 MP4 与 episode metadata 解耦，并提供 schema、fps、统计量和 streaming 接口 `[O,R1]`。第4章已经解释：一个文件可含多个 episode，实验切分必须读 metadata。streaming 减少本地磁盘，不会消除网络、revision、缓存、许可和可重复性问题。
 
-`CLAIM-16-01`（fact）：统一 episode 存储与加载 API 只解决格式层兼容；动作 frame、单位、absolute/delta、频率、本体和许可仍需逐数据集对齐与审计。
-{: .book-claim .claim-fact }
+### 16.2.1 中国具身数据生态：规模数字之后还要问什么
+
+中国团队近年的开放数据补充了三种不同的异质性。[AGIBOT WORLD 2026](https://agibot-world.com/)按研究主题分阶段发布真实交互数据，首阶段强调任务、动作、原子技能、对象标注与恢复轨迹；[RoboMIND 2.0](https://log2r.github.io/RoboMIND2.0/)由作者报告超过31万条双臂移动操作轨迹、6种本体和739项任务；[RoboCOIN](https://FlagOpen.github.io/RoboCOIN/)由作者报告超过18万条示范、15种双臂平台、421项任务和16类场景 `[A/O,R0-R1]`。这些规模均来自项目或论文说明，本书没有下载、清点或验证。
+
+| 案例 | 主要增加的覆盖轴 | 对本章最有价值的问题 | 不能由规模数字推出 |
+| --- | --- | --- | --- |
+| AGIBOT WORLD 2026 | 真实场景、任务阶段、物理交互与恢复片段 | 分阶段数据如何进入 mixture，失败与恢复是否保留 | 每一阶段许可、schema 和质量相同 |
+| RoboMIND 2.0 | 多模态、双臂移动操作、六种本体 | 移动底盘、双臂和多传感器怎样对齐时间与动作 | 31万轨迹等于31万个独立任务条件 |
+| RoboCOIN | 十五种平台与多类双臂场景 | 跨平台 canonical action 在哪里需要 adapter | 平台数自动带来零样本迁移 |
+
+*TAB-16-07：中国具身数据案例的异质性轴。来源：项目页与论文作者报告，核查于2026-09-03；表中数字不是本书审计结果。*
+
+这些案例的价值不在于建立地区排行榜，而在于迫使 mixture 同时回答来源、平台、任务、操作者、成功/失败、控制频率和许可。旧版 AGIBOT World 论文材料曾说明其数据采用 CC BY-NC-SA 4.0，但这不能自动覆盖2026年每个阶段、模型和工具；RoboMIND、RoboCOIN也必须按实际下载页分别核验数据、代码、权重与衍生资产。所谓“开放”不能替代逐资产授权。
+
+<!-- CLAIM_META: CLAIM-16-01 fact -->
+统一 episode 存储与加载 API 只解决格式层兼容；动作 frame、单位、absolute/delta、频率、本体和许可仍需逐数据集对齐与审计。
 
 ## 16.3 canonical action：共享什么，不共享什么
 
@@ -95,7 +109,7 @@
 - **latent/unified action**：可从多数据学习，需要对每个本体重新 grounding。
 
 ```mermaid
-flowchart LR
+flowchart TB
     accTitle: FIG-16-01 跨本体数据与策略接口
     accDescr: 不同本体的数据先由版本化适配器映射到 canonical action 合同，策略在共同接口上学习，部署时再由目标本体适配器转换为可执行动作。
     A[数据集 A raw action] --> AA[adapter A]
@@ -110,7 +124,7 @@ flowchart LR
     P --> DC[decoder/controller C]
 ```
 
-*FIG-16-01：跨本体数据与策略接口。canonical action 是版本化中间合同，不是自动可执行的万能动作。来源：本书原创，MIT，2026-08-31。*
+*FIG-16-01：跨本体数据与策略接口。canonical action 是版本化中间合同，不是自动可执行的万能动作。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
 
 canonical schema 至少包含字段名称/顺序、frame、单位、时间定义、absolute/delta、控制频率、范围、夹爪语义、缺失掩码和版本。转换应通过已知样本做 raw→canonical→raw round-trip，并在真实/仿真 controller 上验证可执行性。
 
@@ -188,17 +202,17 @@ make ch16-smoke
 
 *TAB-16-03：`EXP-16-01` 结果。没有训练模型，因此 `0.28375` 是接口反例，不是负迁移性能。*
 
-`CLAIM-16-02`（result）：`EXP-16-01` 中两个 raw action 都是二维，但位移单位和夹爪极性不同；相同 tensor shape 未提供语义兼容证据。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-16-02 result -->
+`EXP-16-01` 中两个 raw action 都是二维，但位移单位和夹爪极性不同；相同 tensor shape 未提供语义兼容证据。
 
-`CLAIM-16-03`（result）：直接 raw pooling 的 canonical MAE 为 `0.28375`，schema-aware pooling 为 `0`，adapter 最大 round-trip 误差为 `0`。这个确定性结果不能外推 learned adapter 或真实策略效果。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-16-03 result -->
+直接 raw pooling 的 canonical MAE 为 `0.28375`，schema-aware pooling 为 `0`，adapter 最大 round-trip 误差为 `0`。这个确定性结果不能外推 learned adapter 或真实策略效果。
 
-`CLAIM-16-04`（result）：fixture 对缺失/未知 `embodiment_id`、缺失 fingerprint 和陈旧 fingerprint 的 3 条错误记录全部拒绝转换，而不是套用默认本体或当前 adapter；这只验证 metadata 与版本门禁。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-16-04 result -->
+fixture 对缺失/未知 `embodiment_id`、缺失 fingerprint 和陈旧 fingerprint 的 3 条错误记录全部拒绝转换，而不是套用默认本体或当前 adapter；这只验证 metadata 与版本门禁。
 
-`CLAIM-16-07`（result）：fixture 中缩放或字段合同改变会产生不同 schema fingerprint；该结果只证明确定性身份绑定，不提供防篡改、数据真实性、跨语言序列化兼容或 controller 安全保证。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-16-07 result -->
+fixture 中缩放或字段合同改变会产生不同 schema fingerprint；该结果只证明确定性身份绑定，不提供防篡改、数据真实性、跨语言序列化兼容或 controller 安全保证。
 
 ### 16.5.1 同一来源清单，三种实际暴露
 
@@ -212,8 +226,8 @@ make ch16-smoke
 
 *TAB-16-05：`EXP-16-01` v4 的采样单位负对照。比例是对固定计数的解析期望，不含有限 batch 随机波动、窗口重叠、过滤、token mask 或质量权重。*
 
-`CLAIM-16-09`（result）：在该 fixture 中，仅把“均匀”的单位从 dataset 改为 episode 或 transition，就会把 long 来源的期望暴露从50%改为75%或约85.71%。该结果只证明采样单位会改变这两个手工来源的 mixture，不判断哪一种权重更优，也不估计真实训练 batch、梯度贡献、数据质量或迁移性能。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-16-09 result -->
+在该 fixture 中，仅把“均匀”的单位从 dataset 改为 episode 或 transition，就会把 long 来源的期望暴露从50%改为75%或约85.71%。该结果只证明采样单位会改变这两个手工来源的 mixture，不判断哪一种权重更优，也不估计真实训练 batch、梯度贡献、数据质量或迁移性能。
 
 ### 16.5.2 raw transition 占比仍不是 loss window 占比
 
@@ -234,8 +248,8 @@ N_{\text{window}}=\max(L-H+1,0)
 
 *TAB-16-06：`EXP-16-01` v4 的 raw-transition—合格 action-window 负对照。这里固定 stride one、drop-tail、无 padding；比例是解析计数，不是随机采样或梯度实测。*
 
-`CLAIM-16-10`（result）：在该固定 fixture 中，long 来源占12/14个 raw transition，但三步 drop-tail 窗口的6个合格样本全部来自 long，short 来源从14.2857%降为0。该结果只证明 horizon 与尾部策略会改变可训练窗口分母，不估计 padding/mask、过滤、重复采样、分布式 shard、有效 token、梯度贡献、数据质量或模型迁移性能。
-{: .book-claim .claim-result }
+<!-- CLAIM_META: CLAIM-16-10 result -->
+在该固定 fixture 中，long 来源占12/14个 raw transition，但三步 drop-tail 窗口的6个合格样本全部来自 long，short 来源从14.2857%降为0。该结果只证明 horizon 与尾部策略会改变可训练窗口分母，不估计 padding/mask、过滤、重复采样、分布式 shard、有效 token、梯度贡献、数据质量或模型迁移性能。
 
 ## 16.6 正迁移与负迁移必须用矩阵判断
 
@@ -252,8 +266,8 @@ N_{\text{window}}=\max(L-H+1,0)
 
 还要先声明“跨本体”是哪一种问题：训练 mixture 中见过目标本体的多任务学习、预训练后用少量目标数据适配、还是完全未见目标本体的 zero-shot。前三种实验不能共用一个“泛化”标签。对新形态机器人，除了任务与场景，还需按运动学拓扑、自由度、工作空间、末端执行器和 controller 能力描述与训练分布的距离；只留出一个数据集名称，可能仍泄漏相同硬件与控制栈。
 
-`CLAIM-16-05`（recommendation）：跨本体训练应以“目标单独训练”为基线，用固定预算的来源×目标迁移矩阵报告正/负迁移；只有混合模型分数或总体平均无法定位贡献。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-16-05 recommendation -->
+跨本体训练应以“目标单独训练”为基线，用固定预算的来源×目标迁移矩阵报告正/负迁移；只有混合模型分数或总体平均无法定位贡献。
 
 ### 16.6.1 迁移来自什么
 
@@ -279,8 +293,8 @@ N_{\text{window}}=\max(L-H+1,0)
 
 仿真中“同一场景参数”只加强内部归因，不自动获得真实机器人外部效度。若没有版本化代码、资产、split 与指标实现，本书可以采用上述审计结构，但不能声称复现 XEWorld 的数值结论。
 
-`CLAIM-16-08`（fact）：XEWorld v1 在五种双臂机器人和 25 个操作任务上定义了 held-out-embodiment 协议，并把视觉质量、机器人形态、运动学与物体动力学分开报告；这一事实只描述论文协议，不证明其作者结论已由本书复现或适用于所有世界模型。
-{: .book-claim .claim-fact }
+<!-- CLAIM_META: CLAIM-16-08 fact -->
+XEWorld v1 在五种双臂机器人和 25 个操作任务上定义了 held-out-embodiment 协议，并把视觉质量、机器人形态、运动学与物体动力学分开报告；这一事实只描述论文协议，不证明其作者结论已由本书复现或适用于所有世界模型。
 
 ## 16.7 从 action head 到 full fine-tune：逐级扩大权限
 
@@ -331,20 +345,16 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 
 动作 horizon 与窗口策略还会改变驾驶场景的实际训练分布：短促急刹、接管前片段或被传感器故障截断的稀有事件，可能因不足一个完整 chunk 被 drop-tail 全部删除；若改用 padding，又必须让 loss mask、终止原因和 padding 值不可混淆。训练日志应同时报告每类场景的 raw steps、候选窗口、过滤后窗口和有效 action token，不能只用总里程或 transition 数证明稀有事件进入了 loss。
 
-`CLAIM-16-06`（recommendation）：自动驾驶跨车队训练不得直接混合同名 raw control；应转换到版本化轨迹/动力学合同或使用 fleet-specific adapter，并以按车辆/路线拆分的闭环迁移矩阵验证。
-{: .book-claim .claim-recommendation }
+<!-- CLAIM_META: CLAIM-16-06 recommendation -->
+自动驾驶跨车队训练不得直接混合同名 raw control；应转换到版本化轨迹/动力学合同或使用 fleet-specific adapter，并以按车辆/路线拆分的闭环迁移矩阵验证。
 
 驾驶数据还包含人脸、车牌、地理位置和行为记录，必须处理授权、脱敏、保留期限和跨地域治理。格式转换、裁剪和衍生 embedding 不会消除源数据许可与隐私责任。
 
 ## 16.10 资源、数据和许可路线
 
-S 档 `EXP-16-01` 使用 Python 标准库、CPU、零下载和 MIT fixture，只验证 adapter 合同。
+全书资源档位见[术语表](../glossary.md)。本章的最低反例只验证 adapter、normalization、mixture 暴露和 action-window 分母；进一步使用真实数据时，应先完成 schema round-trip、split/来源身份、数据 checksum、许可和实际有效窗口统计，再讨论 adapter、LoRA/OFT 或蒸馏。模型适配不能补救错误的数据合同。
 
-M 档在确认许可和体积后选择少量 LeRobot episode，训练小 action head/adapter 或 SmolVLA 小规模适配，默认不超过 24 GB 单卡、2–8 小时。先做 1–4 episode 过拟合、schema round-trip 和数据 checksum，再扩大；这是可选证据路径，不是理解跨本体迁移的前置条件。
-
-L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游传统 OFT 训练下限约 27 GB，不能预先承诺符合 24 GB。L2 最多 2×80 GB，可做较大 adapter/部分解冻；若上游配方要求更多 GPU，则标记超出本书默认边界，而不是擅自缩小后声称复现。
-
-所有环境优先 Docker，但大数据与 checkpoint 不写进镜像层。下载前输出预计字节数、缓存目录、许可和终止方式；代码、模型、每个子数据集、视频和衍生资产分别记录。Open X 软件 Apache-2.0、其余材料 CC-BY 的仓库说明不能替代每个贡献数据的原始条款。
+大型数据和 checkpoint 不应写进镜像层或由正文命令自动下载。使用前必须登记文件清单、预计字节数、缓存位置、终止方式，以及代码、模型、每个子数据集、视频和衍生资产各自的许可。
 
 ## 16.11 失效模式与安全边界
 
@@ -448,18 +458,3 @@ stride one、drop-tail 时，长度 `L` 的 episode 只有 `max(L-H+1,0)` 个连
 ## 下一章接口
 
 第17章把已对齐的数据与策略放入“世界模型帮助策略”的五种用途，区分表示预训练、数据生成、模拟、规划/critic 和安全预测；第18章进一步讨论后训练、coverage 与长时序。
-
-## 验收与审查记录
-
-```text
-本地检查：make check-local
-严格检查：make check
-章节 smoke：make ch16-smoke
-文档构建：make docs-build
-```
-
-- 内容审查：通过；
-- 代码审查：通过；
-- 一致性审查：通过；
-- 教学审查：通过；
-- 已知限制：没有下载真实数据、训练 adapter/VLA、运行仿真或 GPU；
