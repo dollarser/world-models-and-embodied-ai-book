@@ -3,19 +3,20 @@
   "id": "EXP-01-01",
   "chapter": 1,
   "status": "smoke",
-  "claim_ids": ["CLAIM-01-02", "CLAIM-01-06"],
+  "claim_ids": ["CLAIM-01-02", "CLAIM-01-06", "CLAIM-01-07"],
   "claim_scope": [
     "two fixed residual-action sequences with equal per-step MAE produce different integrated states and safety-bound outcomes",
-    "one fixed scalar disturbance sequence produces different finite-horizon outcomes under open loop, timely feedback, delayed feedback, and insufficient action authority"
+    "one fixed scalar disturbance sequence produces different finite-horizon outcomes under open loop, timely feedback, delayed feedback, and insufficient action authority",
+    "two reordered equal-multiset disturbances under the same delayed controller reach the same terminal state while only one crosses the strict transient bound"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library scalar integrator fixture-v2"
+    "config": "standard-library scalar integrator fixture-v3"
   },
   "data": {
-    "name": "two hand-authored five-step residual sequences and one twelve-step disturbance sequence",
-    "version": "v2",
+    "name": "two hand-authored five-step residual sequences, one twelve-step disturbance sequence, and one reordered eight-step disturbance pair",
+    "version": "v3",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -44,13 +45,17 @@
     {"name": "timely_feedback_maximum_abs_state", "value": 0.124999999488, "unit": "state", "split": "feedback-comparison"},
     {"name": "delayed_feedback_final_state", "value": 0.4076, "unit": "state", "split": "feedback-comparison"},
     {"name": "authority_limited_final_state", "value": 0.65, "unit": "state", "split": "feedback-comparison"},
-    {"name": "authority_limited_saturation_count", "value": 11, "unit": "step", "split": "feedback-comparison"}
+    {"name": "authority_limited_saturation_count", "value": 11, "unit": "step", "split": "feedback-comparison"},
+    {"name": "terminal_aliasing_final_state", "value": 0.264, "unit": "state", "split": "terminal-state-aliasing"},
+    {"name": "boundary_touching_maximum_abs_state", "value": 0.3, "unit": "state", "split": "terminal-state-aliasing"},
+    {"name": "transient_violation_maximum_abs_state", "value": 0.476, "unit": "state", "split": "terminal-state-aliasing"},
+    {"name": "transient_violation_first_step", "value": 7, "unit": "step", "split": "terminal-state-aliasing"}
   ],
   "artifacts": ["results/ch01/EXP-01-01-smoke.json"],
   "limitations": [
     "hand-authored residuals, disturbances, proportional feedback, and unit-gain scalar integration",
     "the fixed bound is illustrative rather than a physical safety limit",
-    "the delayed and limited cases are finite-horizon counterexamples, not a general controller-stability analysis",
+    "the delayed, limited, and terminal-state-aliasing cases are finite-horizon counterexamples, not a general controller-stability or safety analysis",
     "no image, learned perception, physical controller, stochastic dynamics, simulator, GPU, robot, or vehicle"
   ]
 }

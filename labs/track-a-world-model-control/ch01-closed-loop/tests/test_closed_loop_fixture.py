@@ -7,7 +7,14 @@ import unittest
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from closed_loop_fixture import evaluate, feedback_rollout, rollout  # noqa: E402
+from closed_loop_fixture import (  # noqa: E402
+    BOUNDARY_TOUCHING_DISTURBANCES,
+    TRANSIENT_VIOLATION_DISTURBANCES,
+    evaluate,
+    feedback_rollout,
+    rollout,
+    terminal_state_aliasing_audit,
+)
 
 
 class ClosedLoopFixtureTests(unittest.TestCase):
@@ -84,6 +91,37 @@ class ClosedLoopFixtureTests(unittest.TestCase):
         for disturbances in ((), (False,), (float("nan"),)):
             with self.subTest(disturbances=disturbances), self.assertRaises(ValueError):
                 feedback_rollout(disturbances, controller_gain=0.8)
+
+    def test_terminal_aliasing_sequences_have_the_same_inputs_and_final_state(self):
+        audit = terminal_state_aliasing_audit()
+        self.assertTrue(audit["same_disturbance_multiset"])
+        self.assertEqual(audit["final_state_gap"], 0.0)
+        self.assertEqual(audit["boundary_touching"]["final_state"], 0.264)
+        self.assertEqual(audit["transient_violation"]["final_state"], 0.264)
+
+    def test_touching_the_strict_boundary_is_not_a_violation(self):
+        result = terminal_state_aliasing_audit()["boundary_touching"]
+        self.assertEqual(result["maximum_abs_state"], 0.3)
+        self.assertFalse(result["bound_violated"])
+        self.assertIsNone(result["first_violation_step"])
+
+    def test_equal_terminal_state_can_hide_a_transient_violation(self):
+        result = terminal_state_aliasing_audit()["transient_violation"]
+        self.assertEqual(result["maximum_abs_state"], 0.476)
+        self.assertTrue(result["bound_violated"])
+        self.assertEqual(result["first_violation_step"], 7)
+
+    def test_disturbance_order_changes_peak_not_mean_absolute_magnitude(self):
+        audit = terminal_state_aliasing_audit()
+        self.assertEqual(audit["maximum_abs_state_gap"], 0.176)
+        self.assertEqual(
+            audit["boundary_touching"]["disturbance_mean_abs"],
+            audit["transient_violation"]["disturbance_mean_abs"],
+        )
+        self.assertEqual(
+            sorted(BOUNDARY_TOUCHING_DISTURBANCES),
+            sorted(TRANSIENT_VIOLATION_DISTURBANCES),
+        )
 
 
 if __name__ == "__main__":

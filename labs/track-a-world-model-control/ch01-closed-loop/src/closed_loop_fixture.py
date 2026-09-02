@@ -122,6 +122,41 @@ def feedback_rollout(
     }
 
 
+BOUNDARY_TOUCHING_DISTURBANCES = (-0.1, -0.1, -0.1, 0.1, 0.1, -0.1, -0.1, 0.1)
+TRANSIENT_VIOLATION_DISTURBANCES = (-0.1, -0.1, -0.1, 0.1, 0.1, -0.1, 0.1, -0.1)
+
+
+def terminal_state_aliasing_audit() -> dict[str, object]:
+    """Compare equal-multiset disturbances with equal terminal state and different transients."""
+
+    common = {
+        "controller_gain": 0.8,
+        "observation_delay_steps": 2,
+        "action_limit": 0.25,
+        "safety_bound": 0.3,
+    }
+    boundary_touching = feedback_rollout(BOUNDARY_TOUCHING_DISTURBANCES, **common)
+    transient_violation = feedback_rollout(TRANSIENT_VIOLATION_DISTURBANCES, **common)
+    return {
+        "boundary_touching": boundary_touching,
+        "transient_violation": transient_violation,
+        "same_disturbance_multiset": sorted(BOUNDARY_TOUCHING_DISTURBANCES)
+        == sorted(TRANSIENT_VIOLATION_DISTURBANCES),
+        "final_state_gap": round(
+            transient_violation["final_state"] - boundary_touching["final_state"], 12
+        ),
+        "maximum_abs_state_gap": round(
+            transient_violation["maximum_abs_state"]
+            - boundary_touching["maximum_abs_state"],
+            12,
+        ),
+        "scope": (
+            "eight-step unitless scalar delayed-feedback fixture; not a stability proof, "
+            "physical safety limit, disturbance model, or controller benchmark"
+        ),
+    }
+
+
 def evaluate() -> dict[str, object]:
     persistent = rollout((0.1, 0.1, 0.1, 0.1, 0.1))
     alternating = rollout((0.1, -0.1, 0.1, -0.1, 0.1))
@@ -145,5 +180,6 @@ def evaluate() -> dict[str, object]:
                 disturbances, controller_gain=0.8, action_limit=0.05
             ),
         },
+        "terminal_state_aliasing_audit": terminal_state_aliasing_audit(),
         "scope": "unit-gain scalar integrator with hand-authored residual actions and proportional feedback",
     }

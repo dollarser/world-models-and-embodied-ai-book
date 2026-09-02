@@ -57,6 +57,7 @@
 - [快速演进研究雷达审查](research-radar-review-2026-09-01.md)
 - [快速演进源码不可变快照审查](immutable-source-snapshot-review-2026-09-01.md)
 - [第1章反馈、时延与动作权限边界审查](ch01-feedback-boundary-review-2026-09-01.md)
+- [第1章终态混叠与瞬态越界审查（2026-09-02）](ch01-terminal-state-aliasing-review-2026-09-02.md)
 - [第2章 state aliasing 与任务相关状态审查](ch02-state-aliasing-review-2026-09-01.md)
 - [第3章时间对齐与运动补偿边界审查](ch03-temporal-alignment-review-2026-09-01.md)
 - [第8章 imagined loss 累计权重审查](ch08-imagined-loss-weight-review-2026-09-01.md)

@@ -29,6 +29,16 @@ def main() -> int:
         raise AssertionError("the fixed delayed-feedback case must cross the bound")
     if feedback["authority_limited_feedback"]["saturation_count"] != 11:
         raise AssertionError("the fixed authority-limited case must expose eleven saturated steps")
+    terminal_aliasing = metrics["terminal_state_aliasing_audit"]
+    if not terminal_aliasing["same_disturbance_multiset"] or terminal_aliasing["final_state_gap"] != 0.0:
+        raise AssertionError("the terminal-state pair must preserve disturbance values and final state")
+    if terminal_aliasing["boundary_touching"]["bound_violated"]:
+        raise AssertionError("touching the strict boundary must remain non-violating")
+    if (
+        not terminal_aliasing["transient_violation"]["bound_violated"]
+        or terminal_aliasing["transient_violation"]["first_violation_step"] != 7
+    ):
+        raise AssertionError("the reordered disturbance must expose the step-seven transient violation")
     report = {
         "experiment_id": "EXP-01-01",
         "status": "smoke",
