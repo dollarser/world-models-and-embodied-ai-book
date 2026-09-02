@@ -31,7 +31,7 @@
 
 ### 学完后的可验证产出
 
-读者应能为一个后训练系统登记 policy、interaction source、reward/verifier、advantage/weight、support constraint 和独立 evaluation；计算 reward-weighted behavior target 与 effective sample size；设计带 phase、memory、replan 和 recovery 的长时任务；按输入输出和因果接口判别 WAM。
+读者应能从目标信号、数据来源、信用分配、策略约束和更新权限五个方面分析后训练，判断结果信号能够支持哪些因果结论，并解释长时能力为何依赖进度、记忆、恢复与层级时间尺度。读者还应能按干预与递归接口判断 WAM，而不是依据联合损失或名称推断能力。
 
 ## 18.1 SFT 之后还缺什么
 
@@ -45,6 +45,18 @@ SFT 最大化示范动作在观察和指令下的似然：
 它回答“数据中的操作者做了什么”，不直接回答动作导致的后果、失败能否恢复、多个可行动作哪个回报更高，或闭环偏离示范后怎样回到任务。后训练引入 outcome，但也增加了新的污染源：reward 定义、数据收集 policy、优势估计、环境真实性和更新后 distribution shift。
 
 `CLAIM-18-01`（recommendation）：VLA 后训练的完成定义至少应包含 interaction source、reward/verifier、credit/advantage、policy support、更新算法和独立闭环评测；“用了 RL”不是足够的实验说明。
+
+### 18.1.1 后训练同时改变三个对象
+
+“后训练”不是一种统一算法，而是预训练或 SFT 之后对系统继续优化的阶段。它可能改变学习目标，例如从动作似然转向任务回报；改变训练分布，例如让当前策略收集自己的失败状态；也可能改变参数权限，例如只更新 action head 或允许主干适应。三者可以独立变化，不能仅凭“RL”“偏好优化”或“全量微调”概括。
+
+这一区分有助于解释收益来源。只对固定数据重新加权，改变了目标但没有获得新状态；在线采集而继续做监督纠正，改变了数据分布却不一定使用 RL 目标；解冻更多参数增加表达自由度，但不会凭空改善 reward 或 coverage。清晰的对照应一次固定其中两项，观察第三项的影响。
+
+### 18.1.2 Outcome 是监督信号，不是自动归因
+
+任务成功、人工偏好或 verifier 分数描述整条轨迹的结果，却不直接说明每个动作的边际贡献。同一成功可能依赖初态更容易、控制器偶然纠偏或外部主体配合；同一失败轨迹也可能包含正确前缀、有效恢复和最后一步偶然失误。把 episode outcome 均匀赋给所有动作，是一种信用分配假设，而不是结果数据本身蕴含的事实。
+
+后训练还受到行为策略混杂。某类状态只由强策略访问，成功率高可能同时反映状态选择和动作质量；人类只在危险时接管，纠正数据天然集中于高风险分布。若没有共同初态、随机化、配对 rollout 或明确的离线校正，就不应把轨迹间 outcome 差异直接解释为某个局部动作的因果效果。
 
 ```mermaid
 flowchart LR
@@ -91,6 +103,10 @@ flowchart LR
 上式是按 transition 归一化；若所有轨迹长度相同，才与 fixture 的“每个 phase 按 trajectory weight 求均值”一致。长度不同时，按 episode 等权、按 transition 等权和截断到固定 horizon 会得到不同 target。有效样本量（effective sample size, ESS）也必须注明是在 trajectory、transition、task group 还是 token 层计算，不能把四条轨迹的 ESS 直接解释为动作样本数。
 
 稀疏 episode reward 会把同一权重施加给长轨迹内所有动作：成功轨迹中的偶然动作被奖励，失败轨迹中正确前缀和恢复动作被惩罚。解决 credit assignment 需要阶段状态、dense progress、value/advantage、counterfactual 或更细粒度 verifier，但每一种又可能引入 reward misspecification。
+
+Credit assignment 有时间与结构两个维度。时间维度问早期动作对延迟结果贡献多少，结构维度问视觉判断、子目标选择、动作执行和恢复模块分别造成了什么。Value 或 advantage 可以传播延迟回报，却仍依赖状态表示、bootstrap 与行为覆盖；阶段 verifier 可以定位结构，却可能把连续任务硬切成错误边界。更细信号提高分辨率，也增加更多可被优化器利用的假设。
+
+Policy support 或 KL 约束的作用是限制更新策略偏离有证据的行为分布，而不是证明分布内动作正确。约束过弱会让 critic 或 world model 在 OOD 动作上过度乐观，约束过强则只能复现 SFT 行为，难以超过示范。合适强度取决于数据质量、环境真实性和回退能力，不能把一个固定 KL 系数当成跨任务安全常数。
 
 ## 18.3 EXP-18-01：target 改善与 coverage 损失同时发生
 
@@ -163,6 +179,10 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 
 人类纠正可记录 intervention 前观察、模型原动作、纠正动作、触发原因和恢复结果。只保存纠正动作会丢失“为何接管”和 policy-induced state，无法区分动作学习与数据选择效应。高风险机器人/车辆必须先用保守 controller 和安全员协议限定探索范围。
 
+在线数据的新鲜性既是优势，也是非平稳来源。每次更新都会改变后续访问状态，早期 rollout 与当前策略的分布逐渐不同；环境、reward model 或安全规则更新也会改变同一轨迹的解释。数据记录必须绑定 behavior policy、收集轮次和 verifier 版本。所谓 on-policy 不是一个永久标签，而是相对于哪一个策略版本、允许多大滞后定义的关系。
+
+交互效率也不能只用“使用了多少条训练轨迹”衡量。被拒绝、超时、接管和无学习信号的 rollout 同样消耗仿真或人工成本，并揭示 coverage 边界。只统计 optimizer 消费的数据，会系统性高估后训练效率，并隐藏过难任务被采样器排除的事实。
+
 ## 18.5 在 learned world model 中后训练
 
 这一路线继承第8章 imagined learning，却把 policy 扩展到大视觉—语言—动作模型，常用生成视频、VLM verifier 或目标参考构造 reward。
@@ -175,6 +195,10 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 这些 2025–2026 工作属于快速变化的方法簇，论文结果是上游证据，不是本书实测。它们即使都叫 world-model RL，也不共享 simulator、reward、policy backbone、rollout horizon 或真实回查协议，不能直接横比摘要成功率。
 
 最低审计矩阵是：SFT baseline、reward reweight baseline、物理 simulator RL、learned simulator RL，以及相同最终 policy 在独立环境的闭环评测。还要报告 model-only return、外部 return、策略排序、hallucination、VLM/reward-model confusion matrix、OOD 和迭代后 simulator gap。World-Gymnast 的[固定 README](https://github.com/world-gymnast/world-gymnast/blob/59c83a6e121fc1e099b39a4d6e01421cf1aa55c7/README.md)还把 `partial_credit_criteria` 作为数据字段，意味着 reward rubric 本身也要锁定版本，不能只保存一个最终标量。
+
+这里存在双重优化压力：policy 寻找 world model 的乐观区域，policy 与 world model 共同演化时，world model 又优先拟合新策略访问的数据。这种循环可以修复旧盲区，也可能不断把误差推向新的边界。增加真实数据回流只有在样本覆盖了被利用区域、标签可靠且更新后重新校准时才构成纠偏；“持续训练 simulator”本身不是收敛保证。
+
+Reward model 与 world model 的错误也可能相关。例如两者都来自相似视频预训练时，视觉上逼真但物理错误的 rollout 可能同时得到高可信度和高奖励。把两个网络分开部署不代表错误独立。审计应包含专门使画面质量与任务结果冲突的样本，并用独立状态或规则锚点检查共同偏差。
 
 ## 18.6 长时序不是把短时策略重复更多次
 
@@ -191,6 +215,14 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 [MindExplore](https://openaccess.thecvf.com/content/ICCV2025/html/Li_Towards_Long-Horizon_Vision-Language-Action_System_Reasoning_Acting_and_Memory_ICCV_2025_paper.html)是 ICCV 2025 的层级 reasoning—acting—memory 案例 `[P,R1]`。它支持“分层和反馈是可行架构模式”，不能证明特定沙地系统结果能外推到桌面操作、车辆或任意 VLA。
 
 `CLAIM-18-04`（recommendation）：长时 VLA 应分别评测 subgoal selection、phase completion、memory correctness、recovery、动作闭环和全任务 outcome；增加 context/chunk 长度不能替代显式进度证据与 replanning。
+
+### 18.6.1 长时能力依赖可撤销的承诺
+
+长计划必须在执行中持续接受新证据。高层 subgoal 是跨多个控制周期的承诺，但不应成为不可修改的脚本；低层 chunk 是更短的承诺，应在接触变化或安全事件发生时立即失效。系统能力来自在合适时间尺度保持意图，又能在证据冲突时撤销，而不是一次预测覆盖尽可能远。
+
+进度变量应描述环境已经发生什么，而不是模型曾经命令什么。“已发出抓取动作”不等于“物体已被抓住”，“已规划到目标区”也不等于“机器人已经到达”。如果 memory 写入的是计划而非观察确认的事实，后续阶段会在虚假前提上继续执行。长期记忆因此需要来源、时间、置信度和失效规则，而不仅是更长文本摘要。
+
+恢复也不是把失败后剩余步骤重放一次。它需要识别当前状态仍满足哪个阶段入口、哪些资源或对象状态已经改变，以及是否应退回更早的安全检查点。好的长时评测不仅统计最终成功，还统计错误首次出现在哪层、被发现用了多久、恢复是否回到有效状态，以及重复失败是否触发停止。
 
 ## 18.7 World-Action Model：按接口分，不按名字分
 
@@ -212,6 +244,10 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 2026 年的 WAM 分类本身仍在演化：本章沿用“未来如何连接动作”的四接口轴；另一些当前 survey 使用 render-and-decode、latent-only、video-generation-free 等推理 substrate。两种分类可以交叉，不应把 taxonomy 名称当能力声明。工程卡仍应直接登记：动作是否条件化未来、未来是否递归、推理是否解码视频、action head 是否能看未来 token，以及 reward/termination 是否存在。
 
 `CLAIM-18-05`（inference）：一个 WAM 是否能用于规划、RL simulator 或安全反事实，取决于它是否暴露经验证的动作条件未来、递归 state、reward/termination 与候选比较接口；联合视频—动作 loss 或“world”命名本身不提供这些能力。
+
+联合建模只说明未来与动作出现在同一个概率系统中，不说明因果方向。模型可能根据未来视频反推动作，也可能根据动作预测未来，还可能共同预测二者而不存在可控干预接口。用于策略时，必须检查推理阶段哪些 token 可见、动作是否先于被预测未来进入条件，以及替换动作时未来是否按语义改变。
+
+辅助未来预测的价值也可能来自普通正则化，而不是模型学会可规划动力学。若加入 future loss 后策略改善，需要与参数量、额外视频监督和其他辅助任务做匹配对照；只有进一步展示动作干预敏感性、长期一致性或下游 rollout 使用，才能把收益归因到更具体的世界建模能力。
 
 ## 18.8 自动驾驶正文：后训练必须保留独立道路真值
 
@@ -246,7 +282,9 @@ reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预�
 
 ## 小结
 
-VLA 后训练的价值来自 outcome 和交互，风险也来自 outcome 定义与交互环境。离线重加权能移动 target，却可能缩小有效样本和恢复覆盖；world-model rollout 能降低真实交互成本，却给 policy 新增可利用的模型漏洞。长时能力需要层级、记忆、进度与恢复，WAM 则必须回到实际接口判断。
+VLA 后训练不是单一算法，而是对目标信号、数据分布和参数权限的重新选择。Outcome 提供任务结果，却不自动识别局部动作贡献；credit、advantage、support 与 KL 都加入新的假设。离线重加权能移动 target，却可能缩小有效样本和恢复覆盖；交互数据更接近当前策略，也带来版本非平稳、选择偏差与未使用 rollout 成本。
+
+World-model rollout 降低真实交互成本，同时给 policy 和 reward model 新增可共同利用的漏洞。长时能力依赖多时间尺度、观察确认的进度、带失效规则的记忆与可撤销承诺，不是无限延长 context 或 chunk。WAM 是否具有世界模型能力，最终要看动作干预、递归状态、reward/termination 与候选比较接口，而不是联合视频—动作损失或名称。
 
 ## 练习
 
