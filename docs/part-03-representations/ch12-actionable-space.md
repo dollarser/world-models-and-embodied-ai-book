@@ -47,6 +47,7 @@ flowchart LR
 *FIG-12-01：从传感器证据到可行动空间的最小链路。每次压缩都应保留 frame、时间与未知状态。来源：本书原创，MIT，2026-08-31。*
 
 `CLAIM-12-01`（recommendation）：面向行动的空间表征至少要声明 frame、单位、时间戳、分辨率、已知/未知规则和下游动作；只有外观或点集合不足以定义规划合同。
+{: .book-claim .claim-recommendation }
 
 ### 12.1.1 地图是信念，不是世界本身
 
@@ -172,6 +173,7 @@ NeRF 和 3D Gaussian Splatting 以新视角渲染和场景重建见长。[Nerfst
 2026 年 Google DeepMind 发布的 [D4RT](https://deepmind.google/blog/d4rt-teaching-ai-to-see-the-world-in-four-dimensions/) 将点图、深度、相机与跨时间跟踪统一为动态 4D 重建查询，项目页提供论文与可视结果 `[V/A,R0]`。它是“随时间重建与跟踪”的研究锚点，不自动证明机器人抓取、导航或驾驶安全有效；本书未运行其模型。
 
 `CLAIM-12-05`（recommendation）：只有当辐射场、Gaussian、点图或动态重建被控制器或规划器消费时，才应另行验证度量尺度、碰撞几何、未知空间、动态一致性和任务 outcome；渲染指标不能替代这些门禁。若它只用于可视化，应明确标为非行动表示，无需伪装成已通过控制门禁。
+{: .book-claim .claim-recommendation }
 
 ## 12.6 affordance：对象、动作与本体的关系
 
@@ -182,6 +184,7 @@ affordance 不是“杯子”类别的同义词。同一把手对两指夹爪、
 场景图适合表达 `cup-on-table`、`vehicle-in-lane`、`door-connected-room` 等关系。它能支持任务规划，却可能丢失连续几何。实际系统常用稠密 occupancy 处理碰撞，用对象/图处理语义与长程关系，再通过一致的 ID、frame 和时间连接。
 
 `CLAIM-12-06`（fact）：affordance 是状态、动作与本体约束下的关系；物体类别或二维热力图本身不能保证动作可执行。
+{: .book-claim .claim-fact }
 
 ### 12.6.1 Affordance 还包含可达性与后续状态
 
@@ -219,10 +222,13 @@ make ch12-smoke
 *TAB-12-02：`EXP-12-01` 的确定性 CPU smoke。结果由报告脚本生成，不是学习模型 benchmark。*
 
 `CLAIM-12-02`（result）：在 `EXP-12-01` 中，回波后方格子保持 unknown；49 个格子中只有 10 个 free、3 个 occupied，另有 36 个 unknown。
+{: .book-claim .claim-result }
 
 `CLAIM-12-03`（result）：三个 occupied 格整体横移一格后 occupied IoU 从自对齐的 1 降为 0；这说明该 fixture 对一格坐标偏移敏感，不代表所有真实 occupancy 指标都会降为 0。
+{: .book-claim .claim-result }
 
 `CLAIM-12-04`（result）：把 unknown 当 free 会把测试路径判为安全；三态保守查询在更新前因未知拒绝，在动态目标进入路径后因占用拒绝。这个手工例子只验证接口语义，不估计真实误报率。
+{: .book-claim .claim-result }
 
 ### 12.7.1 overall accuracy 会奖励错误的多数类
 
@@ -236,6 +242,7 @@ make ch12-smoke
 *TAB-12-07：`EXP-12-01` v5 的类别与 mask 负对照。两个 predictor 均为手写多数类诊断，不是 learned baseline；评测 mask 排除 unknown 只改变计分分母，不改变规划地图中的 unknown 语义。*
 
 `CLAIM-12-12`（result）：`EXP-12-01` v5 中，all-unknown 在全域取得36/49即73.47% accuracy，observed-only all-free 取得10/13即76.92%，但两者 occupied recall 与 IoU 都为0。该固定三射线网格只证明 overall accuracy 可能掩盖稀少 occupied，不估计真实数据类别比例、模型性能或碰撞风险。
+{: .book-claim .claim-result }
 
 | 可行动性诊断 | 固定结果 | 分母/解释 |
 | --- | ---: | --- |
@@ -247,10 +254,13 @@ make ch12-smoke
 *TAB-12-03：`EXP-12-01` 的证据更新、footprint 与新鲜度反例。footprint 是静态方形离散近似，不是连续车辆或机械臂碰撞器。*
 
 `CLAIM-12-07`（result）：动态回波离开旧格后，fixture 在没有额外清空证据时把旧格恢复为 unknown；只有显式声明射线已穿过旧格时才标为 free。
+{: .book-claim .claim-result }
 
 `CLAIM-12-08`（result）：同一条 3 步路径只检查中心格时安全，但半径 1 格的方形 footprint 扫过 15 个有效格，其中 1 个 occupied、6 个 unknown，保守查询因此拒绝。该结果不代表真实车辆尺寸或连续碰撞率。
+{: .book-claim .claim-result }
 
 `CLAIM-12-09`（result）：fixture 中一条 4 格 free 路径原本安全；其中 1 格的观测年龄超过两步阈值后回退为 unknown，路径被保守查询拒绝。两步是教学参数，不是推荐安全阈值。
+{: .book-claim .claim-result }
 
 ### 12.7.1 Waypoint 安全不等于路径段安全
 
@@ -270,6 +280,7 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 *TAB-12-04：`EXP-12-01` v5 保留的稀疏 waypoint 反例。第二行只修复整数栅格上的跳格，不是连续时间、连续姿态或车辆动力学碰撞检测。*
 
 `CLAIM-12-10`（result）：`EXP-12-01` v5 保留的稀疏路径 `(3,3)→(3,5)` 只检查两个 waypoint 时没有命中 occupied，因允许 unknown 而误判 safe；Bresenham 段栅格化检查三个中心格并检出一个中间 occupied，判为 unsafe。这只验证固定二维整数格的离散路径合同，不证明 continuous collision、转弯扫掠、动态可达性或真实车辆安全。
+{: .book-claim .claim-result }
 
 ### 12.7.2 栅格边界也需要负对照
 
@@ -284,6 +295,7 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 *TAB-12-05：`EXP-12-01` v5 的米制点—栅格边界负对照。它验证本书固定索引合同，不代表任何外部地图实现。*
 
 `CLAIM-12-11`（result）：`EXP-12-01` v5 中，原点左侧 `0.01 m` 的点经 floor 映射到越界 cell `(-1,0)`，而向 0 截断会错误映射到界内 `(0,0)`；`3.5 m` 的上边界映射到 `(7,0)` 并被拒绝。这只验证固定 `0.5 m`、`7×7` 半开栅格的边界合同，不证明 ROS/Nav2、连续碰撞或真实定位行为。
+{: .book-claim .claim-result }
 
 ## 12.8 自动驾驶正文：BEV occupancy、flow 与安全时域
 

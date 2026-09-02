@@ -155,6 +155,7 @@ Real2Sim 不一定从手机扫描重建完整 3D。最小路径可以从已有�
 *TAB-19-04：`EXP-19-01` v4 的相同边际—不同联合支持负对照。support 是两个手工离散点，不是连续相关分布。*
 
 `CLAIM-19-09`（result）：两套各2点的手工 support 具有完全相同的逐参数边际值，逐维范围检查都接受目标，但 crossed support 不包含目标三元组。该结果只证明边际范围不能识别这两个有限联合 support，不估计真实概率质量、相关性、随机化覆盖率、策略鲁棒性或 Sim2Real 性能。
+{: .book-claim .claim-result }
 
 ### 19.5.1 随机化分布定义了策略要对谁稳健
 
@@ -189,12 +190,16 @@ make ch19-smoke
 *TAB-19-02：`EXP-19-01` 的留出动作结果。observation 一致不保证隐藏 state 或参数一致。*
 
 `CLAIM-19-02`（result）：名义参数在留出动作上的 state MAE 为 `0.6625`、observation MAE 为 `0.625`、终态误差为 `1.0`；这些数值只描述固定标量动力学与留出动作，不是物理引擎或 Sim2Real 误差估计。
+{: .book-claim .claim-result }
 
 `CLAIM-19-03`（result）：observation-only 网格搜索在 12 个候选中发现两个零误差 minimizer。非目标解 `(gain=1.0, delay=1, scale=1.0)` 在留出动作上仍有 observation MAE `0`，但 state MAE `0.1625`、终态误差 `0.25`；单靠更换动作序列没有解决乘积混淆。
+{: .book-claim .claim-result }
 
 `CLAIM-19-07`（result）：加入校准 state anchor 后，网格中只剩目标参数一个 minimizer，并在留出动作上得到零 state/observation gap。该结果来自无噪目标参数恰在离散网格，不证明真实系统参数、连续优化或任意传感器组合可辨识。
+{: .book-claim .claim-result }
 
 `CLAIM-19-04`（result）：手工窄随机化范围没有覆盖目标参数，手工宽范围覆盖了目标。它说明 support 应被显式检查，不比较随机化策略性能。
+{: .book-claim .claim-result }
 
 fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量响应只由 `force_gain/(base_load+known_payload)` 决定。在 9 个候选点中，零载荷只能识别这个比值；把同一条零载荷序列重复两次不会增加参数方向。第二条序列将已知载荷改为 `1.0`，才为当前离散网格提供另一条独立约束。
 
@@ -207,6 +212,7 @@ fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量
 *TAB-19-03：多工况校准反例。独立载荷数按 fixture 中不同的已知 payload 值计数，不代表统计独立性或真实实验的有效样本量。*
 
 `CLAIM-19-08`（result）：零载荷校准存在 3 个等价解，重复同一载荷后仍为 3 个；加入第二个不同的已知载荷后，当前 9 点网格只剩目标 `(force_gain=1.0, base_load=1.0)`，而单载荷替代解 `(0.5,0.5)` 在载荷 `1.0` 上的 MAE 为 `0.197916666667`。这是解析标量 fixture 的实验设计反例，不证明两个工况足以辨识一般连续、带噪、接触或时变系统。
+{: .book-claim .claim-result }
 
 结果文件为 `results/ch19/EXP-19-01-smoke.json`。测试还检查非法参数、一步延迟、等价 minimizer、state anchor、校准/留出分离、观测—状态误差归因，以及重复/不同载荷工况的可辨识性。
 
@@ -215,6 +221,7 @@ fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量
 [MJX 官方文档](https://mujoco.readthedocs.io/en/stable/mjx.html) 当前区分 MJX-JAX 和 MJX-Warp：两者功能覆盖、批处理方式和自动微分能力不同；Warp 更接近完整 MuJoCo 功能但不提供自动微分，JAX 仍有缺失特性。把 XML 加载成功不能当作行为等价。
 
 `CLAIM-19-05`（recommendation）：切换 MuJoCo CPU、MJX-JAX、MJX-Warp 或其他求解后端时，应固定模型、初态和动作序列，逐步比较状态、接触、约束、奖励、终止和最终任务结果，再报告吞吐与显存。若差异超过预注册容差或改变任务结论，就不得合并成同一性能比较，应分别报告并把后端视为实验变量。
+{: .book-claim .claim-recommendation }
 
 吞吐测试还必须说明并行环境数、是否渲染、步长、模型复杂度、编译时间是否计入以及硬件。单环境延迟和大批量 steps/s 回答不同问题。
 
@@ -233,6 +240,7 @@ CARLA 用于高保真多相机、天气、城市资产和传感器管线扩展�
 5. reset、路线和终止规则。
 
 `CLAIM-19-06`（recommendation）：驾驶评测先用 MetaDrive 建立便宜、可重复的闭环与失败分类，再按研究问题升级到 CARLA；不得把两个环境的成功率直接拼表。导入真实日志还要检查数据许可，并区分固定回放交通与会响应自车的行为代理。
+{: .book-claim .claim-recommendation }
 
 世界模型生成的视频可补充稀有场景，但不能替代车辆动力学、道路边界和参与者响应。第17章的 learned simulator 结果必须在本章这类独立环境或真实日志锚点上回查。
 

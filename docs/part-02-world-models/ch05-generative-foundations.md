@@ -35,6 +35,7 @@ p(x_{t+1:t+H}\mid x_{\le t}, a_{t:t+H-1}, c),
 - 下游只需要任务充分状态，不必为了“生成式”而重建所有像素。
 
 `CLAIM-05-01`（fact）：生成式预测的共同目标是表达条件数据分布或其可采样近似；VAE、token、自回归、masked、diffusion 和 flow 是不同参数化，架构名称本身不保证物理、动作或闭环有效。
+{: .book-claim .claim-fact }
 
 分布模型也不能只展示一个幸运样本。至少报告 likelihood/校准、mode coverage、条件一致性、多样性、重复性，以及第9章定义的下游用途指标。
 
@@ -179,16 +180,20 @@ make ch05-smoke
 *TAB-05-02：`EXP-05-01` 解析结果。它不是神经生成模型 benchmark。*
 
 `CLAIM-05-02`（result）：固定 fork 中 MSE 最优均值为 0，但距两个观测到的未来都为 1。
+{: .book-claim .claim-result }
 
 `CLAIM-05-03`（result）：显式条件分布保留两个 mode；在完整 fixture 上，条件 NLL 为 0.346574，低于忽略 context 的 0.562335。数字只适用于八个手工样本。
+{: .book-claim .claim-result }
 
 `CLAIM-05-04`（result）：解析 diffusion forward process 在 `alpha_bar=1/0` 返回 data/noise；直线 flow 在 `t=0/1` 返回 noise/data 且速度恒定。这验证公式端点，不比较训练或采样性能。
+{: .book-claim .claim-result }
 
 ## 5.8 条件、latent 与动力学不能混为一谈
 
 模型可能生成逼真图像却忽略动作；也可能 latent rollout 正确但 decoder 不够锐利。应分别检查：条件是否生效、latent 是否保留任务状态、转移是否动作敏感、decoder 是否忠实、自由 rollout 是否漂移。
 
 `CLAIM-05-05`（recommendation）：世界预测实验应至少包含 action/context shuffle、确定性点预测、分布模型、oracle/真实转移和自由 rollout 对照；只比较单帧视觉质量不能证明世界模型用途。
+{: .book-claim .claim-recommendation }
 
 ### 5.8.1 条件相关不等于动作干预
 
@@ -240,6 +245,7 @@ D_{TV}(p,q)=\frac{1}{2}\sum_x |p(x)-q(x)|.
 *TAB-05-03：离散 fixture 的互补诊断。这里的“观察 support”只指八个手工样本，不是真实连续数据分布的完整 support。*
 
 `CLAIM-05-07`（result）：在固定 fixture 中，条件模型跨 `fork/left_only` 的 TV 为 `0.5`，条件忽略模型为 `0`；mode collapse 与虚构 mode 又分别表现为 50% mode recall 和 10% 观察 support 外概率质量。任一单项指标都无法识别全部三类错误。
+{: .book-claim .claim-result }
 
 ### 5.8.3 aleatoric 与 epistemic 不确定性
 
@@ -264,6 +270,7 @@ u(x)=\max_m \hat y_m(x)-\min_m \hat y_m(x),
 *TAB-05-04：ensemble range 的有用拒绝与共同错误假阴性。所有值均为手写教学 fixture。*
 
 `CLAIM-05-08`（result）：固定 range gate 拒绝了成员分歧为 2 的 `diverse_ood`，却接受了三个成员完全一致、ensemble mean 绝对误差仍为 4 的 `shared_error_ood`。该结果只证明低 disagreement 不蕴含正确，也不测量 learned ensemble、OOD 检出率、校准、真实错误相关性或安全性。
+{: .book-claim .claim-result }
 
 v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为2，但 ensemble mean error 为0；于是 score 排序同时包含“低分但错”和“高分但对”。令绝对误差大于1为手工 failure，range 不超过阈值才接受：
 
@@ -276,6 +283,7 @@ v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为
 *TAB-05-05：`EXP-05-01` v4 的四例 disagreement risk–coverage 扫描。failure 标签、误差容差1和阈值均由作者设定，不是总体风险估计。*
 
 `CLAIM-05-09`（result）：固定四例 panel 中，range 阈值0只接受 `shared_error_ood`，coverage 为0.25且接受 failure rate 为1；阈值0.25接受低误差 ID 与共同错误，coverage/risk 为0.5/0.5；阈值2接受全部，coverage/risk 为1/0.5。它只证明该手工排序中收紧 disagreement gate 可降低 coverage 却提高接受错误比例，不能估计 learned ensemble 的 risk–coverage、阈值泛化、OOD 检出率、校准或安全收益。
+{: .book-claim .claim-result }
 
 因此，成员训练数据、初始化、架构和 checkpoint 数量必须登记，且要在冻结的 ID/shift/OOD/stress split 上把 score 与真实错误配对。若所有成员共享数据捷径、标签错误、架构盲点或 simulator bias，它们可能一致地自信犯错；此时仍需覆盖测试、外部 detector、约束检查与真实/高保真后果验证。
 
@@ -288,6 +296,7 @@ v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为
 遮挡车辆可能保持、减速或切入；ego 候选动作也改变未来。驾驶模型应把 ego action、他车行为、地图和信号灯分开条件化，并报告 mode coverage、碰撞/越界、时间一致性和概率校准。采样出多个未来是表达不确定性，不是让控制器随机挑一条。
 
 `CLAIM-05-06`（recommendation）：自动驾驶生成式预测必须区分 aleatoric 多模态与 OOD/模型无知，并把候选未来交给有风险约束的 planner；生成概率不能越过第21章安全网关。
+{: .book-claim .claim-recommendation }
 
 ## 5.10 资源、许可与边界
 

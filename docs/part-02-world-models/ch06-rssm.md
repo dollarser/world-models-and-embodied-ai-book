@@ -70,6 +70,7 @@
 prior 回答“如果只知道过去和动作，我预期现在是什么状态”；posterior 回答“看到新观测以后，我应该怎样修正这个预期”。训练阶段通常两者都存在；真正向未来想象时没有未来观测，只能连续使用 prior。
 
 `CLAIM-06-01`（fact）：RSSM 的 prior 只使用历史状态和动作推进信念，posterior 在此基础上额外使用当前观测进行修正；两者承担的证据角色不同。
+{: .book-claim .claim-fact }
 
 这一区别非常重要：模型可能在每一步都依靠新观测纠错，因此 one-step 指标很好；一旦拿走观测做十步 rollout，误差就开始复合。后续章节讨论模型规划和 Dreamer 时，会反复回到这条边界。
 
@@ -184,6 +185,7 @@ D_{KL}\!\left(q\,\|\,\operatorname{sg}(p)\right)\right)
 `free_nats` 还容易被日志误读：`max(raw_KL, τ)` 会让阈值以下的报告值停在 `τ`，但该常数区的 KL 梯度为零（边界点除外）。因此“KL loss 显示为 1”不能单独证明 prior 与 posterior 仍在被该项拉近，必须同时查看 raw KL、阈值、权重和梯度路由。
 
 `CLAIM-06-05`（fact）：DreamerV3 官方快照 `e3f0224` 的 dynamics/representation KL 在前向计算中数值相同，但 stop-gradient 使二者更新不同参数；`free_nats` 又使阈值以下的 KL 成为常数区。该结论只描述所锁实现，而不是所有 RSSM 或未来 commit 的必备形式。
+{: .book-claim .claim-fact }
 
 ## 6.5 训练数据流与想象数据流
 
@@ -209,6 +211,7 @@ D_{KL}\!\left(q\,\|\,\operatorname{sg}(p)\right)\right)
 只报告第一项，会掩盖模型在规划时真正暴露的问题。
 
 `CLAIM-06-02`（recommendation）：用于规划或 imagined learning 的状态空间模型，至少应分别报告观测修正后的 filtering 误差和关闭未来观测后的 multi-step prior 误差。
+{: .book-claim .claim-recommendation }
 
 ### 6.5.1 一步一致不等于多步充分
 
@@ -276,6 +279,7 @@ make ch06-smoke
 同一协议已冻结为 `benchmarks/BENCH-06-01.json` v3：它除登记31个有效转移、seed 7、四种预测视图、五个 open-loop horizon 与未来观测可见性负对照，还登记两组 categorical posterior/prior、`KL(q‖p)` 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、状态是否从 posterior 重置、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
 
 `CLAIM-06-03`（result）：在 `EXP-06-01` 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
+{: .book-claim .claim-result }
 
 ### 一步 prior 仍可能偷看历史中的未来观测
 
@@ -294,6 +298,7 @@ make ch06-smoke
 同一条 no-reset rollout 的绝对位置误差在 h1/h4/h8/h16/h31 分别约为 `0.0384/0.0503/0.1719/0.2393/0.6010`。这五个点确认代码没有在中途从 posterior 重置，并展示本 fixture 的长时偏离；它不证明误差对所有 horizon 单调增加，也不估计其他 seed、神经模型或真实系统误差。
 
 `CLAIM-06-07`（result）：`EXP-06-01` v3 中，posterior-anchored one-step prior RMSE 为 0.078419，位于 filtering 的 0.060842 与 no-reset open-loop 的 0.333167 之间；后续观测统一偏移 `+1` 后，前两类指标显著改变，而 open-loop RMSE 精确保持 0.333167。这只验证三条代码路径的观测可见性与命名边界，不估计真实 posterior leakage 频率、学习性能或规划价值。
+{: .book-claim .claim-result }
 
 | posterior / prior | raw KL（nat） | `free_nats` 后的 dyn/rep 值 | 权重后总值 |
 | --- | ---: | ---: | ---: |
@@ -303,6 +308,7 @@ make ch06-smoke
 *TAB-06-02：`EXP-06-01` 的解析 KL 阈值反例。权重采用核查日期下官方配置的 dyn=1.0、rep=0.1；数值不包含神经网络或自动微分。*
 
 `CLAIM-06-06`（result）：`EXP-06-01` 中，小失配 raw KL 约为 0.005，在 `free_nats=1` 时进入常数区；大失配 raw KL 约为 1.614，超过阈值。该结果只验证阈值算术，梯度接收方由合同标签表达而非由本实验测量。
+{: .book-claim .claim-result }
 
 ## 6.8 一个必须保留的反例
 
@@ -337,6 +343,7 @@ make ch06-smoke
 驾驶信念状态至少可能需要融合：历史图像、ego speed、yaw rate、方向盘/油门/制动、前车相对速度、遮挡对象的轨迹，以及地图和信号灯状态。动作也必须进入转移：制动会改变下一时刻的 ego motion 和未来观测，不能只把动作当作展示标签。
 
 `CLAIM-06-04`（inference）：在自动驾驶中，单帧 RGB 无法唯一确定闭合速度、遮挡对象轨迹和车辆动态；将历史观测与车辆动作纳入信念状态，是预测制动和变道后果的必要建模步骤，但仍需第9章的闭环协议验证是否足够。
+{: .book-claim .claim-inference }
 
 本章不要求安装驾驶仿真器。第19章才用 MetaDrive 做 S/M 档闭环决策实验，并将 CARLA 保留为 L2 高保真选做项。
 

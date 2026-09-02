@@ -65,6 +65,7 @@ flowchart LR
 这里的“真实环境锚点”是相对于 learned world model 的独立参照：S/M 档可以用锁定规则、未参与训练的物理仿真或既有合法日志，不要求购置硬件；但这些只能支撑对应层级的声明。若声称真实机器人或道路效果，最终锚点仍必须来自相应真实系统，仿真结果不能改名为 real-world result。
 
 `CLAIM-17-01`（fact）：五类用途共享预测模型，却不共享完成标准；表征 probe、生成质量、交互稳定性、规划 return 和安全漏检率不能互相替代。
+{: .book-claim .claim-fact }
 
 ### 17.1.1 世界模型的价值是用途相对的
 
@@ -124,6 +125,7 @@ flowchart LR
 [官方仓库快照 `077e10a`](https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834)明确说明当前 code release 聚焦 world-model component，包含多视角 A2World inference、history-aware A2World-sim、LIBERO 转换/全量微调和 rollout；它没有把 A2World-policy 列入当前代码发布。仓库源码是 Apache-2.0，但 A2World checkpoint 是 NVIDIA Cosmos 衍生模型，按仓库内 NVIDIA Open Model License 管理；`world_model/README.md` 的全量微调示例还使用 `GPUS=8`。本书只完成零下载源码审计，既没有得到 24 GB 单卡/2×80 GB 可行证据，也没有运行模型。
 
 `CLAIM-17-09`（fact）：A2World 论文把同一个 action-to-video 预训练先验分别适配为 A2World-sim 与 A2World-policy，而官方仓库快照 `077e10a` 明确把当前代码发布限定在 world-model/A2World-sim 侧；这一事实只描述论文架构和已发布资产范围，不证明两种能力已由本书复现、同等开放或可用同一指标验收。
+{: .book-claim .claim-fact }
 
 ## 17.5 用途四：规划、奖励或 critic
 
@@ -147,6 +149,7 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 安全反事实询问：“若执行候选动作，未来是否越界、碰撞、失稳或进入不可恢复状态？”它需要动作条件预测、足够 horizon、风险事件召回和不确定性处理。对稀有事件，平均误差很低也可能漏掉唯一危险模式。
 
 `CLAIM-17-03`（recommendation）：用于规划或安全筛选的世界模型必须在候选策略诱导分布上报告动作条件转移、return/风险 gap、OOD 与漏检；高平均预测准确率不能单独授权执行。
+{: .book-claim .claim-recommendation }
 
 世界模型只能增加一道预测性检查。硬范围、碰撞几何、速度/力限制、watchdog、急停和最小风险动作仍由独立安全层执行。若模型间分歧大、输入过期或场景超出覆盖范围，应拒绝、减速或转入保守控制，而不是继续生成更自信的视频。
 
@@ -159,6 +162,7 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 [WorldEval](https://arxiv.org/abs/2505.19017) 和 [WorldGym](https://arxiv.org/abs/2506.00613) 研究用视频世界模型运行或排序机器人策略；WorldGym 的官方仓库提供 OpenVLA、Octo、SpatialVLA 和 RT-1-X runner `[A/O,R1]`。这是一条重要的降本路线，但应视为代理评测，不列入前五类“帮助策略学习/执行”的主路径。
 
 `CLAIM-17-04`（inference）：世界模型中的策略排序与真实排序相关，只支持其已验证任务、策略族和协议中的筛选用途；相关性不能校准绝对成功率，也不能替代新策略、OOD 场景和最终安全评测。
+{: .book-claim .claim-inference }
 
 代理评测至少包含三段误差：策略动作是否按正确 schema 注入、世界模型 rollout 是否保持动作条件动力学、自动/VLM outcome scorer 是否正确判定成功与失败。[WorldGym 官方 runner](https://github.com/world-model-eval/world-model-eval) 同时打包 diffusion world model、多个 policy runner 和自动 VLM scoring；最终相关性是三段误差的合成，不能只归因于“world model quality” `[O,R1]`。
 
@@ -180,6 +184,7 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 `EXP-17-01` v6 给四段各注入一个确定性故障。全正确 oracle 保持 `safe_route`、Spearman 为 `1`、regret 为 `0`；action-grounding 故障把安全策略错误注入为 shortcut，代理改选 `idle`，真实 regret 为 `1.05`。更关键的是，transition 把碰撞预测成 goal、decoder 把 collision 解码成 goal、scorer 把 collision 直接打成 `1.0` 时，三者产生完全相同的最终三策略分数、都选择 `phantom_shortcut`，Spearman 都为 `-0.5`、真实 regret 都为 `1.85`。只有检查中间的 predicted terminal 与 decoded terminal 才能定位故障段。
 
 `CLAIM-17-10`（result）：在 `EXP-17-01` v6 的单故障四段管线中，transition、state decoder 和 outcome scorer 三个不同故障产生相同最终代理分数与错误策略选择；因此端到端相关性、成功分或 regret 不能单独归因到某个组件。该结果只证明固定 corridor 中的不可辨识反例，不给出真实组件故障率、误差独立性或可加总的统计预算。
+{: .book-claim .claim-result }
 
 ### 17.7.2 相关性必须面向模型冻结后的新策略
 
@@ -199,6 +204,7 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 `EXP-17-01` v6 先只看 `safe_route/idle` 两个 calibration policy：世界模型对它们的 return 完全正确，Spearman 为 `1.0`、最大 gap 为 `0`。模型冻结后才加入从未进入 calibration 的 `phantom_shortcut`；三策略 Spearman 立刻变为 `-0.5`，代理选中真实碰撞策略，regret 为 `1.85`。两策略上的 `ρ=1` 本身极不稳定，这正是不能把小型回顾性 panel 包装成泛化证书的原因。
 
 `CLAIM-17-11`（result）：`EXP-17-01` v6 的两策略 calibration panel 具有 Spearman `1.0` 和零 return gap，但加入一个不相交 held-out policy 后，prospective 排序变为 `-0.5` 并选中真实碰撞策略；因此冻结 panel 上的完美回顾性相关不蕴含对新策略的排序有效性。该结果只验证三个手工策略的 split 机制，不估计 learned simulator 对真实新策略的失败概率。
+{: .book-claim .claim-result }
 
 代理评测要预注册真实性锚点：至少保留一组未用于训练世界模型或 scorer 的独立仿真/硬件 episode，报告 Pearson/Spearman、逐策略偏差、置信区间、错误排序、失败视频、scorer confusion matrix 和新增策略后的校准漂移。策略数量很少或分数并列时，Spearman 必须使用平均秩并报告区间；全体分数相同则相关系数未定义，不能记成零。若只公布相关性最高的子集，就无法判断筛选器何时失效。
 
@@ -241,6 +247,7 @@ make ch17-smoke
 *TAB-17-01：`EXP-17-01` 的模型 gap 与策略排序。固定规则用于说明接口，不是 learned simulator benchmark。*
 
 `CLAIM-17-02`（result）：`EXP-17-01` 的学习模型单步一致率为 `8/9`，却把真实最优 `safe_route` 排在乐观捷径之后；模型所选策略在真实规则中碰撞，排序 Spearman 为 `-0.5`，exploitation regret 为 `1.85`。该结果只验证手工 corridor 中的模型利用机制，不估计学习式世界模型的真实碰撞率。
+{: .book-claim .claim-result }
 
 这个反例不是说 88.89% 必然不够，而是说明错误权重取决于策略访问频率和后果。安全关键转移应分桶、加权并做压力测试，不能被大量容易的 `wait/advance` 样本稀释。
 
@@ -256,10 +263,13 @@ make ch17-smoke
 *TAB-17-05：`EXP-17-01` v6 的等均匀准确率—异决策后果负对照。访问次数只针对三个固定候选策略从固定初态产生的 query；它不是总体 occupancy 或未来 planner 分布。*
 
 `CLAIM-17-12`（result）：`EXP-17-01` v6 的两个单故障模型在同一9格 transition panel 上均为8/9正确，但错误落在当前候选可达 shortcut 时，模型选择碰撞策略且 regret 为1.85；错误落在当前 panel 不访问的 `(3,wait)` 时，仍选择真实最优且 regret 为0。该结果只证明均匀准确率不能识别这个固定候选集下的错误位置与决策后果；不表示 `(3,wait)` 对其他初态、策略、planner 或部署分布安全，也不估计真实 occupancy、严重度或故障率。
+{: .book-claim .claim-result }
 
 `CLAIM-17-07`（result）：在 fixture 的 support 外设置中，gate 拒绝唯一未覆盖的 `phantom_shortcut`，从剩余两个策略选中 `safe_route`，使真实 exploitation regret 从 `1.85` 降为 `0`。这是手工已知 support 的机制对照，不证明 learned OOD estimator 校准。
+{: .book-claim .claim-result }
 
 `CLAIM-17-08`（result）：保持世界模型、策略和真实规则不变，只把 `(position=0, shortcut)` 加入手工 support 后，gate 接受全部三个策略，仍选中真实会碰撞的 `phantom_shortcut`，exploitation regret 保持 `1.85`。该负对照只证明 coverage membership 不能发现 support 内模型错误，也不估计真实数据覆盖质量或 learned uncertainty 的失效率。
+{: .book-claim .claim-result }
 
 ## 17.9 五类用途的验收矩阵
 
@@ -284,8 +294,10 @@ coverage gate 的分母也要明确：按单步 state-action、完整 action chu
 同样的总体 transition error 可以落在停车场低速等待，也可以落在高速切入、行人横穿或规划器反复查询的候选轨迹上。驾驶评测至少应同时报告固定基准分布、当前策略 occupancy、候选规划器 query 分布和风险严重度分层；其中任何一层的加权指标都依赖已冻结策略与 ODD，策略更新后必须重新估计，不能把一次“低访问错误”永久标成低风险。
 
 `CLAIM-17-05`（recommendation）：自动驾驶使用世界模型时，应为场景生成、驾驶 rollout、规划代价和稀有事件验证分别登记数据、horizon、动作合同和真实性锚点；任何一类通过都不能授权另一类用途。
+{: .book-claim .claim-recommendation }
 
 `CLAIM-17-06`（recommendation）：驾驶与机器人数据扩充应优先审查当前策略可达、模型过度乐观且后果严重的状态，而不是只按平均预测误差排序；选择协议需要同时登记可达性、不确定性、风险与覆盖成本。
+{: .book-claim .claim-recommendation }
 
 ## 17.11 资源、开源与许可路线
 

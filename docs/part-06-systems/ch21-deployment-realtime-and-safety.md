@@ -34,6 +34,7 @@ L_{e2e}=L_{sensor}+L_{transport}+L_{pre}+L_{infer}+L_{post}+L_{queue}+L_{actuato
 只测 `L_infer` 会漏掉图像解码、网络、排队、后处理和执行器。更重要的是，实时系统关心 deadline 是否被满足；一次 150 ms 卡顿不会因为其余五次很快而消失。
 
 `CLAIM-21-01`（recommendation）：吞吐、单次推理延迟和端到端控制 deadline 应作为不同指标报告；部署记录至少应包含测量边界、warm-up、并发、批量、输入尺寸、硬件、频率、尾分位和 deadline miss。
+{: .book-claim .claim-recommendation }
 
 小样本的 p95/p99 很粗糙，仍应保留原始逐周期数据。正式测试要说明分位数定义，并报告 max、miss 连续长度和最坏时发生了什么。相同 miss rate 可能是一串连续超时，也可能是相隔很远的孤立超时；前者更可能耗尽 action queue 或触发 watchdog。平均 FPS 和单个 miss rate 都不能完整表达抖动、burst 与队列饥饿。
 
@@ -96,6 +97,7 @@ Fail-closed 能防止未知命令继续执行，却可能让系统频繁停止�
 异步系统还必须冻结队列策略：FIFO 会保序但可能执行陈旧 chunk，latest-wins 会丢工作并改变动作连续性，重叠融合则要求 action index、观测版本和 prefix 对齐。队列“非空”只说明还有数值，不说明这些数值由足够新的观测生成；反过来，最新 chunk 已计算完成也不代表它在目标 start step 前到达。
 
 `CLAIM-21-04`（recommendation）：异步推理必须同时监控 action queue 深度、观测年龄、chunk 起止步、网络/推理 latency 和连续 fallback 次数；“控制线程未阻塞”不能证明动作仍新鲜。
+{: .book-claim .claim-recommendation }
 
 ### 21.3.1 队列稳定性与动作有效性是两道门
 
@@ -134,6 +136,7 @@ make ch21-smoke
 *TAB-21-01：`EXP-21-01` 固定延迟。没有测量墙钟或调度器。*
 
 `CLAIM-21-02`（result）：fixture 的 mean 为 45 ms，看似通过 50 ms deadline，但 p95/max 为 150 ms，六个周期中一个 miss。它只证明均值可能隐藏尾部失败。
+{: .book-claim .claim-result }
 
 | packet | 网关结果 | 原因 |
 | --- | --- | --- |
@@ -148,6 +151,7 @@ make ch21-smoke
 *TAB-21-02：七个固定 packet 的网关原因码。fallback 标签不是执行器命令。*
 
 `CLAIM-21-03`（result）：七个 packet 中只有健康包通过，六种注入分别产生唯一原因码并进入 fallback。该结果验证网关实现，不估计真实系统故障率或安全性。
+{: .book-claim .claim-result }
 
 结果保存在 `results/ch21/EXP-21-01-smoke.json`；36 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系、授权序列长度/类型错误、跳过 `operating` 的生命周期、含糊状态机配置、非法 receipt、重复 case ID、非有限后果权重、未知接受 ID，以及缺失/错步/错维度、schema/单位/频率/ack/session/boot 错配的前序已执行动作；命令审计另区分精确重试、同 ID 改写、倒序和显式新 epoch。第15章另以第19项测试确认两章导入同一共享 schema 对象。
 
@@ -172,6 +176,7 @@ make ch21-smoke
 *TAB-21-07：静态端点与相邻步跃迁负对照。单位和字段来自共享教学 schema；数值仍是作者设定的 fixture，不是机器人或车辆限值。*
 
 `CLAIM-21-15`（result）：`EXP-21-01` v11 中，两个当前动作都通过同一 `mobile-base-v1` 静态范围；绑定前序 `(0,0)` 后，`(0.2,-0.1)` 的逐字段变化 `(0.2,0.1)` 均不超过 `0.25/step` 而允许，`(0.4,-0.1)` 因线速度变化 `0.4>0.25 m/s/step` 而拒绝；缺少前序记录也拒绝。该结果只验证共享 schema 下状态化门禁的原因码和 fail-closed 接线，不证明执行器 ack 可信、真实加速度/jerk 合法、动力学可行、跟踪稳定或安全。
+{: .book-claim .claim-result }
 
 当前 packet 与前序记录都携带 `schema_id/frame_id/field_names/units/control_hz/clock_id/command_session_id/executor_boot_id/command_id`。前序记录还携带 `acknowledged_command_id`；只有它等于该记录的 `command_id`、前序命令早于当前命令、步号紧邻且两侧身份都匹配同一共享 schema、生产者会话和执行器启动 epoch，才计算逐字段变化。六个单字段负对照保留独立原因：
 
@@ -187,6 +192,7 @@ make ch21-smoke
 *TAB-21-08：共享 schema 与前序执行身份的单字段负对照。字段均为手工构造，没有认证或防篡改。*
 
 `CLAIM-21-16`（result）：`EXP-21-01` v11 的六个身份负对照分别以 `schema_mismatch`、`previous_unit_mismatch`、`previous_control_rate_mismatch`、`invalid_applied_action_ack`、`previous_command_session_mismatch` 和 `previous_executor_boot_mismatch` 拒绝，没有退化成同一个“动作异常”。这只验证第15/21章共享代码来源、epoch 绑定和原因码，不证明文本/数值身份真实、ack 来自执行器、跨进程状态原子持久化、通信完整性或控制安全。
+{: .book-claim .claim-result }
 
 [Autoware Velocity Smoother 官方文档](https://autowarefoundation.github.io/autoware_core/main/planning/autoware_velocity_smoother/)把速度、加速度、jerk、横向加速度和转向角速度列为不同约束，并在初始状态中使用当前或上一规划值 `[O,R1]`；这支持“跨点约束需要状态且必须保留量纲”的工程模式，但不为本书的 `0.25` 教学阈值背书。真实 profile 应按动作单位、控制周期、执行器动态与运行域分别标定限制，并用仿真、封闭场地和目标硬件逐级验证。
 
@@ -224,6 +230,7 @@ K=(\text{command\_session\_id},\ \text{executor\_boot\_id},\ \text{command\_id})
 *TAB-21-10：恢复出的内存 ledger 结构负对照。损坏值均由作者手工构造，没有读取磁盘、WAL 或数据库。*
 
 `CLAIM-21-17`（result）：`EXP-21-01` v11 中，首次 command8 产生一条回执；完全相同的重试返回缓存回执且 ledger 仍只有一条记录；action 改写与有效期改写都成为 identity conflict，倒序、错误 session 和错误 boot 保留独立状态；显式新 session/boot 的 command0 才被接受。另有五种手工恢复状态全部在返回缓存回执前 fail closed。回执里的 SHA-256 只是确定性 envelope 比较值，不是签名、存储校验和或发送者认证。这验证单进程内存状态转移与结构校验，不证明数据库事务、WAL 恢复、存储完整性、并发线性化、崩溃恢复、回执认证或物理副作用恰好一次。
+{: .book-claim .claim-result }
 
 [ROS 2 Actions 设计](https://design.ros2.org/articles/actions.html)用 client 生成的 UUID 关联 goal，并明确要求 action server 处理潜在并发碰撞 `[O,R1]`；[AUTOSAR E2E Protocol R25-11](https://www.autosar.org/fileadmin/standards/R25-11/FO/AUTOSAR_FO_PRS_E2EProtocol.pdf)列出 sequence/alive counter、Data/Source ID、request/response type 与 timeout，用于发现重复、丢失、乱序、错配和超时 `[O,R1]`。两者支持“身份、序号和状态机必须共同设计”，但都不为本书 fixture 或实体设备 exactly-once 背书。
 
@@ -250,8 +257,10 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 尤其不能把 ensemble agreement 当成“安全通过”。第5章的手写负对照中，三个成员共同错 4 时 range 恰为 0；如果第21章只消费这个 score，就会把相关错误排在低不确定性端。部署日志因此还应绑定成员清单、训练/数据谱系与 estimator revision，并用独立约束、coverage/OOD 测试和实际 fallback 后果寻找 score 的共同盲区。
 
 `CLAIM-21-07`（result）：固定选择性执行 fixture 中，把阈值从 `0.5` 放宽到 `0.7`，coverage 从 `0.5` 增至 `0.666667`，接受样本 failure rate 从 `0` 增至 `0.25`，拒绝捕获的 failure 比例从 `1.0` 降至 `0.666667`。它只验证指标语义，不是 estimator 性能。
+{: .book-claim .claim-result }
 
 `CLAIM-21-08`（recommendation）：任何 uncertainty/OOD 执行门都应锁定分数定义、方向、估计器与校准版本，在独立 split 上报告 risk–coverage 和 fallback 后果；单个阈值、AUROC 或“高置信”标签不能单独授权动作。
+{: .book-claim .claim-recommendation }
 
 ### 21.4.4 相同失败率，不同严重度后果
 
@@ -269,12 +278,14 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 若 `w_i` 是预先登记且有来源的后果量，可以同时报告接受失败后果 `\sum_{i\in A}w_i\ell_i` 和按后果权重的拒绝召回 `\sum_{i\notin A}w_i\ell_i/\sum_iw_i\ell_i`。但当权重只是无外部标定的任意代理量时，不能把它汇总成“预计伤亡”或跨场景比较的单一风险值；应保留原始 failure type、场景/道路使用者/速度分桶、计数与权重来源。若高严重度分桶没有足够暴露、标签不可靠，或 fallback 后果未闭环验证，应停止部署外推并回到仿真、封闭场地或人工审查，而不是用总体 failure rate 放行。
 
 `CLAIM-21-14`（result）：`EXP-21-01` v11 的两个严重度负对照具有相同 `0.666667` coverage、`0.25` 接受失败率和 `0.5` 按个数拒绝召回，但接受失败 authored weight 分别为 `1` 与 `10`，按权重拒绝召回分别为 `0.909091` 与 `0.090909`。它只证明聚合计数可能隐藏手工后果差异，不估计真实事故概率、伤害、成本、门禁性能或安全性。
+{: .book-claim .claim-result }
 
 ### 21.4.5 相同 miss rate，不同故障形状
 
 fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80,20,20 ms`。两者 mean 都是 `40 ms`，deadline miss 都是 `2/6`，p95/p99/max 都是 `80 ms`；唯一变化是连续 miss 最大长度分别为 `2` 和 `1`。
 
 `CLAIM-21-09`（result）：`EXP-21-01` v11 的 burst/scattered 对照证明 mean、尾分位、max 和 miss rate 完全相同时，连续 deadline miss 长度仍可不同。该结果只验证日志字段必要性，不估计真实调度 burst。
+{: .book-claim .claim-result }
 
 ### 21.4.6 异步队列：有 action 也可能不可执行
 
@@ -287,6 +298,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 机械臂“保持位置”可能在夹持重物时过热，在接触任务中继续施力；移动底盘急停可能打滑；车辆在弯道冻结转向再制动可能偏离车道。fallback 应由 hazard analysis、当前状态、可用子系统和运行设计域决定。
 
 `CLAIM-21-05`（recommendation）：网关只选择针对当前本体和场景预先验证的降级模式，例如 hold、controlled stop、退回安全位、请求人工或 minimum-risk maneuver；模式必须有进入条件、独立控制器、完成/失败条件和恢复规则，不能由语言模型临时生成。若当前状态没有可达且已验证的降级模式，系统应拒绝激活或退出该运行域，而不是任意选择一个名称相似的 fallback。
+{: .book-claim .claim-recommendation }
 
 至少区分：传感器旧但低层控制健康、策略超时、动作非法、定位丢失、通信中断、执行器故障和安全层自身故障。不同原因可能需要不同降级，连续失败还应升级而非无限重试。
 
@@ -303,8 +315,10 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 *TAB-21-03：同一健康序列的重新激活负对照。状态和授权信号均为手工 fixture，不是 MRM 完成证据。*
 
 `CLAIM-21-10`（result）：仅健康迟滞分支验证了“连续三次失败升级、连续两次健康恢复”的计数合同，一次瞬时健康不会造成 mode flapping；但它会在第二个健康包后自动重新激活，因而不是充分的恢复合同。
+{: .book-claim .claim-result }
 
 `CLAIM-21-11`（result）：在相同七步健康序列上，仅健康对照在第 5 步恢复 `policy_action`；授权感知分支同步保持 `request_operator` 并记录 `reactivation_not_authorized`，到第 6 步授权为真才恢复。该结果只验证两个信号在确定性状态机中被分离，不证明 fallback 完成、operator 可用、授权真实有效或重新激活安全。
+{: .book-claim .claim-result }
 
 ### 21.5.1 完成、失败和授权是三个不同事件
 
@@ -324,6 +338,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 *TAB-21-04：fallback 完成、超时/失败与重新激活授权的固定负对照。未执行 MRM 或实体安全检查。*
 
 `CLAIM-21-12`（result）：固定生命周期 fixture 中，成功路径在第 2 步报告 `succeeded` 仍因未授权而拒绝，第 3 步才重新激活；过早授权路径在第 3 步超时锁定为 `failed`，迟到的 `succeeded` 也不能清除已锁定超时，显式失败路径的重新激活计数同样为 0。该结果只验证状态转移、超时锁定和授权合取，不验证完成检查器、物理可达性、车辆安全状态或备用 MRM 切换。
+{: .book-claim .claim-result }
 
 ### 21.5.2 授权不是一个长期有效的布尔值
 
@@ -345,6 +360,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 *TAB-21-05：重新激活 receipt 的固定绑定、时效和单次消费负对照。字符串身份与内存集合均为手工 fixture。*
 
 `CLAIM-21-13`（result）：`EXP-21-01` v11 的九个手工 receipt 中仅一个新鲜且完整绑定的 `approved` receipt 通过，其余八个因重放、时间窗、run/target、声明 approver、决定或序号错误被拒绝。该结果只验证纯函数字段合同和单进程内存状态；文本 approver ID 未经认证，receipt 没有签名、防篡改、撤销、持久化或并发原子性，也不证明 fallback 完成或重新激活安全。
+{: .book-claim .claim-result }
 
 生产实现还需要可信身份来源、完整性保护、持久化去重/撤销、并发消费原子性、时钟故障策略、审计日志与 least-privilege policy。即使 receipt 合法，也只能作为“授权”谓词；它不能替代 `succeeded`、车辆/机器人当前安全状态、队列与时钟重同步以及所有其他 profile-specific 恢复门。
 
@@ -384,6 +400,7 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 [Autoware Universe 快照 `af47e1e`](https://github.com/autowarefoundation/autoware_universe/tree/af47e1e26cfb40240439f3876fee0356bb4a1c75)包含 operation mode、command gate、diagnostics 和 minimum-risk maneuver 相关组件 `[O,R1]`。其 [operation mode transition manager 文档](https://github.com/autowarefoundation/autoware_universe/blob/af47e1e26cfb40240439f3876fee0356bb4a1c75/control/autoware_operation_mode_transition_manager/README.md)明确区分 `IN TRANSITION` 与 `COMPLETED`：切换完成前仍由原 operator 负责控制，组件还要检查 transition completion；如果在 `transition_timeout` 内未完成，则视为 transition failure `[O,R1]`。command-mode 文档又区分 emergency stop、comfortable stop 与尚未支持的 pull over。这个结构支持本章的核心边界：模式请求、过渡责任、可用性和完成确认是不同状态，不能把一个 `fallback` 字符串当作 MRM 已成功。
 
 `CLAIM-21-06`（recommendation）：自动驾驶降级应按故障可用性选择减速、保持车道、受控停车、靠边、远程/人工接管或其他 MRM，并在直道、弯道、低附着、密集交通和传感器组合故障中闭环验证；不得用单一零控制向量代表安全。
+{: .book-claim .claim-recommendation }
 
 实际道路安全、法规和认证属于高风险专业工作。本书给的是研究与工程证据结构，不替代 ISO 26262、ISO 21448、网络安全、当地法规或组织安全流程。
 

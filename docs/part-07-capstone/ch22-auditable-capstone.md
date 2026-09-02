@@ -33,6 +33,7 @@
 例如：“在固定扰动 corridor 中，replanning 是否比执行旧 action suffix 降低真实 simulator return gap，且不超过 50 ms deadline？”这句话允许失败，也能决定需要哪些资产。
 
 `CLAIM-22-01`（recommendation）：综合项目必须先冻结研究问题、唯一主变量、最低基线、独立评测和停止条件，再选择模型；模型名不能替代可证伪假设。
+{: .book-claim .claim-recommendation }
 
 ### 22.1.1 四种主张需要四种证据
 
@@ -102,6 +103,7 @@ flowchart LR
 基线失败也要保存。若简单规则已经达到任务上限，应增加有意义难度或缩小研究主张，而不是隐藏基线。若目标方法只提高 model-only metric、外部 outcome 不变，结论应写“改善代理指标”，不能写“改善控制”。
 
 `CLAIM-22-03`（recommendation）：项目结果表必须把训练数据/步数、动作 schema、候选预算、评测 seed 和资源对齐；任何未对齐差异都进入 confounder 列，而不是靠模型名称解释。
+{: .book-claim .claim-recommendation }
 
 ### 22.3.1 对照的目的不是让表格更完整
 
@@ -128,6 +130,7 @@ flowchart LR
 *TAB-22-02：综合项目必交物。项目规模可以小，追溯字段不能省。*
 
 `CLAIM-22-04`（fact）：一个结果只有在代码/配置、数据版本与切分、环境、结构化输出和声明作用域共同可追溯时，才进入本书证据链；存在 checkpoint 或视频不满足这个条件。
+{: .book-claim .claim-fact }
 
 ### 22.4.1 Provenance 保证身份链，不保证真理
 
@@ -166,8 +169,10 @@ make ch22-smoke
 *TAB-22-03：`EXP-22-01` v5 固定审计结果。fixture 在内存中重算文本 payload 的 SHA-256，并运行受限标准库子进程；没有遍历真实项目目录、重建环境或运行模型，也不证明研究正确、许可有效或系统安全。*
 
 `CLAIM-22-02`（result）：完整固定包得到 0 issue；无效包得到 24 个具名 issue，包括四种 train–eval 身份重叠、artifact 缺失或 claim binding 非法、执行回执缺失、3×80 GB 与 L2 不匹配、GPU 结果未验证、trace 缺失、评测不独立且未冻结、驾驶指标与 safety gateway 缺失。该结果只验证标准库 fixture 的项目包审计路径。
+{: .book-claim .claim-result }
 
 `CLAIM-22-08`（result）：`EXP-22-01` v5 的完整包校验 5 个 `uri + sha256 + producer_stage + claim_ids` binding；篡改 `results.json` 的 payload 会触发 `artifact_digest_mismatch:result`，错误 producer 或非规范 claim 会触发 `invalid_artifact_binding`。这只证明固定 payload 与登记摘要一致，不是科学复现徽章。
+{: .book-claim .claim-result }
 
 | probe | exit code | stdout digest | 状态 |
 | --- | ---: | --- | --- |
@@ -178,6 +183,7 @@ make ch22-smoke
 *TAB-22-06：本地 reproduction probe 的三条执行路径。只允许 JSON argv 形式的 `python3`，不经过 shell；stdout 是固定字符串，不是模型结果。*
 
 `CLAIM-22-11`（result）：`EXP-22-01` v5 实际启动三个固定本地子进程；只有 exit 0 且 stdout SHA-256 与结果 artifact 一致的路径记为 `reproduced`，同一输出面对错误预期摘要得到 `stdout_digest_mismatch`，显式 exit 3 得到 `nonzero_exit`。项目包另要求手工 receipt 同时绑定 command/result URI、两端 digest、exit code 与 stderr 字节数。这只验证受限 CPU fixture 的执行和字段一致性，不证明命令安全、环境可重建、依赖完整、receipt 可信、模型运行、科学结论复现或独立 replication。
+{: .book-claim .claim-result }
 
 | 分区 | 只允许承担的角色 | 必填且与另外两区互斥的集合 |
 | --- | --- | --- |
@@ -188,6 +194,7 @@ make ch22-smoke
 *TAB-22-05：项目包的三分区 × 四身份维度合同。集合互斥只证明已登记身份没有交集，不证明上游相似度方法完备、数据统计独立或场景真正分布外。来源：本书原创，MIT，2026-09-02。*
 
 `CLAIM-22-10`（result）：`EXP-22-01` v5 要求 train/selection/eval 各登记四类非空且内部无重复的身份集合；三个保持 group 不同的回归反例分别以 source asset、精确内容和近重复簇重叠触发拒绝，selection 与另外两区的来源重叠也会被拒绝。该结果只验证项目包内已登记集合与失败代码，不读取媒体、不发现未知近重复，也不证明统计独立。
+{: .book-claim .claim-result }
 
 资源检查按档位而不是全局阈值解释：S/M 不声明 GPU，L1 最多 1×24 GB，L2 最多 2×80 GB；因此 1×80 GB 或 2×80 GB 可属于 L2，而 1×25 GB 不能冒充 L1，3×80 GB 也不能冒充 L2。这不是说方法在其他环境不可运行，只表示它不能被包装成本书对应档位。
 
@@ -216,12 +223,15 @@ make ch22-smoke
 *TAB-22-04：自动驾驶 capstone 的五段证据 trace。表中入口均是本书 S 档接口 fixture；它证明依赖可追踪，不证明模型、仿真或车辆已经端到端运行。*
 
 `CLAIM-22-07`（result）：`EXP-22-01` v5 的完整包包含五个具名 trace stage 并通过 0 issue 审计；删除独立评测阶段会触发 `traceability_incomplete`，章节号与 `EXP/BENCH` ID 不一致、revision 为空、method stage 错连到第20章或依赖错误都会触发对应 `invalid_trace_stage`。这是证据图合同测试，不是闭环性能结果。
+{: .book-claim .claim-result }
 
 训练、model selection 和最终闭环 evaluation 必须按 route/scene 分组隔离，并继续检查 raw source、精确内容和已知近重复簇；相邻帧随机切分无效，重命名的同源 test log 也不能用于选 checkpoint、阈值或 prompt。[NeurIPS reproducibility checklist](https://blog.neurips.cc/2021/03/26/introducing-the-neurips-2021-paper-checklist/)强调提交训练与评测细节、代码/数据/指令和限制；在本书项目合同中，评测协议还必须在看最终结果前冻结，并绑定独立 evaluator artifact。碰撞、道路边界、动作范围、时效和最小风险停车由带 trace、失败记录和 fallback modes 的独立 gate 检查，不能被路线 reward 抵消。
 
 `CLAIM-22-09`（recommendation）：最终评测必须与训练和选择数据隔离，在查看最终结果前冻结协议，并绑定独立 evaluator artifact；安全门必须绑定部署 trace、失败记录与具体 fallback mode。一个 `independent=true` 或 `safety_gateway=true` 布尔值不足以形成审计证据。
+{: .book-claim .claim-recommendation }
 
 `CLAIM-22-05`（recommendation）：驾驶综合项目只有在独立闭环 route/seed、碰撞/干预/路线指标、失败注入、尾延迟和最小风险 gate 同时登记后，才能声称完成研究闭环；仍不能据此声称道路部署安全。
+{: .book-claim .claim-recommendation }
 
 ## 22.7 阶段、提交与停止规则
 
@@ -271,6 +281,7 @@ S 档 capstone 可以在无 GPU 条件下完整表达研究问题、接口与证
 本书的当前活页入口是[研究雷达](../research-radar.md)，机器源为仓库根目录下的 `specs/research-radar.json`。前者面向读者解释近期趋势和证据缺口，后者约束一手来源、revision、章节归属、资产开放度、复现状态、资源路径、不可外推边界与复核触发器。两者都不能把作者报告的性能升级为本书 `result`。
 
 `CLAIM-22-06`（recommendation）：维护在线书时，应让稳定章节结构慢更新、案例卡和研究雷达快更新；新论文不能因“更新”二字跳过证据、资源、许可与复现审计。
+{: .book-claim .claim-recommendation }
 
 知识更新要区分新名称、新实现和新原理。一个新模型可能只替换 backbone 或扩大数据，并未改变稳定概念；一个小型工作也可能通过新反例改变我们对指标有效性的认识。正文应围绕经得住版本变化的问题结构，案例则说明这些结构在当前系统中如何实现。
 

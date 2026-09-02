@@ -1,0 +1,32 @@
+.md-typeset p.book-claim {
+  margin-block: 1rem;
+  padding: 0.55rem 0.75rem;
+  border-inline-start: 0.15rem solid var(--md-default-fg-color--lighter);
+  background: var(--md-code-bg-color);
+}
+
+.md-typeset p.book-claim > code:first-child {
+  padding: 0.08rem 0.3rem;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  background: transparent;
+}
+
+.md-typeset p.claim-fact,
+.md-typeset p.claim-inference {
+  border-inline-start-color: var(--md-primary-fg-color--light);
+}
+
+.md-typeset p.claim-result,
+.md-typeset p.claim-recommendation {
+  border-inline-start-color: var(--md-accent-fg-color--transparent);
+}
+
+@media print {
+  .md-typeset p.book-claim {
+    break-inside: avoid;
+    background: transparent;
+  }
+}

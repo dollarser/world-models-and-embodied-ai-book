@@ -58,6 +58,7 @@ flowchart LR
 其中 `M` 是目标 token，`i` 携带目标位置，`sg` 表示停止梯度。距离、归一化、目标编码器更新和 mask 形状都属于实验定义，不能只写“feature loss”。
 
 `CLAIM-10-01`（fact）：JEPA 类方法预测目标区域的表示而不是直接重建其像素；这改变了训练目标，但不自动证明表示包含全部任务相关状态。
+{: .book-claim .claim-fact }
 
 ### 10.1.1 预测的是表示等价类，不是隐藏像素的唯一答案
 
@@ -120,6 +121,7 @@ V-JEPA 2 的官方论文和仓库把流程分为两部分：先用大规模图�
 - 2B 结果不证明 24 GB 单卡可训练或可实时部署。
 
 `CLAIM-10-04`（fact）：V-JEPA 2.1 论文把 dense predictive loss 与 deep self-supervision 列为相对 V-JEPA 2 的关键训练变化；其性能数字仍是论文报告，当前复现状态为 `R0/R1` 而非本书实测。
+{: .book-claim .claim-fact }
 
 ### 10.4.1 Global 与 dense 是不同的信息合同
 
@@ -191,10 +193,13 @@ make ch10-smoke
 *TAB-10-02：`EXP-10-01` 的固定排名反转。表征为手工标量函数，不是 JEPA checkpoint。*
 
 `CLAIM-10-02`（result）：在 `EXP-10-01` 中，appearance 表征以 1.25 对 125.00 赢得重建 MSE，却在纹理相关性反转后取得 0% probe accuracy；task-predictive 表征取得 100%。这只证明两个指标可以给出相反排序。
+{: .book-claim .claim-result }
 
 `CLAIM-10-03`（result）：同一实验的 collapsed 表征在平衡测试集上取得 50% accuracy，作为 probe 管线的负对照；若它异常高，应先查标签泄漏、样本重复或度量实现。该数值只来自二分类平衡 fixture，不是通用 chance baseline。
+{: .book-claim .claim-result }
 
 `CLAIM-10-06`（result）：appearance 与 task-predictive 在未参与拟合的 ID 集上都取得 100%，但纹理相关性反转后前者降至 0%、后者保持 100%。该固定反例表明，单独报告 ID probe 会把 nuisance shortcut 与稳定任务信息混为一谈；四样本结果不估计真实模型的 OOD 性能。
+{: .book-claim .claim-result }
 
 ### 10.6.1 可读状态不等于动作条件转移
 
@@ -208,6 +213,7 @@ make ch10-smoke
 *TAB-10-03：`EXP-10-01` 的动作接口诊断。数值来自八条手工确定性转移，不是学习模型、因果发现或规划实验。*
 
 `CLAIM-10-07`（result）：两个手工接口的当前状态 probe RMSE 都为 0，但 action-blind 接口的反事实转移 RMSE 为 1、动作敏感度为 0；action-conditioned 接口对应为 0 和 2。这只证明状态可读性不足以验证 predictor 是否使用动作，不证明动作条件模型会规划。
+{: .book-claim .claim-result }
 
 ### 10.6.2 中间状态可读不等于保留时间方向
 
@@ -221,6 +227,7 @@ make ch10-smoke
 *TAB-10-04：`EXP-10-01` 的时间顺序诊断。反转敏感度是原序与反序的手写 delta 特征绝对差；八条三标量序列不是视频、learned representation 或物理理解 benchmark。*
 
 `CLAIM-10-08`（result）：在 `EXP-10-01` 的平衡方向 fixture 中，middle-frame 与 ordered-delta 都以 RMSE 0 读出中间状态，但前者的方向 accuracy 为 50% 且反转敏感度为 0，后者分别为 100% 和 4。这只证明当前状态可读、时间方向可辨和反转敏感是不同验收项；数值不能外推到 V-JEPA 或真实视频。
+{: .book-claim .claim-result }
 
 该实验没有图像、视频、模型参数或训练，不估计 V-JEPA 的能力。其价值是建立官方特征到来前就能测试的评测合同，并把“静态表示信息”“时间顺序”“动作接口”和“规划用途”拆成不同验收项。
 
@@ -256,6 +263,7 @@ M 档可在经许可的少量第一人称视频上训练轻量 masked predictor 
 - 稀有但安全关键的局部对象。
 
 `CLAIM-10-05`（recommendation）：驾驶表征若要支持规划，至少要在 route-disjoint 的状态 probe、时间扰动和下游闭环/干预测试中通过；道路场景分类分数不能替代这些证据。
+{: .book-claim .claim-recommendation }
 
 2026 年预印本 WA-JEPA 将 JEPA 思路用于自动驾驶 world-action 建模。它是值得跟踪的 `[A,R0]` 案例，但发布时间很近，本书不采用其性能数字、不安排复现，也不把单篇工作固化为稳定架构。
 

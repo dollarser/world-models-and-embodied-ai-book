@@ -12,6 +12,9 @@ theme:
     - navigation.indexes
     - content.code.copy
 
+extra_css:
+  - stylesheets/book.css
+
 markdown_extensions:
   - admonition
   - attr_list

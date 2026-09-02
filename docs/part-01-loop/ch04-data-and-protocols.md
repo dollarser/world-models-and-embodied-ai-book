@@ -42,6 +42,7 @@
 如果先把所有帧打散再随机切分，相邻帧、同一场景背景甚至同一条轨迹的未来就可能同时出现在训练和测试中。模型看似泛化，实际可能只是在识别录制环境。
 
 `CLAIM-04-01`（recommendation）：时序具身数据默认按产生依赖关系的最小完整组切分，而不是按帧切分；具体组可以是 episode、轨迹、任务实例、场景、路线、主体或采集会话。
+{: .book-claim .claim-recommendation }
 
 `terminated` 与 `truncated` 也不能合并成一个含义不明的 `done`：前者表示任务定义内的自然终态，例如成功、失败或摔倒；后者表示 MDP 之外的采集上限、日志切断或外部超时。[Gymnasium 的 time-limit 文档](https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/)明确区分两者。二者不是必须互斥：本书核查的官方 [`TimeLimit` 实现快照 `9e04324`](https://github.com/Farama-Foundation/Gymnasium/blob/9e04324f6b0adbe19112206dfe247edc4142e7ec/gymnasium/wrappers/common.py)在达到步数上限时把 `truncated` 置真，并保留下层同一步的 `terminated`；因此恰好在上限步到达自然终态时可以双真。任一标志为真都会阻止序列窗口跨到下一个 episode，而常见价值目标只由 `terminated` 关闭 bootstrap；双真时自然终止语义优先：
 
@@ -106,10 +107,12 @@ sequenceDiagram
 7. 缺帧是丢弃、插值、重复上一帧还是显式 mask。
 
 `CLAIM-04-02`（fact）：不先定义动作和观测的时间关系，就无法解释转移模型预测的是 `a_t` 之前还是之后的环境；shape 检查不能发现这一语义错误。
+{: .book-claim .claim-fact }
 
 多传感器数据还要把“是否有样本”和“样本是什么时间”拆开。每个必需模态至少保存来源时间戳、clock domain、有效位和同步策略；本书 fixture 规定缺失样本写成 `valid=false, timestamp=null`，整个字段消失则视为合同错误。若采用近似同步，必须冻结最大允许 skew 并报告实际分布。[ROS 2 `ApproximateTimeSynchronizer`](https://docs.ros.org/en/ros2_packages/rolling/api/message_filters/message_filters.html)同样用消息 header timestamp 和秒级 `slop` 容差配对；容差内配对只说明协议接受，不证明硬件同时曝光，更不能替代时钟偏移、漂移、rolling shutter 或运动补偿审计。
 
 `CLAIM-04-07`（recommendation）：用于融合或控制的必需传感器流应逐样本保存显式有效位和来源时间戳，并预注册最大同步偏差；缺字段、arrival time 和“最近一帧”隐式填充不能自动当作同步成功。
+{: .book-claim .claim-recommendation }
 
 ## 4.4 归一化不能偷看测试集
 
@@ -144,6 +147,7 @@ sequenceDiagram
 错误 fixture 仍写 `normalization_scope=train`，但 artifact 同时登记一个 eval episode，且 mean/scale 与这些 source 不一致，因此分别触发 `normalization_source_split` 和 `normalization_stat_mismatch`。这两个原因码不能合并：来源违规与数值损坏需要不同修复路径。
 
 `CLAIM-04-10`（result）：`EXP-04-01 v5` 从已绑定的三行 train state 精确重算 count=3、mean=`[1,2]` 与 population scale=`[sqrt(2/3),sqrt(2/3)]`，最大 mean/scale gap 均为 0；错误 fixture 即使保留 `train` 标签，仍因 eval source 和不一致统计被拒绝。该结果只证明作者构造 metadata 的 provenance/recompute 合同，不验证真实数据统计、padding/mask、权重、周期变量、checkpoint compatibility 或泛化性能。
+{: .book-claim .claim-result }
 
 ## 4.5 切分：按照会导致记忆的共同因素分组
 
@@ -192,6 +196,7 @@ sequenceDiagram
 - 传感器缺失、定位跳变和人工接管。
 
 `CLAIM-04-03`（recommendation）：自动驾驶预测与规划数据至少按 scene 或 route 级别切分，并针对道路、城市、天气和事件类型报告分桶结果；相邻帧随机切分不能作为泛化证据。
+{: .book-claim .claim-recommendation }
 
 一个尤其危险的泄漏是“未来信息标注”。离线轨迹平滑、3D 跟踪或地图匹配可能利用未来帧。如果部署输入拿不到这些未来信息，训练时就必须将其限制为监督标签，而不能混入模型输入。
 
@@ -231,6 +236,7 @@ sequenceDiagram
 报告均值时同时给出运行数、离散程度和每次原始结果。小样本下不要机械使用正态近似；可报告全部种子结果，并用 bootstrap 或适合指标的区间估计。成功率还应给出 episode 数和二项比例区间，而不只是百分比。
 
 `CLAIM-04-04`（recommendation）：任何包含训练随机性或环境采样的模型比较，默认至少保留逐 seed/episode 结果；是否需要多个训练 seed 由主张强度和成本决定，不能用单次最优运行支持稳定性声明。
+{: .book-claim .claim-recommendation }
 
 ## 4.10 停止条件要在看结果之前写
 
@@ -265,6 +271,7 @@ prepare/smoke/train/evaluate/report 命令
 实验生命周期与章节生命周期分开。`smoke` 只证明接口、数据流和指标链路可以运行；`experimented` 表示目标实验已执行；`reproducible` 还要求 commit、环境、数据、结果和审查能够被冷启动复现。
 
 `CLAIM-04-05`（fact）：本书 Schema 允许 planned 实验没有指标，但从 smoke 开始强制要求 smoke/evaluate/report 命令和至少一个指标；到 reproducible 时还会拒绝 `UNCOMMITTED` 和 `license pending`。
+{: .book-claim .claim-fact }
 
 ## 4.12 数据契约审计（EXP-04-01）
 
@@ -296,8 +303,10 @@ make ch04-smoke
 22 个单元测试除原有 schema/split/action 检查外，还验证：在最终观测有效的本 fixture 中，外部截断保留 value bootstrap 而自然终止关闭它；episode 最后一帧至少有一种结束标志、双真合法且关闭 bootstrap、非末帧不能结束、显式 mask 合法但缺字段非法、sensor timestamp 必须单调且满足 skew，以及 NaN/Inf 不会绕过数值检查。身份回归测试固定 source asset、精确指纹和 authored similarity cluster 在不同 `group_id` 下的泄漏检测；normalization 回归测试则覆盖精确重算、eval source、篡改 mean 和 source fingerprint 错配。
 
 `CLAIM-04-08`（result）：`EXP-04-01` v5 中，有效 fixture 为 0 issue，11 类注入错误均被识别；双真结束标志作为合法边界另有测试。该结果只证明已编码规则覆盖已知手工反例，不估计真实数据错误率。
+{: .book-claim .claim-result }
 
 `CLAIM-04-09`（result）：`EXP-04-01` v5 的三个独立反例证明，即使 train/eval 的 `group_id` 不同，共享 `source_asset_id`、`content_fingerprint` 或 `similarity_cluster_id` 仍会分别触发跨 split 拒绝。该结果只验证已登记 metadata 的集合交集；不证明指纹生成正确、相似簇完备或真实媒体不存在未登记近重复。
+{: .book-claim .claim-result }
 
 这仍只是已知错误注入测试。它不能证明真实 LeRobot、机器人或驾驶数据不存在其他问题，也没有检查视频解码、标定、隐私和第三方许可。
 

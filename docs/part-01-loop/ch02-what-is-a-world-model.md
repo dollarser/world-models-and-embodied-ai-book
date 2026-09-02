@@ -46,6 +46,7 @@
 第三，如果模型声称支持反事实决策，它必须说明**动作如何改变未来**。没有动作条件的视频预测器仍可以学习环境动力学，但它只能预测行为数据中常见的未来，不能单独回答“如果现在向左而不是向右，会怎样”。
 
 `CLAIM-02-01`（recommendation）：为避免按项目名称分类，本书用“任务相关状态 + 演化规律 + 明确用途”作为最低工作框架；它是贯穿本书的审查口径，不宣称是领域唯一或普适定义。只有在声称支持反事实规划时，才进一步要求动作条件和相应的干预测试。
+{: .book-claim .claim-recommendation }
 
 这是一项写作与工程约定，不是声称其他定义错误。它的价值在于：后续每一章都能用同一组字段描述模型，并让声明与评测对应起来。
 
@@ -86,6 +87,7 @@ z_t=f_\theta(z_{t-1},o_t,a_{t-1})
 若 policy 只能看到当前编码，它必须在两个 context 中执行同一个动作。`advance` 的等权 mean return 为 0，`hold` 为 0.1，因此最优的 current-only 决策是 `hold`；相对逐 context oracle，它的 mean regret 是 0.5。若 state 保留唯一历史线索，则 clear 选 `advance`、blocked 选 `hold`，mean return 从 0.1 提高到 0.6，regret 变为 0。
 
 `CLAIM-02-06`（result）：在 `EXP-02-01` 的两个等权手工 context 中，current-only 表示把不同最优动作的历史合并，最优共享动作仍有 0.5 mean regret；保留历史线索后固定 regret 为 0。该差值只证明这组一次决策 fixture 是 memory-improvable，不证明某种 sequence model 必然能学会记忆，也不估计真实 POMDP、机器人或驾驶性能。
+{: .book-claim .claim-result }
 
 ### 2.2.2 有历史不等于 belief 已充分
 
@@ -100,6 +102,7 @@ z_t=f_\theta(z_{t-1},o_t,a_{t-1})
 *TAB-02-04：`EXP-02-01` v4 的 noisy-history belief 负对照。cue likelihood 与 return 均为作者设定的一步无单位数值，不是感知校准或真实 POMDP。*
 
 `CLAIM-02-07`（result）：固定等权双 context 中，已知 `0.8/0.2` 对称 cue likelihood 的 Bayes belief 把 mean return 从 current-only 的0.1提高到0.38，但仍低于 perfect-history oracle 的0.6，保留0.22 mean regret。该结果只证明这组已知生成概率的一步 fixture 中 noisy history 部分减少 decision aliasing，不证明模型能学习、校准或跨时更新 belief，也不估计真实记忆、感知或规划性能。
+{: .book-claim .claim-result }
 
 这里有三条需要分开的理论直觉。[DeepMDP](https://proceedings.mlr.press/v97/gelada19a.html) 用 reward prediction 与 next-latent distribution prediction 把表示质量连接到 MDP/bisimulation 条件；这说明只重建外观不是唯一目标，也不表示任意低预测 loss 都足够。[Value Equivalence](https://arxiv.org/abs/2011.03506) 则把模型等价定义在选定的 functions 与 policies 的 Bellman updates 上；它允许忽略无关细节，但“相关”随用途和函数集合变化。MuZero 的 reward/value/policy 预测是价值相关路线的代表，不是所有任务上的充分状态证明。
 
@@ -223,6 +226,7 @@ flowchart LR
 策略 `π(a_t\mid o_{\le t})` 直接选择动作；世界模型预测动作之后的状态或决策相关量。一个 VLA 可能在内部形成预测表示，也可能只是从输入到动作的条件生成器。除非有独立动力学接口、预测目标或干预证据，否则不能从动作能力推断它包含可调用的世界模型。
 
 `CLAIM-02-02`（fact）：在本书术语中，VLA 是策略架构族，不自动等同于世界模型；二者可以组合。
+{: .book-claim .claim-fact }
 
 ### 仿真器
 
@@ -260,6 +264,7 @@ CV 工程师可以沿四步迁移已有经验：
 如果模型只生成“看起来合理的继续行驶”，却无法在同一场景比较急刹、变道和保持车道，它不能单独承担规划器的反事实模型。反过来，一个不生成高清图像、只预测 BEV occupancy、碰撞概率和路线进度的模型，可能更适合决策。
 
 `CLAIM-02-03`（inference）：判断驾驶世界模型时，动作接口和功能评测比“是否生成视频”更接近规划用途，但仿真结果仍不能替代真实车辆安全验证。
+{: .book-claim .claim-inference }
 
 ## 2.8 八类系统的四轴模型卡（EXP-02-01）
 
@@ -295,8 +300,10 @@ make ch02-smoke
 固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有 HTTPS 证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。能力矩阵中，6 张有时间/转移证据、5 张支持候选动作干预、3 张同时满足学习动态与动作条件、1 张保持 scope-dependent、1 张是无独立转移的策略。state-aliasing 对照得到 current-only mean return 0.1、perfect-history 0.6 和0.5 gap；noisy-history Bayes belief 得到0.38 return 和0.22 oracle regret。18 个单元测试还会故意破坏能力矩阵、证据与身份、动作/return 合同、prior、likelihood 归一化和 cue 决策唯一性，确认校验器能够拒绝这些变化。
 
 `CLAIM-02-04`（result）：`EXP-02-01` 在固定 fixture 上完成了 8/8 类别、8/8 来源和 8/8 证据限制检查。它证明分类契约可执行，不证明被列系统的性能、可复现性或完整能力。
+{: .book-claim .claim-result }
 
 `CLAIM-02-05`（result）：`EXP-02-01` v4 中，只有 3/8 固定卡片同时满足“学习动态 + 候选动作条件”，而转移证据、动作干预和直接策略输出分别属于不同集合。该计数只描述本书选定的八个教学 archetype，不估计现实项目比例。
+{: .book-claim .claim-result }
 
 ## 2.9 失效模式与安全边界
 

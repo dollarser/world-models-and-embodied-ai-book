@@ -53,6 +53,7 @@ flowchart LR
 *FIG-11-01：动作条件视频模型进入规划环路的最小接口。生成未来只是中间环节；规划器还需要状态/效用读出与真实环境验证。来源：本书原创，MIT，2026-08-31。*
 
 `CLAIM-11-01`（recommendation）：动作作为条件输入只是必要接口；若同一状态下改变动作不能产生方向正确且可测的未来差异，就不应支持动作反事实声明。
+{: .book-claim .claim-recommendation }
 
 ### 11.1.1 条件相关不等于干预效果
 
@@ -204,10 +205,13 @@ make ch11-smoke
 *TAB-11-02：`EXP-11-01` 的单步与同状态反事实结果。敏感度和无符号分离都无法单独检出左右语义交换。*
 
 `CLAIM-11-02`（result）：按预测未来最大两两距离计算，`EXP-11-01` 的 action-blind 动作敏感度为 0，action-conditioned 为 2；前者对四个动作产生同一未来。该量有网格单位，不是归一化性能分数。
+{: .book-claim .claim-result }
 
 `CLAIM-11-03`（result）：在只保留动作组合的三条序列上，conditioned 模型平均终点误差为 0，blind 模型为 1.33852。该结果来自确定性可组合动力学，不能外推复杂视频的组合泛化。
+{: .book-claim .claim-result }
 
 `CLAIM-11-07`（result）：left-right-swapped 与正确模型的动作敏感度、无符号左右分离都为 2，但有符号左右效果分别为 -2 和 +2，counterfactual vector RMSE 分别为 1.63299 和 0。这一标签置换负对照证明“响应动作”不足以支持“动作语义正确”。
+{: .book-claim .claim-result }
 
 多步评测同时报告固定分母的全轨迹 RMSE。三条序列各三步，因此每个模型都有 3 个终点、9 个预测转移；没有缺失 rollout。
 
@@ -220,6 +224,7 @@ make ch11-smoke
 *TAB-11-03：`EXP-11-01` 的多步结果。全轨迹 RMSE 以 9 个转移、每步两个状态坐标为分母；终点误差以 3 条序列为分母。*
 
 `CLAIM-11-08`（result）：在固定的 3 条未见序列、9 个转移上，blind、swapped、conditioned 的全轨迹 RMSE 分别为 0.76830、1.33333、0。显式报告轨迹与终点能阻止中间错误被终点抵消，但仍不是随机环境的统计泛化证据。
+{: .book-claim .claim-result }
 
 ### 11.6.1 endpoint 正确仍可能掩盖中间错误
 
@@ -235,6 +240,7 @@ make ch11-smoke
 *TAB-11-05：`EXP-11-01` 的 endpoint-cancellation 负对照。状态和动作均为手写确定性网格规则；单条序列的终点正确不能替代逐步轨迹检查。*
 
 `CLAIM-11-11`（result）：`EXP-11-01` 的三条未见序列中，left-right-swapped 有 1 条终点误差为 0、但中间最大误差为 2；正确模型没有这种抵消。`1/3` 不是现实错误发生率，2 也不是视频或物理单位，只证明 endpoint-only 指标可以产生假阴性。
+{: .book-claim .claim-result }
 
 ## 11.7 renderer、simulator、planner：同一视频，不同合同
 
@@ -247,6 +253,7 @@ make ch11-smoke
 | policy | 从观测/信念选择动作 | 含世界模型不证明安全执行 |
 
 `CLAIM-11-04`（recommendation）：将生成模型用于仿真或策略评测前，应分别验证状态转移、动作干预、自由 rollout、策略排序和闭环 outcome；renderer 的视觉指标不能越级支持这些声明。
+{: .book-claim .claim-recommendation }
 
 物理仿真器通常有显式状态、碰撞与确定性规则；学习模拟器从数据估计未来，可能更真实地渲染复杂外观，也可能幻觉或遗漏约束。两者可以组合，而不是二选一。
 
@@ -275,12 +282,14 @@ make ch11-smoke
 *TAB-11-04：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*
 
 `CLAIM-11-09`（fact）：[Cosmos-Predict2.5 官方仓库快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/tree/a2c298b0a3df3778b973fe65e9e58877b292d8a7)列有 2B robot/action-cond 模型及推理、后训练路径，并声明只做有限维护、建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
+{: .book-claim .claim-fact }
 
 [Cosmos 3 官方仓库快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827)把 Generator 描述为可联合处理或生成 text、vision、sound 与 action 的 omnimodal world model，并公开推理和 post-training 入口；同一 README 也明确列出长时一致性、action-state consistency、3D 结构和物理合理性等限制。这里按 `[O,R1]` 记录“该快照中公开接口与资产存在”，不把官方的能力概述升级为独立效果验证。
 
 [同一快照的 action cookbook](https://github.com/NVIDIA/cosmos/blob/9aa98e5a0773a5558f07d2699e640858f7ca8827/cookbooks/cosmos3/generator/action/README.md)把 forward dynamics、inverse dynamics 与 policy 分成三个 mode，并声明 Generator 默认需要申请 gated `Cosmos-1.0-Guardrail`；三个后端也允许显式关闭 guardrail。后者不是无影响的安装技巧：实验包必须登记 `guardrail_enabled`、guardrail revision/授权状态和拒绝/模糊化行为，关闭时不能声称运行了默认安全路径。仓库根许可证为 OpenMDW-1.1，仍需逐项核对模型、数据和依赖，不能把它写成本书 MIT 或旧 Cosmos 2.5 的 Apache-2.0/Open Model License 组合。
 
 `CLAIM-11-10`（fact）：Cosmos 3 官方快照 `9aa98e5` 已将 action 纳入统一生成输入输出，同时仍明确列出 action-state、3D 与物理一致性限制；这是该快照的接口事实，不代表后续版本或独立有效性验证。
+{: .book-claim .claim-fact }
 
 迁移代际时仍应重新登记输入输出模态、运行后端、checkpoint、许可与失败边界，不能沿用 2.5 的实验卡。
 
@@ -303,6 +312,7 @@ Waymo 2026 年官方博客称其驾驶世界模型基于 Genie 3 做领域适配
 GAIA-2 有公开技术报告，描述多相机、文本、动作和结构条件的 latent/flow 视频模型；GAIA-3/4 的最新闭环与安全评测内容主要来自 Wayve 官方研究页面。2026 年 8 月发布的 [GAIA-4 页面](https://wayve.ai/thinking/gaia-4/)强调把 AI Driver 放回闭环、world-on-rails 与多模态生成。
 
 `CLAIM-11-05`（fact）：截至 2026-09-02，Wayve 官方页面把 GAIA-4 定位为闭环驾驶模拟与安全评测组件；本书只把它记录为供应商声明 `[V,R0]`，不把相关性、保真或安全结论视为独立验证。
+{: .book-claim .claim-fact }
 
 这些闭源案例的教学价值是展示用途演进：视频生成 → 可控场景 → 闭环策略评测。版本越新，越需要更新案例卡，而不是改写稳定的动作条件公式。
 
@@ -319,6 +329,7 @@ GAIA-2 有公开技术报告，描述多相机、文本、动作和结构条件�
 - rollout 超出训练支持时给出不确定性或拒绝。
 
 `CLAIM-11-06`（recommendation）：驾驶学习模拟器必须声明其他交通参与者是固定回放、规则响应还是学习响应；三种协议产生的碰撞和策略结果不能直接比较。
+{: .book-claim .claim-recommendation }
 
 OpenDV 等视频数据可用于外观/运动预训练，但若缺少同步控制、ego-motion 或轨迹，就不能直接监督动作反事实。S/M 路线优先使用 MetaDrive/CARLA 程序化轨迹或许可明确的小型日志；大型真实驾驶下载需要用户单独确认。
 

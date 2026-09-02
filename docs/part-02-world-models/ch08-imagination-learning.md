@@ -32,6 +32,7 @@
 2. **学习循环**：从 replay 训练 world model，再从 posterior state 出发，用 actor 和 world-model prior 展开 imagined trajectory，训练 critic 与 actor。
 
 `CLAIM-08-01`（fact）：Dreamer 式方法把 world model 的监督锚定在 replay transition 上，把行为学习的大量 rollout 放在 learned latent dynamics 中；imagined trajectory 的低交互成本不等于它是真实证据。
+{: .book-claim .claim-fact }
 
 ```mermaid
 flowchart LR
@@ -150,12 +151,14 @@ make ch08-smoke
 *TAB-08-01：`EXP-08-01` 的解析 λ-return。所有数字来自仓库内固定输入和标准库代码。*
 
 `CLAIM-08-02`（result）：在这个 value 不精确的固定序列中，λ 从 0、0.5 到 1 时 start target 分别为 0.40、0.65、1.00。这只验证 target 接口，不是策略效果比较。
+{: .book-claim .claim-result }
 
 ## 8.5 两条污染路径：reward bias 与终止泄漏
 
 第一条反例把 imagined 最终 reward 从 1 改成 2。在 λ=1 时 target 从 `[1,1,1]` 变成 `[2,2,2]`，start target gap 为 1。
 
 `CLAIM-08-03`（result）：固定的终点 reward-model +1 偏差传播到三个 full-return target。它表明 actor/critic 会接收模型生成的偏置信号，但没有执行梯度更新，也没有证明实际 policy 会怎样改变。
+{: .book-claim .claim-result }
 
 第二条反例含 reward `[0,1,10]`，真实 episode 在 reward 1 后结束：
 
@@ -167,6 +170,7 @@ make ch08-smoke
 *TAB-08-02：continuation mask 的固定反例。最后一格仍可有局部 target，但终止 mask 阻止它影响更早状态。*
 
 `CLAIM-08-04`（result）：漏掉固定终止 mask 会把 start target 从 1 变成 11，产生 10 的泄漏 gap。这个反例验证数据语义，不估计真实 Dreamer 的误差率。
+{: .book-claim .claim-result }
 
 还要区分“序列是否结束”和“价值是否 bootstrap”。`terminated` 与 `truncated` 都会结束当前采样窗口，但只有任务定义内的自然终态把 value discount 置零。fixture 新增一个单步反例：即时 reward 为 1、下一状态 value 为 4、标量 discount 为 1。
 
@@ -177,6 +181,7 @@ make ch08-smoke
 | 把两者折叠为 `done` | 0 | 1 | 错误丢失 4 的 bootstrap |
 
 `CLAIM-08-07`（result）：`EXP-08-01` 的固定单步反例中，把有效截断误当自然终止会让 target 从 5 降为 1，bootstrap loss 为 4。若 `terminated/truncated` 同时为真，代码按自然终止关闭 bootstrap；若需要 bootstrap 但下一观测无效，则拒绝该 transition。这验证接口语义，不估计 learned continuation head 的误差。
+{: .book-claim .claim-result }
 
 这里没有矛盾：外部截断之后不能把下一 episode 的 reward 接到当前序列上，但若截断时保存了有效最终观测，仍可用该观测估计截断点的 value。[Gymnasium 的官方 time-limit 指南](https://gymnasium.farama.org/main/tutorials/handling_time_limits/)明确区分 termination 与 truncation 的 bootstrap 语义 `[O,R1]`；Pardo et al. 的[Time Limits in Reinforcement Learning](https://proceedings.mlr.press/v80/pardo18a.html)把训练用外部 time limit 下的末状态 bootstrap 形式化为 partial-episode bootstrapping `[P,R1]`。若最终观测丢失，正确做法是把 target 标为不可构造并暴露数据问题，而不是猜成 terminal。
 
@@ -190,6 +195,7 @@ make ch08-smoke
 *TAB-08-04：截断 bootstrap 与 λ-trace 边界的双信号反例。来源：`EXP-08-01` v4，本书原创，MIT，2026-09-02。第二行的100是手工放大的新 episode reward。*
 
 `CLAIM-08-09`（result）：`EXP-08-01` v4 的两行跨 episode 反例中，正确的 `d₀=1,m₀=0` 得到第一行 target 5；若保留 bootstrap discount 却遗漏 trace 边界，target 变为101，产生96的跨 episode 泄漏。该结果只验证数组边界与递推接口，不估计真实 replay 污染率、critic bias、训练稳定性或策略性能。
+{: .book-claim .claim-result }
 
 ### 8.5.1 Target 正确不等于 loss 权重正确
 
@@ -209,6 +215,7 @@ w_0=1,\qquad w_t=\prod_{i=0}^{t-1}d_i\quad(t>0).
 *TAB-08-03：`EXP-08-01` 的固定 loss-weighting 反例。100 是手工伪 loss，用于让错误可见；总和不是 Dreamer 训练曲线或性能指标。*
 
 `CLAIM-08-08`（result）：`EXP-08-01` v4 的三步手工序列中，正确累计权重把终止后 raw loss 100 的贡献降为 0，加权总和为 2；漏掉 continuation mask 时总和为 102，post-terminal leakage 为 100。这只验证非负标量 loss 与手工 discount 的累计加权合同，没有 actor/critic、梯度、learned continuation 或策略改进。
+{: .book-claim .claim-result }
 
 运行产物为 `results/ch08/EXP-08-01-smoke.json`；实验卡明确记录了零下载、CPU、未用 GPU 和非训练边界。
 
@@ -263,6 +270,7 @@ Dreamer 谱系的共同点是“从真实序列学习世界模型，再在潜空
 - actor/critic/world-model 各自版本与更新频率。
 
 `CLAIM-08-05`（recommendation）：Dreamer 类实验必须分别报告 world-model loss、critic calibration、imagined return、真实/独立仿真 return 与安全事件；只报告训练曲线中的 imagined objective 不能支持策略有效性结论。
+{: .book-claim .claim-recommendation }
 
 第17章给出 model exploitation 的策略排序反例，第20章定义评测协议；本章只解释污染如何进入 target。
 
@@ -285,6 +293,7 @@ reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和�
 5. 通过第21章 deadline、watchdog、fallback 与最小风险停车网关后，才讨论更高等级验证。
 
 `CLAIM-08-06`（recommendation）：自动驾驶 imagined learning 的 actor 必须在独立闭环环境中复核路线、碰撞、干预、规则和尾部风险；world-model return 不能作为车辆执行授权或道路安全证据。
+{: .book-claim .claim-recommendation }
 
 ## 8.10 资源、许可与可执行路径
 

@@ -56,6 +56,7 @@ flowchart LR
 *FIG-15-01：VLA 的稳定架构骨架。模型主干和动作头可以变化，但动作解码、合同与安全网关不可省略。来源：本书原创，MIT，2026-08-31。*
 
 `CLAIM-15-01`（fact）：VLA 的最低合同是条件动作策略；除非系统还提供并验证动作条件状态转移、rollout 或反事实接口，不能仅因其具备大模型或隐式知识就称为世界模型。
+{: .book-claim .claim-fact }
 
 ### 15.1.1 “视觉—语言—动作”不是三个模块的固定拼接
 
@@ -141,6 +142,7 @@ VLA 描述的是输入语义与输出能力，不规定内部必须恰好有视�
 *TAB-15-04：模型最大 horizon、数据窗口、实际输出和执行窗口是四个相关但不同的量。数字来自核查日的官方 N1.7 README、模型配置与入门文档；本书未运行 checkpoint。*
 
 `CLAIM-15-09`（recommendation）：VLA 实验卡必须分别记录模型最大 action horizon、数据 `delta_indices`、checkpoint 实际输出 horizon 与 rollout execution horizon；不得从其中一个数字推断另外三个，改变数据窗口后还要重算与其时间维一致的归一化统计。
+{: .book-claim .claim-recommendation }
 
 双系统仍需要明确：慢模块多久刷新一次、快模块在指令变化时何时失效、chunk 缓存如何中断、两个模块使用哪一个时间戳，以及安全控制器是否拥有更高优先级。异步并不自动更安全：旧响应可能晚到，网络可能重复传送，同一 chunk 可能被执行两次。客户端至少要比较单调 `command_id`、共同 clock、观测/动作 timestep 和有效期；新指令、急停或 schema revision 变化应原子地使旧队列失效。
 
@@ -198,10 +200,13 @@ make ch15-smoke
 | flow chunk 预测/执行 | 3 / 1 步 | 验证 receding horizon 字段 |
 
 `CLAIM-15-02`（result）：`EXP-15-01` 中，连续、离散 token 和 flow chunk 三类手工输出都通过同一带 frame、单位、时间与 horizon 的动作 schema；这只验证统一解码合同，不比较三类动作头的学习或闭环性能。
+{: .book-claim .claim-result }
 
 `CLAIM-15-03`（result）：五档逐维 tokenizer 将 `(0.6,-0.4)` 量化为 `(0.5,-0.5)`，平均归一化绝对误差为 `0.1`。该值只属于教学词表，不能外推 FAST 或真实 VLA。
+{: .book-claim .claim-result }
 
 `CLAIM-15-04`（result）：高层文本、过期命令、错误 frame、错误单位、越界动作、首动作错位与 chunk 内 timetable 重复/跳步等十四类 packet 全部被网关拒绝。范围和时间身份检查不是碰撞检查、时钟同步或功能安全证明。
+{: .book-claim .claim-result }
 
 错误集合包括 clock/字段顺序错配、packet 擅自把执行前缀从 1 扩为 3、重复/乱序命令，以及墙钟时间戳仍新鲜但观测或首动作 timestep 错位。新命令 `command_id=8` 在已接受 7 后通过；重复 7 与旧命令 6 都被拒绝。布尔值、非有限动作和伪造 prediction horizon 另由单元测试覆盖。
 
@@ -214,6 +219,7 @@ make ch15-smoke
 *TAB-15-05：`EXP-15-01` 的墙钟新鲜度—逻辑 timestep 负对照。fixture 预登记当前观测与首动作槽均为42；它不表示所有系统都必须采用同号 timestep。*
 
 `CLAIM-15-10`（result）：`EXP-15-01` v4 中，两个错误 packet 的生成时间年龄均只有10 ms、低于100 ms上限，但因观测 timestep 为40或首动作 timestep 为43而被拒绝；对齐 packet 的年龄为50 ms且 `42→42`，能够通过。该结果只证明本 fixture 的双重时间身份会拒绝两类错位，不证明跨机时钟同步、真实队列时序、deadline 或控制安全。
+{: .book-claim .claim-result }
 
 首动作对齐仍不足以定义整个 action chunk。`EXP-15-01` v4 为每个预测动作携带一个逻辑执行槽，并要求与 `first_action_timestep` 和动作长度共同形成连续序列：
 
@@ -226,6 +232,7 @@ make ch15-smoke
 *TAB-15-06：`EXP-15-01` v4 的首动作—完整 chunk timetable 负对照。整数槽是教学调度身份，不是墙钟时间，也不证明 runtime 会在对应周期真正执行。*
 
 `CLAIM-15-11`（result）：`EXP-15-01` v4 中，合法三步 chunk 的动作槽为 `(42,43,44)`；两个错误 chunk 的 `first_action_timestep` 都仍为42，但因后续序列分别重复或跳过槽位而被拒绝。该固定反例只证明首步对齐不能替代逐动作 timetable，不估计真实队列故障率、deadline、丢帧、动作消费进度或控制安全。
+{: .book-claim .claim-result }
 
 | 动作包字段 | 作用 | 仍未提供的保证 |
 | --- | --- | --- |
@@ -239,8 +246,10 @@ make ch15-smoke
 *TAB-15-03：`EXP-15-01` 的最小执行身份。生产协议还需要 session/boot ID、认证、完整性保护、ACK 和安全控制器。*
 
 `CLAIM-15-07`（result）：`EXP-15-01` 修复了 packet 可把 schema 执行时域从 1 扩到 3 的漏洞；重复 `command_id=7` 和乱序 6 在已接受 7 后被拒绝，而新命令 8 通过。该结果只验证单会话手工 packet 合同，不证明网络安全、并发顺序或控制安全。
+{: .book-claim .claim-result }
 
 `CLAIM-15-08`（recommendation）：远程或异步 VLA chunk 必须携带版本化字段顺序、共同 clock、观测/动作 timestep、单调命令身份和明确失效规则；仅有网络时间戳不能防止 replay、乱序或旧队列继续执行。
+{: .book-claim .claim-recommendation }
 
 ## 15.7 新本体适配：shape 相同也可能语义相反
 
@@ -257,6 +266,7 @@ make ch15-smoke
 两个本体都有 7 维动作，不代表每一维对应相同关节。不同数据集对 gripper 的 `0/1`、`-1/1`、开度和速度可能方向相反。训练时的 normalization key 是模型的一部分，部署时猜错统计量会得到数值范围“像动作”但物理意义错误的命令。
 
 `CLAIM-15-05`（recommendation）：比较或迁移 VLA 时，应先把所有动作头解码到同一个版本化可执行 schema，再比较开环误差、闭环 outcome、控制频率与端到端时延；张量维度一致不足以证明协议兼容。
+{: .book-claim .claim-recommendation }
 
 ### 15.7.1 跨本体迁移有不同层级
 
@@ -280,6 +290,7 @@ make ch15-smoke
 若驾驶 VLA 输出带时间的轨迹点或控制序列，仅检查首点时间也不够：后续点重复同一时刻会产生零时长段，跳过时刻会改变隐含速度/加速度，乱序则可能让插值器回退。进入轨迹规划器前应检查完整时间向量的长度、单调性、期望采样周期和允许抖动，再由动力学模块计算速度、加速度、jerk 与 swept-volume；本章的整数 timetable 只覆盖第一层身份合同。
 
 `CLAIM-15-06`（recommendation）：自动驾驶中的通用 VLM/VLA 提示基线只应产生低频候选意图或轨迹约束；任何连续控制都必须通过版本化 schema、时效、动力学、碰撞与最小风险门禁。
+{: .book-claim .claim-recommendation }
 
 评测要同时报告路线完成、碰撞/越界、干预、舒适度、P50/P95 延迟、超时、成本和拒绝率。语言任务成功或离线 action accuracy 不能代替闭环驾驶证据。
 

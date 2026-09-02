@@ -42,6 +42,7 @@ o_t\rightarrow z_t\rightarrow a_t\rightarrow e_{t+1}\rightarrow o_{t+1}.
 其中 $e_t$ 是真实环境状态，通常不能完全看见；$o_t$ 是传感器观测；$z_t$ 是模型内部的潜在状态或表征；$a_t$ 是交给环境或下层控制器的动作。只有当 $z_t$ 根据观测历史表达了对隐藏环境状态的任务相关估计时，本书才把它进一步称为信念状态。换言之，任意中间特征都可以是表征，却不自动成为状态，更不自动成为信念。
 
 `CLAIM-01-01`（fact）：开环视觉任务中模型输出通常不改变后续测试输入；闭环系统中动作会改变环境和未来观测，因此错误的时间相关性、可恢复性和后果与逐帧平均误差同样重要。
+{: .book-claim .claim-fact }
 
 ```mermaid
 flowchart LR
@@ -100,6 +101,7 @@ make ch01-smoke
 *TAB-01-01：`EXP-01-01` 的固定结果。lateral state、action 和边界均无物理单位；不是车辆横向控制结果。*
 
 `CLAIM-01-02`（result）：两组手工 residual 的离线 MAE gap 为 0，但积分后的 final-state gap 为 0.4，且只有持续误差越过固定边界。它证明逐步 MAE 不能唯一决定这个 fixture 的时序后果，不证明真实误差一定线性累积。
+{: .book-claim .claim-result }
 
 首次测试还暴露了一个工程细节：二进制浮点的 `0.1+0.1+0.1` 会略大于 `0.3`。代码对边界比较加入明确容差，避免数值表示把“等于边界”误判为“超过边界”。真实系统也必须规定单位、精度、inclusive/exclusive 规则和安全裕量。
 
@@ -124,6 +126,7 @@ u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
 *TAB-01-03：`EXP-01-01` 的 12 步固定反馈结果。越界定义为 $|x|>0.3$；恰好等于 0.3 不算越界。state、disturbance 和 action 都无物理单位。*
 
 `CLAIM-01-06`（result）：在这组固定 12 步标量 fixture 中，及时无饱和反馈把最大绝对 state 从 open-loop 的 1.2 限制到约 0.125；把观测延迟两步后最大值为 0.4076 并越界，把动作限幅降到 0.05 后最大值为 0.65 且 11 步饱和。该结果只证明反馈效果依赖观测新鲜度和动作权限，不证明一般 closed-loop stability、真实 controller 收敛性或物理安全收益。
+{: .book-claim .claim-result }
 
 ### 1.3.2 终态相同不能抹去中途越界
 
@@ -137,6 +140,7 @@ u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
 *TAB-01-04：`EXP-01-01` v3 的 terminal-state aliasing 负对照。符号序列表示无单位手工扰动，不是道路、机器人或执行器轨迹。*
 
 `CLAIM-01-07`（result）：在固定八步无单位标量 fixture 中，两条扰动序列具有相同元素 multiset、平均绝对扰动 0.1 和最终 state 0.264；边界触及序列的最大绝对 state 为 0.3、按严格规则不越界，重排序列在第 7 步达到 0.476 并越界。它只证明终态与扰动边际统计不能恢复这段有限轨迹的瞬态后果，不估计真实扰动分布、控制稳定性、恢复能力、碰撞风险或物理安全。
+{: .book-claim .claim-result }
 
 无时延且未饱和时，固定点满足 $x^*=d/k=0.125$，这解释了 timely feedback 的残余偏差。delayed case 的 12 步轨迹只是一个有限时域反例，未做特征根或 Lyapunov 分析时不要把它改写成“系统不稳定”；authority-limited case 则表明命令方向正确也不等于执行权限充足。后续第7章讨论重规划，第19章讨论仿真合同，第21章再把时延、deadline、fallback 和独立安全网关接入系统证据。
 
@@ -153,6 +157,7 @@ u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
 离线车道线、3D 检测或轨迹误差不能单独回答：车辆是否碰撞、越界、违反规则，规划是否超时，传感器故障时是否进入最小风险状态。转向和制动还会改变相机视角、相对速度与其他交通参与者的反应。
 
 `CLAIM-01-03`（recommendation）：自动驾驶感知/预测输出只能作为状态和候选后果的证据；任何控制必须继续经过车辆动力学、道路边界、occupancy/碰撞、时效、控制限幅和最小风险网关，并以独立闭环协议验收。
+{: .book-claim .claim-recommendation }
 
 自动驾驶不是独立附录：第4章写日志切分，第6–9章写 latent rollout/规划/评测，第11–12章写动作条件未来和 BEV/occupancy，第17–18章写世界模型与后训练，第19–21章写 MetaDrive/CARLA、指标和部署。
 
@@ -179,6 +184,7 @@ u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
 *TAB-01-02：建议路线。章节之间有前置接口，但不是只有线性读法。自动驾驶读者在任一路线上都跟随各章正文小节。*
 
 `CLAIM-01-04`（recommendation）：没有 3D 视觉经验不妨碍阅读第1–11章；第3章提供像素—深度—点云—frame 最小桥接，第12章再从二维射线和三态 occupancy 进入空间表征。遇到 NeRF/3DGS 可先按 renderer/representation 接口理解，不必先完成多视图几何课程。
+{: .book-claim .claim-recommendation }
 
 若想系统补基础，可使用开放教材 [Modern Robotics](https://modernrobotics.northwestern.edu/)、[MIT Robotic Manipulation](https://manipulation.csail.mit.edu/) 和 [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html)。它们是延伸路线，不是本书 S 档实验的安装依赖。
 
@@ -194,6 +200,7 @@ u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
 - 超过上限或要求购置硬件的方法只做论文/接口审计，不阻塞主线。
 
 `CLAIM-01-05`（recommendation）：先运行 S 档并核对实验卡、结果 JSON 和已知限制，再决定是否投入 GPU/数据；如果目标硬件、数据许可或下载预算尚不明确，就停在 S 档并把 M/L 路径保留为可选待办，不要求购置硬件。没有目标硬件实测时，24 GB 配方、训练收敛、样本效率和实时性能必须保持 `pending`。
+{: .book-claim .claim-recommendation }
 
 ## 1.8 失效模式与安全边界
 

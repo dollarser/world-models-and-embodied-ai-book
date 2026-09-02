@@ -37,6 +37,7 @@ SFT 最大化示范动作在观察和指令下的似然：
 它回答“数据中的操作者做了什么”，不直接回答动作导致的后果、失败能否恢复、多个可行动作哪个回报更高，或闭环偏离示范后怎样回到任务。后训练引入 outcome，但也增加了新的污染源：reward 定义、数据收集 policy、优势估计、环境真实性和更新后 distribution shift。
 
 `CLAIM-18-01`（recommendation）：VLA 后训练的完成定义至少应包含 interaction source、reward/verifier、credit/advantage、policy support、更新算法和独立闭环评测；“用了 RL”不是足够的实验说明。
+{: .book-claim .claim-recommendation }
 
 ### 18.1.1 后训练同时改变三个对象
 
@@ -124,8 +125,10 @@ make ch18-smoke
 *TAB-18-02：`EXP-18-01` 固定 reward reweighting 结果。ESS 为 \((\sum_i w_i)^2/\sum_i w_i^2\)，recovery mass 是归一化权重，不是恢复成功率。*
 
 `CLAIM-18-02`（result）：固定成功权重从 1 增至 3 后，两阶段 target 从 `(0.55,0.45)` 移到 `(0.40,0.60)`，相对手工成功参考的 MAE 从 0.30 降到 0.15。代码没有训练或评测 policy，因此不能声称成功率改善。
+{: .book-claim .claim-result }
 
 `CLAIM-18-03`（result）：同一重加权把 ESS 从 4.0 降到 3.2，并把 recovery 样本权重占比从 0.50 降到 0.25；只保留成功时 ESS=2、recovery mass=0。target 更接近参考与 coverage 下降在此 fixture 中同时发生。
+{: .book-claim .claim-result }
 
 fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最近完整轨迹的 action MAE 不超过 `0.1`”。极端 proposal `(-0.1,1.1)` 两者都拒绝；但 `(0.9,0.8)` 的每一维都落在观测范围内，会被 marginal gate 接受，而它到最近完整轨迹的 MAE 为 `0.35`，被 joint gate 拒绝。
 
@@ -140,8 +143,10 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 *TAB-18-03：联合支持与 leave-one-out advantage 退化。最近邻阈值和 reward group 都是手工 fixture。*
 
 `CLAIM-18-07`（result）：`EXP-18-01` 的未见组合 `(0.9,0.8)` 通过逐阶段 min/max，却被最大 MAE `0.1` 的最近完整轨迹门禁拒绝，最近距离为 `0.35`。该结果只说明 marginal range 不能代表联合轨迹支持；最近邻同样不证明状态条件可达、安全或真实行为密度。
+{: .book-claim .claim-result }
 
 `CLAIM-18-08`（result）：三样本组中，全成功与全失败 reward 的未归一化 leave-one-out advantage 都为 `(0,0,0)`，混合 `(1,0,0)` 为 `(1,-0.5,-0.5)`。这验证相对信号退化，不是 RIPT-VLA 梯度、PPO clipping 或训练稳定性复现。
+{: .book-claim .claim-result }
 
 ## 18.4 交互式后训练：稀疏成功信号也有代价
 
@@ -162,6 +167,7 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 *TAB-18-05：`EXP-18-01` v4 的 dynamic rejection 分母。难度标签、reward 和组构成都由本书手工指定；“rejected rollout 数”只是被拒组所含样本数，不含为了补满 batch 后续可能新增的重采样成本。*
 
 `CLAIM-18-10`（result）：在该四组 fixture 中，零优势拒绝使 group acceptance rate 为 `2/4=0.5`，训练使用分布中的 medium context 从 attempted 的50%变为100%，easy/hard 从各25%变为0%。这只证明选择规则能改变本 fixture 的 used 分布，不估计 RIPT-VLA 的真实 context 发生率、重采样成本、梯度偏差、收敛或策略性能。
+{: .book-claim .claim-result }
 
 只保存最终 used batch 仍不足以恢复成本与选择历史。`EXP-18-01` v4 固定两个最终都使用“两组 medium、共6条 rollout”的流：clean 流直接尝试这两组；rejection-heavy 流先尝试并拒绝 easy/hard，再得到同样两组 medium。
 
@@ -173,6 +179,7 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 *TAB-18-06：`EXP-18-01` v4 的同 used batch—异尝试历史负对照。两条确定性流不是从未知接受概率推导的期望成本。rejection-heavy 的完整 used 字典还保留 easy/hard 的零占比，以便追溯被拒来源。*
 
 `CLAIM-18-11`（result）：`EXP-18-01` v4 的 clean 与 rejection-heavy 流具有相同 used group/rollout 数和相同非零 used 难度分布，但后者 attempted rollout 为12、是前者6的两倍，并隐藏6条被拒 rollout。该结果只证明 used-batch 摘要不能识别这两条手工尝试历史，不估计真实接受概率、期望重采样成本、并行效率、梯度偏差、收敛或策略性能。
+{: .book-claim .claim-result }
 
 人类纠正可记录 intervention 前观察、模型原动作、纠正动作、触发原因和恢复结果。只保存纠正动作会丢失“为何接管”和 policy-induced state，无法区分动作学习与数据选择效应。高风险机器人/车辆必须先用保守 controller 和安全员协议限定探索范围。
 
@@ -212,6 +219,7 @@ Reward model 与 world model 的错误也可能相关。例如两者都来自相
 [MindExplore](https://openaccess.thecvf.com/content/ICCV2025/html/Li_Towards_Long-Horizon_Vision-Language-Action_System_Reasoning_Acting_and_Memory_ICCV_2025_paper.html)是 ICCV 2025 的层级 reasoning—acting—memory 案例 `[P,R1]`。它支持“分层和反馈是可行架构模式”，不能证明特定沙地系统结果能外推到桌面操作、车辆或任意 VLA。
 
 `CLAIM-18-04`（recommendation）：长时 VLA 应分别评测 subgoal selection、phase completion、memory correctness、recovery、动作闭环和全任务 outcome；增加 context/chunk 长度不能替代显式进度证据与 replanning。
+{: .book-claim .claim-recommendation }
 
 ### 18.6.1 长时能力依赖可撤销的承诺
 
@@ -237,10 +245,12 @@ Reward model 与 world model 的错误也可能相关。例如两者都来自相
 [SimWAM README 快照 `68b426c`](https://github.com/H-EmbodVis/SimWAM/blob/68b426c162827cb7701396895dbb3572d29f3420/README.md)把它描述为自动驾驶中的第四类案例；其[固定源码](https://github.com/H-EmbodVis/SimWAM/blob/68b426c162827cb7701396895dbb3572d29f3420/src/simwam/models/wan22/simwam.py)构造 isolated attention mask，使 action token 可读取 action token 和当前首帧 video token、不能读取其余 future-video token。README 还说明两类 expert 不共享权重，推理时省略显式未来帧生成并走 action-only 路径 `[O,R1]`。这恰好说明 WAM 可以在部署时不生成或读取预测未来；其视频分支是训练信号，不能仅凭名称声称在线 planner 在 imagined future 上比较候选。
 
 `CLAIM-18-09`（fact）：在 SimWAM 官方快照 `68b426c` 中，源码 attention mask 只开放 action→action 与 action→当前首帧 video token，README 把部署接口描述为不显式生成未来帧的直接轨迹预测；这只证明该版本的接口和作者说明，不证明视频辅助训练带来因果收益、上游分数已复现或该模型可作交互 simulator。
+{: .book-claim .claim-fact }
 
 2026 年的 WAM 分类本身仍在演化：本章沿用“未来如何连接动作”的四接口轴；另一些当前 survey 使用 render-and-decode、latent-only、video-generation-free 等推理 substrate。两种分类可以交叉，不应把 taxonomy 名称当能力声明。工程卡仍应直接登记：动作是否条件化未来、未来是否递归、推理是否解码视频、action head 是否能看未来 token，以及 reward/termination 是否存在。
 
 `CLAIM-18-05`（inference）：一个 WAM 是否能用于规划、RL simulator 或安全反事实，取决于它是否暴露经验证的动作条件未来、递归 state、reward/termination 与候选比较接口；联合视频—动作 loss 或“world”命名本身不提供这些能力。
+{: .book-claim .claim-inference }
 
 联合建模只说明未来与动作出现在同一个概率系统中，不说明因果方向。模型可能根据未来视频反推动作，也可能根据动作预测未来，还可能共同预测二者而不存在可控干预接口。用于策略时，必须检查推理阶段哪些 token 可见、动作是否先于被预测未来进入条件，以及替换动作时未来是否按语义改变。
 
@@ -257,6 +267,7 @@ reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预�
 [WorldRFT](https://arxiv.org/abs/2512.19133)是 latent world model、分层规划和 reinforcement fine-tuning 的驾驶案例 `[A,R0]`；[SimWAM 快照 `68b426c`](https://github.com/H-EmbodVis/SimWAM/tree/68b426c162827cb7701396895dbb3572d29f3420)则代表 future-prediction auxiliary + action-only inference。两者都只能作为架构证据，不能把上游 nuScenes/NAVSIM 数字当作本书或道路部署结果。
 
 `CLAIM-18-06`（recommendation）：驾驶 policy 的后训练更新必须在未用于 policy/world-model/reward 训练的闭环路线和 seed 上复核碰撞、路线、干预、规则、舒适与尾部风险，并通过第21章执行网关；learned simulator reward 或 open-loop score 不能授权车辆控制。
+{: .book-claim .claim-recommendation }
 
 ## 18.9 资源、开源与许可路线
 

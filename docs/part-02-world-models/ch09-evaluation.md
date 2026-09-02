@@ -125,6 +125,7 @@ MSE、PSNR 和 SSIM 对局部像素误差敏感，便于定位模糊、漂移和
 uniform 行在这四例上只复述 base rate，预测方差为0；informative 行把正负例分开，预测方差为0.16。单 bin ECE 看不到这一差别；改成 `[0,0.5)` 与 `[0.5,1]` 两个预注册 bin 后，informative 行的经验 gap 为0.1。不能由此反过来宣称 uniform “更校准”或“更好”：四例不足以估计总体 calibration，而 ECE 单独不奖励有用的分辨率。合格报告应并列 proper score、reliability diagram/分箱定义、样本数和按 horizon/场景分桶，并在独立 calibration split 上选择任何温度或阈值，再到未参与选择的 final split 评估。
 
 `CLAIM-09-09`（result）：`EXP-09-01` v4 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
+{: .book-claim .claim-result }
 
 平均 proper score 也不是完整的失败分布。v4 在同一 `y=(1,1,0,0)` 上构造 `diffuse=(0.6,0.6,0.4,0.4)` 与 `concentrated=(0.3,0.7,0.2,sqrt(0.02))`；两行四个 squared error 的总和都为0.64，因此 mean Brier 都是0.16，但误差位置不同：
 
@@ -136,6 +137,7 @@ uniform 行在这四例上只复述 base rate，预测方差为0；informative �
 *TAB-09-04：`EXP-09-01` v4 的 equal-mean-Brier 误差集中负对照。概率按构造给出，不是模型输出或总体 tail estimate。*
 
 `CLAIM-09-10`（result）：固定四 outcome 表中，diffuse 与 concentrated forecast 的 mean Brier 都为0.16；前者0.5阈值准确率为1且最大单例 log loss 为0.510826，后者准确率为0.75且最大单例 log loss 为1.203973。该结果只证明相同平均 Brier 不能恢复误差是否集中在单个样本，不估计总体概率质量、tail risk、calibration、真实事件严重度或安全性。
+{: .book-claim .claim-result }
 
 ### one-step 与 multi-step
 
@@ -172,6 +174,7 @@ E(h)=\frac{1}{N}\sum_{i=1}^{N} d\!\left(\hat{s}^{(i)}_{t+h},s^{(i)}_{t+h}\right)
 `Δ` 很小可能意味着模型忽略动作；`Δ` 很大也不保证正确，因为模型可能对 OOD 动作产生任意变化。应把动作覆盖划分为训练分布内、边界附近和分布外三组，并分别报告误差、校准和失败率。
 
 `CLAIM-09-02`（recommendation）：凡是用于规划或策略评估的模型，至少应通过 E2 干预门禁；只有观察数据上的平均预测误差不足以支撑决策用途。
+{: .book-claim .claim-recommendation }
 
 ### 9.3.1 反事实通常没有现成真值
 
@@ -227,6 +230,7 @@ make ch09-smoke
 *TAB-09-01：`EXP-09-01` 的 one-step—干预—闭环排序反转。action sensitivity 是同一状态下三个候选动作预测值的极差。*
 
 `CLAIM-09-01`（result）：在 `EXP-09-01` 的固定 fixture 中，one-step RMSE 与闭环成功率给出了相反的模型排序；这只构成指标错位反例，不证明真实世界模型必然发生同一排序反转。
+{: .book-claim .claim-result }
 
 这项结果只证明排序反转在逻辑上可以发生。它使用两个确定性函数、两个目标和一维动力学，不能估计这种现象在真实世界模型中的频率，也不能证明所有感知指标与控制性能负相关。它的作用是给评测代码建立一个必须能识别的反例。
 
@@ -240,6 +244,7 @@ make ch09-smoke
 *TAB-09-02：`EXP-09-01` 的长时缺失分母反例。缺失惩罚 2.0 是本 fixture 的预注册失败语义，不是推荐给其他任务的通用常数。*
 
 `CLAIM-09-08`（result）：在 `EXP-09-01` 的固定三 rollout 反例中，available-case 聚合选择 fragile，而预注册缺失惩罚的固定分母聚合选择 stable。该结果证明分母语义可以改变排序，不估计真实模型崩溃率，也不证明任意惩罚值都合理。
+{: .book-claim .claim-result }
 
 ## 9.6 WorldArena：同时测感知与功能，但不要抹平任务边界
 
@@ -275,6 +280,7 @@ OOD AUROC 回答分数能否把两个冻结总体排序，却没有直接回答�
 第5章 `EXP-05-01` 的 correlated-error 负对照给出最小实例：三个成员对 OOD target 同时错 4，却因预测完全相同而得到 range 0。评测不能只统计“高分歧 OOD 被拒绝多少”，还要报告低分歧高损失 false negative、按 shift 类型/严重度分桶，并检查成员是否共享训练数据捷径、架构盲点或 simulator bias。
 
 `CLAIM-09-06`（recommendation）：用于动作拒绝的 uncertainty/OOD score 应报告完整 risk–coverage 关系、预注册工作点、分桶失败捕获率与 fallback 后果，并保存分数方向、估计器版本和校准数据；单一 AUROC 或拒绝率不能替代部署用途证据。
+{: .book-claim .claim-recommendation }
 
 ### 9.7.2 压力测试不是部署频率估计
 
@@ -298,6 +304,7 @@ OOD AUROC 回答分数能否把两个冻结总体排序，却没有直接回答�
 | 稀有事件 | 场景覆盖与条件命中率 | 各场景桶的失败率和置信区间 |
 
 `CLAIM-09-04`（inference）：如果模型用于驾驶规划，闭环路线完成和安全指标比单独的视频质量更接近部署用途；但仿真闭环仍不能替代真实车辆安全验证。正文后续默认用 MetaDrive 做 S/M 档决策评测，CARLA 仅作为 L2 高保真扩展，不要求读者购买硬件。
+{: .book-claim .claim-inference }
 
 闭环也不是一个不可再分的“最终真值”。世界模型、状态估计、规划器、低层控制器、安全网关和仿真器共同产生结果。只替换世界模型并冻结其他组件，有助于估计其增量作用；整套系统同时变化，更接近产品比较，却无法把差异单独归因给模型。两种设计回答不同问题。
 
@@ -331,6 +338,7 @@ resources + experiment_ids + artifacts + limitations
 `BENCH-09-01` v4 明确把 E1 的 12 个 one-step 转移、6 条多步误差行与4行二元概率表、E2 action sensitivity、E4 的两个闭环 episode 分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值、缺失惩罚与概率 bin edge，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。概率表只是评分机制 fixture，不是 learned uncertainty estimator、calibration split 或 OOD 总体，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构风险曲线。
 
 `CLAIM-09-07`（recommendation）：可审计比较应在运行前冻结 benchmark card，并把评测协议、单次运行来源和测量结果拆成可互相引用的资产；机器 Schema 只证明结构与追溯关系成立，不证明 benchmark 有外部效度。
+{: .book-claim .claim-recommendation }
 
 综合分数可用于浏览排行榜，但发布时必须保留分项结果。权重会把价值判断藏进公式：一个重视视觉质量的综合分数，不适合直接选择安全关键规划器。
 

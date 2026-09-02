@@ -40,6 +40,7 @@
 模型至少提供动作条件转移、reward/cost 和终止；terminal value 可近似 horizon 之外的收益。若只生成视频却没有可靠 reward、风险或状态读出，规划目标仍不完整。
 
 `CLAIM-07-01`（fact）：规划结果由模型、目标、horizon、terminal value、候选生成/搜索预算和执行方式共同决定；“使用世界模型”不是足够的算法说明。
+{: .book-claim .claim-fact }
 
 ```mermaid
 flowchart LR
@@ -161,8 +162,10 @@ make ch07-smoke
 *TAB-07-01：`EXP-07-01` 的 horizon 结果。回报无量纲，规则和 value 均为手工设定。*
 
 `CLAIM-07-02`（result）：H=1 选择立即 harvest 得 0；H=3 找到延迟收益序列得 0.8。它证明这个 fixture 对 horizon 敏感，不表示更长永远更好。
+{: .book-claim .claim-result }
 
 `CLAIM-07-03`（result）：加入手工精确 terminal value 后，H=1 首步变为 advance，预测 return 为 0.8；这验证 bootstrap 接口，不证明 learned value 无偏。
+{: .book-claim .claim-result }
 
 原 fixture 还曾把“执行两步旧 suffix 得 -0.2”与“重新规划三步并完成 harvest 得 0.7”并列。这个比较同时改变了反馈方式与扰动后的动作预算，**不能**把 0.9 的差归因于重规划。`EXP-07-01` v4 保留该结果作为 protocol negative control，并增加两个固定为 2 个动作槽的受控比较：
 
@@ -178,8 +181,10 @@ make ch07-smoke
 *TAB-07-02：扰动重规划的 protocol audit。环境 reward 包含扰动前已经执行的 `advance=-0.1`；冻结 terminal value 只在预算耗尽且未终止时加入目标。旧协议两行预算不同，只是不可归因的负对照。*
 
 `CLAIM-07-04`（result）：固定两个扰动后动作槽且只累计观测到的环境 reward 时，stale suffix 得 -0.2，重新规划得 -0.1；该受控 fixture 只证明反馈可改变动作并在此目标下提高 0.1，不证明到达目标、普遍优于 open loop 或抵消模型误差。
+{: .book-claim .claim-result }
 
 `CLAIM-07-08`（result）：同样固定两个动作槽并冻结手工 terminal value 时，重规划的环境 reward 为 -0.3、terminal-value contribution 为 1.0、规划目标为 0.7；因此 `0.7` 是带 bootstrap 的 objective，不是已经观测到的环境回报。
+{: .book-claim .claim-result }
 
 ## 7.7 受限价值等价反例
 
@@ -229,6 +234,7 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 *TAB-07-04：固定五场景风险目标反例。来源：本书原创，MIT，2026-09-01。场景概率是手工设定，不代表真实机器人或驾驶事件频率。*
 
 `CLAIM-07-07`（result）：在五个等权手工场景中，期望回报选择 risky（0.8 > 0.6），经验最差 20% 均值和失败概率上限 0.1 都选择 steady；该固定排序反例只证明聚合目标会改变动作选择，不估计真实尾部概率、不证明 CVaR 校准或系统安全。
+{: .book-claim .claim-result }
 
 同一 risky 样本再固定 `α=0.3`，尾部质量为 `1.5` 个等权样本。正式指标完整计入 `-2`，再给下一个 `1.5` 分配 `0.5` 权重；粗略 `ceil` 对照则完整平均两个样本：
 
@@ -240,6 +246,7 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 *TAB-07-05：非整数经验尾部质量审计。来源：`EXP-07-01` v4，本书原创，MIT，2026-09-02。两个数都只是同一五点经验分布的描述量。*
 
 `CLAIM-07-09`（result）：`EXP-07-01` v4 在五个等权固定 return、`α=0.3` 下得到按边界质量计权的经验下尾均值 `-0.833333`；`ceil` 粗略对照把尾部扩大为 40%，得到 `-0.25`，两者相差 `0.583333`。该解析对照只暴露离散化口径，不估计总体 CVaR、置信区间、真实稀有风险或系统安全。
+{: .book-claim .claim-result }
 
 这个表还揭示三个容易漏报的实验字段：场景/粒子如何生成，风险阈值在什么 split 上冻结，以及“没有采到失败”时分母是多少。驾驶中的碰撞、越界和不可恢复状态通常应作为独立约束或网关事件，不能只乘一个小权重后被路线进度抵消。
 
@@ -262,6 +269,7 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 缓解方式包括短 horizon、replanning、terminal value、action bounds、不确定性惩罚、真实数据回查和独立约束。第17章会完整讨论 model exploitation；本章只建立规划接口。
 
 `CLAIM-07-05`（recommendation）：报告 learned-model planning 时必须把“优化器没找到好序列”“模型把坏序列评高”“value 错”“执行/状态估计错”分开，而不是统称规划失败。
+{: .book-claim .claim-recommendation }
 
 ## 7.10 自动驾驶正文：候选轨迹不是控制授权
 
@@ -274,6 +282,7 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 短 horizon 可能错过切入或停车距离，长 horizon 会扩大他车行为和地图不确定性。terminal value 可表达路线进度，但不能吞掉碰撞；replanning 能响应新观测，却受第21章 deadline 约束。
 
 `CLAIM-07-06`（recommendation）：自动驾驶 learned planner 的候选轨迹必须再经车辆动力学、道路边界、occupancy、碰撞、控制限幅和最小风险层检查；模型预测的高 return 不能直接下发执行器。
+{: .book-claim .claim-recommendation }
 
 ## 7.11 资源、许可与证据边界
 
