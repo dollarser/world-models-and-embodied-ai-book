@@ -34,6 +34,15 @@ def main() -> int:
         raise AssertionError("the narrow range must miss the target")
     if not metrics["broad_randomization_covers_target"]:
         raise AssertionError("the broad range must cover the target")
+    joint_support = metrics["joint_randomization_support_audit"]
+    if not joint_support["same_marginal_values"]:
+        raise AssertionError("the authored supports must expose the same marginal values")
+    if not joint_support["aligned_support"]["joint_point_accepted"]:
+        raise AssertionError("the aligned support must contain the target parameter tuple")
+    if not joint_support["crossed_support"]["marginal_range_accepted"]:
+        raise AssertionError("the crossed support must pass the marginal envelope check")
+    if joint_support["crossed_support"]["joint_point_accepted"]:
+        raise AssertionError("the crossed support must exclude the target parameter tuple")
     condition_metrics = metrics["operating_condition_calibration"]
     if condition_metrics["single_load"]["minimizer_count"] != 3:
         raise AssertionError("one load must expose three force/load-equivalent grid points")

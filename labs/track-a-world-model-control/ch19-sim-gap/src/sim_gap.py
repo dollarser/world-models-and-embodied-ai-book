@@ -250,6 +250,52 @@ def covers(
     )
 
 
+def finite_support_report(
+    params: SystemParams,
+    support: tuple[SystemParams, ...],
+) -> dict[str, object]:
+    """Compare marginal envelopes with membership in an authored finite support."""
+    if not support:
+        raise ValueError("finite support must contain at least one parameter point")
+    if any(not isinstance(point, SystemParams) for point in support):
+        raise ValueError("finite support must contain SystemParams points")
+    gains = tuple(sorted({point.actuator_gain for point in support}))
+    delays = tuple(sorted({point.action_delay_steps for point in support}))
+    scales = tuple(sorted({point.observation_scale for point in support}))
+    return {
+        "support_size": len(support),
+        "marginal_values": {
+            "actuator_gain": gains,
+            "action_delay_steps": delays,
+            "observation_scale": scales,
+        },
+        "marginal_range_accepted": covers(
+            params,
+            (gains[0], gains[-1]),
+            delays,
+            (scales[0], scales[-1]),
+        ),
+        "joint_point_accepted": params in support,
+    }
+
+
+def joint_support_audit() -> dict[str, object]:
+    """Expose two finite supports with equal marginals but different joint coverage."""
+    aligned_support = (TARGET, SystemParams(1.0, 1, 1.0))
+    crossed_support = (
+        SystemParams(0.8, 1, 1.0),
+        SystemParams(1.0, 1, 1.25),
+    )
+    aligned = finite_support_report(TARGET, aligned_support)
+    crossed = finite_support_report(TARGET, crossed_support)
+    return {
+        "same_marginal_values": aligned["marginal_values"] == crossed["marginal_values"],
+        "aligned_support": aligned,
+        "crossed_support": crossed,
+        "scope": "two authored finite supports; not a continuous randomization distribution",
+    }
+
+
 def rounded_comparison(values: dict[str, float]) -> dict[str, float]:
     return {key: round(value, 12) for key, value in values.items()}
 
@@ -315,6 +361,7 @@ def evaluate() -> dict[str, object]:
         "calibrated_held_out_gap": rounded_comparison(calibrated_gap),
         "narrow_randomization_covers_target": covers(TARGET, (0.9, 1.1), (0,), (0.95, 1.05)),
         "broad_randomization_covers_target": covers(TARGET, (0.7, 1.1), (0, 1), (0.9, 1.3)),
+        "joint_randomization_support_audit": joint_support_audit(),
         "operating_condition_calibration": {
             "candidate_count": single_load.candidate_count,
             "single_load": {

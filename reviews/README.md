@@ -93,6 +93,7 @@
 - [第18章 WAM 实现快照审查](ch18-wam-implementation-snapshot-review-2026-09-02.md)
 - [第19章参数可辨识性审查](ch19-identifiability-review-2026-09-01.md)
 - [第19章多工况可辨识性审查](ch19-multi-condition-identifiability-review-2026-09-02.md)
+- [第19章联合随机化支持审查](ch19-joint-randomization-support-review-2026-09-02.md)
 - [第20章零事件风险上界审查](ch20-zero-event-risk-review-2026-09-02.md)
 - [编译站点语义可访问性审查](compiled-site-semantic-accessibility-review-2026-09-02.md)
 - [全书折叠自检 Markdown 渲染审查](self-check-markdown-rendering-review-2026-09-02.md)

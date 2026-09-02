@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-19-01`
-> 关联声明：`CLAIM-19-01`～`CLAIM-19-08`
-> 关联图表：`FIG-19-01` / `TAB-19-01` / `TAB-19-02` / `TAB-19-03`
+> 关联声明：`CLAIM-19-01`～`CLAIM-19-09`
+> 关联图表：`FIG-19-01` / `TAB-19-01`～`TAB-19-04`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：待验证
 
@@ -133,6 +133,17 @@ Real2Sim 不一定从手机扫描重建完整 3D。最小路径可以从已有�
 
 经典“纹理、光照全随机”只覆盖视觉域的一部分。对控制任务，延迟、执行器、摩擦、负载和行为参与者往往同样关键。应先由系统辨识和测量建立中心与范围，再逐项扩展；不确定的参数可以更宽，但必须记录假设。fixture 的 `covers` 只检查独立区间与离散 delay：即使目标每一维都在边界内，若真实随机化使用相关分布、约束流形或零概率组合，也不能据此声称 joint support 已覆盖。
 
+`EXP-19-01` v4 把该边界变成两套有限 support。aligned 与 crossed 都恰好包含 gain `{0.8,1.0}`、delay `{1}`、observation scale `{1.0,1.25}`；差别只在 gain—scale 如何配对。目标 `(0.8,1,1.25)` 属于 aligned，却不属于 crossed。
+
+| 有限 support | 边际范围检查 | 目标联合点检查 | 目标参数组合 |
+| --- | --- | --- | --- |
+| aligned | 通过 | 通过 | `(0.8,1,1.25)` 存在 |
+| crossed | 通过 | 拒绝 | 只有 `(0.8,1,1.0)` 与 `(1.0,1,1.25)` |
+
+*TAB-19-04：`EXP-19-01` v4 的相同边际—不同联合支持负对照。support 是两个手工离散点，不是连续相关分布。*
+
+`CLAIM-19-09`（result）：两套各2点的手工 support 具有完全相同的逐参数边际值，逐维范围检查都接受目标，但 crossed support 不包含目标三元组。该结果只证明边际范围不能识别这两个有限联合 support，不估计真实概率质量、相关性、随机化覆盖率、策略鲁棒性或 Sim2Real 性能。
+
 ## 19.6 EXP-19-01：零校准误差与“更多数据”都可能不可辨识
 
 S 档 fixture 用一个标量状态演示执行器增益、动作延迟和观测尺度。目标系统固定为 `gain=0.8`、`delay=1`、`scale=1.25`；12 个候选组合在校准动作上网格搜索。关键是 observation 只依赖 `gain×scale`：目标的 `0.8×1.25` 与候选 `1.0×1.0` 相同，因此 observation-only 本来就无法分离二者。
@@ -227,6 +238,7 @@ CARLA 用于高保真多相机、天气、城市资产和传感器管线扩展�
 3. **辨识设计**：分别说明“激励不足导致 gain/delay 难分”与“gain×scale 结构混淆”的区别；前者设计新动作，后者设计新测量。
 4. **驾驶迁移**：列出 MetaDrive 到 CARLA 迁移时必须重新验证的五类语义，不比较无法对齐的成功率。
 5. **多工况设计**：解释为什么重复十次同一载荷不等于十个独立辨识条件，并为车辆质量—驱动力或机械臂负载—电机增益设计一个安全的第二工况。
+6. **联合随机化支持**：构造两套逐参数范围相同但联合配对不同的有限 support，说明为什么逐维 min/max 不足以证明目标组合可采样。
 
 ## 自检要点
 
@@ -267,6 +279,13 @@ gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-19-06：相同边际不等于相同联合支持</summary>
+
+可令两套 support 的 gain 都取 `{0.8,1.0}`、scale 都取 `{1.0,1.25}`、delay 都固定为1。aligned 配对为 `{(0.8,1,1.25),(1.0,1,1.0)}`，包含目标；crossed 配对为 `{(0.8,1,1.0),(1.0,1,1.25)}`，不包含目标。逐维 min/max 与离散 delay 检查无法区分二者。真实 domain randomization 还应登记 joint sampler、参数相关性、约束、拒绝采样和目标附近概率质量；本题两点集合只验证结构差异，不代表连续分布或策略鲁棒性。
+
+</details>
+
 ## 延伸阅读
 
 - [MuJoCo 官方仓库](https://github.com/google-deepmind/mujoco) 与 [MJX 文档](https://mujoco.readthedocs.io/en/stable/mjx.html)，`[O,R1]`；
@@ -296,5 +315,5 @@ gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`、`reviews/ch19-multi-condition-identifiability-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`、`reviews/ch19-multi-condition-identifiability-review-2026-09-02.md`、`reviews/ch19-joint-randomization-support-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：只运行标准库标量 fixture；没有安装仿真器、下载资产、运行 GPU 或真实硬件。

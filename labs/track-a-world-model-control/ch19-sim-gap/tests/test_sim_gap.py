@@ -20,6 +20,8 @@ from sim_gap import (  # noqa: E402
     calibrate_load_conditions,
     compare,
     covers,
+    finite_support_report,
+    joint_support_audit,
     mean_absolute_error,
     rollout,
     rollout_load_condition,
@@ -108,6 +110,29 @@ class SimGapTests(unittest.TestCase):
             covers(TARGET, (1.0, 0.5), (0,), (0.9, 1.3))
         with self.assertRaises(ValueError):
             covers(TARGET, (0.7, 1.1), (True,), (0.9, 1.3))
+
+    def test_equal_marginals_do_not_identify_joint_support(self):
+        audit = joint_support_audit()
+        self.assertTrue(audit["same_marginal_values"])
+        self.assertEqual(
+            audit["aligned_support"]["marginal_values"],
+            audit["crossed_support"]["marginal_values"],
+        )
+
+    def test_crossed_pairing_rejects_target_despite_marginal_coverage(self):
+        audit = joint_support_audit()
+        self.assertTrue(audit["aligned_support"]["marginal_range_accepted"])
+        self.assertTrue(audit["aligned_support"]["joint_point_accepted"])
+        self.assertTrue(audit["crossed_support"]["marginal_range_accepted"])
+        self.assertFalse(audit["crossed_support"]["joint_point_accepted"])
+
+    def test_finite_support_must_not_be_empty(self):
+        with self.assertRaises(ValueError):
+            finite_support_report(TARGET, ())
+
+    def test_finite_support_rejects_non_parameter_members(self):
+        with self.assertRaises(ValueError):
+            finite_support_report(TARGET, (TARGET, "invalid"))
 
     def test_single_load_exposes_force_load_confounding(self):
         measured = rollout_load_condition(TARGET_LOAD, 0.0, CALIBRATION_ACTIONS)

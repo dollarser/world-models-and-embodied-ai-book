@@ -14,6 +14,30 @@
       "state_mae": 0.0,
       "terminal_state_error": 0.0
     },
+    "joint_randomization_support_audit": {
+      "aligned_support": {
+        "joint_point_accepted": true,
+        "marginal_range_accepted": true,
+        "marginal_values": {
+          "action_delay_steps": [1],
+          "actuator_gain": [0.8, 1.0],
+          "observation_scale": [1.0, 1.25]
+        },
+        "support_size": 2
+      },
+      "crossed_support": {
+        "joint_point_accepted": false,
+        "marginal_range_accepted": true,
+        "marginal_values": {
+          "action_delay_steps": [1],
+          "actuator_gain": [0.8, 1.0],
+          "observation_scale": [1.0, 1.25]
+        },
+        "support_size": 2
+      },
+      "same_marginal_values": true,
+      "scope": "two authored finite supports; not a continuous randomization distribution"
+    },
     "narrow_randomization_covers_target": false,
     "nominal_held_out_gap": {
       "observation_mae": 0.625,
