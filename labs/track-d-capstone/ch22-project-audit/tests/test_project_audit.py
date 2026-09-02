@@ -9,9 +9,13 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from project_audit import (  # noqa: E402
     INVALID_DRIVING_PACKAGE,
+    REPRODUCTION_COMMAND_PAYLOAD,
+    REPRODUCTION_STDOUT,
     VALID_DRIVING_PACKAGE,
     audit_project,
+    execute_reproduction_probe,
     evaluate,
+    reproduction_probe_audit,
 )
 
 
@@ -20,16 +24,42 @@ class ProjectAuditTests(unittest.TestCase):
         self.assertEqual(audit_project(VALID_DRIVING_PACKAGE), [])
         self.assertTrue(evaluate()["valid_package"]["accepted"])
         binding = VALID_DRIVING_PACKAGE["artifacts"]["reproduction_command"]
-        self.assertEqual(binding["uri"], "commands/reproduce.txt")
+        self.assertEqual(binding["uri"], "commands/reproduce.json")
         self.assertEqual(
             VALID_DRIVING_PACKAGE["artifact_payloads"][binding["uri"]],
-            "make ch22-smoke",
+            REPRODUCTION_COMMAND_PAYLOAD,
         )
 
     def test_invalid_project_exposes_all_fixed_issues(self):
         result = evaluate()["invalid_package"]
         self.assertFalse(result["accepted"])
-        self.assertEqual(result["issue_count"], 23)
+        self.assertEqual(result["issue_count"], 24)
+
+    def test_reproduction_receipt_binds_command_and_result_digests(self):
+        self.assertNotIn("invalid_reproduction_receipt", audit_project(VALID_DRIVING_PACKAGE))
+        package = copy.deepcopy(VALID_DRIVING_PACKAGE)
+        package["reproduction_receipt"]["stdout_sha256"] = "0" * 64
+        self.assertIn("invalid_reproduction_receipt", audit_project(package))
+
+    def test_missing_reproduction_receipt_is_rejected(self):
+        package = copy.deepcopy(VALID_DRIVING_PACKAGE)
+        del package["reproduction_receipt"]
+        self.assertIn("invalid_reproduction_receipt", audit_project(package))
+
+    def test_fixed_reproduction_probe_executes_and_matches_stdout_digest(self):
+        audit = reproduction_probe_audit()
+        self.assertEqual(audit["matched"]["status"], "reproduced")
+        self.assertEqual(audit["matched"]["exit_code"], 0)
+        self.assertEqual(audit["matched"]["stdout_bytes"], len(REPRODUCTION_STDOUT))
+        self.assertEqual(audit["matched"]["stderr_bytes"], 0)
+
+    def test_reproduction_probe_separates_digest_and_exit_failures(self):
+        audit = reproduction_probe_audit()
+        self.assertEqual(audit["digest_mismatch"]["status"], "stdout_digest_mismatch")
+        self.assertEqual(audit["nonzero_exit"]["status"], "nonzero_exit")
+        self.assertEqual(audit["nonzero_exit"]["exit_code"], 3)
+        with self.assertRaises(ValueError):
+            execute_reproduction_probe('["sh","-c","true"]', "0" * 64)
 
     def test_valid_project_has_five_stage_traceability(self):
         self.assertEqual(evaluate()["required_trace_stage_count"], 5)

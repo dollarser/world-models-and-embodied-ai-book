@@ -39,6 +39,7 @@
 - [第15/21章共享动作 Schema 与执行身份审查](ch15-ch21-shared-action-schema-review-2026-09-02.md)
 - [第15/21章重新激活 receipt 交叉审查](ch15-ch21-reactivation-receipt-review-2026-09-02.md)
 - [第22章 Artifact Provenance 与独立评测审查](ch22-artifact-provenance-review-2026-09-01.md)
+- [第22章复现命令与结果回执审查（2026-09-02）](ch22-reproduction-receipt-review-2026-09-02.md)
 - [第3/10/11/12章零基础3D与刚体变换桥接审查](ch03-rigid-transform-bridge-review-2026-09-01.md)
 - [全书声明—来源—实验合同审查](claim-evidence-contract-review-2026-09-01.md)
 - [快速演进来源与版本接口审查：第9–11、15、18–21章](fast-moving-source-audit-2026-09-01.md)

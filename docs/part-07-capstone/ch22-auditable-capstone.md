@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-22-01`
-> 关联声明：`CLAIM-22-01`～`CLAIM-22-10`
-> 关联图表：`FIG-22-01` / `TAB-22-01` / `TAB-22-02` / `TAB-22-03` / `TAB-22-04` / `TAB-22-05`
+> 关联声明：`CLAIM-22-01`～`CLAIM-22-11`
+> 关联图表：`FIG-22-01` / `TAB-22-01` / `TAB-22-02` / `TAB-22-03` / `TAB-22-04` / `TAB-22-05` / `TAB-22-06`
 > 资源档位：S / M / L1 / L2
 > GPU 状态：不需要（S/M 档）/ 待验证（L1/L2）
 
@@ -115,7 +115,7 @@ flowchart LR
 
 ## 22.5 EXP-22-01：先审项目包，再审模型
 
-S 档审计器检查两个手工 driving project package fixture。完整包包含问题、claim、许可、三分区 × 四身份维度的数据隔离、五类带摘要的 artifact binding、可对照预期与实际问题的失败注入、局限、S 档资源、冻结且独立的评测、驾驶指标、可追溯 safety gateway，以及五段跨章证据 trace；故意不完整包违反这些合同。
+S 档审计器检查两个手工 driving project package fixture。完整包包含问题、claim、许可、三分区 × 四身份维度的数据隔离、五类带摘要的 artifact binding、绑定 command/result digest 的执行回执、可对照预期与实际问题的失败注入、局限、S 档资源、冻结且独立的评测、驾驶指标、可追溯 safety gateway，以及五段跨章证据 trace；故意不完整包违反这些合同。v5 还实际启动三个不经过 shell 的固定 `python3` 子进程，分离成功且输出摘要匹配、输出漂移和非零退出。
 
 ```bash
 make ch22-test-local
@@ -126,13 +126,23 @@ make ch22-smoke
 | 包 | issue 数 | 是否接受 | 关键结果 |
 | --- | ---: | --- | --- |
 | 完整固定包 | 0 | 是 | 12 个 split identity set、5 个 artifact digest binding、2 个失败注入和 5 段 trace 通过 |
-| 故意无效包 | 23 | 否 | 问题/claim/许可、4 类 train–eval 重叠、artifact/失败/资源/trace/评测冻结/驾驶安全均有具名 issue |
+| 故意无效包 | 24 | 否 | 问题/claim/许可、4 类 train–eval 重叠、artifact/回执/失败/资源/trace/评测冻结/驾驶安全均有具名 issue |
 
-*TAB-22-03：`EXP-22-01` v4 固定审计结果。fixture 在内存中重算文本 payload 的 SHA-256；没有遍历真实项目目录、运行真实复现命令，也不证明研究正确、许可有效或系统安全。*
+*TAB-22-03：`EXP-22-01` v5 固定审计结果。fixture 在内存中重算文本 payload 的 SHA-256，并运行受限标准库子进程；没有遍历真实项目目录、重建环境或运行模型，也不证明研究正确、许可有效或系统安全。*
 
-`CLAIM-22-02`（result）：完整固定包得到 0 issue；无效包得到 23 个具名 issue，包括四种 train–eval 身份重叠、artifact 缺失或 claim binding 非法、3×80 GB 与 L2 不匹配、GPU 结果未验证、trace 缺失、评测不独立且未冻结、驾驶指标与 safety gateway 缺失。该结果只验证标准库 fixture 的项目包审计路径。
+`CLAIM-22-02`（result）：完整固定包得到 0 issue；无效包得到 24 个具名 issue，包括四种 train–eval 身份重叠、artifact 缺失或 claim binding 非法、执行回执缺失、3×80 GB 与 L2 不匹配、GPU 结果未验证、trace 缺失、评测不独立且未冻结、驾驶指标与 safety gateway 缺失。该结果只验证标准库 fixture 的项目包审计路径。
 
-`CLAIM-22-08`（result）：`EXP-22-01` v4 的完整包校验 5 个 `uri + sha256 + producer_stage + claim_ids` binding；篡改 `results.json` 的 payload 会触发 `artifact_digest_mismatch:result`，错误 producer 或非规范 claim 会触发 `invalid_artifact_binding`。这只证明固定 payload 与登记摘要一致，不是科学复现徽章。
+`CLAIM-22-08`（result）：`EXP-22-01` v5 的完整包校验 5 个 `uri + sha256 + producer_stage + claim_ids` binding；篡改 `results.json` 的 payload 会触发 `artifact_digest_mismatch:result`，错误 producer 或非规范 claim 会触发 `invalid_artifact_binding`。这只证明固定 payload 与登记摘要一致，不是科学复现徽章。
+
+| probe | exit code | stdout digest | 状态 |
+| --- | ---: | --- | --- |
+| 固定命令与登记结果一致 | 0 | 匹配 `results.json` | `reproduced` |
+| 命令相同、预期 digest 改为全零 | 0 | 不匹配 | `stdout_digest_mismatch` |
+| 固定命令显式退出 3 | 3 | 空输出摘要 | `nonzero_exit` |
+
+*TAB-22-06：本地 reproduction probe 的三条执行路径。只允许 JSON argv 形式的 `python3`，不经过 shell；stdout 是固定字符串，不是模型结果。*
+
+`CLAIM-22-11`（result）：`EXP-22-01` v5 实际启动三个固定本地子进程；只有 exit 0 且 stdout SHA-256 与结果 artifact 一致的路径记为 `reproduced`，同一输出面对错误预期摘要得到 `stdout_digest_mismatch`，显式 exit 3 得到 `nonzero_exit`。项目包另要求手工 receipt 同时绑定 command/result URI、两端 digest、exit code 与 stderr 字节数。这只验证受限 CPU fixture 的执行和字段一致性，不证明命令安全、环境可重建、依赖完整、receipt 可信、模型运行、科学结论复现或独立 replication。
 
 | 分区 | 只允许承担的角色 | 必填且与另外两区互斥的集合 |
 | --- | --- | --- |
@@ -142,7 +152,7 @@ make ch22-smoke
 
 *TAB-22-05：项目包的三分区 × 四身份维度合同。集合互斥只证明已登记身份没有交集，不证明上游相似度方法完备、数据统计独立或场景真正分布外。来源：本书原创，MIT，2026-09-02。*
 
-`CLAIM-22-10`（result）：`EXP-22-01` v4 要求 train/selection/eval 各登记四类非空且内部无重复的身份集合；三个保持 group 不同的回归反例分别以 source asset、精确内容和近重复簇重叠触发拒绝，selection 与另外两区的来源重叠也会被拒绝。该结果只验证项目包内已登记集合与失败代码，不读取媒体、不发现未知近重复，也不证明统计独立。
+`CLAIM-22-10`（result）：`EXP-22-01` v5 要求 train/selection/eval 各登记四类非空且内部无重复的身份集合；三个保持 group 不同的回归反例分别以 source asset、精确内容和近重复簇重叠触发拒绝，selection 与另外两区的来源重叠也会被拒绝。该结果只验证项目包内已登记集合与失败代码，不读取媒体、不发现未知近重复，也不证明统计独立。
 
 资源检查按档位而不是全局阈值解释：S/M 不声明 GPU，L1 最多 1×24 GB，L2 最多 2×80 GB；因此 1×80 GB 或 2×80 GB 可属于 L2，而 1×25 GB 不能冒充 L1，3×80 GB 也不能冒充 L2。这不是说方法在其他环境不可运行，只表示它不能被包装成本书对应档位。
 
@@ -170,7 +180,7 @@ make ch22-smoke
 
 *TAB-22-04：自动驾驶 capstone 的五段证据 trace。表中入口均是本书 S 档接口 fixture；它证明依赖可追踪，不证明模型、仿真或车辆已经端到端运行。*
 
-`CLAIM-22-07`（result）：`EXP-22-01` v4 的完整包包含五个具名 trace stage 并通过 0 issue 审计；删除独立评测阶段会触发 `traceability_incomplete`，章节号与 `EXP/BENCH` ID 不一致、revision 为空、method stage 错连到第20章或依赖错误都会触发对应 `invalid_trace_stage`。这是证据图合同测试，不是闭环性能结果。
+`CLAIM-22-07`（result）：`EXP-22-01` v5 的完整包包含五个具名 trace stage 并通过 0 issue 审计；删除独立评测阶段会触发 `traceability_incomplete`，章节号与 `EXP/BENCH` ID 不一致、revision 为空、method stage 错连到第20章或依赖错误都会触发对应 `invalid_trace_stage`。这是证据图合同测试，不是闭环性能结果。
 
 训练、model selection 和最终闭环 evaluation 必须按 route/scene 分组隔离，并继续检查 raw source、精确内容和已知近重复簇；相邻帧随机切分无效，重命名的同源 test log 也不能用于选 checkpoint、阈值或 prompt。[NeurIPS reproducibility checklist](https://blog.neurips.cc/2021/03/26/introducing-the-neurips-2021-paper-checklist/)强调提交训练与评测细节、代码/数据/指令和限制；在本书项目合同中，评测协议还必须在看最终结果前冻结，并绑定独立 evaluator artifact。碰撞、道路边界、动作范围、时效和最小风险停车由带 trace、失败记录和 fallback modes 的独立 gate 检查，不能被路线 reward 抵消。
 
@@ -236,6 +246,7 @@ make ch22-smoke
 3. **三类对照**：为目标方法设计 oracle、负对照和独立真实性锚点。
 4. **停止规则**：写一个“应停止而不是继续加算力”的失败场景。
 5. **驾驶终测**：为驾驶项目划分互斥 route，并定义碰撞、干预和最小风险 gate。
+6. **复现回执**：运行固定 probe，分别改坏 stdout digest 与 exit code，解释为何两者必须保留不同失败状态。
 
 ## 自检要点
 
@@ -276,6 +287,13 @@ make ch22-smoke
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-22-06：命令存在、执行成功与结果一致是三层证据</summary>
+
+`reproduction_command` 的 URI 和 digest 只证明命令文本已绑定；exit code 0 只证明该进程按操作系统约定成功退出；只有 stdout digest 再与登记结果 artifact 一致，才能说这个固定输出被重现。若命令 exit 0 但摘要漂移，应报告 `stdout_digest_mismatch`，不能用“命令跑通”覆盖结果差异；若 exit 非零，应报告 `nonzero_exit`，也不能比较一个不完整输出后声称复现。当前 probe 只执行作者允许的 `python3` argv 和固定字符串，receipt 也是作者填写的字段，因此不支持真实环境重建、模型复现或独立 replication。
+
+</details>
+
 ## 延伸阅读
 
 - 仓库文件 `specs/PRD/书籍编写与审查执行流程.md`；
@@ -298,5 +316,5 @@ make ch22-smoke
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch22-artifact-provenance-review-2026-09-01.md`、`reviews/ch04-ch22-split-identity-propagation-review-2026-09-02.md`、`reviews/capstone-traceability-review-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
-- 已知限制：审计只读取内存 fixture payload 并重算摘要，不遍历真实目录、不执行复现命令；没有模型、数据、仿真、GPU、机器人、车辆或部署。
+- 审查记录路径：`reviews/ch22-artifact-provenance-review-2026-09-01.md`、`reviews/ch04-ch22-split-identity-propagation-review-2026-09-02.md`、`reviews/capstone-traceability-review-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/ch22-reproduction-receipt-review-2026-09-02.md`；
+- 已知限制：审计读取内存 fixture payload、重算摘要并执行受限本地 `python3` 字符串 probe，不遍历真实目录、不重建环境或运行模型；receipt 未签名，也没有数据、仿真、GPU、机器人、车辆或部署证据。

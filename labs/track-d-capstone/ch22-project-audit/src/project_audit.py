@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from hashlib import sha256
+import json
 from math import isfinite
 import re
+import subprocess
 
 
 REQUIRED_ARTIFACTS = (
@@ -86,6 +88,71 @@ def _artifact_binding(
     }
 
 
+def execute_reproduction_probe(
+    command_payload: str,
+    expected_stdout_sha256: str,
+    timeout_seconds: float = 2.0,
+) -> dict[str, object]:
+    """Execute one fixed Python argv contract without a shell and hash its stdout."""
+
+    if not isinstance(command_payload, str):
+        raise ValueError("reproduction command payload must be JSON text")
+    if not isinstance(expected_stdout_sha256, str) or not SHA256_PATTERN.fullmatch(
+        expected_stdout_sha256
+    ):
+        raise ValueError("expected stdout digest must be lowercase SHA-256 hex")
+    if (
+        isinstance(timeout_seconds, bool)
+        or not isinstance(timeout_seconds, (int, float))
+        or not isfinite(timeout_seconds)
+        or not 0.0 < timeout_seconds <= 5.0
+    ):
+        raise ValueError("probe timeout must be finite and lie in (0, 5]")
+    try:
+        argv = json.loads(command_payload)
+    except json.JSONDecodeError as exc:
+        raise ValueError("reproduction command payload must encode an argv list") from exc
+    if (
+        not isinstance(argv, list)
+        or not argv
+        or any(not isinstance(argument, str) or not argument for argument in argv)
+        or argv[0] != "python3"
+    ):
+        raise ValueError("fixture reproduction command must be a non-empty python3 argv list")
+
+    try:
+        completed = subprocess.run(
+            argv,
+            capture_output=True,
+            check=False,
+            shell=False,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "status": "timeout",
+            "exit_code": None,
+            "stdout_sha256": sha256(exc.stdout or b"").hexdigest(),
+            "stdout_bytes": len(exc.stdout or b""),
+            "stderr_bytes": len(exc.stderr or b""),
+        }
+
+    stdout_sha256 = sha256(completed.stdout).hexdigest()
+    if completed.returncode != 0:
+        status = "nonzero_exit"
+    elif stdout_sha256 != expected_stdout_sha256:
+        status = "stdout_digest_mismatch"
+    else:
+        status = "reproduced"
+    return {
+        "status": status,
+        "exit_code": completed.returncode,
+        "stdout_sha256": stdout_sha256,
+        "stdout_bytes": len(completed.stdout),
+        "stderr_bytes": len(completed.stderr),
+    }
+
+
 def audit_project(package: object) -> list[str]:
     if not isinstance(package, dict):
         return ["package_not_object"]
@@ -149,6 +216,19 @@ def audit_project(package: object) -> list[str]:
             issues.append(f"artifact_payload_missing:{artifact}")
         elif sha256(payload.encode("utf-8")).hexdigest() != digest:
             issues.append(f"artifact_digest_mismatch:{artifact}")
+
+    reproduction_receipt = _dict(package.get("reproduction_receipt"))
+    command_binding = _dict(artifacts.get("reproduction_command"))
+    result_binding = _dict(artifacts.get("result"))
+    if (
+        reproduction_receipt.get("command_uri") != command_binding.get("uri")
+        or reproduction_receipt.get("command_sha256") != command_binding.get("sha256")
+        or reproduction_receipt.get("result_uri") != result_binding.get("uri")
+        or reproduction_receipt.get("stdout_sha256") != result_binding.get("sha256")
+        or reproduction_receipt.get("exit_code") != 0
+        or reproduction_receipt.get("stderr_bytes") != 0
+    ):
+        issues.append("invalid_reproduction_receipt")
 
     failure_injections = package.get("failure_injections")
     if not isinstance(failure_injections, (list, tuple)) or not failure_injections:
@@ -251,11 +331,18 @@ def audit_project(package: object) -> list[str]:
     return issues
 
 
+REPRODUCTION_STDOUT = "fixture structured result v5"
+REPRODUCTION_COMMAND_PAYLOAD = json.dumps(
+    ["python3", "-c", f"import sys;sys.stdout.write({REPRODUCTION_STDOUT!r})"],
+    separators=(",", ":"),
+)
+
+
 VALID_ARTIFACT_PAYLOADS = {
-    "experiment-card.json": "fixture experiment card v4",
-    "results.json": "fixture structured result v4",
+    "experiment-card.json": "fixture experiment card v5",
+    "results.json": REPRODUCTION_STDOUT,
     "failures.md": "stale_observation -> stale_observation\nfixed_disturbance -> route_failure",
-    "commands/reproduce.txt": "make ch22-smoke",
+    "commands/reproduce.json": REPRODUCTION_COMMAND_PAYLOAD,
     "model-card.md": "fixture model card: no model, no vehicle",
 }
 
@@ -299,13 +386,21 @@ VALID_DRIVING_PACKAGE = {
             "failures.md", VALID_ARTIFACT_PAYLOADS["failures.md"], "deployment_or_safety_gate", "CLAIM-22-02"
         ),
         "reproduction_command": _artifact_binding(
-            "commands/reproduce.txt", VALID_ARTIFACT_PAYLOADS["commands/reproduce.txt"], "evidence_package", "CLAIM-22-02"
+            "commands/reproduce.json", VALID_ARTIFACT_PAYLOADS["commands/reproduce.json"], "evidence_package", "CLAIM-22-02"
         ),
         "model_card": _artifact_binding(
             "model-card.md", VALID_ARTIFACT_PAYLOADS["model-card.md"], "method_contract", "CLAIM-22-02"
         ),
     },
     "artifact_payloads": VALID_ARTIFACT_PAYLOADS,
+    "reproduction_receipt": {
+        "command_uri": "commands/reproduce.json",
+        "command_sha256": sha256(REPRODUCTION_COMMAND_PAYLOAD.encode("utf-8")).hexdigest(),
+        "result_uri": "results.json",
+        "stdout_sha256": sha256(REPRODUCTION_STDOUT.encode("utf-8")).hexdigest(),
+        "exit_code": 0,
+        "stderr_bytes": 0,
+    },
     "failure_injections": [
         {
             "name": "stale_observation",
@@ -334,28 +429,28 @@ VALID_DRIVING_PACKAGE = {
         "method_contract": {
             "chapter": 8,
             "artifact": "EXP-08-01",
-            "revision": "fixture-v3",
+            "revision": "fixture-v4",
             "decision": "construct continuation-aware value targets without collapsing truncation into terminal",
             "depends_on": ["input_contract"],
         },
         "independent_evaluation": {
             "chapter": 20,
             "artifact": "BENCH-20-01",
-            "revision": "fixture-v8",
+            "revision": "fixture-v11",
             "decision": "freeze selection/final/confirmation roles, route population, safety-aware success, timeout policy, valid denominator, and independent-unit plus zero-event estimand assumptions",
             "depends_on": ["input_contract", "method_contract"],
         },
         "deployment_or_safety_gate": {
             "chapter": 21,
             "artifact": "EXP-21-01",
-            "revision": "fixture-v10",
+            "revision": "fixture-v11",
             "decision": "reject stale, late, uncertain, out-of-bounds, epoch-identity-mismatched, duplicate-conflicting, or cross-step discontinuous actions and retain severity-stratified fallback consequences",
             "depends_on": ["input_contract", "method_contract"],
         },
         "evidence_package": {
             "chapter": 22,
             "artifact": "EXP-22-01",
-            "revision": "fixture-v4",
+            "revision": "fixture-v5",
             "decision": "bind question, artifacts, failures, resources, evaluation, and limitations into one audit",
             "depends_on": [
                 "input_contract",
@@ -378,6 +473,30 @@ VALID_DRIVING_PACKAGE = {
         "fallback_modes": ["controlled_stop", "request_operator"],
     },
 }
+
+
+def reproduction_probe_audit() -> dict[str, object]:
+    expected_digest = sha256(REPRODUCTION_STDOUT.encode("utf-8")).hexdigest()
+    matched = execute_reproduction_probe(REPRODUCTION_COMMAND_PAYLOAD, expected_digest)
+    digest_mismatch = execute_reproduction_probe(REPRODUCTION_COMMAND_PAYLOAD, "0" * 64)
+    nonzero_exit = execute_reproduction_probe(
+        json.dumps(["python3", "-c", "raise SystemExit(3)"], separators=(",", ":")),
+        sha256(b"").hexdigest(),
+    )
+    return {
+        "matched": matched,
+        "digest_mismatch": digest_mismatch,
+        "nonzero_exit": nonzero_exit,
+        "case_count": 3,
+        "reproduced_count": sum(
+            result["status"] == "reproduced"
+            for result in (matched, digest_mismatch, nonzero_exit)
+        ),
+        "scope": (
+            "three allowlisted local python3 subprocess probes; not an arbitrary project command, "
+            "filesystem package reproduction, model run, or independent replication"
+        ),
+    }
 
 
 INVALID_ARTIFACT_PAYLOADS = {
@@ -437,6 +556,7 @@ INVALID_DRIVING_PACKAGE = {
 def evaluate() -> dict[str, object]:
     valid_issues = audit_project(VALID_DRIVING_PACKAGE)
     invalid_issues = audit_project(INVALID_DRIVING_PACKAGE)
+    reproduction_probe = reproduction_probe_audit()
     return {
         "valid_package": {"issue_count": len(valid_issues), "issues": valid_issues, "accepted": not valid_issues},
         "invalid_package": {
@@ -450,4 +570,5 @@ def evaluate() -> dict[str, object]:
         "split_identity_dimension_count": len(SPLIT_IDENTITY_FIELDS),
         "verified_artifact_binding_count": len(REQUIRED_ARTIFACTS),
         "verified_failure_injection_count": len(VALID_DRIVING_PACKAGE["failure_injections"]),
+        "reproduction_probe_audit": reproduction_probe,
     }

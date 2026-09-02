@@ -5,7 +5,7 @@
     "driving_metric_count": 3,
     "invalid_package": {
       "accepted": false,
-      "issue_count": 23,
+      "issue_count": 24,
       "issues": [
         "missing_research_question",
         "missing_claim_id",
@@ -20,6 +20,7 @@
         "missing_failure_record",
         "missing_reproduction_command",
         "invalid_artifact_binding:model_card",
+        "invalid_reproduction_receipt",
         "missing_failure_injection",
         "missing_known_limitations",
         "resource_tier_mismatch",
@@ -32,6 +33,32 @@
         "missing_safety_gateway"
       ]
     },
+    "reproduction_probe_audit": {
+      "case_count": 3,
+      "digest_mismatch": {
+        "exit_code": 0,
+        "status": "stdout_digest_mismatch",
+        "stderr_bytes": 0,
+        "stdout_bytes": 28,
+        "stdout_sha256": "8cd802d9d57fdf1ba860ff9e6c91a00f5c8e46620e0799c601ee33e8f65f6490"
+      },
+      "matched": {
+        "exit_code": 0,
+        "status": "reproduced",
+        "stderr_bytes": 0,
+        "stdout_bytes": 28,
+        "stdout_sha256": "8cd802d9d57fdf1ba860ff9e6c91a00f5c8e46620e0799c601ee33e8f65f6490"
+      },
+      "nonzero_exit": {
+        "exit_code": 3,
+        "status": "nonzero_exit",
+        "stderr_bytes": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "reproduced_count": 1,
+      "scope": "three allowlisted local python3 subprocess probes; not an arbitrary project command, filesystem package reproduction, model run, or independent replication"
+    },
     "required_artifact_count": 5,
     "required_trace_stage_count": 5,
     "split_identity_dimension_count": 4,
@@ -43,6 +70,6 @@
     "verified_artifact_binding_count": 5,
     "verified_failure_injection_count": 2
   },
-  "scope": "in-memory project-package contract audit; not filesystem reproduction, model, or deployment validation",
+  "scope": "project-package contract plus fixed local subprocess probe; not filesystem project, model, or deployment validation",
   "status": "smoke"
 }
