@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-09-01`
-> 关联声明：`CLAIM-09-01`～`CLAIM-09-09`
-> 关联图表：`FIG-09-01` / `TAB-09-01` / `TAB-09-02` / `TAB-09-03`
+> 关联声明：`CLAIM-09-01`～`CLAIM-09-10`
+> 关联图表：`FIG-09-01` / `TAB-09-01` / `TAB-09-02` / `TAB-09-03` / `TAB-09-04`
 > 资源档位：S / M
 > GPU 状态：不需要
 
@@ -96,7 +96,7 @@ MSE、PSNR 和 SSIM 对局部像素误差敏感，便于定位模糊、漂移和
 \left|\operatorname{mean}_{i\in I_b}(p_i)-\operatorname{mean}_{i\in I_b}(y_i)\right|.
 \]
 
-[Guo et al.](https://proceedings.mlr.press/v70/guo17a.html)使用分箱可靠性图与 ECE 研究神经网络校准 `[P]`。ECE 是指定分箱与样本上的诊断，不是 proper score；bin edge、空 bin、边界归属和样本数都属于协议。下面的 `EXP-09-01` v3 用四个手工结果 `1,1,0,0` 比较两组概率：
+[Guo et al.](https://proceedings.mlr.press/v70/guo17a.html)使用分箱可靠性图与 ECE 研究神经网络校准 `[P]`。ECE 是指定分箱与样本上的诊断，不是 proper score；bin edge、空 bin、边界归属和样本数都属于协议。下面的 `EXP-09-01` v4 用四个手工结果 `1,1,0,0` 比较两组概率：
 
 | forecast | 概率 | 0.5 阈值准确率 | Brier ↓ | Log loss ↓ | 1-bin ECE | 2-bin ECE |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
@@ -107,7 +107,18 @@ MSE、PSNR 和 SSIM 对局部像素误差敏感，便于定位模糊、漂移和
 
 uniform 行在这四例上只复述 base rate，预测方差为0；informative 行把正负例分开，预测方差为0.16。单 bin ECE 看不到这一差别；改成 `[0,0.5)` 与 `[0.5,1]` 两个预注册 bin 后，informative 行的经验 gap 为0.1。不能由此反过来宣称 uniform “更校准”或“更好”：四例不足以估计总体 calibration，而 ECE 单独不奖励有用的分辨率。合格报告应并列 proper score、reliability diagram/分箱定义、样本数和按 horizon/场景分桶，并在独立 calibration split 上选择任何温度或阈值，再到未参与选择的 final split 评估。
 
-`CLAIM-09-09`（result）：`EXP-09-01` v3 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
+`CLAIM-09-09`（result）：`EXP-09-01` v4 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
+
+平均 proper score 也不是完整的失败分布。v4 在同一 `y=(1,1,0,0)` 上构造 `diffuse=(0.6,0.6,0.4,0.4)` 与 `concentrated=(0.3,0.7,0.2,sqrt(0.02))`；两行四个 squared error 的总和都为0.64，因此 mean Brier 都是0.16，但误差位置不同：
+
+| forecast | mean Brier | 0.5 threshold accuracy | 最大单例 Brier | 最大单例 log loss |
+| --- | ---: | ---: | ---: | ---: |
+| diffuse error | 0.16 | 1.00 | 0.16 | 0.510826 |
+| concentrated error | 0.16 | 0.75 | 0.49 | 1.203973 |
+
+*TAB-09-04：`EXP-09-01` v4 的 equal-mean-Brier 误差集中负对照。概率按构造给出，不是模型输出或总体 tail estimate。*
+
+`CLAIM-09-10`（result）：固定四 outcome 表中，diffuse 与 concentrated forecast 的 mean Brier 都为0.16；前者0.5阈值准确率为1且最大单例 log loss 为0.510826，后者准确率为0.75且最大单例 log loss 为1.203973。该结果只证明相同平均 Brier 不能恢复误差是否集中在单个样本，不估计总体概率质量、tail risk、calibration、真实事件严重度或安全性。
 
 ### one-step 与 multi-step
 
@@ -265,7 +276,7 @@ resources + experiment_ids + artifacts + limitations
 
 仓库中的 `specs/benchmark-card.schema.json` 是 Draft 2020-12 Schema；`benchmarks/BENCH-06-01.json`、`BENCH-09-01.json` 和 `BENCH-20-01.json` 分别覆盖 prior/posterior 与 KL 路由算术、指标排序/概率质量反转，以及闭环比例/配对/暴露统计。严格检查还验证 claim/experiment 的章节归属、benchmark 与 experiment 双向引用、metric layer、ID 前缀、产物路径、系统名唯一性和下载量总和。它能阻止字段缺失和跨资产漂移，不能判断指标是否科学充分，也不能替代领域评审。
 
-`BENCH-09-01` v3 明确把 E1 的 12 个 one-step 转移、6 条多步误差行与4行二元概率表、E2 action sensitivity、E4 的两个闭环 episode 分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值、缺失惩罚与概率 bin edge，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。概率表只是评分机制 fixture，不是 learned uncertainty estimator、calibration split 或 OOD 总体，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构风险曲线。
+`BENCH-09-01` v4 明确把 E1 的 12 个 one-step 转移、6 条多步误差行与4行二元概率表、E2 action sensitivity、E4 的两个闭环 episode 分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值、缺失惩罚与概率 bin edge，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。概率表只是评分机制 fixture，不是 learned uncertainty estimator、calibration split 或 OOD 总体，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构风险曲线。
 
 `CLAIM-09-07`（recommendation）：可审计比较应在运行前冻结 benchmark card，并把评测协议、单次运行来源和测量结果拆成可互相引用的资产；机器 Schema 只证明结构与追溯关系成立，不证明 benchmark 有外部效度。
 
@@ -302,6 +313,7 @@ resources + experiment_ids + artifacts + limitations
 5. **自动驾驶迁移**：设计一个平均 ADE 很低却高风险的驾驶数据分布，说明需要增加哪些分桶指标。
 6. **反例审查**：解释为何“闭环成功率高”仍可能掩盖安全问题，并给出至少两个补充指标。
 7. **概率评分**：为同一组碰撞事件概率同时计算 Brier、log loss 与两种分箱 ECE；说明哪些设置必须在看结果前冻结，以及为什么 ECE=0 仍不充分。
+8. **误差集中**：复算 `TAB-09-04` 的逐行 squared/log loss，解释为什么相同 mean Brier 仍需保存逐样本与场景分桶。
 
 ## 自检要点
 
@@ -356,6 +368,13 @@ E1 可冻结对象/相机 group test split，要求多 horizon pose/keypoint err
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-09-08：相同 mean Brier 不等于相同失败形状</summary>
+
+diffuse 行四个概率误差绝对值都是0.4，所以 squared error 都是0.16；concentrated 行误差为 `0.7,0.3,0.2,sqrt(0.02)`，平方和同样是0.64，mean Brier 仍为0.16。但 concentrated 第一行把正例报成0.3，造成一次0.5阈值错误，单例 Brier 0.49、log loss `-log(0.3)=1.203973`。合格答案要保留逐样本 loss、事件/场景分桶和最大/尾部摘要，同时说明四行最大值不是总体 tail-risk 估计。
+
+</details>
+
 ## 延伸阅读
 
 - Yu et al., [How Should World Models Be Evaluated?](https://arxiv.org/abs/2606.15032)，`[A,R0]`，评测层级与声明错位；
@@ -387,6 +406,6 @@ E1 可冻结对象/相机 group test split，要求多 horizon pose/keypoint err
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch09-probability-calibration-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch09-probability-calibration-review-2026-09-02.md`、`reviews/ch09-probability-error-concentration-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：WorldArena 系列、KineBench 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；概率 fixture 只有四行作者构造结果，不能估计总体 calibration、真实事件概率、uncertainty 或安全性；
 - 下一步：用真实但可合法获取的小型数据试运行一张 `draft/frozen` benchmark card；当前无 GPU 阶段不伪造该结果。

@@ -4,55 +4,89 @@
   "chapter": 9,
   "title": "World-model metric alignment and probability-score audit",
   "status": "executed",
-  "purpose": "Test whether one-step error agrees with closed-loop utility, whether missing outputs change horizon rankings, and whether a coarse calibration summary hides probabilistic forecast quality.",
-  "claim_ids": ["CLAIM-09-01", "CLAIM-09-02", "CLAIM-09-07", "CLAIM-09-08", "CLAIM-09-09"],
-  "evaluation_layers": ["E1", "E2", "E4"],
+  "purpose": "Test whether one-step error agrees with closed-loop utility, whether missing outputs change horizon rankings, and whether a coarse calibration summary hides probabilistic forecast quality. Audit whether equal mean proper scores hide concentrated per-outcome probability error.",
+  "claim_ids": [
+    "CLAIM-09-01",
+    "CLAIM-09-02",
+    "CLAIM-09-07",
+    "CLAIM-09-08",
+    "CLAIM-09-09",
+    "CLAIM-09-10"
+  ],
+  "evaluation_layers": [
+    "E1",
+    "E2",
+    "E4"
+  ],
   "allowed_claims": [
     "The fixed fixture exhibits a ranking reversal between one-step RMSE and closed-loop success.",
     "Action sensitivity is necessary to diagnose the action-blind predictor in this fixture.",
     "Available-case and predeclared fixed-denominator aggregation select different terminal-horizon winners in the authored missing-rollout fixture.",
-    "One-bin ECE ties the authored uniform and informative forecasts at zero while Brier loss, log loss, and a registered two-bin ECE distinguish them."
+    "One-bin ECE ties the authored uniform and informative forecasts at zero while Brier loss, log loss, and a registered two-bin ECE distinguish them.",
+    "On the authored four-outcome pair, diffuse and concentrated forecasts have the same mean Brier score but different threshold accuracy and maximum per-outcome losses."
   ],
   "forbidden_claims": [
     "The fixture estimates ranking-reversal frequency in learned world models.",
     "The fixture establishes real robot, autonomous-driving, OOD, or safety performance.",
     "The fixture compares published world-model architectures.",
     "The authored missing penalty is a universal or empirically estimated error value.",
-    "Zero ECE on four authored outcomes proves population calibration, uncertainty quality, or safety."
+    "Zero ECE on four authored outcomes proves population calibration, uncertainty quality, or safety.",
+    "The maximum loss over four authored outcomes estimates population tail risk, calibration, real-world severity, or safety."
   ],
   "systems": [
     {
       "name": "action_blind",
       "role": "baseline",
       "type": "deterministic persistence predictor",
-      "revision": "fixture-v3",
-      "inputs": ["scalar state", "scalar candidate action"],
-      "outputs": ["scalar next-state prediction"],
+      "revision": "fixture-v4",
+      "inputs": [
+        "scalar state",
+        "scalar candidate action"
+      ],
+      "outputs": [
+        "scalar next-state prediction"
+      ],
       "preprocessing": "none; the candidate action is deliberately ignored"
     },
     {
       "name": "action_faithful_biased",
       "role": "system_under_test",
       "type": "deterministic action-conditioned predictor with fixed bias",
-      "revision": "fixture-v3",
-      "inputs": ["scalar state", "scalar candidate action"],
-      "outputs": ["scalar next-state prediction"],
+      "revision": "fixture-v4",
+      "inputs": [
+        "scalar state",
+        "scalar candidate action"
+      ],
+      "outputs": [
+        "scalar next-state prediction"
+      ],
       "preprocessing": "none"
     },
     {
       "name": "binary_probability_table",
       "role": "baseline",
       "type": "two hand-authored probability forecasts on four binary outcomes",
-      "revision": "fixture-v3",
-      "inputs": ["four Boolean outcomes", "uniform 0.5 probabilities", "informative 0.9/0.1 probabilities", "fixed bin edges"],
-      "outputs": ["threshold accuracy", "Brier loss", "log loss", "forecast variance", "fixed-bin ECE"],
+      "revision": "fixture-v4",
+      "inputs": [
+        "four Boolean outcomes",
+        "uniform 0.5 probabilities",
+        "informative 0.9/0.1 probabilities",
+        "fixed bin edges"
+      ],
+      "outputs": [
+        "threshold accuracy",
+        "Brier loss",
+        "log loss",
+        "forecast variance",
+        "fixed-bin ECE"
+      ],
       "preprocessing": "validate probabilities in (0,1), Boolean outcomes, equal lengths, and strictly increasing bin edges spanning [0,1]"
     }
   ],
   "datasets": [
     {
       "name": "procedural 1D intervention and goal-reaching fixture",
-      "version": "v3",
+      "version": "v4",
       "license": "MIT",
       "classification": "fixture",
       "fixture": true,
@@ -61,7 +95,10 @@
       "role": "fixture",
       "split_definition": "Twelve fixed low-motion one-step pairs, two fixed closed-loop start-goal pairs, and two three-rollout four-horizon error tables; no fitted parameters or model selection.",
       "unit_of_analysis": "one-step transition for E1, action intervention for E2, complete episode for E4, and rollout for horizon missingness",
-      "grouping_keys": ["predictor", "evaluation layer"],
+      "grouping_keys": [
+        "predictor",
+        "evaluation layer"
+      ],
       "leakage_controls": [
         "No training or calibration occurs.",
         "The one-step pairs and closed-loop goals are defined separately.",
@@ -70,7 +107,7 @@
     },
     {
       "name": "procedural four-outcome binary-probability table",
-      "version": "v3",
+      "version": "v4",
       "license": "MIT",
       "classification": "fixture",
       "fixture": true,
@@ -79,7 +116,10 @@
       "role": "fixture",
       "split_definition": "Two positive followed by two negative authored outcomes, evaluated with uniform 0.5 and outcome-separating 0.9/0.1 probability rows under one and two fixed bins.",
       "unit_of_analysis": "one binary forecast-outcome pair; all four rows are authored and exhaustive only for the fixture",
-      "grouping_keys": ["forecast name", "probability bin"],
+      "grouping_keys": [
+        "forecast name",
+        "probability bin"
+      ],
       "leakage_controls": [
         "Outcomes, probabilities, and bin edges are immutable inputs.",
         "One-bin and two-bin ECE are both reported rather than selecting the more favorable partition.",
@@ -89,7 +129,7 @@
     }
   ],
   "protocol": {
-    "version": "fixture-v3",
+    "version": "fixture-v4",
     "comparison_unit": "paired predictor evaluation on identical deterministic inputs, stable/fragile rollout tables with a fixed attempted denominator, and two probability forecasts on four identical binary outcomes",
     "sample_count": 24,
     "randomness": {
@@ -97,7 +137,11 @@
       "seeds": [],
       "rationale": "All states, actions, goals, predictors, planner tie-breaking, horizons, binary outcomes, probabilities, and bin edges are fixed."
     },
-    "horizons": [1, 4, 24],
+    "horizons": [
+      1,
+      4,
+      24
+    ],
     "action_space": "scalar discrete actions {-0.1, 0.0, 0.1}; tuple order resolves equal planner scores toward 0.0",
     "timing": "one abstract step; no wall-clock or real-time claim",
     "termination_conditions": [
@@ -105,7 +149,9 @@
       "Horizon evaluation ends after all six authored rollout rows, retaining missing suffixes.",
       "Each closed-loop episode ends after exactly 24 planning steps."
     ],
-    "baselines": ["action_blind persistence predictor"],
+    "baselines": [
+      "action_blind persistence predictor"
+    ],
     "comparison_design": "Report each predictor separately on E1, E2, and E4; for horizon errors report attempted count, available count, coverage, available-case mean, and a fixed-denominator mean using the predeclared missing penalty 2.0. Separately report Brier loss, log loss, forecast variance, and ECE under both registered bin partitions for the two binary forecasts; do not combine layers into one score.",
     "selection_protocol": "No hyperparameter, threshold, checkpoint, missing penalty, probability forecast, bin edge, or post-result model selection is permitted.",
     "failure_definition": "Closed-loop failure means final absolute goal distance exceeds 0.11 after 24 steps; a missing rollout suffix receives penalty 2.0 only in the registered fixed-denominator diagnostic."
@@ -121,7 +167,7 @@
       "split": "12-pair low-motion fixture",
       "aggregation": "square root of the mean squared prediction error over all 12 paired transitions",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:prediction_rmse",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "This is an exhaustive deterministic teaching fixture, not a sample used to estimate population performance."
@@ -137,7 +183,7 @@
       "split": "two-goal fixture",
       "aggregation": "arithmetic mean of two Boolean episode outcomes",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:evaluate",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "Two authored counterexamples are the complete fixture and do not support a population confidence interval."
@@ -153,7 +199,7 @@
       "split": "two-goal fixture",
       "aggregation": "arithmetic mean of final absolute goal distance over both episodes",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:evaluate",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The deterministic fixture is not a statistical sample of tasks or environments."
@@ -169,7 +215,7 @@
       "split": "three-action intervention fixture",
       "aggregation": "maximum minus minimum next-state prediction across {-0.1, 0.0, 0.1} at state zero",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:action_sensitivity",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The three interventions are exhaustive for the fixture; a larger span is useful only for detecting the authored action-blind baseline and is not universally better."
@@ -185,7 +231,7 @@
       "split": "three-rollout four-horizon fixture",
       "aggregation": "valid terminal-horizon predictions divided by the three attempted rollouts",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:horizon_error_report",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "All authored rollout rows are enumerated; coverage describes fixture completeness rather than population uncertainty."
@@ -201,7 +247,7 @@
       "split": "three-rollout four-horizon fixture",
       "aggregation": "arithmetic mean over only non-missing terminal-horizon errors, always accompanied by coverage",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:horizon_error_report",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The value is a deterministic conditional summary of authored surviving outputs and is not a population estimate."
@@ -217,7 +263,7 @@
       "split": "three-rollout four-horizon fixture",
       "aggregation": "arithmetic mean over all three attempted rollouts after assigning the predeclared penalty 2.0 to each missing terminal prediction",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:horizon_error_report",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The penalty and rows are authored to expose denominator sensitivity; they do not estimate a natural error scale."
@@ -233,7 +279,7 @@
       "split": "four authored binary outcomes",
       "aggregation": "arithmetic mean of squared forecast-probability minus Boolean-outcome differences",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:binary_probability_report",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The four rows are the complete authored fixture; the loss is not a population estimate."
@@ -249,7 +295,7 @@
       "split": "four authored binary outcomes",
       "aggregation": "mean negative Bernoulli log likelihood over probabilities strictly between zero and one",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:binary_probability_report",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "The exact authored loss demonstrates scoring mechanics and does not estimate expected predictive performance."
@@ -265,10 +311,26 @@
       "split": "the same four outcomes under registered [0,1] and [0,0.5,1] bin edges",
       "aggregation": "sum over nonempty bins of bin frequency times absolute mean-forecast minus event-rate gap",
       "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:binary_probability_report",
-      "implementation_version": "fixture-v3",
+      "implementation_version": "fixture-v4",
       "statistical_uncertainty": {
         "method": "not_applicable",
         "rationale": "Both partitions are fixed and fully enumerated. The result exposes bin sensitivity and is not a calibrated population error estimate."
+      }
+    },
+    {
+      "id": "METRIC-09-11",
+      "name": "maximum_per_outcome_log_loss",
+      "layer": "E1",
+      "role": "diagnostic",
+      "direction": "minimize",
+      "unit": "nats per outcome",
+      "split": "two equal-mean-Brier forecasts on four authored outcomes",
+      "aggregation": "maximum Bernoulli log loss over the four retained per-outcome rows, reported beside mean Brier and threshold accuracy",
+      "implementation": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py:binary_probability_report",
+      "implementation_version": "fixture-v4",
+      "statistical_uncertainty": {
+        "method": "not_applicable",
+        "rationale": "This is an exhaustive deterministic teaching fixture, not a sample used to estimate population performance."
       }
     }
   ],
@@ -279,7 +341,15 @@
   "reporting": {
     "per_system": true,
     "per_task": false,
-    "disaggregations": ["predictor", "E1 versus E2 versus E4 evaluation layer", "horizon", "stable versus fragile rollout table", "uniform versus informative probability forecast", "one-bin versus two-bin ECE"],
+    "disaggregations": [
+      "predictor",
+      "E1 versus E2 versus E4 evaluation layer",
+      "horizon",
+      "stable versus fragile rollout table",
+      "uniform versus informative probability forecast",
+      "one-bin versus two-bin ECE",
+      "diffuse versus concentrated forecast and retained per-outcome Brier/log-loss rows"
+    ],
     "raw_predictions": "Recompute from the deterministic source; no large prediction artifact is emitted.",
     "failure_artifacts": "The action-blind predictor's two failed episodes and fragile rollout missing suffixes are represented by named result metrics; no video exists.",
     "confounders": [
@@ -299,8 +369,12 @@
     "download_bytes": 0,
     "runtime_limit_seconds": 10
   },
-  "experiment_ids": ["EXP-09-01"],
-  "artifacts": ["results/ch09/EXP-09-01-smoke.json"],
+  "experiment_ids": [
+    "EXP-09-01"
+  ],
+  "artifacts": [
+    "results/ch09/EXP-09-01-smoke.json"
+  ],
   "limitations": [
     "The predictors are deterministic hand-written functions rather than learned world models.",
     "The state and action spaces are one-dimensional and omit perception, contact, stochasticity, and dynamics mismatch.",

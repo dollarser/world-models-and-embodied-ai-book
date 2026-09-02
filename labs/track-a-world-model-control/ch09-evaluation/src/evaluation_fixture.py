@@ -242,6 +242,14 @@ def binary_probability_report(
         })
 
     numeric_outcomes = tuple(float(outcome) for outcome in checked_outcomes)
+    brier_losses = tuple(
+        (probability - outcome) ** 2
+        for probability, outcome in zip(checked_probabilities, numeric_outcomes, strict=True)
+    )
+    log_losses = tuple(
+        -(outcome * math.log(probability) + (1.0 - outcome) * math.log(1.0 - probability))
+        for probability, outcome in zip(checked_probabilities, numeric_outcomes, strict=True)
+    )
     mean_probability = sum(checked_probabilities) / sample_count
     return {
         "sample_count": sample_count,
@@ -249,14 +257,13 @@ def binary_probability_report(
             (probability >= 0.5) == outcome
             for probability, outcome in zip(checked_probabilities, checked_outcomes, strict=True)
         ) / sample_count,
-        "brier_loss": sum(
-            (probability - outcome) ** 2
-            for probability, outcome in zip(checked_probabilities, numeric_outcomes, strict=True)
-        ) / sample_count,
-        "log_loss": -sum(
-            outcome * math.log(probability) + (1.0 - outcome) * math.log(1.0 - probability)
-            for probability, outcome in zip(checked_probabilities, numeric_outcomes, strict=True)
-        ) / sample_count,
+        "brier_loss": sum(brier_losses) / sample_count,
+        "log_loss": sum(log_losses) / sample_count,
+        "maximum_brier_loss": max(brier_losses),
+        "maximum_log_loss": max(log_losses),
+        "worst_log_loss_index": max(range(sample_count), key=log_losses.__getitem__),
+        "per_outcome_brier_losses": brier_losses,
+        "per_outcome_log_losses": log_losses,
         "mean_probability": mean_probability,
         "event_rate": sum(numeric_outcomes) / sample_count,
         "probability_variance": sum(
@@ -298,6 +305,32 @@ def probability_metric_diagnostic() -> dict[str, object]:
     }
 
 
+def probability_error_concentration_diagnostic() -> dict[str, object]:
+    """Hold mean Brier fixed while concentrating probability error in one row."""
+
+    outcomes = (True, True, False, False)
+    forecasts = {
+        "diffuse_error": (0.6, 0.6, 0.4, 0.4),
+        "concentrated_error": (0.3, 0.7, 0.2, math.sqrt(0.02)),
+    }
+    reports = {
+        name: binary_probability_report(outcomes, probabilities, bin_edges=(0.0, 1.0))
+        for name, probabilities in forecasts.items()
+    }
+    return {
+        **reports,
+        "mean_brier_gap": round(
+            reports["concentrated_error"]["brier_loss"]
+            - reports["diffuse_error"]["brier_loss"],
+            12,
+        ),
+        "scope": (
+            "four authored binary outcomes with equal mean Brier by construction; not a "
+            "population tail-risk estimate, calibrated forecast, or safety metric"
+        ),
+    }
+
+
 def evaluate() -> dict[str, object]:
     predictors = {
         "action_blind": action_blind,
@@ -315,4 +348,5 @@ def evaluate() -> dict[str, object]:
         }
     report["horizon_missingness"] = missing_rollout_diagnostic()
     report["probability_metric_diagnostic"] = probability_metric_diagnostic()
+    report["probability_error_concentration"] = probability_error_concentration_diagnostic()
     return report

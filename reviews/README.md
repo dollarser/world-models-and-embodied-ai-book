@@ -60,6 +60,7 @@
 - [第1章终态混叠与瞬态越界审查（2026-09-02）](ch01-terminal-state-aliasing-review-2026-09-02.md)
 - [第2章噪声历史与 belief 边界审查（2026-09-02）](ch02-noisy-history-belief-review-2026-09-02.md)
 - [第5章 disagreement 排序与 risk–coverage 审查（2026-09-02）](ch05-disagreement-risk-coverage-review-2026-09-02.md)
+- [第9章概率误差集中审查（2026-09-02）](ch09-probability-error-concentration-review-2026-09-02.md)
 - [第2章 state aliasing 与任务相关状态审查](ch02-state-aliasing-review-2026-09-01.md)
 - [第3章时间对齐与运动补偿边界审查](ch03-temporal-alignment-review-2026-09-01.md)
 - [第8章 imagined loss 累计权重审查](ch08-imagined-loss-weight-review-2026-09-01.md)

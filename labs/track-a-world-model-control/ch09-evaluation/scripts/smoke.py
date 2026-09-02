@@ -34,6 +34,18 @@ def main() -> int:
         raise AssertionError("the informative forecast must win the authored Brier comparison")
     if not probability["informative"]["two_bin_ece"] > probability["informative"]["one_bin_ece"]:
         raise AssertionError("the registered binning must expose ECE sensitivity")
+    concentration = metrics["probability_error_concentration"]
+    if concentration["mean_brier_gap"] != 0.0:
+        raise AssertionError("the probability pair must retain equal mean Brier loss")
+    if concentration["diffuse_error"]["threshold_accuracy_at_0_5"] != 1.0:
+        raise AssertionError("the diffuse-error forecast must keep four correct threshold decisions")
+    if concentration["concentrated_error"]["threshold_accuracy_at_0_5"] != 0.75:
+        raise AssertionError("the concentrated-error forecast must expose one threshold error")
+    if not (
+        concentration["concentrated_error"]["maximum_log_loss"]
+        > concentration["diffuse_error"]["maximum_log_loss"]
+    ):
+        raise AssertionError("equal mean Brier must not hide the larger worst log loss")
 
     report = {
         "experiment_id": "EXP-09-01",

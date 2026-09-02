@@ -18,20 +18,180 @@
       "available_case_terminal_winner": "fragile",
       "fixed_denominator_terminal_winner": "stable",
       "fragile": [
-        {"attempted_count": 3, "available_case_mean_error": 0.10000000000000002, "available_count": 3, "coverage": 1.0, "fixed_denominator_mean_error": 0.10000000000000002, "horizon": 1},
-        {"attempted_count": 3, "available_case_mean_error": 0.2, "available_count": 2, "coverage": 0.6666666666666666, "fixed_denominator_mean_error": 0.7999999999999999, "horizon": 2},
-        {"attempted_count": 3, "available_case_mean_error": 0.3, "available_count": 1, "coverage": 0.3333333333333333, "fixed_denominator_mean_error": 1.4333333333333333, "horizon": 3},
-        {"attempted_count": 3, "available_case_mean_error": 0.4, "available_count": 1, "coverage": 0.3333333333333333, "fixed_denominator_mean_error": 1.4666666666666668, "horizon": 4}
+        {
+          "attempted_count": 3,
+          "available_case_mean_error": 0.10000000000000002,
+          "available_count": 3,
+          "coverage": 1.0,
+          "fixed_denominator_mean_error": 0.10000000000000002,
+          "horizon": 1
+        },
+        {
+          "attempted_count": 3,
+          "available_case_mean_error": 0.2,
+          "available_count": 2,
+          "coverage": 0.6666666666666666,
+          "fixed_denominator_mean_error": 0.7999999999999999,
+          "horizon": 2
+        },
+        {
+          "attempted_count": 3,
+          "available_case_mean_error": 0.3,
+          "available_count": 1,
+          "coverage": 0.3333333333333333,
+          "fixed_denominator_mean_error": 1.4333333333333333,
+          "horizon": 3
+        },
+        {
+          "attempted_count": 3,
+          "available_case_mean_error": 0.4,
+          "available_count": 1,
+          "coverage": 0.3333333333333333,
+          "fixed_denominator_mean_error": 1.4666666666666668,
+          "horizon": 4
+        }
       ],
       "missing_penalty": 2.0,
       "stable": [
-        {"attempted_count": 3, "available_case_mean_error": 0.20000000000000004, "available_count": 3, "coverage": 1.0, "fixed_denominator_mean_error": 0.20000000000000004, "horizon": 1},
-        {"attempted_count": 3, "available_case_mean_error": 0.4000000000000001, "available_count": 3, "coverage": 1.0, "fixed_denominator_mean_error": 0.4000000000000001, "horizon": 2},
-        {"attempted_count": 3, "available_case_mean_error": 0.6, "available_count": 3, "coverage": 1.0, "fixed_denominator_mean_error": 0.6, "horizon": 3},
-        {"attempted_count": 3, "available_case_mean_error": 0.8000000000000002, "available_count": 3, "coverage": 1.0, "fixed_denominator_mean_error": 0.8000000000000002, "horizon": 4}
+        {
+          "attempted_count": 3,
+          "available_case_mean_error": 0.20000000000000004,
+          "available_count": 3,
+          "coverage": 1.0,
+          "fixed_denominator_mean_error": 0.20000000000000004,
+          "horizon": 1
+        },
+        {
+          "attempted_count": 3,
+          "available_case_mean_error": 0.4000000000000001,
+          "available_count": 3,
+          "coverage": 1.0,
+          "fixed_denominator_mean_error": 0.4000000000000001,
+          "horizon": 2
+        },
+        {
+          "attempted_count": 3,
+          "available_case_mean_error": 0.6,
+          "available_count": 3,
+          "coverage": 1.0,
+          "fixed_denominator_mean_error": 0.6,
+          "horizon": 3
+        },
+        {
+          "attempted_count": 3,
+          "available_case_mean_error": 0.8000000000000002,
+          "available_count": 3,
+          "coverage": 1.0,
+          "fixed_denominator_mean_error": 0.8000000000000002,
+          "horizon": 4
+        }
       ]
     },
-    "probability_metric_diagnostic": {"informative": {"brier_loss": 0.009999999999999998, "log_loss": 0.10536051565782628, "one_bin_ece": 0.0, "probability_variance": 0.16000000000000003, "threshold_accuracy_at_0_5": 1.0, "two_bin_ece": 0.09999999999999999}, "one_bin_ece_tie": true, "proper_score_winner": "informative", "scope": "four authored binary outcomes; fixed-bin ECE mechanics only, not population calibration or probabilistic world-model performance", "uniform_base_rate": {"brier_loss": 0.25, "log_loss": 0.6931471805599453, "one_bin_ece": 0.0, "probability_variance": 0.0, "threshold_accuracy_at_0_5": 0.5, "two_bin_ece": 0.0}}
+    "probability_error_concentration": {
+      "concentrated_error": {
+        "bin_edges": [
+          0.0,
+          1.0
+        ],
+        "brier_loss": 0.16,
+        "event_rate": 0.5,
+        "fixed_bin_ece": 0.16464466094067265,
+        "log_loss": 0.4840670741013606,
+        "maximum_brier_loss": 0.48999999999999994,
+        "maximum_log_loss": 1.2039728043259361,
+        "mean_probability": 0.33535533905932735,
+        "nonempty_bins": [
+          {
+            "absolute_gap": 0.16464466094067265,
+            "count": 4,
+            "event_rate": 0.5,
+            "lower": 0.0,
+            "mean_probability": 0.33535533905932735,
+            "upper": 1.0,
+            "upper_inclusive": true
+          }
+        ],
+        "per_outcome_brier_losses": [
+          0.48999999999999994,
+          0.09000000000000002,
+          0.04000000000000001,
+          0.02
+        ],
+        "per_outcome_log_losses": [
+          1.2039728043259361,
+          0.35667494393873245,
+          0.2231435513142097,
+          0.15247699682656404
+        ],
+        "probability_variance": 0.047536796564403565,
+        "sample_count": 4,
+        "threshold_accuracy_at_0_5": 0.75,
+        "worst_log_loss_index": 0
+      },
+      "diffuse_error": {
+        "bin_edges": [
+          0.0,
+          1.0
+        ],
+        "brier_loss": 0.16000000000000003,
+        "event_rate": 0.5,
+        "fixed_bin_ece": 0.0,
+        "log_loss": 0.5108256237659907,
+        "maximum_brier_loss": 0.16000000000000003,
+        "maximum_log_loss": 0.5108256237659907,
+        "mean_probability": 0.5,
+        "nonempty_bins": [
+          {
+            "absolute_gap": 0.0,
+            "count": 4,
+            "event_rate": 0.5,
+            "lower": 0.0,
+            "mean_probability": 0.5,
+            "upper": 1.0,
+            "upper_inclusive": true
+          }
+        ],
+        "per_outcome_brier_losses": [
+          0.16000000000000003,
+          0.16000000000000003,
+          0.16000000000000003,
+          0.16000000000000003
+        ],
+        "per_outcome_log_losses": [
+          0.5108256237659907,
+          0.5108256237659907,
+          0.5108256237659907,
+          0.5108256237659907
+        ],
+        "probability_variance": 0.009999999999999995,
+        "sample_count": 4,
+        "threshold_accuracy_at_0_5": 1.0,
+        "worst_log_loss_index": 0
+      },
+      "mean_brier_gap": -0.0,
+      "scope": "four authored binary outcomes with equal mean Brier by construction; not a population tail-risk estimate, calibrated forecast, or safety metric"
+    },
+    "probability_metric_diagnostic": {
+      "informative": {
+        "brier_loss": 0.009999999999999998,
+        "log_loss": 0.10536051565782628,
+        "one_bin_ece": 0.0,
+        "probability_variance": 0.16000000000000003,
+        "threshold_accuracy_at_0_5": 1.0,
+        "two_bin_ece": 0.09999999999999999
+      },
+      "one_bin_ece_tie": true,
+      "proper_score_winner": "informative",
+      "scope": "four authored binary outcomes; fixed-bin ECE mechanics only, not population calibration or probabilistic world-model performance",
+      "uniform_base_rate": {
+        "brier_loss": 0.25,
+        "log_loss": 0.6931471805599453,
+        "one_bin_ece": 0.0,
+        "probability_variance": 0.0,
+        "threshold_accuracy_at_0_5": 0.5,
+        "two_bin_ece": 0.0
+      }
+    }
   },
   "scope": "metric-ranking fixture; not learned world-model evaluation",
   "status": "smoke"

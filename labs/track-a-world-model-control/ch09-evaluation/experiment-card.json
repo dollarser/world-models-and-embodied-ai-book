@@ -3,22 +3,23 @@
   "id": "EXP-09-01",
   "chapter": 9,
   "status": "smoke",
-  "claim_ids": ["CLAIM-09-01", "CLAIM-09-02", "CLAIM-09-08", "CLAIM-09-09"],
+  "claim_ids": ["CLAIM-09-01", "CLAIM-09-02", "CLAIM-09-08", "CLAIM-09-09", "CLAIM-09-10"],
   "benchmark_ids": ["BENCH-09-01"],
   "claim_scope": [
     "lower one-step prediction error need not imply better closed-loop action selection",
     "action sensitivity must be evaluated when a model is used under intervention",
     "available-case and fixed-denominator aggregation can reverse a terminal-horizon ranking when rollouts go missing",
-    "a coarse fixed-bin calibration error can tie an uninformative base-rate forecast with an informative forecast even when proper losses distinguish them"
+    "a coarse fixed-bin calibration error can tie an uninformative base-rate forecast with an informative forecast even when proper losses distinguish them",
+    "equal mean Brier loss can hide whether probability error is diffuse or concentrated in one outcome with a larger worst log loss"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py fixture-v3"
+    "config": "labs/track-a-world-model-control/ch09-evaluation/src/evaluation_fixture.py fixture-v4"
   },
   "data": {
-    "name": "procedural 1D intervention, goal-reaching, missing-rollout, and binary-probability fixture",
-    "version": "v3",
+    "name": "procedural 1D intervention, goal-reaching, missing-rollout, calibration-bin, and probability-error-concentration fixture",
+    "version": "v4",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -53,14 +54,20 @@
     {"name": "informative_log_loss", "value": 0.10536051565782628, "unit": "nats_per_outcome", "split": "four-outcome-probability-fixture"},
     {"name": "uniform_base_rate_one_bin_ece", "value": 0.0, "unit": "probability_gap", "split": "one-fixed-bin"},
     {"name": "informative_one_bin_ece", "value": 0.0, "unit": "probability_gap", "split": "one-fixed-bin"},
-    {"name": "informative_two_bin_ece", "value": 0.09999999999999999, "unit": "probability_gap", "split": "two-fixed-bins"}
+    {"name": "informative_two_bin_ece", "value": 0.09999999999999999, "unit": "probability_gap", "split": "two-fixed-bins"},
+    {"name": "diffuse_error_brier_loss", "value": 0.16000000000000003, "unit": "mean_squared_probability_error", "split": "error-concentration"},
+    {"name": "concentrated_error_brier_loss", "value": 0.16000000000000003, "unit": "mean_squared_probability_error", "split": "error-concentration"},
+    {"name": "diffuse_error_threshold_accuracy", "value": 1.0, "unit": "ratio", "split": "error-concentration"},
+    {"name": "concentrated_error_threshold_accuracy", "value": 0.75, "unit": "ratio", "split": "error-concentration"},
+    {"name": "diffuse_error_maximum_log_loss", "value": 0.5108256237659907, "unit": "nats", "split": "error-concentration"},
+    {"name": "concentrated_error_maximum_log_loss", "value": 1.2039728043259361, "unit": "nats", "split": "error-concentration"}
   ],
   "artifacts": ["results/ch09/EXP-09-01-smoke.json"],
   "limitations": [
     "deterministic hand-designed predictors rather than learned world models",
     "one-dimensional dynamics and a one-step planner",
     "the missing penalty of 2.0 is an authored protocol choice rather than a universal error value",
-    "the four binary outcomes and fixed bin edges demonstrate metric mechanics rather than population calibration or uncertainty quality",
+    "the four binary outcomes, fixed bin edges, and authored equal-Brier pair demonstrate metric mechanics rather than population calibration, tail risk, or uncertainty quality",
     "demonstrates logical possibility, not frequency in real benchmarks"
   ]
 }

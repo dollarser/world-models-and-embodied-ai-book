@@ -18,6 +18,7 @@ from evaluation_fixture import (  # noqa: E402
     horizon_error_report,
     missing_rollout_diagnostic,
     probability_metric_diagnostic,
+    probability_error_concentration_diagnostic,
     rmse,
     run_episode,
 )
@@ -112,6 +113,36 @@ class EvaluationFixtureTest(unittest.TestCase):
             with self.subTest(outcomes=outcomes, probabilities=probabilities, edges=edges):
                 with self.assertRaises(ValueError):
                     binary_probability_report(outcomes, probabilities, bin_edges=edges)
+
+    def test_equal_mean_brier_can_hide_error_concentration(self) -> None:
+        diagnostic = probability_error_concentration_diagnostic()
+        self.assertEqual(diagnostic["mean_brier_gap"], 0.0)
+        self.assertAlmostEqual(diagnostic["diffuse_error"]["brier_loss"], 0.16)
+        self.assertAlmostEqual(diagnostic["concentrated_error"]["brier_loss"], 0.16)
+
+    def test_concentrated_error_changes_threshold_accuracy(self) -> None:
+        diagnostic = probability_error_concentration_diagnostic()
+        self.assertEqual(diagnostic["diffuse_error"]["threshold_accuracy_at_0_5"], 1.0)
+        self.assertEqual(
+            diagnostic["concentrated_error"]["threshold_accuracy_at_0_5"], 0.75
+        )
+
+    def test_concentrated_error_exposes_larger_worst_log_loss(self) -> None:
+        diagnostic = probability_error_concentration_diagnostic()
+        diffuse = diagnostic["diffuse_error"]
+        concentrated = diagnostic["concentrated_error"]
+        self.assertAlmostEqual(diffuse["maximum_log_loss"], 0.5108256237659907)
+        self.assertAlmostEqual(concentrated["maximum_log_loss"], 1.2039728043259361)
+        self.assertEqual(concentrated["worst_log_loss_index"], 0)
+
+    def test_probability_report_retains_per_outcome_losses(self) -> None:
+        report = probability_error_concentration_diagnostic()["concentrated_error"]
+        self.assertEqual(len(report["per_outcome_brier_losses"]), 4)
+        self.assertEqual(len(report["per_outcome_log_losses"]), 4)
+        self.assertAlmostEqual(
+            sum(report["per_outcome_brier_losses"]) / 4,
+            report["brier_loss"],
+        )
 
     def test_invalid_episode_and_metric_inputs_are_rejected(self) -> None:
         for kwargs in ({"start": float("nan")}, {"goal": True}, {"steps": 0}, {"steps": False}):

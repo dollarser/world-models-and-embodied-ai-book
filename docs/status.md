@@ -2,7 +2,7 @@
 
 | 资产 | 状态 | 已验证 | 待验证 |
 | --- | --- | --- | --- |
-| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、68 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；219 条声明及全部 `FIG/TAB` 双向登记，29 条 `fact` 与 8 条 `inference` 均有证据合同，127 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项；全部 Markdown 审查记录必须可从审查索引发现 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
+| 执行规格 | `reviewed` | 章节、术语、证据、manifest、实验卡与 benchmark card、MIT 许可/数据政策、图表和门禁已建立；4 个 Schema、68 项严格规格测试通过；PRD 22 章均把当前 `EXP-NN-01` S 档与可选 M/L 路径分开，22 个实验资产包具有 README、实验卡、可测试源码、smoke、测试和中央结果；220 条声明及全部 `FIG/TAB` 双向登记，29 条 `fact` 与 8 条 `inference` 均有证据合同，128 条 `result` 均绑定同章实验卡并在定义句写明边界，55 条 `recommendation` 中 24 条高后果建议登记适用条件、停止路径与未授权事项；全部 Markdown 审查记录必须可从审查索引发现 | 机器规则不能判断来源和前提是否真正蕴含文字，也不能替代关键建议选择是否完备、外部效度、视觉可用性或 benchmark 科学有效性审查 |
 | 批次 A：第2、4、6、9章 | `reviewed` | 内容、代码、一致性和教学交叉审查通过，记录见 `reviews/batch-a-review.md` | 各章保留的 GPU/真实数据/上游运行限制 |
 | 批次 B：第13、14、15、20章 | `reviewed` | 第13–15章在批次 B 通过；第20章由批次 D 关闭第17/19章一致性门 | 上游策略、仿真、真实数据和 GPU 未运行 |
 | 批次 C：第3、10、11、12、19章 | `reviewed` | 五章四类审查通过；第5章补齐后关闭第10/11章生成式谱系一致性门 | 真实 3D、视频模型、仿真、数据和 GPU 未运行 |
@@ -15,7 +15,7 @@
 | 贯穿案例与概念递进审查 | `reviewed` | 杯子操作与施工改道两个固定任务串联22章；对 observation/state/action/prediction/horizon/success/uncertainty 给出逐层证据升级表，并提供无3D经验与自动驾驶阅读路径 | 贯穿任务是教学索引，不是共享数据集或端到端实验；仍需真实读者测试跳转密度与理解负担 |
 | 练习与自学出口审查 | `reviewed` | 22 章 144 道练习均有折叠式同编号自检要点；全部容器启用 Markdown-in-HTML，编译门禁拒绝原始反引号残留；manifest 登记全章覆盖，源码门禁拒绝缺失、重复、跨章、顺序错位、未闭合和过短答案 | 自检是最低合格要点，不是开放题唯一答案或真实实验替代品；仍需真实读者测试难度、歧义与真实屏幕阅读器体验 |
 | 事实声明来源审查 | `reviewed` | 29 条 `fact` 与机器证据登记双向相等；GitHub `official_asset` 全部使用 40 位 commit URL；区分论文、官方资产、供应商声明、本书定义、仓库合同和数学恒等式 | 不可变 URL 只固定被审查内容，不证明来源蕴含、独立复现或当前上游默认行为；仍需周期性人工复核 |
-| 推断链与结果解释审查 | `reviewed` | 8 条 `inference` 登记双前提、锚点、反例和范围；GitHub 实现前提必须锁完整 commit；1 条采样偏好改为 `recommendation`；127 条 `result` 定义句均有不可外推边界 | 结构化前提不能自动证明推理有效；机制解释与外部效度仍需领域审稿和更强实验 |
+| 推断链与结果解释审查 | `reviewed` | 8 条 `inference` 登记双前提、锚点、反例和范围；GitHub 实现前提必须锁完整 commit；1 条采样偏好改为 `recommendation`；128 条 `result` 定义句均有不可外推边界 | 结构化前提不能自动证明推理有效；机制解释与外部效度仍需领域审稿和更强实验 |
 | 关键建议适用性审查 | `reviewed` | 24 条资源升级、数据纳入、评测发布、运行激活或安全执行建议登记 trigger、动作、fallback/stop 与未授权事项；8 条正文补齐失败路径 | 自动规则不能保证高后果建议选择已穷尽，也不构成硬件、数据、机器人或车辆授权 |
 | PRD 实验档位一致性审查 | `reviewed` | 22 章逐一绑定当前 S 档 `EXP-NN-01`，并把训练、真实数据、checkpoint 与仿真拆为可选待验证 M/L 路径；当前仓库树与脚本名已同步 | 只证明设计—交付映射正确，不表示任何 M/L 路径已经运行或资源可复现 |
 | 实验资产最小合同审查 | `reviewed` | 22 个 manifest 实验与实验卡双向一致，并具有 README、可测试 `src`、smoke、测试和存在的结果 artifact；解析 fixture 不再被要求伪造训练/config 步骤 | 资产完整和 S 档通过不证明训练、外部数据、仿真或目标硬件可复现 |
@@ -29,8 +29,8 @@
 | EXP-04-01 | `smoke` | 有效 fixture 0 问题；11/11 注入问题类型检出，其中 1 个 group 与 3 个独立身份重叠；1 terminated + 1 truncated episode；1 个显式 masked sensor sample | 手工 metadata ID；未读取媒体、发现未知近重复或审计真实数据、clock、标定和隐私 |
 | 第5章 预测模型的生成式基础 | `reviewed` | VAE/token/自回归/masked/diffusion/flow、五步错误诊断树、aleatoric/epistemic 边界、ensemble correlated-error 与 disagreement risk–coverage 排序反例、自动驾驶多未来与解析 fixture；四类审查通过 | 神经生成模型、learned ensemble/OOD estimator、图像/视频、采样性能和 GPU 未运行 |
 | EXP-05-01 | `smoke` | 18 个单元测试；点均值落在 support 外、条件 NLL 优于无条件，区分条件忽略/mode collapse/虚构 mode，证明共同错误可在 range 0 时漏过门禁，并以阈值0/0.25/2得到coverage 0.25/0.5/1、accepted risk 1/0.5/0.5 | 八个分布样本与四个手写三成员 case；failure 标签、误差容差和阈值均为作者设定；观察 support 不等于真实连续 support，range 不是校准或 OOD 保证 |
-| 第9章 世界模型如何评测与失败 | `reviewed` | one-step/E2/E4 排序反转、逐 horizon attempted/available/coverage、缺失分母反例、proper probability score 与分箱 ECE 负对照、自动驾驶矩阵、risk–coverage 协议与 benchmark card | WorldArena/KineBench 等上游未运行；手工概率/缺失表与机器结构不证明总体校准、uncertainty 或外部效度 |
-| EXP-09-01 | `smoke` | 12 个单元测试；action sensitivity 0/0.2；fragile 第4步 coverage 1/3，available-case 与固定分母排序相反；两 forecast 单 bin ECE 同为0但 Brier 为0.25/0.01 | 手工一维预测器、误差表与4个二元结果，不是模型崩溃率、总体校准、自然误差尺度或安全测量 |
+| 第9章 世界模型如何评测与失败 | `reviewed` | one-step/E2/E4 排序反转、逐 horizon attempted/available/coverage、缺失分母反例、proper probability score 与分箱 ECE 负对照、同均值 Brier 下的逐 outcome 误差集中诊断、自动驾驶矩阵、risk–coverage 协议与 benchmark card | WorldArena/KineBench 等上游未运行；手工概率/缺失表与机器结构不证明总体校准、tail risk、uncertainty 或外部效度 |
+| EXP-09-01 | `smoke` | 16 个单元测试；action sensitivity 0/0.2；fragile 第4步 coverage 1/3，available-case 与固定分母排序相反；两 forecast 单 bin ECE 同为0但 Brier 为0.25/0.01；diffuse/concentrated 的 mean Brier 同为0.16，但阈值准确率为1/0.75、最大单例 log loss 为0.510826/1.203973 | 手工一维预测器、误差表与二元结果，不是模型崩溃率、总体校准、tail risk、自然误差尺度或安全测量 |
 | 第6章正文 | `reviewed` | prior/posterior、DreamerV3 dyn/rep stop-gradient 路由、free-nats 日志边界、自动驾驶正文、资源边界；`BENCH-06-01` v3 冻结31个转移上的 filtering、posterior-anchored one-step、no-reset open-loop、五个 horizon、未来观测可见性负对照及两组 KL 合同 | PyTorch mini-RSSM、真实自动微分梯度、跨 seed/任务外部效度与 GPU 验证 |
 | EXP-06-01 | `smoke` | 13 个单元测试；四类 RMSE；h1/h4/h8/h16/h31 no-reset 误差；未来观测 `+1` 只改变观测消费分支、open-loop 精确不变；raw KL 在 free-nats 阈值两侧的解析诊断 | 手写一维单 seed 状态更新器与结构偏移，不运行自动微分/神经训练，不估计真实 leakage、规划性能或24GB GPU资源 |
 | 第7章 用模型做规划 | `reviewed` | MPC/CEM/tree search/value equivalence、PETS 粒子传播接口、固定动作预算的扰动重规划、环境 reward/terminal value 分账、风险目标排序反例、非整数经验尾部质量审计与自动驾驶正文；四类审查通过 | learned probabilistic model、总体 CVaR/置信区间、概率校准、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
@@ -63,6 +63,6 @@
 | EXP-21-01 | `smoke` | 36 个单元测试；mean 45 ms 掩盖尾部；同 miss rate 的 burst 长度 2/1；两个静态合法物理动作的线速度单步变化 0.2 通过/0.4 拒绝；schema/单位/频率/ack/session/boot 错配 fail closed；首次 command8 后完全重试返回缓存回执且记录仍为1，payload 冲突、倒序与 epoch 错配独立拒绝，显式新 epoch 才接受 command0；5 类损坏恢复状态全部 fail closed；8 步 schedule 有 1 stale/1 underflow；相同失败计数下接受 authored weight 1/10；健康/授权/生命周期/receipt 负对照 | 手工 latency/packet/物理单位动作/epoch/回执/score/代理权重/chunk/状态与授权；内存 ledger 结构校验不证明存储完整性，且不是 durable transaction、崩溃恢复、并发原子性、可信 ack、物理 exactly-once、真实动力学、实时、OOD、MRM 完成、认证授权、完整性或安全证明 |
 | 第22章 可审计综合项目 | `reviewed` | 可证伪问题、五条选题轨道、受限 subprocess 复现 probe 与 command/result receipt、五段跨章证据 trace、三分区 × 四身份数据隔离、交付物、阶段提交、驾驶合同与研究雷达已接入正文；四类审查通过 | 真实模型、环境重建、真实数据/媒体、仿真、GPU、机器人、车辆与部署均未运行；author-written receipt 未签名；未发现未知近重复 |
 | EXP-22-01 | `smoke` | 23 个单元测试；完整包 12 个 split identity set/5 段 trace/5 个 artifact binding/2 个 failure injection/0 issue，无效包 24 个具名 issue，四类 train–eval 重叠、缺段、错误依赖、评测未冻结与缺失安全网关均被拒绝 | metadata 与固定本地 subprocess 检查，不遍历真实项目、不重建环境、不读取媒体、发现未知近重复或验证科学正确性与安全性 |
-| 文档站 | `release-candidate` | 22 章正文、读者术语表、研究雷达、贯穿案例阅读地图、22 张实验卡、3 张 benchmark card、438 个章节单元测试、22 组结果精确比对、29 个 HTML/23 张可访问 Mermaid 图/148 个已渲染 Markdown 的折叠式练习自检/1161 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸、深浅色、键盘与屏幕阅读器巡检仍待人工确认，自动 DOM 检查不替代视觉与辅助技术验收 |
+| 文档站 | `release-candidate` | 22 章正文、读者术语表、研究雷达、贯穿案例阅读地图、22 张实验卡、3 张 benchmark card、442 个章节单元测试、22 组结果精确比对、29 个 HTML/23 张可访问 Mermaid 图/149 个已渲染 Markdown 的折叠式练习自检/1161 个内部目标检查、本地静态预览与 MkDocs 严格构建 | 尚未部署；截图式多尺寸、深浅色、键盘与屏幕阅读器巡检仍待人工确认，自动 DOM 检查不替代视觉与辅助技术验收 |
 
 状态含义见仓库文件 `specs/PRD/书籍编写与审查执行流程.md`。
