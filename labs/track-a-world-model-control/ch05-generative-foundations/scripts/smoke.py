@@ -36,6 +36,15 @@ def main() -> int:
         raise AssertionError("the correlated-error fixture must expose a disagreement false negative")
     if ensemble["shared_error_ood"]["ensemble_mean_absolute_error"] != 4.0:
         raise AssertionError("the correlated-error fixture must remain jointly wrong")
+    if ensemble["diverse_correct"]["ensemble_mean_absolute_error"] != 0.0:
+        raise AssertionError("the high-disagreement correct fixture must retain zero mean error")
+    risk_coverage = ensemble["risk_coverage"]
+    if risk_coverage["threshold_0"]["accepted_failure_rate"] != 1.0:
+        raise AssertionError("the strict threshold must expose the shared-error ranking failure")
+    if risk_coverage["threshold_0_25"]["accepted_failure_rate"] != 0.5:
+        raise AssertionError("the authored operating point must retain half accepted failures")
+    if risk_coverage["threshold_2"]["coverage"] != 1.0:
+        raise AssertionError("the permissive endpoint must accept all four cases")
     report = {
         "experiment_id": "EXP-05-01",
         "status": "smoke",

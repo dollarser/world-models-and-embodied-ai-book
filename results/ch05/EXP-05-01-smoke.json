@@ -8,32 +8,222 @@
       "noise": -2.0
     },
     "distribution_diagnostics": {
-      "collapsed": {"observed_mode_recall": 0.5, "out_of_support_probability_mass": 0},
+      "collapsed": {
+        "observed_mode_recall": 0.5,
+        "out_of_support_probability_mass": 0
+      },
       "conditional_context_tv": 0.5,
       "context_ignored_tv": 0.0,
-      "faithful": {"observed_mode_recall": 1.0, "out_of_support_probability_mass": 0},
-      "hallucinated": {"observed_mode_recall": 1.0, "out_of_support_probability_mass": 0.1}
+      "faithful": {
+        "observed_mode_recall": 1.0,
+        "out_of_support_probability_mass": 0
+      },
+      "hallucinated": {
+        "observed_mode_recall": 1.0,
+        "out_of_support_probability_mass": 0.1
+      }
     },
     "ensemble_disagreement_audit": {
       "disagreement_threshold": 0.25,
-      "diverse_ood": {
-        "ensemble_mean_absolute_error": 4.0,
+      "diverse_correct": {
         "deferred_by_range": true,
+        "ensemble_mean_absolute_error": 0.0,
+        "mean_prediction": 0.0,
+        "member_count": 3,
+        "prediction_range": 2.0
+      },
+      "diverse_ood": {
+        "deferred_by_range": true,
+        "ensemble_mean_absolute_error": 4.0,
         "mean_prediction": 2.0,
         "member_count": 3,
         "prediction_range": 2.0
       },
       "in_distribution": {
-        "ensemble_mean_absolute_error": 0.0,
         "deferred_by_range": false,
+        "ensemble_mean_absolute_error": 0.0,
         "mean_prediction": 0.0,
         "member_count": 3,
         "prediction_range": 0.2
       },
-      "scope": "three hand-authored scalar members and a fixed range threshold; not learned epistemic uncertainty, OOD detection, calibration, or safety evidence",
+      "risk_coverage": {
+        "threshold_0": {
+          "accepted_case_ids": [
+            "shared_error_ood"
+          ],
+          "accepted_count": 1,
+          "accepted_failure_rate": 1.0,
+          "accepted_mean_absolute_error": 4.0,
+          "case_count": 4,
+          "correct_deferral_rate": 1.0,
+          "coverage": 0.25,
+          "disagreement_threshold": 0.0,
+          "error_tolerance": 1.0,
+          "failure_recall_by_deferral": 0.5,
+          "rows": [
+            {
+              "accepted": false,
+              "case_id": "in_distribution",
+              "deferred_by_range": true,
+              "ensemble_mean_absolute_error": 0.0,
+              "failed": false,
+              "mean_prediction": 0.0,
+              "member_count": 3,
+              "prediction_range": 0.2
+            },
+            {
+              "accepted": false,
+              "case_id": "diverse_ood",
+              "deferred_by_range": true,
+              "ensemble_mean_absolute_error": 4.0,
+              "failed": true,
+              "mean_prediction": 2.0,
+              "member_count": 3,
+              "prediction_range": 2.0
+            },
+            {
+              "accepted": true,
+              "case_id": "shared_error_ood",
+              "deferred_by_range": false,
+              "ensemble_mean_absolute_error": 4.0,
+              "failed": true,
+              "mean_prediction": 2.0,
+              "member_count": 3,
+              "prediction_range": 0.0
+            },
+            {
+              "accepted": false,
+              "case_id": "diverse_correct",
+              "deferred_by_range": true,
+              "ensemble_mean_absolute_error": 0.0,
+              "failed": false,
+              "mean_prediction": 0.0,
+              "member_count": 3,
+              "prediction_range": 2.0
+            }
+          ]
+        },
+        "threshold_0_25": {
+          "accepted_case_ids": [
+            "in_distribution",
+            "shared_error_ood"
+          ],
+          "accepted_count": 2,
+          "accepted_failure_rate": 0.5,
+          "accepted_mean_absolute_error": 2.0,
+          "case_count": 4,
+          "correct_deferral_rate": 0.5,
+          "coverage": 0.5,
+          "disagreement_threshold": 0.25,
+          "error_tolerance": 1.0,
+          "failure_recall_by_deferral": 0.5,
+          "rows": [
+            {
+              "accepted": true,
+              "case_id": "in_distribution",
+              "deferred_by_range": false,
+              "ensemble_mean_absolute_error": 0.0,
+              "failed": false,
+              "mean_prediction": 0.0,
+              "member_count": 3,
+              "prediction_range": 0.2
+            },
+            {
+              "accepted": false,
+              "case_id": "diverse_ood",
+              "deferred_by_range": true,
+              "ensemble_mean_absolute_error": 4.0,
+              "failed": true,
+              "mean_prediction": 2.0,
+              "member_count": 3,
+              "prediction_range": 2.0
+            },
+            {
+              "accepted": true,
+              "case_id": "shared_error_ood",
+              "deferred_by_range": false,
+              "ensemble_mean_absolute_error": 4.0,
+              "failed": true,
+              "mean_prediction": 2.0,
+              "member_count": 3,
+              "prediction_range": 0.0
+            },
+            {
+              "accepted": false,
+              "case_id": "diverse_correct",
+              "deferred_by_range": true,
+              "ensemble_mean_absolute_error": 0.0,
+              "failed": false,
+              "mean_prediction": 0.0,
+              "member_count": 3,
+              "prediction_range": 2.0
+            }
+          ]
+        },
+        "threshold_2": {
+          "accepted_case_ids": [
+            "in_distribution",
+            "diverse_ood",
+            "shared_error_ood",
+            "diverse_correct"
+          ],
+          "accepted_count": 4,
+          "accepted_failure_rate": 0.5,
+          "accepted_mean_absolute_error": 2.0,
+          "case_count": 4,
+          "correct_deferral_rate": 0.0,
+          "coverage": 1.0,
+          "disagreement_threshold": 2.0,
+          "error_tolerance": 1.0,
+          "failure_recall_by_deferral": 0.0,
+          "rows": [
+            {
+              "accepted": true,
+              "case_id": "in_distribution",
+              "deferred_by_range": false,
+              "ensemble_mean_absolute_error": 0.0,
+              "failed": false,
+              "mean_prediction": 0.0,
+              "member_count": 3,
+              "prediction_range": 0.2
+            },
+            {
+              "accepted": true,
+              "case_id": "diverse_ood",
+              "deferred_by_range": false,
+              "ensemble_mean_absolute_error": 4.0,
+              "failed": true,
+              "mean_prediction": 2.0,
+              "member_count": 3,
+              "prediction_range": 2.0
+            },
+            {
+              "accepted": true,
+              "case_id": "shared_error_ood",
+              "deferred_by_range": false,
+              "ensemble_mean_absolute_error": 4.0,
+              "failed": true,
+              "mean_prediction": 2.0,
+              "member_count": 3,
+              "prediction_range": 0.0
+            },
+            {
+              "accepted": true,
+              "case_id": "diverse_correct",
+              "deferred_by_range": false,
+              "ensemble_mean_absolute_error": 0.0,
+              "failed": false,
+              "mean_prediction": 0.0,
+              "member_count": 3,
+              "prediction_range": 2.0
+            }
+          ]
+        }
+      },
+      "scope": "four hand-authored scalar cases, three members, and fixed range thresholds; not learned epistemic uncertainty, OOD detection, calibration, or safety evidence",
       "shared_error_ood": {
-        "ensemble_mean_absolute_error": 4.0,
         "deferred_by_range": false,
+        "ensemble_mean_absolute_error": 4.0,
         "mean_prediction": 2.0,
         "member_count": 3,
         "prediction_range": 0.0

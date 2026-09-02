@@ -8,6 +8,7 @@ sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from generative_fixture import (  # noqa: E402
     conditional_distribution,
+    disagreement_selective_metrics,
     diffusion_forward,
     empirical_distribution,
     ensemble_disagreement_audit,
@@ -123,6 +124,37 @@ class GenerativeFoundationTests(unittest.TestCase):
             ensemble_disagreement_diagnostic((1.0, float("nan")), 0.0, 0.25)
         with self.assertRaises(ValueError):
             ensemble_disagreement_diagnostic((1.0, 2.0), 0.0, False)
+
+    def test_high_disagreement_can_be_correct(self):
+        case = ensemble_disagreement_audit()["diverse_correct"]
+        self.assertEqual(case["prediction_range"], 2.0)
+        self.assertEqual(case["ensemble_mean_absolute_error"], 0.0)
+        self.assertTrue(case["deferred_by_range"])
+
+    def test_strict_disagreement_threshold_can_accept_only_the_shared_error(self):
+        metrics = ensemble_disagreement_audit()["risk_coverage"]["threshold_0"]
+        self.assertEqual(metrics["coverage"], 0.25)
+        self.assertEqual(metrics["accepted_case_ids"], ("shared_error_ood",))
+        self.assertEqual(metrics["accepted_failure_rate"], 1.0)
+        self.assertEqual(metrics["accepted_mean_absolute_error"], 4.0)
+
+    def test_disagreement_threshold_scan_exposes_non_monotonic_accepted_risk(self):
+        risk_coverage = ensemble_disagreement_audit()["risk_coverage"]
+        self.assertEqual(risk_coverage["threshold_0_25"]["coverage"], 0.5)
+        self.assertEqual(risk_coverage["threshold_0_25"]["accepted_failure_rate"], 0.5)
+        self.assertEqual(risk_coverage["threshold_2"]["coverage"], 1.0)
+        self.assertEqual(risk_coverage["threshold_2"]["accepted_failure_rate"], 0.5)
+        self.assertEqual(risk_coverage["threshold_0_25"]["failure_recall_by_deferral"], 0.5)
+
+    def test_disagreement_selective_metrics_reject_ambiguous_contracts(self):
+        for cases, threshold in (
+            ((), 0.25),
+            ((('same', (0.0, 1.0), 0.0), ('same', (0.0, 1.0), 0.0)), 0.25),
+            ((('bad', (0.0,), 0.0),), 0.25),
+            ((('ok', (0.0, 1.0), 0.0),), -0.1),
+        ):
+            with self.subTest(cases=cases, threshold=threshold), self.assertRaises(ValueError):
+                disagreement_selective_metrics(cases, threshold)
 
 
 if __name__ == "__main__":

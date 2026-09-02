@@ -170,6 +170,79 @@ def ensemble_disagreement_diagnostic(
     }
 
 
+ENSEMBLE_SELECTIVE_CASES = (
+    ("in_distribution", (-0.1, 0.0, 0.1), 0.0),
+    ("diverse_ood", (1.0, 2.0, 3.0), -2.0),
+    ("shared_error_ood", (2.0, 2.0, 2.0), -2.0),
+    ("diverse_correct", (-1.0, 0.0, 1.0), 0.0),
+)
+
+
+def disagreement_selective_metrics(
+    cases: tuple[tuple[str, tuple[float, ...], float], ...],
+    disagreement_threshold: float,
+    error_tolerance: float = 1.0,
+) -> dict[str, object]:
+    """Measure coverage and observed error under one authored range threshold."""
+
+    if not isinstance(cases, tuple) or not cases:
+        raise ValueError("cases must be a non-empty tuple")
+    if not _finite_number(disagreement_threshold) or disagreement_threshold < 0.0:
+        raise ValueError("disagreement_threshold must be a finite non-negative number")
+    if not _finite_number(error_tolerance) or error_tolerance < 0.0:
+        raise ValueError("error_tolerance must be a finite non-negative number")
+    case_ids: set[str] = set()
+    rows = []
+    for case in cases:
+        if not isinstance(case, tuple) or len(case) != 3:
+            raise ValueError("each case must contain an ID, prediction tuple, and target")
+        case_id, predictions, target = case
+        if not isinstance(case_id, str) or not case_id or case_id in case_ids:
+            raise ValueError("case IDs must be unique non-empty strings")
+        case_ids.add(case_id)
+        diagnostic = ensemble_disagreement_diagnostic(
+            predictions, target, disagreement_threshold
+        )
+        rows.append(
+            {
+                "case_id": case_id,
+                **diagnostic,
+                "failed": diagnostic["ensemble_mean_absolute_error"] > error_tolerance,
+                "accepted": not diagnostic["deferred_by_range"],
+            }
+        )
+    accepted = [row for row in rows if row["accepted"]]
+    failed = [row for row in rows if row["failed"]]
+    deferred_failures = [row for row in failed if not row["accepted"]]
+    correct = [row for row in rows if not row["failed"]]
+    deferred_correct = [row for row in correct if not row["accepted"]]
+    return {
+        "disagreement_threshold": float(disagreement_threshold),
+        "error_tolerance": float(error_tolerance),
+        "case_count": len(rows),
+        "accepted_count": len(accepted),
+        "coverage": round(len(accepted) / len(rows), 12),
+        "accepted_failure_rate": (
+            round(sum(row["failed"] for row in accepted) / len(accepted), 12)
+            if accepted
+            else None
+        ),
+        "accepted_mean_absolute_error": (
+            round(
+                sum(row["ensemble_mean_absolute_error"] for row in accepted)
+                / len(accepted),
+                12,
+            )
+            if accepted
+            else None
+        ),
+        "failure_recall_by_deferral": round(len(deferred_failures) / len(failed), 12),
+        "correct_deferral_rate": round(len(deferred_correct) / len(correct), 12),
+        "accepted_case_ids": tuple(row["case_id"] for row in accepted),
+        "rows": tuple(rows),
+    }
+
+
 def ensemble_disagreement_audit() -> dict[str, object]:
     """Compare useful disagreement with a correlated-error false negative."""
 
@@ -185,8 +258,22 @@ def ensemble_disagreement_audit() -> dict[str, object]:
         "shared_error_ood": ensemble_disagreement_diagnostic(
             (2.0, 2.0, 2.0), target=-2.0, disagreement_threshold=threshold
         ),
+        "diverse_correct": ensemble_disagreement_diagnostic(
+            (-1.0, 0.0, 1.0), target=0.0, disagreement_threshold=threshold
+        ),
+        "risk_coverage": {
+            "threshold_0": disagreement_selective_metrics(
+                ENSEMBLE_SELECTIVE_CASES, 0.0
+            ),
+            "threshold_0_25": disagreement_selective_metrics(
+                ENSEMBLE_SELECTIVE_CASES, threshold
+            ),
+            "threshold_2": disagreement_selective_metrics(
+                ENSEMBLE_SELECTIVE_CASES, 2.0
+            ),
+        },
         "scope": (
-            "three hand-authored scalar members and a fixed range threshold; "
+            "four hand-authored scalar cases, three members, and fixed range thresholds; "
             "not learned epistemic uncertainty, OOD detection, calibration, or safety evidence"
         ),
     }

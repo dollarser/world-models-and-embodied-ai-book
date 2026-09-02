@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-05-01`
-> 关联声明：`CLAIM-05-01`～`CLAIM-05-08`
-> 关联图表：`FIG-05-01` / `TAB-05-01` / `TAB-05-02` / `TAB-05-03` / `TAB-05-04`
+> 关联声明：`CLAIM-05-01`～`CLAIM-05-09`
+> 关联图表：`FIG-05-01` / `TAB-05-01` / `TAB-05-02` / `TAB-05-03` / `TAB-05-04` / `TAB-05-05`
 > 资源档位：S / M
 > GPU 状态：待验证
 
@@ -186,7 +186,7 @@ D_{TV}(p,q)=\frac{1}{2}\sum_x |p(x)-q(x)|.
 
 [Deep Ensembles](https://proceedings.neurips.cc/paper_files/paper/2017/hash/9ef2ed4b7fd2c810847ffa5fa85bce38-Abstract.html)把独立初始化成员的预测聚合作为可扩展不确定性基线；[Ovadia et al.](https://proceedings.neurips.cc/paper/2019/hash/8558cb408c1d76621371888657d2eb1d-Abstract.html)则在多种 dataset shift 严重度上比较准确率与校准退化 `[P,R1]`。这些工作支持“必须在 shift 下评估估计器”，不支持把任意成员分歧直接解释成 epistemic 概率，也不保证 ensemble 成员会学到不同错误。
 
-`EXP-05-01` v3 用三个手写标量成员演示这个边界。为便于初学者直接计算，定义 range score
+`EXP-05-01` v4 用三个手写标量成员演示这个边界。为便于初学者直接计算，定义 range score
 
 \[
 u(x)=\max_m \hat y_m(x)-\min_m \hat y_m(x),
@@ -203,6 +203,18 @@ u(x)=\max_m \hat y_m(x)-\min_m \hat y_m(x),
 *TAB-05-04：ensemble range 的有用拒绝与共同错误假阴性。所有值均为手写教学 fixture。*
 
 `CLAIM-05-08`（result）：固定 range gate 拒绝了成员分歧为 2 的 `diverse_ood`，却接受了三个成员完全一致、ensemble mean 绝对误差仍为 4 的 `shared_error_ood`。该结果只证明低 disagreement 不蕴含正确，也不测量 learned ensemble、OOD 检出率、校准、真实错误相关性或安全性。
+
+v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为2，但 ensemble mean error 为0；于是 score 排序同时包含“低分但错”和“高分但对”。令绝对误差大于1为手工 failure，range 不超过阈值才接受：
+
+| range 阈值 | coverage | 接受 failure rate | 接受 mean absolute error | 正确样本 defer rate |
+| ---: | ---: | ---: | ---: | ---: |
+| 0 | 0.25 | 1.00 | 4.00 | 1.00 |
+| 0.25 | 0.50 | 0.50 | 2.00 | 0.50 |
+| 2 | 1.00 | 0.50 | 2.00 | 0.00 |
+
+*TAB-05-05：`EXP-05-01` v4 的四例 disagreement risk–coverage 扫描。failure 标签、误差容差1和阈值均由作者设定，不是总体风险估计。*
+
+`CLAIM-05-09`（result）：固定四例 panel 中，range 阈值0只接受 `shared_error_ood`，coverage 为0.25且接受 failure rate 为1；阈值0.25接受低误差 ID 与共同错误，coverage/risk 为0.5/0.5；阈值2接受全部，coverage/risk 为1/0.5。它只证明该手工排序中收紧 disagreement gate 可降低 coverage 却提高接受错误比例，不能估计 learned ensemble 的 risk–coverage、阈值泛化、OOD 检出率、校准或安全收益。
 
 因此，成员训练数据、初始化、架构和 checkpoint 数量必须登记，且要在冻结的 ID/shift/OOD/stress split 上把 score 与真实错误配对。若所有成员共享数据捷径、标签错误、架构盲点或 simulator bias，它们可能一致地自信犯错；此时仍需覆盖测试、外部 detector、约束检查与真实/高保真后果验证。
 
@@ -234,6 +246,7 @@ S 档只用 Python 标准库、CPU、零下载。M 档可在程序化低维数�
 4. **条件设计**：为车辆切入写出 ego action 与他车 behavior 的条件 schema，并设计 context-shuffle 对照。
 5. **反例设计**：构造一个 TV 很高但条件响应方向错误的模型，说明为什么敏感性不等于正确性。
 6. **不确定性计算**：把 `shared_error_ood` 的一个成员改为 `-2`，计算 range、mean error 和 defer 结果；解释为何“更分歧”与“平均预测更正确”是两个问题。
+7. **排序审计**：复算 `TAB-05-05` 三个阈值的 coverage/risk，并解释为什么阈值只能在冻结真值 split 上选择。
 
 ## 自检要点
 
@@ -281,6 +294,13 @@ VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-05-07：严格 disagreement gate 也可能留下最差接受集</summary>
+
+阈值0只接受 range 恰为0的 `shared_error_ood`，而它的 mean error 为4并超过手工容差1，所以 coverage 是1/4、accepted failure rate 是1。放宽到0.25后，低误差 ID case 也被接受，coverage变成2/4、risk降为1/2；放宽到2后四例全收，risk仍为2/4。合格答案必须指出 risk 不随阈值收紧而保证单调下降，因为 range 排序本身可能错误；四个手工点也不能用于选择生产阈值或估计总体风险。
+
+</details>
+
 ## 延伸阅读
 
 - [Auto-Encoding Variational Bayes](https://arxiv.org/abs/1312.6114)；
@@ -302,4 +322,4 @@ VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并�
 - 一致性审查：通过；
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch05-diagnostic-review-2026-09-01.md`、`reviews/ch05-ch09-ch21-epistemic-gate-review-2026-09-02.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
-- 已知限制：只有解析标量 fixture；mode recall 与 support 外质量只相对手工观察集合定义，ensemble 成员和 OOD 标签也是手写的，没有训练神经网络、估计校准、图像/视频或 GPU。
+- 已知限制：只有解析标量 fixture；mode recall 与 support 外质量只相对手工观察集合定义，ensemble 成员、OOD/failure 标签、误差容差和阈值也是手写的，没有训练神经网络、估计 risk/calibration、图像/视频或 GPU。
