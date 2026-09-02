@@ -82,6 +82,16 @@ CHECKPOINT_SELECTION_ROWS = (
 )
 
 
+ADAPTIVE_RETRY_ROWS = (
+    {"task_id": "task-a", "attempt_id": 1, "success": True, "cost": 1.0},
+    {"task_id": "task-b", "attempt_id": 1, "success": False, "cost": 1.0},
+    {"task_id": "task-b", "attempt_id": 2, "success": True, "cost": 1.0},
+    {"task_id": "task-c", "attempt_id": 1, "success": False, "cost": 1.0},
+    {"task_id": "task-c", "attempt_id": 2, "success": False, "cost": 1.0},
+    {"task_id": "task-d", "attempt_id": 1, "success": True, "cost": 1.0},
+)
+
+
 def wilson_interval(successes: int, trials: int, z: float = 1.959963984540054) -> dict[str, float]:
     """Return a two-sided Wilson score interval for a binomial proportion."""
     if isinstance(successes, bool) or isinstance(trials, bool):
@@ -284,6 +294,83 @@ def checkpoint_selection_audit(
         "scope": (
             "authored checkpoint-score table; demonstrates data-role leakage only and does "
             "not estimate expected selection bias or model generalization"
+        ),
+    }
+
+
+def adaptive_retry_audit(
+    rows: Sequence[dict[str, object]] = ADAPTIVE_RETRY_ROWS,
+) -> dict[str, object]:
+    """Separate per-attempt outcomes from an authored retry-policy task estimand."""
+    if isinstance(rows, (str, bytes)) or not isinstance(rows, Sequence) or not rows:
+        raise ValueError("retry rows must be a non-empty sequence")
+
+    by_task: dict[str, list[dict[str, object]]] = {}
+    seen_attempts: set[tuple[str, int]] = set()
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise ValueError(f"retry row {index} must be a mapping")
+        task_id = row.get("task_id")
+        attempt_id = row.get("attempt_id")
+        success = row.get("success")
+        cost = row.get("cost")
+        if not isinstance(task_id, str) or not task_id:
+            raise ValueError("task_id values must be non-empty strings")
+        if isinstance(attempt_id, bool) or not isinstance(attempt_id, int):
+            raise TypeError("attempt_id must be an integer")
+        if attempt_id not in (1, 2):
+            raise ValueError("attempt_id must be 1 or 2")
+        if not isinstance(success, bool):
+            raise ValueError("success must be boolean")
+        if isinstance(cost, bool) or not isinstance(cost, (int, float)):
+            raise TypeError("cost must be a real number")
+        if not isfinite(cost) or cost <= 0.0:
+            raise ValueError("cost must be finite and positive")
+        identity = (task_id, attempt_id)
+        if identity in seen_attempts:
+            raise ValueError("task and attempt identities must be unique")
+        seen_attempts.add(identity)
+        by_task.setdefault(task_id, []).append(
+            {"attempt_id": attempt_id, "success": success, "cost": float(cost)}
+        )
+
+    recovered_task_count = 0
+    for task_id, attempts in by_task.items():
+        attempts.sort(key=lambda attempt: attempt["attempt_id"])
+        attempt_ids = [attempt["attempt_id"] for attempt in attempts]
+        if attempt_ids[0] != 1 or attempt_ids != list(range(1, len(attempts) + 1)):
+            raise ValueError(f"task {task_id} attempts must be contiguous from 1")
+        if attempts[0]["success"] and len(attempts) != 1:
+            raise ValueError(f"task {task_id} cannot retry after first-attempt success")
+        if not attempts[0]["success"] and len(attempts) != 2:
+            raise ValueError(f"task {task_id} must retry exactly once after first failure")
+        recovered_task_count += int(not attempts[0]["success"] and attempts[1]["success"])
+
+    task_count = len(by_task)
+    attempt_count = len(rows)
+    first_attempt_success_count = sum(attempts[0]["success"] for attempts in by_task.values())
+    per_attempt_success_count = sum(
+        attempt["success"] for attempts in by_task.values() for attempt in attempts
+    )
+    task_success_count = sum(any(attempt["success"] for attempt in attempts) for attempts in by_task.values())
+    total_cost = sum(attempt["cost"] for attempts in by_task.values() for attempt in attempts)
+    return {
+        "task_count": task_count,
+        "attempt_count": attempt_count,
+        "retry_count": attempt_count - task_count,
+        "first_attempt_success_count": first_attempt_success_count,
+        "first_attempt_success_rate": first_attempt_success_count / task_count,
+        "per_attempt_success_count": per_attempt_success_count,
+        "per_attempt_success_rate": per_attempt_success_count / attempt_count,
+        "task_success_count_with_up_to_two_attempts": task_success_count,
+        "task_success_rate_with_up_to_two_attempts": task_success_count / task_count,
+        "recovered_task_count": recovered_task_count,
+        "mean_attempts_per_task": attempt_count / task_count,
+        "total_cost": total_cost,
+        "mean_cost_per_task": total_cost / task_count,
+        "scope": (
+            "four authored tasks under a deterministic retry-on-first-failure policy; "
+            "not an iid repeated-trial or deployment success estimate"
         ),
     }
 
@@ -605,4 +692,5 @@ def evaluate() -> dict[str, object]:
     }
     metrics["zero_event_pseudoreplication_audit"] = zero_event_pseudoreplication_audit()
     metrics["checkpoint_selection_audit"] = checkpoint_selection_audit()
+    metrics["adaptive_retry_audit"] = adaptive_retry_audit()
     return metrics

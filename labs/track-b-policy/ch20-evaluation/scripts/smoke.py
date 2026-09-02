@@ -82,6 +82,15 @@ def main() -> int:
         raise AssertionError("the negative control must expose final-set-driven checkpoint selection")
     if selection["test_reuse_authored_optimism_gap"] != 0.25:
         raise AssertionError("the untouched confirmation score must expose the authored reuse gap")
+    retry = metrics["adaptive_retry_audit"]
+    if retry["task_count"] != 4 or retry["attempt_count"] != 6:
+        raise AssertionError("the adaptive retry ledger must preserve task and attempt denominators")
+    if retry["per_attempt_success_rate"] != 0.5:
+        raise AssertionError("the per-attempt success estimand must remain fixed")
+    if retry["task_success_rate_with_up_to_two_attempts"] != 0.75:
+        raise AssertionError("the retry-policy task success estimand must remain fixed")
+    if retry["mean_attempts_per_task"] != 1.5 or retry["recovered_task_count"] != 1:
+        raise AssertionError("retry cost and recovered-task accounting must remain explicit")
 
     report = {
         "experiment_id": "EXP-20-01",

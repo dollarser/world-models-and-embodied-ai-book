@@ -3,7 +3,7 @@
   "id": "EXP-20-01",
   "chapter": 20,
   "status": "smoke",
-  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10", "CLAIM-20-11", "CLAIM-20-12", "CLAIM-20-13"],
+  "claim_ids": ["CLAIM-20-01", "CLAIM-20-02", "CLAIM-20-05", "CLAIM-20-06", "CLAIM-20-07", "CLAIM-20-08", "CLAIM-20-09", "CLAIM-20-10", "CLAIM-20-11", "CLAIM-20-12", "CLAIM-20-13", "CLAIM-20-14"],
   "benchmark_ids": ["BENCH-20-01"],
   "claim_scope": [
     "success rates are not directly comparable when task populations, success definitions, or denominators differ",
@@ -16,7 +16,8 @@
     "repeated members within authored route clusters do not create independent routes, and episode-event versus cluster-incidence bounds answer different estimands",
     "selecting a checkpoint on a final score reassigns that split to model selection; an untouched authored confirmation score can expose the resulting reuse gap without estimating expected selection bias",
     "identical candidate and baseline marginal success rates do not determine their paired joint table, discordant-pair count, or a predeclared exact conditional McNemar diagnostic",
-    "a non-rejected exact conditional null does not establish practical equivalence; a separately declared effect interval and practical-difference band answer different questions"
+    "a non-rejected exact conditional null does not establish practical equivalence; a separately declared effect interval and practical-difference band answer different questions",
+    "an adaptive retry-on-first-failure ledger yields distinct per-attempt and task-with-up-to-two-attempts success estimands while exposing retry cost"
   ],
   "code": {
     "repository": "cv2embodied",
@@ -25,7 +26,7 @@
   },
   "data": {
     "name": "procedural episode, paired-route, paired-margin, checkpoint-selection, and zero-event pseudoreplication audit tables",
-    "version": "v10",
+    "version": "v11",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -85,7 +86,11 @@
     {"name": "more_discordant_exact_conditional_two_sided_p", "value": 0.387695, "unit": "probability", "split": "more-discordant-twenty-pair-table"},
     {"name": "paired_difference_hoeffding_95_lower", "value": -0.407361, "unit": "ratio_difference", "split": "both-twenty-pair-joint-tables"},
     {"name": "paired_difference_hoeffding_95_upper", "value": 0.807361, "unit": "ratio_difference", "split": "both-twenty-pair-joint-tables"},
-    {"name": "paired_difference_interval_within_practical_band", "value": 0.0, "unit": "boolean", "split": "predeclared-minus-0.3-to-0.3-band"}
+    {"name": "paired_difference_interval_within_practical_band", "value": 0.0, "unit": "boolean", "split": "predeclared-minus-0.3-to-0.3-band"},
+    {"name": "adaptive_retry_per_attempt_success_rate", "value": 0.5, "unit": "ratio", "split": "six-actual-attempts"},
+    {"name": "adaptive_retry_task_success_rate", "value": 0.75, "unit": "ratio", "split": "four-tasks-up-to-two-attempts"},
+    {"name": "adaptive_retry_mean_attempts_per_task", "value": 1.5, "unit": "attempts_per_task", "split": "four-authored-tasks"},
+    {"name": "adaptive_retry_recovered_task_count", "value": 1, "unit": "count", "split": "retry-after-first-failure"}
   ],
   "artifacts": ["results/ch20/EXP-20-01-smoke.json"],
   "limitations": [
@@ -96,6 +101,7 @@
     "the paired-margin Hoeffding interval is a conservative independent-pair bounded-mean baseline, not an exact-compatible matched-binary interval, cluster or multiplicity correction, equivalence test, or population-sampling claim",
     "the four-checkpoint score table is deliberately authored and does not estimate expected selection bias, checkpoint quality, or model generalization",
     "does not estimate any real policy or benchmark performance",
-    "the injected invalid-run case tests rejection only and does not estimate a technical failure rate"
+    "the injected invalid-run case tests rejection only and does not estimate a technical failure rate",
+    "the four-task adaptive retry ledger is authored and does not estimate iid retry probability, deployment success, latency, intervention, or safety cost"
   ]
 }

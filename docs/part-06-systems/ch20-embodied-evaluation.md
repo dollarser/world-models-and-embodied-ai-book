@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-20-01`
-> 关联声明：`CLAIM-20-01`～`CLAIM-20-13`
-> 关联图表：`FIG-20-01` / `TAB-20-01` / `TAB-20-02` / `TAB-20-03` / `TAB-20-04` / `TAB-20-05` / `TAB-20-06` / `TAB-20-07`
+> 关联声明：`CLAIM-20-01`～`CLAIM-20-14`
+> 关联图表：`FIG-20-01` / `TAB-20-01`～`TAB-20-08`
 > 资源档位：S / M
 > GPU 状态：不需要
 
@@ -76,9 +76,9 @@ p_U=1-\alpha^{1/n}.
 | 100 | 2.9513% | 3.0% |
 | 1000 | 0.2991% | 0.3% |
 
-*TAB-20-03：零次观测事件的一侧二项风险上界。来源：`EXP-20-01` v10 解析计算；独立同分布 Bernoulli 只是一项显式教学假设。*
+*TAB-20-03：零次观测事件的一侧二项风险上界。来源：`EXP-20-01` v11 解析计算；独立同分布 Bernoulli 只是一项显式教学假设。*
 
-`CLAIM-20-09`（result）：`EXP-20-01` v10 在零观测事件下计算出 `n=20/100/1000` 的 95% 一侧上界分别为 `0.139108/0.029513/0.002991`；因此即使 `0/100`，该假设下仍不能排除约 2.95% 的事件概率。该结果不估计机器人或车辆风险，也不覆盖相关 route、重复 seed、未见危险类型、scorer 漏检或 sim-to-real gap。
+`CLAIM-20-09`（result）：`EXP-20-01` v11 在零观测事件下计算出 `n=20/100/1000` 的 95% 一侧上界分别为 `0.139108/0.029513/0.002991`；因此即使 `0/100`，该假设下仍不能排除约 2.95% 的事件概率。该结果不估计机器人或车辆风险，也不覆盖相关 route、重复 seed、未见危险类型、scorer 漏检或 sim-to-real gap。
 
 ### 20.1.3 重复 replay 不能伪装成独立暴露
 
@@ -91,11 +91,11 @@ p_U=1-\alpha^{1/n}.
 
 *TAB-20-04：零事件 pseudo-replication 负对照。两行是不同 estimand，不能相减、求倍数或把第二行称为第一行的“修正值”。*
 
-`EXP-20-01` v10 还比较同样 10 条 route 各 replay 1 次与 10 次：因为独立 cluster 数仍是10，cluster-level 公式数值都为 `0.258866`；但目标量已经从“新 route 在1次 replay 内至少一例”变成“新 route 在10次 replay 内至少一例”，不能把数值相同解释成风险不变。与此同时，建立在 episode 独立假设上的数值从 `0.258866` 收窄到 `0.029513`。重复测量可以帮助描述固定 route 内的随机性，却不会自动创造新的 route、天气、交通参与者或 ODD 支持。当前 [Waymo Safety Impact](https://waymo.com/safety/impact/) 方法也按城市与地理暴露对 benchmark 做匹配，并明确没有完美的“apples-to-apples”比较 `[O,R1]`；这支持暴露总体必须对齐，不为本书两个手工上界背书。
+`EXP-20-01` v11 还比较同样 10 条 route 各 replay 1 次与 10 次：因为独立 cluster 数仍是10，cluster-level 公式数值都为 `0.258866`；但目标量已经从“新 route 在1次 replay 内至少一例”变成“新 route 在10次 replay 内至少一例”，不能把数值相同解释成风险不变。与此同时，建立在 episode 独立假设上的数值从 `0.258866` 收窄到 `0.029513`。重复测量可以帮助描述固定 route 内的随机性，却不会自动创造新的 route、天气、交通参与者或 ODD 支持。当前 [Waymo Safety Impact](https://waymo.com/safety/impact/) 方法也按城市与地理暴露对 benchmark 做匹配，并明确没有完美的“apples-to-apples”比较 `[O,R1]`；这支持暴露总体必须对齐，不为本书两个手工上界背书。
 
 实际分析必须先声明目标量和独立采样单元。若目标是 per-episode event rate，需要能辩护 episode 条件独立或使用适合相关数据的层级/稳健模型；若目标是“新场景是否暴露至少一次失败”，cluster incidence 才是对应量。cluster 只有 10 个时，不能用 cluster bootstrap 或渐近标准误伪造高精度。若 route 身份、生成谱系或重复结构缺失，应停止发布总体风险上界，只报告零事件计数、已知暴露结构与该缺口。
 
-`CLAIM-20-10`（result）：`EXP-20-01` v10 的零事件 pseudo-replication fixture 中，10 条 route 各重复 10 次时，假设100个 episode 独立得到 per-episode 上界 `0.029513`，把10条 route 作为独立单元得到“新 route 在10次内至少一例”的上界 `0.258866`；把重复数从1增至10不会改变独立 route 数或该公式数值，却会改变 cluster outcome 的定义。该结果只验证分析单位与 estimand 合同，不估计有效样本量、相关系数、真实 episode/route 风险或任何策略安全性。
+`CLAIM-20-10`（result）：`EXP-20-01` v11 的零事件 pseudo-replication fixture 中，10 条 route 各重复 10 次时，假设100个 episode 独立得到 per-episode 上界 `0.029513`，把10条 route 作为独立单元得到“新 route 在10次内至少一例”的上界 `0.258866`；把重复数从1增至10不会改变独立 route 数或该公式数值，却会改变 cluster outcome 的定义。该结果只验证分析单位与 estimand 合同，不估计有效样本量、相关系数、真实 episode/route 风险或任何策略安全性。
 
 ## 20.2 从模型分数到证据阶梯
 
@@ -183,13 +183,28 @@ make ch20-smoke
 
 四格反事实把混杂进一步展开：在 goal-only 下从 easy 换到 full，成功率变化 `-12.5` 个百分点；在 safety-aware 下同一总体变化是 `-37.5` 个百分点。安全规则在 easy 上变化 `0`，在 full 上变化 `-25` 个百分点，difference-in-differences interaction 为 `-25` 个百分点。这些是固定表格的算术差，不是总体效应估计。
 
-`CLAIM-20-07`（result）：`EXP-20-01` v10 的 2×2 协议格证明，同一个 protocol warning 的数值影响依赖另一个协议因素；因此首尾成功率差不能被唯一归因给任务总体、安全定义或分母。要解释归因，必须预先设计共同总体上的反事实或配对比较。
+`CLAIM-20-07`（result）：`EXP-20-01` v11 的 2×2 协议格证明，同一个 protocol warning 的数值影响依赖另一个协议因素；因此首尾成功率差不能被唯一归因给任务总体、安全定义或分母。要解释归因，必须预先设计共同总体上的反事实或配对比较。
 
 聚合产物同时报告 `attempted_count`、`valid_episode_count`、`terminated_episode_count`、`truncated_episode_count` 与 `invalid_episode_count`。完整协议是 `8 attempted / 8 valid / 7 terminated / 1 truncated / 0 invalid`；截断没有被误当技术坏样本删除，因此成功率仍为 `5/8`。同一步若同时 natural terminal 与 timeout，会分别进入两个结束原因计数，但 attempted 分母只增加一次；value bootstrap 仍按第4、8章由 `terminated` 关闭。fixture 另有反例注入 `reset_failed`：审计器会保留无效 episode ID 和原因，并阻止生成聚合比例。
 
-`CLAIM-20-06`（result）：`EXP-20-01` v10 验证了两条分母规则：有效 timeout 截断仍进入预先定义的 episode 分母；技术无效运行必须具名报告并使当前聚合失败，不能在计算后静默删除。这个合同不规定所有 benchmark 必须采用同一重跑政策；它要求重跑、替换或排除政策在运行前冻结。
+`CLAIM-20-06`（result）：`EXP-20-01` v11 验证了两条分母规则：有效 timeout 截断仍进入预先定义的 episode 分母；技术无效运行必须具名报告并使当前聚合失败，不能在计算后静默删除。这个合同不规定所有 benchmark 必须采用同一重跑政策；它要求重跑、替换或排除政策在运行前冻结。
 
-### 20.5.1 配对与 cluster：先决定谁获得相同权重
+### 20.5.1 自适应重试：attempt 成功率不等于恢复政策成功率
+
+`EXP-20-01` v11 固定4个 task 的 retry-on-first-failure ledger。task-a/d 首次成功后停止；task-b 首次失败、第二次成功；task-c 两次都失败。协议拒绝首次成功后继续重试、首次失败后漏记第二次，以及重复 `(task_id,attempt_id)`。
+
+| 目标量 | 分子/分母 | 数值 | 回答的问题 |
+| --- | ---: | ---: | --- |
+| first-attempt success | 2/4 tasks | 0.50 | 不使用恢复政策时的首次执行结果 |
+| per-attempt success | 3/6 attempts | 0.50 | 实际执行的一次 attempt 有多少成功 |
+| task success with up to two attempts | 3/4 tasks | 0.75 | 允许该重试政策后有多少 task 最终成功 |
+| mean attempts per task | 6/4 | 1.50 | 该政策的平均执行成本 |
+
+*TAB-20-08：`EXP-20-01` v11 的自适应重试分母。4个 task、6次 attempt 和每次单位成本均为作者构造。*
+
+`CLAIM-20-14`（result）：该固定 ledger 的 first-attempt/per-attempt 成功率均为 `0.5`，允许首次失败后重试一次的 task-level 成功率为 `0.75`，同时平均每 task 使用 `1.5` 次 attempt、仅1个 task 被重试恢复。该结果只证明具名重试政策会改变估计目标与成本分母，不估计独立重复成功概率、真实恢复收益、时延、干预、安全风险或部署性能。
+
+### 20.5.2 配对与 cluster：先决定谁获得相同权重
 
 第二个子 fixture 比较 candidate 与 baseline，并让两者在相同 `pair_id`、相同 route 上运行。四条 route 的重复数故意不均衡：`route-a/b` 各有 4 对，`route-c/d` 各有 1 对。
 
@@ -208,9 +223,9 @@ micro 差值让每个 episode 权重相同，因此重复 4 次的 `route-b` 对
 
 代码保留每一对的 candidate-baseline 差，再在 route 层重采样。四个 cluster 的一次 bootstrap replicate 抽取 4 条 route、有放回；小规模 fixture 枚举全部 `4^4=256` 个有序 replicate，而不是依赖随机 seed。equal-route macro 差的简单 percentile 95% 区间为 `[-0.75, 0.75]`。[Field 与 Welsh 的 clustered-data bootstrap 研究](https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9868.2007.00593.x)强调 bootstrap 是否合适取决于 cluster 模型和重采样设计；本例只有四个手工 cluster，区间离散且不能当成具有可靠 95% population coverage 的推断。
 
-`CLAIM-20-08`（result）：`EXP-20-01` v10 的十对固定结果中，candidate/baseline 的 episode-micro 成功率为 `0.9/0.6`、配对差为 `+0.3`，但四条 route 等权后的 macro 配对差为 `0.0`；枚举 256 个 route-level bootstrap replicate 得到 percentile 区间 `[-0.75,0.75]`。这只证明不均衡重复、配对和 cluster 权重可以改变 estimand，并演示重采样机制；不估计任何真实策略差异，也不能由区间含 0 证明两策略等效。
+`CLAIM-20-08`（result）：`EXP-20-01` v11 的十对固定结果中，candidate/baseline 的 episode-micro 成功率为 `0.9/0.6`、配对差为 `+0.3`，但四条 route 等权后的 macro 配对差为 `0.0`；枚举 256 个 route-level bootstrap replicate 得到 percentile 区间 `[-0.75,0.75]`。这只证明不均衡重复、配对和 cluster 权重可以改变 estimand，并演示重采样机制；不估计任何真实策略差异，也不能由区间含 0 证明两策略等效。
 
-### 20.5.2 边际成功率相同，配对证据仍可能不同
+### 20.5.3 边际成功率相同，配对证据仍可能不同
 
 如果 candidate 与 baseline 在同一批初态上逐对运行，两个边际成功率会丢掉 joint outcome。令 `b` 为“candidate 成功、baseline 失败”的对数，`c` 为相反方向，`m=b+c` 为 discordant pairs。exact conditional McNemar 诊断在“两个方向在 discordant pairs 中等概率”的零假设下使用：
 
@@ -220,7 +235,7 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 
 [Fay 等人](https://pmc.ncbi.nlm.nih.gov/articles/PMC9447366/)说明二元 matched pairs 的 conditional test 只对 discordant pairs 的方向做 exact binomial 计算，并讨论了与 exact test 相容的差值区间 `[P]`。本书只实现上式的 equal-tail two-sided 诊断；离散 exact test 可能保守，不能看过结果后在 exact、mid-p、渐近或单侧版本之间挑更小的值。
 
-`EXP-20-01` v10 构造两张各 20 对的表。两表的 candidate 都为 `12/20`、baseline 都为 `8/20`，所以边际差都为 `+0.2`；joint table 不同：
+`EXP-20-01` v11 构造两张各 20 对的表。两表的 candidate 都为 `12/20`、baseline 都为 `8/20`，所以边际差都为 `+0.2`；joint table 不同：
 
 | joint pairing | 双方成功 | 仅 candidate 成功 `b` | 仅 baseline 成功 `c` | 双方失败 | discordant `m` | exact two-sided `p` |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -233,9 +248,9 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 
 该诊断要求 pair 之间是目标总体下可辩护的独立单元。若多对结果嵌套在同一 route、scene lineage 或 seed family 中，20.5.1 的 cluster 层仍然存在；对 episode 直接做 McNemar 不会消除伪重复。多策略、多任务、多阈值或反复查看结果还会引入 multiplicity/adaptivity，必须预注册主比较或另做相应控制。
 
-`CLAIM-20-12`（result）：`EXP-20-01` v10 的两张20对手工表都给出 candidate/baseline=`0.6/0.4` 与点差 `+0.2`，但 high-concordance 表的 `b/c=4/0`、exact conditional two-sided `p=0.125`，more-discordant 表为 `8/4`、`p=0.387695`。该结果只证明边际成功率不能恢复 paired joint table 或其具名条件诊断；不估计策略效应、显著性功效、cluster 相关、等效性、多重比较或部署安全。
+`CLAIM-20-12`（result）：`EXP-20-01` v11 的两张20对手工表都给出 candidate/baseline=`0.6/0.4` 与点差 `+0.2`，但 high-concordance 表的 `b/c=4/0`、exact conditional two-sided `p=0.125`，more-discordant 表为 `8/4`、`p=0.387695`。该结果只证明边际成功率不能恢复 paired joint table 或其具名条件诊断；不估计策略效应、显著性功效、cluster 相关、等效性、多重比较或部署安全。
 
-### 20.5.3 不显著不是等效：检验与效应区间必须分账
+### 20.5.4 不显著不是等效：检验与效应区间必须分账
 
 为给前述“不能由 `p>0.05` 宣称等效”一个可执行的最低基线，令每对差值 `D_i=candidate_i-baseline_i∈{-1,0,1}`，并定义这些固定设计位置的平均期望 `μ_n=n^{-1}Σ_i E[D_i]`。若把 `n` 个 pair 视为相互独立且协议固定，[Hoeffding 的有界变量不等式](https://doi.org/10.1080/01621459.1963.10500830)给出：
 
@@ -256,7 +271,7 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 
 这个区间有意保守，也不是 Fay 等人讨论的 exact-test-compatible matched-binary interval；后者的构造并非把 `p` 值机械换算成上下界。当前公式还要求 pair 之间独立，不能穿透 route/scene cluster。对当前均值，若只要求 Hoeffding 半宽不超过 `0.1`，公式给出的充分样本数为 `738` 个独立 pair；这不是专门 paired-binary 方法的功效计算，也不保证未来样本均值仍为 `0.2`。实用等效带必须由任务容差、后果和决策成本在看结果前设定。
 
-`CLAIM-20-13`（result）：`EXP-20-01` v10 对两张20对手工表都得到 paired difference Hoeffding 95% 区间 `[-0.407361,0.807361]`，均未完全落入预注册 `[-0.3,0.3]`，尽管两张表的 exact conditional `p` 分别为 `0.125/0.387695`。该结果只演示检验值、效应区间和实用阈值是三份不同合同；不证明差异、等效、非劣、安全或真实样本量需求。
+`CLAIM-20-13`（result）：`EXP-20-01` v11 对两张20对手工表都得到 paired difference Hoeffding 95% 区间 `[-0.407361,0.807361]`，均未完全落入预注册 `[-0.3,0.3]`，尽管两张表的 exact conditional `p` 分别为 `0.125/0.387695`。该结果只演示检验值、效应区间和实用阈值是三份不同合同；不证明差异、等效、非劣、安全或真实样本量需求。
 
 ## 20.6 benchmark card 的最小字段
 
@@ -291,7 +306,7 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 
 训练集负责拟合参数，selection split 负责选择 checkpoint、prompt、阈值或 adapter；final split 只在选择及协议冻结后运行一次。若看完 final 分数再选择 checkpoint，即使没有反向传播，这个 final split 也已经参与选择，不能继续称为独立最终评测。[Cawley 与 Talbot](https://www.jmlr.org/papers/volume11/cawley10a/cawley10a.pdf)说明有限样本上的模型选择准则本身也会被过拟合，并由此产生乐观的性能评估偏差 `[P]`；[Dwork et al.](https://arxiv.org/abs/1506.02629)进一步研究了自适应分析反复复用 holdout 时的泛化问题 `[A]`。两项工作提供方法论依据，不为下面的手工数字背书。
 
-`EXP-20-01` v10 固定四个 checkpoint 的三列分数。合法路径只看 selection 列，选中 `checkpoint-a`，随后一次性读取其 final 分数 `0.50`。负对照则错误地在 final 列上取最大值，挑中 `checkpoint-d` 并报告 `0.75`；该 checkpoint 在未被两条选择路径使用的 confirmation 列上为 `0.50`：
+`EXP-20-01` v11 固定四个 checkpoint 的三列分数。合法路径只看 selection 列，选中 `checkpoint-a`，随后一次性读取其 final 分数 `0.50`。负对照则错误地在 final 列上取最大值，挑中 `checkpoint-d` 并报告 `0.75`；该 checkpoint 在未被两条选择路径使用的 confirmation 列上为 `0.50`：
 
 | checkpoint | selection score | final score | untouched confirmation score |
 | --- | ---: | ---: | ---: |
@@ -304,7 +319,7 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 
 负对照的 `0.75-0.50=0.25` 是这张表上的 **authored reuse gap**，不是期望选择偏差、置信区间、真实泛化差或“checkpoint-d 更差”的证明。confirmation 列只是教学 oracle：真实项目若已经用 final 挑过模型，应承认原 final 已降级为 selection evidence，并取得新的、谱系隔离且尚未触碰的确认数据；不能把旧 split 改名恢复独立性。候选越多、反馈轮次越多时，偏差通常更值得警惕，但本 fixture 不估计其随候选数增长的概率规律。实现还拒绝重复 checkpoint、非有限/越界分数以及 selection/final 最大值并列，防止 tie-breaking 在结果出现后被悄悄决定。
 
-`CLAIM-20-11`（result）：`EXP-20-01` v10 的四行手工负对照中，按 selection split 冻结选择得到 `checkpoint-a`，其一次性 final 分数为 `0.50`；错误地最大化 final 分数会选择 `checkpoint-d` 并报告 `0.75`，而该 checkpoint 的 untouched confirmation 分数为 `0.50`，形成 `0.25` authored reuse gap。它只验证 split 角色与 final-set reuse 的合同，不估计任何模型的泛化、期望选择偏差或 checkpoint 排序。
+`CLAIM-20-11`（result）：`EXP-20-01` v11 的四行手工负对照中，按 selection split 冻结选择得到 `checkpoint-a`，其一次性 final 分数为 `0.50`；错误地最大化 final 分数会选择 `checkpoint-d` 并报告 `0.75`，而该 checkpoint 的 untouched confirmation 分数为 `0.50`，形成 `0.25` authored reuse gap。它只验证 split 角色与 final-set reuse 的合同，不估计任何模型的泛化、期望选择偏差或 checkpoint 排序。
 
 ## 20.7 自动驾驶：路线完成不能吞掉安全
 
@@ -462,5 +477,5 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch20-evaluation-validity-review-2026-09-01.md`、`reviews/ch20-clustered-paired-statistics-review-2026-09-01.md`、`reviews/ch20-zero-event-risk-review-2026-09-02.md`、`reviews/ch20-zero-event-pseudoreplication-review-2026-09-02.md`、`reviews/ch20-checkpoint-selection-bias-review-2026-09-02.md`、`reviews/ch20-paired-margin-review-2026-09-02.md`、`reviews/ch20-test-interval-equivalence-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch20-evaluation-validity-review-2026-09-01.md`、`reviews/ch20-adaptive-retry-estimand-review-2026-09-02.md`、`reviews/ch20-clustered-paired-statistics-review-2026-09-01.md`、`reviews/ch20-zero-event-risk-review-2026-09-02.md`、`reviews/ch20-zero-event-pseudoreplication-review-2026-09-02.md`、`reviews/ch20-checkpoint-selection-bias-review-2026-09-02.md`、`reviews/ch20-paired-margin-review-2026-09-02.md`、`reviews/ch20-test-interval-equivalence-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：未运行 LIBERO、SimplerEnv、RoboArena、MetaDrive、CARLA 或真实硬件；Wilson 与零事件上界只覆盖各自声明的独立二项单位，pseudo-replication fixture 不估计 cluster 内相关性或有效样本量；cluster bootstrap 只有四个手工 route、简单 percentile 区间与宏平均 estimand，不能作为校准 population inference；exact McNemar 与独立-pair Hoeffding 负对照不提供 exact-compatible matched-binary interval、cluster/multiplicity/adaptivity 修正、正式等效性检验或功效计算；checkpoint 表是手工角色泄漏负对照，不估计期望 selection bias、候选优劣或泛化；2×2 格只是协议算术反事实；无效运行反例只验证拒绝路径，没有估计真实 reset/logging 故障率。

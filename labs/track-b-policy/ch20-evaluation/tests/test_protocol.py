@@ -7,9 +7,11 @@ LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
 from protocol_fixture import (  # noqa: E402
+    ADAPTIVE_RETRY_ROWS,
     CHECKPOINT_SELECTION_ROWS,
     EPISODES,
     audit_episode_rows,
+    adaptive_retry_audit,
     checkpoint_selection_audit,
     comparability_warnings,
     exact_mcnemar_report,
@@ -26,6 +28,33 @@ from protocol_fixture import (  # noqa: E402
 
 
 class ProtocolFixtureTests(unittest.TestCase):
+    def test_adaptive_retry_separates_attempt_and_task_estimands(self):
+        report = adaptive_retry_audit()
+        self.assertEqual(report["task_count"], 4)
+        self.assertEqual(report["attempt_count"], 6)
+        self.assertEqual(report["first_attempt_success_rate"], 0.5)
+        self.assertEqual(report["per_attempt_success_rate"], 0.5)
+        self.assertEqual(report["task_success_rate_with_up_to_two_attempts"], 0.75)
+        self.assertEqual(report["mean_attempts_per_task"], 1.5)
+        self.assertEqual(report["recovered_task_count"], 1)
+
+    def test_successful_first_attempt_cannot_be_retried(self):
+        rows = (*ADAPTIVE_RETRY_ROWS, {"task_id": "task-a", "attempt_id": 2, "success": True, "cost": 1.0})
+        with self.assertRaisesRegex(ValueError, "cannot retry"):
+            adaptive_retry_audit(rows)
+
+    def test_failed_first_attempt_requires_the_declared_retry(self):
+        rows = tuple(row for row in ADAPTIVE_RETRY_ROWS if not (row["task_id"] == "task-c" and row["attempt_id"] == 2))
+        with self.assertRaisesRegex(ValueError, "must retry exactly once"):
+            adaptive_retry_audit(rows)
+
+    def test_retry_ledger_rejects_duplicate_or_invalid_rows(self):
+        with self.assertRaisesRegex(ValueError, "identities must be unique"):
+            adaptive_retry_audit((*ADAPTIVE_RETRY_ROWS, ADAPTIVE_RETRY_ROWS[0]))
+        malformed = (dict(ADAPTIVE_RETRY_ROWS[0], cost=float("nan")),)
+        with self.assertRaisesRegex(ValueError, "finite and positive"):
+            adaptive_retry_audit(malformed)
+
     def test_easy_goal_only_protocol_reports_all_success(self):
         result = evaluate_protocol("easy_goal_only")
         self.assertEqual(result["episode_count"], 4)
