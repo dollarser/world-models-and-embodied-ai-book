@@ -147,7 +147,12 @@ def apply_command_once(
 
     if not isinstance(packet, ActionPacket) or not isinstance(ledger, ExecutorLedger):
         raise ValueError("packet and ledger must use the declared command contract")
-    if not ledger.command_session_id or not ledger.executor_boot_id:
+    if (
+        not isinstance(ledger.command_session_id, str)
+        or not ledger.command_session_id
+        or not isinstance(ledger.executor_boot_id, str)
+        or not ledger.executor_boot_id
+    ):
         raise ValueError("ledger session and boot identities must be explicit")
     if (
         isinstance(ledger.highest_command_id, bool)
@@ -156,13 +161,44 @@ def apply_command_once(
     ):
         raise ValueError("highest_command_id must be an integer greater than or equal to -1")
     if not isinstance(ledger.receipts, tuple) or any(
-        not isinstance(receipt, CommandReceipt)
-        or receipt.command_session_id != ledger.command_session_id
+        not isinstance(receipt, CommandReceipt) for receipt in ledger.receipts
+    ):
+        raise ValueError("ledger receipts must use the declared receipt contract")
+    if any(
+        receipt.command_session_id != ledger.command_session_id
         or receipt.executor_boot_id != ledger.executor_boot_id
+        for receipt in ledger.receipts
+    ):
+        raise ValueError("ledger receipts must belong to its session and boot")
+    if any(
+        isinstance(receipt.command_id, bool)
+        or not isinstance(receipt.command_id, int)
+        or receipt.command_id < 0
         or receipt.command_id > ledger.highest_command_id
         for receipt in ledger.receipts
     ):
-        raise ValueError("ledger receipts must belong to its session, boot, and sequence range")
+        raise ValueError("ledger receipt command IDs must be non-negative integers in range")
+    if any(
+        not isinstance(receipt.action, tuple)
+        or not receipt.action
+        or any(not _finite_number(value) for value in receipt.action)
+        for receipt in ledger.receipts
+    ):
+        raise ValueError("ledger receipt actions must be non-empty finite tuples")
+    if any(
+        isinstance(receipt.applied_step, bool)
+        or not isinstance(receipt.applied_step, int)
+        or receipt.applied_step < 0
+        for receipt in ledger.receipts
+    ):
+        raise ValueError("ledger receipt applied steps must be non-negative integers")
+    if any(
+        not isinstance(receipt.payload_digest, str)
+        or len(receipt.payload_digest) != 64
+        or any(character not in "0123456789abcdef" for character in receipt.payload_digest)
+        for receipt in ledger.receipts
+    ):
+        raise ValueError("ledger receipt payload digests must be lowercase SHA-256 hex")
     receipt_ids = tuple(receipt.command_id for receipt in ledger.receipts)
     if len(receipt_ids) != len(set(receipt_ids)):
         raise ValueError("ledger receipt command IDs must be unique")
@@ -180,6 +216,8 @@ def apply_command_once(
     )
     if existing is not None:
         if existing.payload_digest == payload_digest:
+            if existing.action != packet.action or existing.applied_step != packet.current_step:
+                raise ValueError("cached receipt fields must match the command payload")
             return ledger, {
                 "applied_new": False,
                 "status": "duplicate_returned_cached_receipt",
@@ -1094,6 +1132,50 @@ def command_idempotency_audit() -> dict[str, object]:
     }
 
 
+def command_ledger_integrity_audit() -> dict[str, object]:
+    """Reject malformed restored receipts before returning cached execution state."""
+
+    packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")
+    valid_receipt = CommandReceipt(
+        command_session_id=packet.command_session_id,
+        executor_boot_id=packet.executor_boot_id,
+        command_id=packet.command_id,
+        action=packet.action,
+        applied_step=packet.current_step,
+        payload_digest=command_payload_digest(packet),
+    )
+    receipts = {
+        "boolean_command_id": replace(valid_receipt, command_id=True),
+        "non_finite_action": replace(valid_receipt, action=(float("nan"), -0.1)),
+        "negative_applied_step": replace(valid_receipt, applied_step=-1),
+        "malformed_payload_digest": replace(valid_receipt, payload_digest="not-a-digest"),
+        "cached_payload_mismatch": replace(valid_receipt, action=(0.3, -0.1)),
+    }
+    cases = {}
+    for name, receipt in receipts.items():
+        ledger = ExecutorLedger(
+            packet.command_session_id,
+            packet.executor_boot_id,
+            highest_command_id=packet.command_id,
+            receipts=(receipt,),
+        )
+        try:
+            apply_command_once(packet, ledger)
+        except ValueError as exc:
+            cases[name] = {"rejected": True, "reason": str(exc)}
+        else:
+            cases[name] = {"rejected": False, "reason": "unexpectedly_accepted"}
+    return {
+        "case_count": len(cases),
+        "rejected_count": sum(case["rejected"] for case in cases.values()),
+        "cases": cases,
+        "scope": (
+            "hand-authored restored in-memory ledger corruption; not durable storage validation, "
+            "crash recovery, authenticated receipts, or exactly-once physical effects"
+        ),
+    }
+
+
 LATENCIES_MS = (20.0, 22.0, 24.0, 26.0, 28.0, 150.0)
 BURSTED_LATENCIES_MS = (20.0, 80.0, 80.0, 20.0, 20.0, 20.0)
 SCATTERED_LATENCIES_MS = (20.0, 80.0, 20.0, 80.0, 20.0, 20.0)
@@ -1156,6 +1238,7 @@ def evaluate() -> dict[str, object]:
         "severity_stratified_selective_audit": severity_stratified_selective_audit(),
         "action_transition_audit": action_transition_audit(),
         "command_idempotency_audit": command_idempotency_audit(),
+        "command_ledger_integrity_audit": command_ledger_integrity_audit(),
         "fallback_is_profile_specific": {
             "manipulator": GateConfig(fallback="hold_position").fallback,
             "mobile_robot": GateConfig(fallback="controlled_stop").fallback,

@@ -12,6 +12,7 @@ from deployment_gate import (  # noqa: E402
     AppliedAction,
     BURSTED_LATENCIES_MS,
     GateConfig,
+    CommandReceipt,
     ExecutorLedger,
     LATENCIES_MS,
     ReactivationReceipt,
@@ -21,6 +22,8 @@ from deployment_gate import (  # noqa: E402
     apply_command_once,
     audit_fallback_lifecycle,
     command_idempotency_audit,
+    command_ledger_integrity_audit,
+    command_payload_digest,
     evaluate,
     fallback_lifecycle_audit,
     fallback_reactivation_audit,
@@ -326,6 +329,31 @@ class DeploymentGateTests(unittest.TestCase):
             apply_command_once(packet, ExecutorLedger("", "boot"))
         with self.assertRaises(ValueError):
             apply_command_once(packet, ExecutorLedger("session", "boot", highest_command_id=True))
+
+    def test_restored_command_ledger_corruption_fails_closed(self):
+        audit = command_ledger_integrity_audit()
+        self.assertEqual(audit["case_count"], 5)
+        self.assertEqual(audit["rejected_count"], 5)
+        self.assertTrue(all(case["rejected"] for case in audit["cases"].values()))
+
+    def test_cached_receipt_fields_must_match_the_hashed_packet(self):
+        packet = ActionPacket(20.0, 25.0, (0.2, -0.1), 2, 5, 0.2, "fixture-v1")
+        receipt = CommandReceipt(
+            packet.command_session_id,
+            packet.executor_boot_id,
+            packet.command_id,
+            (0.3, -0.1),
+            packet.current_step,
+            command_payload_digest(packet),
+        )
+        ledger = ExecutorLedger(
+            packet.command_session_id,
+            packet.executor_boot_id,
+            packet.command_id,
+            (receipt,),
+        )
+        with self.assertRaisesRegex(ValueError, "cached receipt fields"):
+            apply_command_once(packet, ledger)
 
     def test_current_packet_identity_is_checked_without_transition_history(self):
         packet = ActionPacket(

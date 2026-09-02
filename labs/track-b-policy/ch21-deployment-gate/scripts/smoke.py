@@ -117,6 +117,9 @@ def main() -> int:
         raise AssertionError("command identity failures must retain distinct statuses")
     if command_audit["explicit_restart"]["status"] != "applied_once":
         raise AssertionError("counter reset requires an explicitly new producer session and executor boot")
+    integrity_audit = metrics["command_ledger_integrity_audit"]
+    if integrity_audit["case_count"] != 5 or integrity_audit["rejected_count"] != 5:
+        raise AssertionError("all malformed restored-ledger cases must fail closed")
     report = {
         "experiment_id": "EXP-21-01",
         "status": "smoke",

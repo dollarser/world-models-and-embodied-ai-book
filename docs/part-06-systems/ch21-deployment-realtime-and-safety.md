@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-21-01`
-> 关联声明：`CLAIM-21-01`～`CLAIM-21-16`
-> 关联图表：`FIG-21-01` / `TAB-21-01` / `TAB-21-02` / `TAB-21-03` / `TAB-21-04` / `TAB-21-05` / `TAB-21-06` / `TAB-21-07` / `TAB-21-08`
+> 关联声明：`CLAIM-21-01`～`CLAIM-21-17`
+> 关联图表：`FIG-21-01` / `TAB-21-01` / `TAB-21-02` / `TAB-21-03` / `TAB-21-04` / `TAB-21-05` / `TAB-21-06` / `TAB-21-07` / `TAB-21-08` / `TAB-21-09` / `TAB-21-10`
 > 资源档位：S / M / L1
 > GPU 状态：待验证
 
@@ -136,7 +136,7 @@ make ch21-smoke
 |a_{t,j}-a^{\mathrm{applied}}_{t-1,j}| \le \Delta_{max,j},\quad \forall j.
 \]
 
-这里的 `a_applied` 必须来自绑定到紧邻步号的执行确认，而不是策略刚生成但可能被网关拒绝、队列丢弃或执行器未执行的向量。`Δ_max,j` 也必须逐字段带单位，不能把 `m/s` 与 `rad/s` 取一个无量纲最大值。`EXP-21-01` v10 与第15章共同导入 `labs/shared/action_schema.py` 中唯一的 `mobile-base-v1`：`base_link`、10 Hz、`control_monotonic_ms`，线速度范围 `[-0.5,0.5] m/s`、角速度范围 `[-1,1] rad/s`，两个字段的教学单步变化上限分别为 `0.25 m/s/step` 与 `0.25 rad/s/step`。
+这里的 `a_applied` 必须来自绑定到紧邻步号的执行确认，而不是策略刚生成但可能被网关拒绝、队列丢弃或执行器未执行的向量。`Δ_max,j` 也必须逐字段带单位，不能把 `m/s` 与 `rad/s` 取一个无量纲最大值。`EXP-21-01` v11 与第15章共同导入 `labs/shared/action_schema.py` 中唯一的 `mobile-base-v1`：`base_link`、10 Hz、`control_monotonic_ms`，线速度范围 `[-0.5,0.5] m/s`、角速度范围 `[-1,1] rad/s`，两个字段的教学单步变化上限分别为 `0.25 m/s/step` 与 `0.25 rad/s/step`。
 
 固定负对照的前序手工“已执行”动作为 `(0 m/s,0 rad/s)`；当前 `(0.2,-0.1)` 的逐字段变化为 `(0.2,0.1)`，通过；当前 `(0.4,-0.1)` 的两个端点也在各自物理范围内，但线速度变化为 `0.4 m/s/step`，以 `action_delta_exceeded:linear_velocity` 拒绝。开启跃迁门却不提供前序记录时，另以 `missing_previous_applied_action` 失败关闭。
 
@@ -148,7 +148,7 @@ make ch21-smoke
 
 *TAB-21-07：静态端点与相邻步跃迁负对照。单位和字段来自共享教学 schema；数值仍是作者设定的 fixture，不是机器人或车辆限值。*
 
-`CLAIM-21-15`（result）：`EXP-21-01` v10 中，两个当前动作都通过同一 `mobile-base-v1` 静态范围；绑定前序 `(0,0)` 后，`(0.2,-0.1)` 的逐字段变化 `(0.2,0.1)` 均不超过 `0.25/step` 而允许，`(0.4,-0.1)` 因线速度变化 `0.4>0.25 m/s/step` 而拒绝；缺少前序记录也拒绝。该结果只验证共享 schema 下状态化门禁的原因码和 fail-closed 接线，不证明执行器 ack 可信、真实加速度/jerk 合法、动力学可行、跟踪稳定或安全。
+`CLAIM-21-15`（result）：`EXP-21-01` v11 中，两个当前动作都通过同一 `mobile-base-v1` 静态范围；绑定前序 `(0,0)` 后，`(0.2,-0.1)` 的逐字段变化 `(0.2,0.1)` 均不超过 `0.25/step` 而允许，`(0.4,-0.1)` 因线速度变化 `0.4>0.25 m/s/step` 而拒绝；缺少前序记录也拒绝。该结果只验证共享 schema 下状态化门禁的原因码和 fail-closed 接线，不证明执行器 ack 可信、真实加速度/jerk 合法、动力学可行、跟踪稳定或安全。
 
 当前 packet 与前序记录都携带 `schema_id/frame_id/field_names/units/control_hz/clock_id/command_session_id/executor_boot_id/command_id`。前序记录还携带 `acknowledged_command_id`；只有它等于该记录的 `command_id`、前序命令早于当前命令、步号紧邻且两侧身份都匹配同一共享 schema、生产者会话和执行器启动 epoch，才计算逐字段变化。六个单字段负对照保留独立原因：
 
@@ -163,7 +163,7 @@ make ch21-smoke
 
 *TAB-21-08：共享 schema 与前序执行身份的单字段负对照。字段均为手工构造，没有认证或防篡改。*
 
-`CLAIM-21-16`（result）：`EXP-21-01` v10 的六个身份负对照分别以 `schema_mismatch`、`previous_unit_mismatch`、`previous_control_rate_mismatch`、`invalid_applied_action_ack`、`previous_command_session_mismatch` 和 `previous_executor_boot_mismatch` 拒绝，没有退化成同一个“动作异常”。这只验证第15/21章共享代码来源、epoch 绑定和原因码，不证明文本/数值身份真实、ack 来自执行器、跨进程状态原子持久化、通信完整性或控制安全。
+`CLAIM-21-16`（result）：`EXP-21-01` v11 的六个身份负对照分别以 `schema_mismatch`、`previous_unit_mismatch`、`previous_control_rate_mismatch`、`invalid_applied_action_ack`、`previous_command_session_mismatch` 和 `previous_executor_boot_mismatch` 拒绝，没有退化成同一个“动作异常”。这只验证第15/21章共享代码来源、epoch 绑定和原因码，不证明文本/数值身份真实、ack 来自执行器、跨进程状态原子持久化、通信完整性或控制安全。
 
 [Autoware Velocity Smoother 官方文档](https://autowarefoundation.github.io/autoware_core/main/planning/autoware_velocity_smoother/)把速度、加速度、jerk、横向加速度和转向角速度列为不同约束，并在初始状态中使用当前或上一规划值 `[O,R1]`；这支持“跨点约束需要状态且必须保留量纲”的工程模式，但不为本书的 `0.25` 教学阈值背书。真实 profile 应按动作单位、控制周期、执行器动态与运行域分别标定限制，并用仿真、封闭场地和目标硬件逐级验证。
 
@@ -175,7 +175,7 @@ make ch21-smoke
 K=(\text{command\_session\_id},\ \text{executor\_boot\_id},\ \text{command\_id}).
 \]
 
-`command_session_id` 标识一次明确建立的命令生产会话，`executor_boot_id` 标识执行器启动 epoch，二者都不能由接收方根据“最近看到的包”静默猜测。`EXP-21-01` v10 的不可变内存 ledger 在 gate 之后执行以下状态转移：首次见到有效 `K` 时生成一条回执；完全相同的 `K+payload+step` 重试只返回缓存回执，不新增执行记录；相同 `K` 携带不同 payload 以 `command_identity_conflict` 拒绝；同 epoch 中未登记却不大于最高序号的命令以 `stale_or_out_of_order_command` 拒绝。只有显式建立新的 session 与 boot epoch 后，命令号0才可重新开始。
+`command_session_id` 标识一次明确建立的命令生产会话，`executor_boot_id` 标识执行器启动 epoch，二者都不能由接收方根据“最近看到的包”静默猜测。`EXP-21-01` v11 的不可变内存 ledger 在 gate 之后执行以下状态转移：首次见到有效 `K` 时生成一条回执；完全相同的 `K+payload+step` 重试只返回缓存回执，不新增执行记录；相同 `K` 携带不同 payload 以 `command_identity_conflict` 拒绝；同 epoch 中未登记却不大于最高序号的命令以 `stale_or_out_of_order_command` 拒绝。只有显式建立新的 session 与 boot epoch 后，命令号0才可重新开始。
 
 | 输入 | 状态 | 新增执行记录 |
 | --- | --- | ---: |
@@ -188,7 +188,19 @@ K=(\text{command\_session\_id},\ \text{executor\_boot\_id},\ \text{command\_id})
 
 *TAB-21-09：执行 epoch 内的命令去重与重启边界。`applied_once` 是教学状态标签，不是实体执行测量。*
 
-`CLAIM-21-17`（result）：`EXP-21-01` v10 中，首次 command8 产生一条回执；完全相同的重试返回缓存回执且 ledger 仍只有一条记录；action 改写与有效期改写都成为 identity conflict，倒序、错误 session 和错误 boot 保留独立状态；显式新 session/boot 的 command0 才被接受。回执里的 SHA-256 只是确定性 envelope 比较值，不是签名或发送者认证。这验证单进程内存状态转移，不证明数据库事务、并发线性化、崩溃恢复、回执认证或物理副作用恰好一次。
+恢复 ledger 还必须先验证自身结构，不能因为“磁盘里有一条回执”就直接返回缓存成功。v11 固定构造五种损坏状态，并在任何命令状态转移前拒绝：布尔 command ID、非有限 action、负 applied step、非 64 位小写十六进制 digest，以及 digest 与缓存 action 不一致。
+
+| 恢复状态负对照 | fail-closed 原因 |
+| --- | --- |
+| `command_id=true` | command ID 不是非负整数 |
+| action 含 `NaN` | action 不是非空有限 tuple |
+| `applied_step=-1` | applied step 不是非负整数 |
+| digest 为 `not-a-digest` | 不是规范 SHA-256 hex |
+| digest 沿用原 packet、缓存 action 被改写 | 缓存字段与命令 payload 不一致 |
+
+*TAB-21-10：恢复出的内存 ledger 结构负对照。损坏值均由作者手工构造，没有读取磁盘、WAL 或数据库。*
+
+`CLAIM-21-17`（result）：`EXP-21-01` v11 中，首次 command8 产生一条回执；完全相同的重试返回缓存回执且 ledger 仍只有一条记录；action 改写与有效期改写都成为 identity conflict，倒序、错误 session 和错误 boot 保留独立状态；显式新 session/boot 的 command0 才被接受。另有五种手工恢复状态全部在返回缓存回执前 fail closed。回执里的 SHA-256 只是确定性 envelope 比较值，不是签名、存储校验和或发送者认证。这验证单进程内存状态转移与结构校验，不证明数据库事务、WAL 恢复、存储完整性、并发线性化、崩溃恢复、回执认证或物理副作用恰好一次。
 
 [ROS 2 Actions 设计](https://design.ros2.org/articles/actions.html)用 client 生成的 UUID 关联 goal，并明确要求 action server 处理潜在并发碰撞 `[O,R1]`；[AUTOSAR E2E Protocol R25-11](https://www.autosar.org/fileadmin/standards/R25-11/FO/AUTOSAR_FO_PRS_E2EProtocol.pdf)列出 sequence/alive counter、Data/Source ID、request/response type 与 timeout，用于发现重复、丢失、乱序、错配和超时 `[O,R1]`。两者支持“身份、序号和状态机必须共同设计”，但都不为本书 fixture 或实体设备 exactly-once 背书。
 
@@ -222,7 +234,7 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 
 只把每个失败记为 `1`，会默认一次轻微任务失败与一次高严重度安全事件可以互换。[NHTSA 的功能安全评估示例](https://www.nhtsa.gov/sites/nhtsa.gov/files/documents/13498a_812_573_alcsystemreport.pdf)把 severity、exposure 与 controllability 分开评定 `[O,R1]`；2026 年的[自动驾驶风险估计预印本](https://arxiv.org/abs/2601.15018)也把状态不确定性与潜在碰撞严重度作为不同输入 `[A,R0]`。这些来源支持“不要只数事件”，但不替本书定义真实事故代价。
 
-`EXP-21-01` v10 因而构造六个手工 case：四个成功、一个权重为 `1` 的失败、一个权重为 `10` 的失败。两个 gate 都接受四例、留下一个失败，并拒绝另一个失败；唯一变化是留下哪一个：
+`EXP-21-01` v11 因而构造六个手工 case：四个成功、一个权重为 `1` 的失败、一个权重为 `10` 的失败。两个 gate 都接受四例、留下一个失败，并拒绝另一个失败；唯一变化是留下哪一个：
 
 | gate 负对照 | coverage | 接受失败率 | 按个数拒绝召回 | 接受失败 authored weight | 按 authored weight 拒绝召回 |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -233,13 +245,13 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 
 若 `w_i` 是预先登记且有来源的后果量，可以同时报告接受失败后果 `\sum_{i\in A}w_i\ell_i` 和按后果权重的拒绝召回 `\sum_{i\notin A}w_i\ell_i/\sum_iw_i\ell_i`。但当权重只是无外部标定的任意代理量时，不能把它汇总成“预计伤亡”或跨场景比较的单一风险值；应保留原始 failure type、场景/道路使用者/速度分桶、计数与权重来源。若高严重度分桶没有足够暴露、标签不可靠，或 fallback 后果未闭环验证，应停止部署外推并回到仿真、封闭场地或人工审查，而不是用总体 failure rate 放行。
 
-`CLAIM-21-14`（result）：`EXP-21-01` v10 的两个严重度负对照具有相同 `0.666667` coverage、`0.25` 接受失败率和 `0.5` 按个数拒绝召回，但接受失败 authored weight 分别为 `1` 与 `10`，按权重拒绝召回分别为 `0.909091` 与 `0.090909`。它只证明聚合计数可能隐藏手工后果差异，不估计真实事故概率、伤害、成本、门禁性能或安全性。
+`CLAIM-21-14`（result）：`EXP-21-01` v11 的两个严重度负对照具有相同 `0.666667` coverage、`0.25` 接受失败率和 `0.5` 按个数拒绝召回，但接受失败 authored weight 分别为 `1` 与 `10`，按权重拒绝召回分别为 `0.909091` 与 `0.090909`。它只证明聚合计数可能隐藏手工后果差异，不估计真实事故概率、伤害、成本、门禁性能或安全性。
 
 ### 21.4.5 相同 miss rate，不同故障形状
 
 fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80,20,20 ms`。两者 mean 都是 `40 ms`，deadline miss 都是 `2/6`，p95/p99/max 都是 `80 ms`；唯一变化是连续 miss 最大长度分别为 `2` 和 `1`。
 
-`CLAIM-21-09`（result）：`EXP-21-01` v10 的 burst/scattered 对照证明 mean、尾分位、max 和 miss rate 完全相同时，连续 deadline miss 长度仍可不同。该结果只验证日志字段必要性，不估计真实调度 burst。
+`CLAIM-21-09`（result）：`EXP-21-01` v11 的 burst/scattered 对照证明 mean、尾分位、max 和 miss rate 完全相同时，连续 deadline miss 长度仍可不同。该结果只验证日志字段必要性，不估计真实调度 burst。
 
 ### 21.4.6 异步队列：有 action 也可能不可执行
 
@@ -275,7 +287,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 
 [Autoware 1.8.0 fail-safe API](https://autowarefoundation.github.io/autoware-documentation/1.8.0/design/autoware-architecture-v1/interfaces/ad-api/features/fail-safe/) 把 MRM 运行状态分为 `NONE / OPERATING / SUCCEEDED / FAILED`：`SUCCEEDED` 表示车辆已处于安全状态，`FAILED` 则表示仍不安全，一般需要切换到其他 MRM 行为 `[O,R1]`。其 request API 又是另一个触发接口。因此本书在该 API 之外加一个本地 `requested` 控制面状态，用来检查“发出请求”不能被当成“已经开始”。这不是对 Autoware message enum 的重命名。
 
-`EXP-21-01` v10 保留三条四步生命周期。所有状态都是手工报告，`max_operating_steps=2` 也是离散教学阈值，不是真实时间或推荐参数。
+`EXP-21-01` v11 保留三条四步生命周期。所有状态都是手工报告，`max_operating_steps=2` 也是离散教学阈值，不是真实时间或推荐参数。
 
 | 对照路径 | 关键步 | 结果 | 重新激活语义 |
 | --- | ---: | --- | --- |
@@ -296,7 +308,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 
 第15章动作 packet 已使用共同 clock、有效期和单调 `command_id` 拒绝会话内旧命令；重新激活 receipt 可复用这种接口形状，但它还必须绑定 fallback run、目标 mode、批准决定与声明的 approver identity。这里借鉴的只是通用授权协议设计原则：RFC 9396 用 `actions`、`locations`、`identifier` 等字段限制授权对象；RFC 9449 用唯一 `jti`、创建时间窗口和 nonce 讨论 replay 检测；RFC 9700 强调 audience restriction 与 replay 防护。它们是 OAuth 规范，不是机器人或自动驾驶安全标准，本书 fixture 也没有实现 OAuth、签名或 sender-constrained proof。
 
-`EXP-21-01` v10 保留一个九例 receipt audit。有效区间采用 `[issued_step, valid_until_step)`；先验证唯一有效 receipt，随后才把其 `receipt_id` 放入已消费集合并更新最后接受序号。八个负例分别覆盖原 receipt 重放、过期、未来签发、run 错配、target 错配、声明 approver 不在 allowlist、显式 `denied` 和新 ID 携带旧序号。
+`EXP-21-01` v11 保留一个九例 receipt audit。有效区间采用 `[issued_step, valid_until_step)`；先验证唯一有效 receipt，随后才把其 `receipt_id` 放入已消费集合并更新最后接受序号。八个负例分别覆盖原 receipt 重放、过期、未来签发、run 错配、target 错配、声明 approver 不在 allowlist、显式 `denied` 和新 ID 携带旧序号。
 
 | receipt 例 | 关键绑定或状态 | 结果 |
 | --- | --- | --- |
@@ -309,7 +321,7 @@ fixture 另构造两组六周期序列：`20,80,80,20,20,20 ms` 与 `20,80,20,80
 
 *TAB-21-05：重新激活 receipt 的固定绑定、时效和单次消费负对照。字符串身份与内存集合均为手工 fixture。*
 
-`CLAIM-21-13`（result）：`EXP-21-01` v10 的九个手工 receipt 中仅一个新鲜且完整绑定的 `approved` receipt 通过，其余八个因重放、时间窗、run/target、声明 approver、决定或序号错误被拒绝。该结果只验证纯函数字段合同和单进程内存状态；文本 approver ID 未经认证，receipt 没有签名、防篡改、撤销、持久化或并发原子性，也不证明 fallback 完成或重新激活安全。
+`CLAIM-21-13`（result）：`EXP-21-01` v11 的九个手工 receipt 中仅一个新鲜且完整绑定的 `approved` receipt 通过，其余八个因重放、时间窗、run/target、声明 approver、决定或序号错误被拒绝。该结果只验证纯函数字段合同和单进程内存状态；文本 approver ID 未经认证，receipt 没有签名、防篡改、撤销、持久化或并发原子性，也不证明 fallback 完成或重新激活安全。
 
 生产实现还需要可信身份来源、完整性保护、持久化去重/撤销、并发消费原子性、时钟故障策略、审计日志与 least-privilege policy。即使 receipt 合法，也只能作为“授权”谓词；它不能替代 `succeeded`、车辆/机器人当前安全状态、队列与时钟重同步以及所有其他 profile-specific 恢复门。
 

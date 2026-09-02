@@ -4,6 +4,7 @@
 
 - [第6章 posterior leakage 与 rollout horizon 审查（2026-09-02）](ch06-posterior-leakage-review-2026-09-02.md)
 - [第21章命令 epoch 与幂等边界审查（2026-09-02）](ch21-command-epoch-idempotency-review-2026-09-02.md)
+- [第21章恢复 ledger 完整性审查（2026-09-02）](ch21-restored-ledger-integrity-review-2026-09-02.md)
 - [批次 A：第2、4、6、9章四类交叉审查](batch-a-review.md)
 - [批次 B：第13、14、15、20章四类交叉审查](batch-b-review.md)（第20章的一致性门随后在批次 D 关闭）
 - [批次 C：第3、10、11、12、19章四类交叉审查](batch-c-review.md)

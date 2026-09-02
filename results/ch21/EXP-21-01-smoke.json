@@ -248,6 +248,33 @@
         "status": "command_session_mismatch"
       }
     },
+    "command_ledger_integrity_audit": {
+      "case_count": 5,
+      "cases": {
+        "boolean_command_id": {
+          "reason": "ledger receipt command IDs must be non-negative integers in range",
+          "rejected": true
+        },
+        "cached_payload_mismatch": {
+          "reason": "cached receipt fields must match the command payload",
+          "rejected": true
+        },
+        "malformed_payload_digest": {
+          "reason": "ledger receipt payload digests must be lowercase SHA-256 hex",
+          "rejected": true
+        },
+        "negative_applied_step": {
+          "reason": "ledger receipt applied steps must be non-negative integers",
+          "rejected": true
+        },
+        "non_finite_action": {
+          "reason": "ledger receipt actions must be non-empty finite tuples",
+          "rejected": true
+        }
+      },
+      "rejected_count": 5,
+      "scope": "hand-authored restored in-memory ledger corruption; not durable storage validation, crash recovery, authenticated receipts, or exactly-once physical effects"
+    },
     "deadline_burst_comparison": {
       "bursted": {
         "all_cycles_meet_deadline": false,
