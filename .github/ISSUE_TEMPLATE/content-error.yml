@@ -1,0 +1,64 @@
+name: 书稿勘误
+description: 报告概念、事实、公式、图表、引用、术语或排版问题
+title: "[勘误] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢帮助改进本书。无需先写出完整修订稿，但请尽量让问题可以被准确定位和核验。
+  - type: input
+    id: location
+    attributes:
+      label: 位置
+      description: 请填写章节、标题、图表编号或页面链接。
+      placeholder: 例如：第6章 6.3 节，FIG-06-01
+    validations:
+      required: true
+  - type: textarea
+    id: original
+    attributes:
+      label: 当前表述
+      description: 请粘贴最短的必要原文，避免复制整节内容。
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: 问题类型
+      options:
+        - 概念或推理
+        - 事实或时效性
+        - 公式或符号
+        - 图表
+        - 引用或来源
+        - 术语一致性
+        - 排版或链接
+        - 其他内容问题
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题说明
+      description: 请说明哪里不正确、不完整或可能误导，以及成立所缺少的条件。
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 核验依据
+      description: 如有可能，请提供论文、标准、官方文档、官方仓库或可复核反例。
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 建议修改
+      description: 可选。请说明建议怎样修改，以及是否可能影响其他章节。
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已尽量确认问题针对当前版本，而不是只针对其他资料或旧版本。
+          required: true
+        - label: 我没有在内容中提交密钥、个人数据或受限制材料。
+          required: true

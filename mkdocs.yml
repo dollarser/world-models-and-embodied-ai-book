@@ -69,4 +69,5 @@ nav:
       - 开放出版、引用与勘误: open-book.md
   - 版本与维护:
       - 发布候选说明: release-notes.md
+      - 勘误与内容反馈: errata.md
       - 编写状态: status.md
