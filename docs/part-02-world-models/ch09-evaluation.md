@@ -1,13 +1,5 @@
 # 第9章 世界模型如何评测与失败
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-01
-> 关联实验：`EXP-09-01`
-> 关联声明：`CLAIM-09-01`～`CLAIM-09-10`
-> 关联图表：`FIG-09-01` / `TAB-09-01` / `TAB-09-02` / `TAB-09-03` / `TAB-09-04`
-> 资源档位：S / M
-> GPU 状态：不需要
-
 ## 本章契约
 
 ### 核心问题
@@ -473,4 +465,3 @@ diffuse 行四个概率误差绝对值都是0.4，所以 squared error 都是0.1
 - 教学审查：通过；
 - 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch09-probability-calibration-review-2026-09-02.md`、`reviews/ch09-probability-error-concentration-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：WorldArena 系列、KineBench 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；概率 fixture 只有四行作者构造结果，不能估计总体 calibration、真实事件概率、uncertainty 或安全性；
-- 下一步：用真实但可合法获取的小型数据试运行一张 `draft/frozen` benchmark card；当前无 GPU 阶段不伪造该结果。

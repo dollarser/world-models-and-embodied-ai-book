@@ -1,13 +1,5 @@
 # 第10章 非生成式预测表示：从 I-JEPA 到 V-JEPA 2.x
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-02
-> 关联实验：`EXP-10-01`
-> 关联声明：`CLAIM-10-01`～`CLAIM-10-08`
-> 关联图表：`FIG-10-01` / `TAB-10-01`～`TAB-10-04`
-> 资源档位：S / M
-> GPU 状态：待验证
-
 ## 本章契约
 
 ### 核心问题
@@ -382,4 +374,3 @@ Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复�
 - 教学审查：通过；
 - 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch10-probe-shift-action-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`；
 - 已知限制：没有下载或运行任何 I-JEPA/V-JEPA checkpoint，也没有第一人称或驾驶数据；
-- 下一步：先等待或锁定经验证的官方 loader 修复，再做不下载权重的 manifest/URL 预检；ViT-B 的24 GB推理占用、macOS/Docker 解码路径与真实视频 probe 均保持待验证。

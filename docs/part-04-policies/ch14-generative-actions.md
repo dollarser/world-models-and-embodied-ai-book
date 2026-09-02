@@ -1,13 +1,5 @@
 # 第14章 生成动作：Diffusion Policy 与 Flow Matching
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-02
-> 关联实验：`EXP-14-01`
-> 关联声明：`CLAIM-14-01`～`CLAIM-14-10`
-> 关联图表：`FIG-14-01` / `TAB-14-01`～`TAB-14-06`
-> 资源档位：S / M / L1 / L2
-> GPU 状态：待验证
-
 ## 本章契约
 
 ### 核心问题
@@ -404,4 +396,3 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch14-candidate-dependence-review-2026-09-02.md`、`reviews/ch14-generative-budget-review-2026-09-01.md`、`reviews/ch14-mode-frequency-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有训练 Diffusion Policy/flow policy、下载数据或 checkpoint，也未验证 GPU 与真实时延；
-- 下一步：后续 M 档实验在具备 GPU 时验证显存、墙钟时延与闭环指标，不用解析 fixture 替代模型结果。

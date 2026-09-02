@@ -1,13 +1,5 @@
 # 第11章 动作条件视频世界模型
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-02
-> 关联实验：`EXP-11-01`
-> 关联声明：`CLAIM-11-01`～`CLAIM-11-11`
-> 关联图表：`FIG-11-01` / `TAB-11-01`～`TAB-11-05`
-> 资源档位：S / M / L1 / L2
-> GPU 状态：待验证
-
 ## 本章契约
 
 ### 核心问题
@@ -451,4 +443,3 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch11-endpoint-cancellation-review-2026-09-02.md`、`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`；
 - 已知限制：没有训练视频模型、下载 checkpoint、申请 gated Guardrail、运行仿真或验证任何闭源案例；
-- 下一步：视频训练与仿真验证保持待办；Cosmos/DIAMOND 等上游资产只完成一手资料与无下载入口核验，未运行模型。

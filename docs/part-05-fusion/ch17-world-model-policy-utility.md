@@ -1,13 +1,5 @@
 # 第17章 世界模型帮助策略的五种方式
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-02
-> 关联实验：`EXP-17-01`
-> 关联声明：`CLAIM-17-01`～`CLAIM-17-12`
-> 关联图表：`FIG-17-01` / `TAB-17-01`～`TAB-17-05`
-> 资源档位：S / M / L1 / L2
-> GPU 状态：待验证
-
 ## 本章契约
 
 ### 核心问题
@@ -415,4 +407,3 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/ch17-dual-use-world-model-review-2026-09-02.md`、`reviews/ch17-component-attribution-review-2026-09-02.md`、`reviews/ch17-prospective-policy-ranking-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
 - 已知限制：两套 support、一个 held-out policy 与四段故障都是手工构造；只验证 coverage、时间化 policy split 与组件归因机制，不估计 learned simulator 的新策略泛化率、真实组件故障率、相关性或可加总预算；未运行上游 checkpoint、仿真、机器人、车辆或 GPU；
-- 下一步：在第22章综合项目中复用 return gap、prospective policy split、四段归因账、双用途独立验收和真实性锚点；A2World 模型执行等待满足资源/许可预检的可选路径。

@@ -1,13 +1,5 @@
 # 第3章 具身任务的最小机器人学与决策基础
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-01
-> 关联实验：`EXP-03-01`
-> 关联声明：`CLAIM-03-01`～`CLAIM-03-10`
-> 关联图表：`FIG-03-01` / `FIG-03-02` / `TAB-03-01` / `TAB-03-02` / `TAB-03-03` / `TAB-03-04` / `TAB-03-05`
-> 资源档位：S
-> GPU 状态：不需要
-
 ## 本章契约
 
 ### 核心问题
@@ -469,4 +461,3 @@ episode:
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch03-temporal-alignment-review-2026-09-01.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有真实相机、机器人、畸变、动力学、接触、clock synchronization、一般 `SE(3)` pose interpolation 或 scan deskew 运行；
-- 下一步：M 档再加入合法真实数据上的标定、畸变、时间同步与运动补偿审计；当前 S 档接口已与第4、12、13、19章核对。

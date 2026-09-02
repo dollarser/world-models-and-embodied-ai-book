@@ -1,13 +1,5 @@
 # 第2章 世界模型到底是什么
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-01
-> 关联实验：`EXP-02-01`（smoke）
-> 关联声明：`CLAIM-02-01`～`CLAIM-02-07`
-> 关联图表：`FIG-02-01` / `TAB-02-01` / `TAB-02-02` / `TAB-02-03` / `TAB-02-04`
-> 资源档位：S
-> GPU 状态：不需要
-
 ## 本章契约
 
 ### 核心问题
@@ -422,4 +414,3 @@ V-JEPA 2 encoder 提供观测/视频表征，可支持当前或历史特征，�
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch02-state-aliasing-review-2026-09-01.md`、`reviews/ch02-noisy-history-belief-review-2026-09-02.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：系统卡基于论文与官方文档元数据，没有运行八个上游系统；
-- 下一步：与第6章 belief state、第9章 E2/E4 评测和第15章 policy memory 继续执行跨章语义审查。

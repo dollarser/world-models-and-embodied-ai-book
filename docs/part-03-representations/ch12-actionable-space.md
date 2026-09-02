@@ -1,13 +1,5 @@
 # 第12章 可行动的空间表征
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-02
-> 关联实验：`EXP-12-01`
-> 关联声明：`CLAIM-12-01`～`CLAIM-12-12`
-> 关联图表：`FIG-12-01` / `FIG-12-02` / `TAB-12-01`～`TAB-12-07`
-> 资源档位：S / M / L1 / L2
-> GPU 状态：待验证
-
 ## 本章契约
 
 ### 核心问题
@@ -471,4 +463,3 @@ Observed mask 回答“哪些 cell 进入当前 benchmark 分母”，unknown �
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch12-occupancy-class-mask-review-2026-09-02.md`、`reviews/ch12-metric-grid-and-task-boundary-review-2026-09-02.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：固定 0.5 m fixture 未验证任意十进制分辨率的浮点边界；未训练 3D/occupancy 模型，Bresenham 不是 supercover 或 continuous collision checking，未下载真实数据，未运行仿真或 GPU；
-- 下一步：在真实 RGB-D/驾驶数据上加入标定噪声、连续 swept volume、姿态插值与动态 occupancy；当前接口已与第3、4、9、10、11、15、19章核对。

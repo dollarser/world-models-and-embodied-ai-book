@@ -1,13 +1,5 @@
 # 第4章 数据、基线与实验协议
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-02
-> 关联实验：`EXP-04-01`（smoke）
-> 关联声明：`CLAIM-04-01`～`CLAIM-04-10`
-> 关联图表：`FIG-04-01` / `TAB-04-01` / `TAB-04-02` / `TAB-04-03`
-> 资源档位：S
-> GPU 状态：不需要
-
 ## 本章契约
 
 ### 核心问题
@@ -437,4 +429,3 @@ S 档使用几条程序化 metadata：验证 schema、frame/unit/timestamp、spl
 - 教学审查：通过；
 - 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch04-content-identity-leakage-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：真实 LeRobot/驾驶数据审计和复杂 normalization 管线尚未执行；
-- 下一步：episode 截断、缺帧 mask、多传感器 skew 和已登记身份交集已进入 S 档；仍需在真实数据上冻结并验证近重复检索方法，同时审计 clock domain/漂移、视频解码、标定、隐私和许可。

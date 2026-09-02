@@ -1,13 +1,5 @@
 # 第16章 数据规模化、跨本体迁移与高效适配
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-02
-> 关联实验：`EXP-16-01`
-> 关联声明：`CLAIM-16-01`～`CLAIM-16-10`
-> 关联图表：`FIG-16-01` / `TAB-16-01`～`TAB-16-06`
-> 资源档位：S / M / L1 / L2
-> GPU 状态：待验证
-
 ## 本章契约
 
 ### 核心问题
@@ -457,4 +449,3 @@ stride one、drop-tail 时，长度 `L` 的 episode 只有 `max(L-H+1,0)` 个连
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`、`reviews/ch16-mixture-exposure-review-2026-09-02.md`、`reviews/ch16-held-out-embodiment-review-2026-09-02.md`、`reviews/ch16-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载真实数据、训练 adapter/VLA、运行仿真或 GPU；
-- 下一步：只在 XEWorld 或等价测试床公开版本化代码、资产、split 与指标实现后，先做无下载预检，再经用户确认执行迁移矩阵；当前证据保持 S 档 reviewed。

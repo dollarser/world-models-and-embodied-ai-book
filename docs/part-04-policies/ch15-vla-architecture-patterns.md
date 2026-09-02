@@ -1,13 +1,5 @@
 # 第15章 VLA 的架构模式
 
-> 状态：`reviewed`
-> 资料核查日期：2026-09-02
-> 关联实验：`EXP-15-01`
-> 关联声明：`CLAIM-15-01`～`CLAIM-15-11`
-> 关联图表：`FIG-15-01` / `TAB-15-01`～`TAB-15-06`
-> 资源档位：S / M / L1 / L2
-> GPU 状态：待验证
-
 ## 本章契约
 
 ### 核心问题
@@ -419,4 +411,3 @@ Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch15-full-chunk-timetable-review-2026-09-02.md`、`reviews/ch15-command-integrity-review-2026-09-01.md`、`reviews/ch15-observation-action-timestep-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载或运行任何 VLA、VLM API、机器人、仿真或 GPU；
-- 下一步：可沿第17章核对世界模型与 VLA 的组合边界，再用第20、21章完成评测与部署证据检查。
