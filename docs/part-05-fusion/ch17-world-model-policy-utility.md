@@ -285,7 +285,7 @@ make ch17-smoke
 
 coverage gate 的分母也要明确：按单步 state-action、完整 action chunk、整条候选轨迹，还是本体/任务级 coverage。轨迹中任一步超出支持就应记录 first unsupported step；只对起始观测做 OOD 检查，无法约束 planner 后续把 rollout 推出覆盖范围。反过来，整条轨迹都被标为 covered 也只说明满足 coverage 定义，不证明 transition、reward、termination 或风险预测正确；仍要在第9章 E3/E4 的独立真实性锚点上回查。
 
-## 17.10 自动驾驶正文：四个角色，四套证据
+## 17.10 自动驾驶：四个角色，四套证据
 
 自动驾驶世界模型可承担：生成雨夜/切入场景，按候选转向与制动 rollout，给规划器估计碰撞/舒适代价，以及对稀有事件做反事实压力测试。四者不能共享一个“视频质量很好”的结论。
 

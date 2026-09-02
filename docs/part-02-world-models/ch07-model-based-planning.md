@@ -271,7 +271,7 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 `CLAIM-07-05`（recommendation）：报告 learned-model planning 时必须把“优化器没找到好序列”“模型把坏序列评高”“value 错”“执行/状态估计错”分开，而不是统称规划失败。
 {: .book-claim .claim-recommendation }
 
-## 7.10 自动驾驶正文：候选轨迹不是控制授权
+## 7.10 自动驾驶：候选轨迹不是控制授权
 
 驾驶规划可在 vehicle/map frame 生成转向—加速度序列或轨迹，用模型预测 occupancy、碰撞、路线、舒适和规则代价。每条候选必须携带 horizon、步长、动作范围、模型版本和风险分解。
 

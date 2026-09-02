@@ -321,7 +321,7 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 
 日志必须同时记录 capture、server receive、inference start/end、client receive 和 execute 时间。模型 20 Hz 不等于有效 action age 为 50 ms；如果网络和队列积压，控制器可能一直执行旧动作。任何超时都进入确定性的保持、减速或停止策略。
 
-## 16.9 自动驾驶正文：跨车队不是把 CAN 列拼起来
+## 16.9 自动驾驶：跨车队不是把 CAN 列拼起来
 
 不同车辆可能记录方向盘角、前轮角、曲率或归一化 steering；油门/制动可能是踏板比例、加速度、压力或控制器目标。即使字段都叫 `steer`，转向比、符号、延迟和饱和范围也随车型变化。
 

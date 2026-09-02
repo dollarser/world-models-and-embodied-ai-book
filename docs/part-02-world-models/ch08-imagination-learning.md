@@ -274,7 +274,7 @@ Dreamer 谱系的共同点是“从真实序列学习世界模型，再在潜空
 
 第17章给出 model exploitation 的策略排序反例，第20章定义评测协议；本章只解释污染如何进入 target。
 
-## 8.9 自动驾驶正文：可以在想象中学，不能在想象中验收
+## 8.9 自动驾驶：可以在想象中学，不能在想象中验收
 
 自动驾驶可从带时间同步、车辆状态和 control 的真实日志，或第19章 MetaDrive/CARLA rollout 学 world model。posterior start 应覆盖城市道路、不同速度、天气、交互密度和稀有事件，而不是只从直道常见帧启动。
 
@@ -295,7 +295,7 @@ reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和�
 `CLAIM-08-06`（recommendation）：自动驾驶 imagined learning 的 actor 必须在独立闭环环境中复核路线、碰撞、干预、规则和尾部风险；world-model return 不能作为车辆执行授权或道路安全证据。
 {: .book-claim .claim-recommendation }
 
-## 8.10 资源、许可与可执行路径
+## 8.10 资源、许可与进一步验证
 
 | 档位 | 路径 | 当前状态 | 证据要求 |
 | --- | --- | --- | --- |
