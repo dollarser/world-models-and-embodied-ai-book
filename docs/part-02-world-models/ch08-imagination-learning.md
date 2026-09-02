@@ -30,7 +30,7 @@
 
 ### 学完后的可验证产出
 
-读者应能画出 real replay 与 latent imagination 的数据流，手算 λ-return，解释 continuation mask 对 target 与 loss weight 的两种作用，区分 world-model loss、critic target、actor objective 和真实环境评测，并写出自动驾驶 imagined training 的独立验证门。
+读者应能画出 real replay 与 latent imagination 的数据流，解释 imagination 如何把在线规划摊销进策略，手算 λ-return，说明 actor 与 critic 各自学习什么，解释 continuation mask 对 target 与 loss weight 的两种作用，区分 world-model loss、imagined objective 和真实环境评测，并判断 replay 起点与 actor 诱导分布之间的覆盖缺口。
 
 ## 8.1 两个循环：真实数据学模型，模型内部学行为
 
@@ -69,6 +69,14 @@ flowchart LR
 
 world-model loss 下降不自动证明 policy 变好，imagined return 上升也不自动证明真实 return 上升。
 
+### 8.1.1 从在线搜索到摊销决策
+
+第7章的规划器在每次决策时搜索候选动作；Dreamer 式 actor 则把大量模型内试探的结果压缩进参数 $\theta$，部署时直接由 $\pi_\theta(a\mid s)$ 给出动作分布。可以把这种过程理解为**把决策时计算摊销到训练阶段**：在线执行更快，但策略不再为每个新状态显式比较大量候选。
+
+两者并非互斥。一个系统可以用规划器为 actor 提供改进目标，也可以用 actor 作为 tree search 的 prior 或 shooting 的候选生成器。关键区别在于计算发生在哪里，以及面对新状态时是否重新求解。策略的快速前向计算不能继承规划器对临时约束的全部适应性；规划器的在线搜索也不能自动获得 actor 已经学到的长期规律。
+
+Dreamer 也属于广义的 Dyna 思路：真实经验更新模型，模型生成的经验再更新行为。但 imagined transition 没有增加关于真实世界的新观测，它只是重新利用 replay 中已经获得的信息。模型可以提高真实数据的计算利用率，却不能凭空修复 replay 从未覆盖的动力学、奖励或风险事件。
+
 ## 8.2 一条 imagined trajectory 包含什么
 
 从 replay 得到起点 latent state $s_t$ 后，actor 采样动作，world model 用 prior 递推：
@@ -88,6 +96,20 @@ d_\tau=\gamma\hat c_\tau,
 
 Imagined horizon 不是越长越好。它越长，越能看见延迟回报，也越会累积 dynamics、reward、continuation 与 actor-induced OOD 误差。第7章的 planning horizon 与这里的 imagination horizon 面临相同误差—远见权衡，但用途不同：前者在线选择动作，后者生成学习 target。
 
+### 8.2.1 起点分布决定“从哪里开始想”
+
+imagination 通常不是从任意潜状态开始，而是从 replay 序列经过 posterior inference 得到的状态开始。这提供了观测锚点，也定义了训练覆盖：常见状态在 replay 中出现得越多，就越可能成为 imagined rollout 的起点；未被采集的状态不会仅因模型可以采样而自动获得可靠监督。
+
+从起点向前滚动后，状态分布又由当前 actor 决定。于是存在三个不同分布：
+
+| 分布 | 由什么产生 | 主要作用 |
+|---|---|---|
+| replay 分布 | 历史行为策略与环境 | 监督 world model，并提供 posterior 起点 |
+| imagined 分布 | 起点、当前 actor 与 learned prior | 训练 actor/critic |
+| evaluation 分布 | 当前策略与独立真实/仿真环境 | 判断行为是否真正有效 |
+
+三者重合不是默认事实。replay 可能来自旧策略，actor 会不断改变 imagined visitation，而独立环境还会揭示模型遗漏的后果。若只在 replay 上测模型误差，就可能看不到 actor 正在访问的区域；若只在 imagined 分布上测，又会让模型同时充当出题者和裁判。
+
 ## 8.3 λ-return：在 bootstrap 与长回报之间
 
 本章采用带显式序列边界的有限递推定义：
@@ -103,6 +125,14 @@ G_t^\lambda=\hat r_t+d_t\left[(1-\lambda m_t)V(s_{t+1})+\lambda m_t G_{t+1}^\lam
 - 中间值混合两者。它不是自动最优参数，必须与 horizon、discount、critic、model quality 和任务一起报告。
 
 “bias/variance”在这里是诊断框架，不是说某个 λ 对所有问题都有固定排序。Dreamer 各版本的 actor loss、gradient estimator、target critic 和归一化细节也不同，不能只凭这一条式子复刻算法。
+
+### 8.3.1 Actor 与 critic 解决不同问题
+
+critic 学的是“从这个 imagined state 继续按当前行为，模型认为还能得到多少回报”的近似。它把有限 imagination horizon 之外的前景压缩成 value，并为 actor 提供密集学习信号。critic target 来自模型预测的 reward、continuation 和自身 bootstrap，因此它不是独立真值；target network、慢更新或正则化只能改善学习稳定性，不能消除共同模型偏差。
+
+actor 学的是如何改变动作分布，使 imagined objective 提高。其梯度可以通过可微模型沿 dynamics 回传，也可以使用随机策略的 likelihood-ratio 类估计，实际方法常混合不同路径。这里的区别很重要：通过模型反传会直接利用局部动力学导数，梯度高效但也可能追逐错误导数；采样型估计不要求整条模型可微，却通常噪声更大。无论采用哪条路径，优化信号仍来自 learned world。
+
+因此，“critic 更准”和“actor 更好”也不能互相代替。critic 可能准确预测一个已经很差的策略；actor 可能在有偏 critic 下提升 imagined value，却降低真实回报。应当把 value calibration、policy improvement 和外部闭环结果作为三层不同问题。
 
 ## 8.4 EXP-08-01：先把 target 算对
 
@@ -206,9 +236,25 @@ w_0=1,\qquad w_t=\prod_{i=0}^{t-1}d_i\quad(t>0).
 
 论文中的“单 GPU 实时交互推理”说明特定实现和设置下的交互生成能力，不说明完整 tokenizer、world model 和 agent 训练可在 24 GB 单卡完成，更不说明机器人操作或自动驾驶闭环已经解决。社区重实现可作课程实验候选，但必须标注为社区资产、锁定 commit，并与论文主张逐项对齐。
 
+Dreamer 谱系的共同点是“从真实序列学习世界模型，再在潜空间想象中改进行为”，而不是某一种固定 RSSM、latent 类型或 actor loss。版本名称只能提示研究路线，不能替代接口核对。比较两个版本时，应分别问表示如何推断、未来如何生成、reward/continuation 如何建模、actor/critic 接收什么梯度，以及真实数据如何再次进入闭环。
+
 ## 8.8 误差为什么会被 actor 放大
 
 随机 replay 衡量的是数据分布附近误差；actor 会搜索能提高 imagined return 的动作，逐渐把 rollout 推到模型最乐观、数据最稀疏的位置。因此甚至很低的平均 prediction loss，也可能隐藏 reward spike、漏碰撞、错误 continuation 或不可达状态。
+
+这不是普通的独立同分布预测误差。模型一旦参与策略优化，预测误差会改变动作，动作又改变下一轮收集到的数据，形成带反馈的分布迁移。可以把污染链写成：
+
+\[
+\text{model error}
+\rightarrow \text{critic/actor objective error}
+\rightarrow \text{policy shift}
+\rightarrow \text{new visitation}
+\rightarrow \text{new model inputs}.
+\]
+
+链条中任何一环都可能放大前一环。reward head 的局部高估会吸引 actor；错误 continuation 会制造不存在的长期收益；latent dynamics 的小偏差会把轨迹送入未训练区域；critic 再把这些远端偏差传播回更早状态。这说明“冻结模型后 actor loss 收敛”只证明对固定代理目标完成了优化，不证明该目标与环境一致。
+
+缓解也必须对应不同机制：限制 rollout horizon 减少复合误差，限制 actor 偏离数据支持域减少外推，ensemble/disagreement 尝试暴露认知不确定性，持续真实交互可以纠正新分布，独立约束则阻止某些错误被收益权衡吸收。这些手段降低风险，但都不是模型正确性或安全性的证明。
 
 至少分开记录：
 
@@ -227,7 +273,11 @@ w_0=1,\qquad w_t=\prod_{i=0}^{t-1}d_i\quad(t>0).
 
 自动驾驶可从带时间同步、车辆状态和 control 的真实日志，或第19章 MetaDrive/CARLA rollout 学 world model。posterior start 应覆盖城市道路、不同速度、天气、交互密度和稀有事件，而不是只从直道常见帧启动。
 
+覆盖还必须包含**可决策时刻**，而不只是事件最终发生后的画面。若日志只记录已经无法避免碰撞的末端状态，actor 即使在 imagination 中学会识别风险，也没有足够提前量改变结果。遮挡行人、cut-in 和信号变化应从仍存在多个可行动分支的前驱状态启动，并保留当时真正可用的观测，不能用事后信息替代在线 belief。
+
 reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和舒适项；碰撞与硬约束不能被路线 reward 的尺度吞没。continuation 要区分碰撞终止、任务完成、日志截断、传感器缺失和 simulator timeout。否则本节的“终止后 +10 reward 泄漏”会进入 critic target，终止后的伪轨迹 loss 也可能继续污染 actor/critic objective；两条路径必须分别检查。
+
+离线日志还带来反事实缺口：数据只展示实际执行动作后的结果，没有同时展示“若当时急刹或绕行会怎样”。世界模型对替代动作的预测来自跨样本泛化，而不是同一场景中的直接配对观察。actor 越偏离日志动作，这个因果外推越强，因此 action support、行为策略覆盖和独立闭环复核是 imagined learning 的核心条件，不只是工程附录。
 
 一个可审计流程是：
 
@@ -254,7 +304,13 @@ reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和�
 
 ## 小结
 
-Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中的 behavior learning 连接起来。它减少的是环境交互，不是模型偏差；λ-return、continuation 与外部闭环评测决定 target 是否有基本可信度。
+Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中的 behavior learning 连接起来，并把决策时搜索的一部分成本摊销进 actor 参数。imagination 提高的是既有数据的计算利用率，不会创造新的环境证据；posterior 起点、actor rollout 与外部评测分别属于不同分布。
+
+critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的延迟价值，actor 再优化这个代理目标。λ-return 控制中间 value 与长回报的混合，continuation 同时约束 target 递推和终止后 loss 权重。target 数值正确只是必要条件，不能让 critic 独立于模型偏差，也不能保证 actor 的真实改进。
+
+模型误差会通过策略优化变成反馈问题：错误目标改变策略，策略访问新区域，新区域又放大模型外推。短 horizon、数据支持约束、不确定性估计、持续真实校正和独立安全门分别处理不同风险，没有任何单项能够替代外部闭环评测。
+
+对自动驾驶尤其要检查可决策前驱状态和反事实动作覆盖，而不只收集事故末端画面。imagined return 是训练信号，不是道路表现；只有在独立环境中复核路线、规则、碰撞、干预与尾部风险后，才能讨论策略是否真正改善。
 
 ## 练习
 
