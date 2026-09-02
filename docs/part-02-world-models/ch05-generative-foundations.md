@@ -4,7 +4,7 @@
 
 ### 核心问题
 
-当未来不唯一时，为什么只预测一个像素或状态均值会失败？VAE、离散 latent、自回归、masked prediction、扩散与 flow matching 分别在建模什么？怎样只掌握后续世界模型、视频预测和生成动作真正需要的部分？
+当未来不唯一时，为什么只预测一个像素或状态均值会失败？变分自编码器（Variational Autoencoder, VAE）、离散 latent、自回归、masked prediction、扩散与 flow matching 分别在建模什么？怎样只掌握后续世界模型、视频预测和生成动作真正需要的部分？
 
 ### 先修与非目标
 

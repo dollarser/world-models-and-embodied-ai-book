@@ -4,7 +4,7 @@
 
 ### 核心问题
 
-监督微调（SFT）之后，怎样利用成功/失败、稀疏奖励、人类纠正、物理仿真或 learned world model 继续改进 VLA？长时任务为什么不能靠无限加长 action chunk？“World-Action Model”究竟是可交互世界模型、带未来预测辅助目标的策略，还是联合生成未来与动作的模型？
+监督微调（Supervised Fine-Tuning, SFT）之后，怎样利用成功/失败、稀疏奖励、人类纠正、物理仿真或 learned world model 继续改进 VLA？长时任务为什么不能靠无限加长 action chunk？世界-动作模型（World-Action Model, WAM）究竟是可交互世界模型、带未来预测辅助目标的策略，还是联合生成未来与动作的模型？
 
 ### 先修知识
 

@@ -118,6 +118,31 @@
 | benchmark card | 在运行前冻结用途、系统、数据划分、协议、指标、统计、声明边界和报告要求的评测合同；单次运行与测量值分别进入 experiment card 和 result，见[第9章](part-02-world-models/ch09-evaluation.md)与[第20章](part-06-systems/ch20-embodied-evaluation.md) |
 | 最小风险动作（MRM） | 系统异常时进入受约束安全状态的动作或流程；不是学习策略的普通输出，见[第21章](part-06-systems/ch21-deployment-realtime-and-safety.md) |
 
+## 常见缩写速查
+
+| 缩写 | 英文全称 | 本书中的中文含义 |
+| --- | --- | --- |
+| CV | Computer Vision | 计算机视觉 |
+| MDP | Markov Decision Process | 马尔可夫决策过程 |
+| POMDP | Partially Observable Markov Decision Process | 部分可观测马尔可夫决策过程 |
+| VAE | Variational Autoencoder | 变分自编码器 |
+| VQ-VAE | Vector-Quantized Variational Autoencoder | 向量量化变分自编码器 |
+| RSSM | Recurrent State-Space Model | 循环状态空间模型 |
+| MPC | Model Predictive Control | 模型预测控制 |
+| CEM | Cross-Entropy Method | 交叉熵方法 |
+| JEPA | Joint-Embedding Predictive Architecture | 联合嵌入预测架构 |
+| BEV | Bird's-Eye View | 鸟瞰图或鸟瞰表示 |
+| OOD | Out of Distribution | 分布外 |
+| BC | Behavior Cloning | 行为克隆 |
+| ACT | Action Chunking with Transformers | 基于 Transformer 的动作分块方法 |
+| VLM | Vision-Language Model | 视觉语言模型 |
+| VLA | Vision-Language-Action | 视觉-语言-动作模型或策略 |
+| SFT | Supervised Fine-Tuning | 监督微调 |
+| WAM | World-Action Model | 世界-动作模型；尚无统一能力定义 |
+| ESS | Effective Sample Size | 有效样本量 |
+| RTC | Real-Time Chunking | 实时动作分块 |
+| MRM | Minimal Risk Maneuver | 最小风险动作或最小风险机动 |
+
 ## 查词时的三个检查
 
 1. 这个词描述的是观测、内部表示、环境状态，还是动作接口？

@@ -4,7 +4,7 @@
 
 ### 核心问题
 
-视觉、语言和机器人状态怎样变成可执行动作？离散 action token、连续回归、FAST、diffusion/flow action expert 与双系统架构的真正差别是什么？为什么一个会看图、会解释的视觉语言模型（Vision-Language Model, VLM）仍不能直接控制机器人或车辆？
+视觉-语言-动作模型（Vision-Language-Action, VLA）怎样把视觉、语言和机器人状态变成可执行动作？离散 action token、连续回归、FAST、diffusion/flow action expert 与双系统架构的真正差别是什么？为什么一个会看图、会解释的视觉语言模型（Vision-Language Model, VLM）仍不能直接控制机器人或车辆？
 
 ### 先修知识
 

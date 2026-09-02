@@ -9,7 +9,7 @@
 ### 先修知识
 
 - 已具备：基本的编码器、循环网络和概率分布直觉；
-- 本章补齐：部分可观测性、状态空间模型、prior/posterior 与 imagined rollout；
+- 本章补齐：部分可观测性、循环状态空间模型（Recurrent State-Space Model, RSSM）、prior/posterior 与 imagined rollout；
 - 不要求：强化学习推导、控制理论或完整变分推断课程。
 
 ### 非目标

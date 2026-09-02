@@ -10,7 +10,7 @@
 
 - 已具备：Transformer/ViT、特征提取和监督评测；
 - 本章复用：第6章的潜在状态、第9章的 E1 probing 与下游效用；
-- 本章补齐：JEPA、目标编码器、masking、特征预测和冻结 probe；
+- 本章补齐：联合嵌入预测架构（Joint-Embedding Predictive Architecture, JEPA）、目标编码器、masking、特征预测和冻结 probe；
 - 不要求：3D 视觉、JEPA 预训练、Ego4D/EPIC-KITCHENS 下载或 GPU。
 
 第5章已建立 VAE/token、自回归、masked、diffusion 与 flow 的共同分布合同；本章只处理“不要求像素生成”的表示预测，并以 probe 和下游用途检查被忽略的信息。
@@ -30,7 +30,7 @@
 
 像素未来包含大量难以预测、但未必影响任务的细节：纹理、反光、背景运动和多个合理结果。逐像素损失可能把容量用于这些细节；完全丢掉细节又可能删除深度边界、接触和小障碍物。问题不在“像素一定无用”，而在表示应该为声明的下游用途保留什么。
 
-联合嵌入预测架构（Joint-Embedding Predictive Architecture, JEPA）不要求从 latent 解码原始像素。它让上下文编码器读取可见区域，预测器根据上下文和目标位置预测目标编码器产生的 latent 表示。
+JEPA 不要求从 latent 解码原始像素。它让上下文编码器读取可见区域，预测器根据上下文和目标位置预测目标编码器产生的 latent 表示。
 
 ```mermaid
 flowchart LR
