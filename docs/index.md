@@ -1,46 +1,64 @@
 # 世界模型与具身智能
 
-> 从表征、预测到行动
+## 从表征、预测到行动
 
-这不是一份模型排行榜，而是一条从计算机视觉走向闭环智能的学习路径：观测如何成为状态，状态如何支持预测，预测如何支持决策，决策又如何在环境反馈中接受检验。
+视觉模型回答“画面里有什么”，具身智能还必须回答另外三个问题：世界现在处于什么状态，动作会怎样改变未来，系统凭什么相信自己的选择能够在闭环中成立？
 
-第一次阅读建议先打开[贯穿案例与全书阅读地图](reading-map.md)：它用同一杯子操作任务和同一施工改道驾驶任务串起22章，并解释 `state`、`action`、`horizon` 与 `success` 的证据含义怎样逐步升级。
+本书沿着这三个问题展开。它不是模型排行榜，也不是硬件搭建手册，而是一条从计算机视觉走向世界模型、动作策略、仿真评测与部署边界的概念学习路径。
 
-## 本书面向谁
+[阅读前言](preface.md) · [打开全书地图](reading-map.md) · [查看术语表](glossary.md)
 
-本书默认读者熟悉 CNN、ViT/Transformer 或至少一种视觉任务，能够阅读 Python/PyTorch 代码；不要求预先学过强化学习、机器人学、控制或 3D 视觉。
+## 你将建立什么能力
 
-## 当前可读内容
+读完全书后，你应当能够：
 
-- [第1章：从“看见”到“行动”](part-01-loop/ch01-from-seeing-to-acting.md)
-- [第2章：世界模型到底是什么](part-01-loop/ch02-what-is-a-world-model.md)
-- [第3章：具身任务的最小机器人学与决策基础](part-01-loop/ch03-minimal-robotics-and-decision.md)
-- [第4章：数据、基线与实验协议](part-01-loop/ch04-data-and-protocols.md)
-- [第5章：预测模型的生成式基础](part-02-world-models/ch05-generative-foundations.md)
-- [第6章：World Models 与循环状态空间模型](part-02-world-models/ch06-rssm.md)
-- [第7章：用模型做规划——从 PlaNet 到价值等价模型](part-02-world-models/ch07-model-based-planning.md)
-- [第8章：在想象中学习——Dreamer 系列](part-02-world-models/ch08-imagination-learning.md)
-- [第9章：世界模型如何评测与失败](part-02-world-models/ch09-evaluation.md)
-- [第10章：非生成式预测表示——从 I-JEPA 到 V-JEPA 2.x](part-03-representations/ch10-jepa-representations.md)
-- [第11章：动作条件视频世界模型](part-03-representations/ch11-action-conditioned-video.md)
-- [第12章：可行动的空间表征](part-03-representations/ch12-actionable-space.md)
-- [第13章：模仿学习、误差累积与动作分块](part-04-policies/ch13-imitation-and-action-chunks.md)
-- [第14章：生成动作——Diffusion Policy 与 Flow Matching](part-04-policies/ch14-generative-actions.md)
-- [第15章：VLA 的架构模式](part-04-policies/ch15-vla-architecture-patterns.md)
-- [第16章：数据规模化、跨本体迁移与高效适配](part-04-policies/ch16-data-scaling-and-adaptation.md)
-- [第17章：世界模型帮助策略的五种方式](part-05-fusion/ch17-world-model-policy-utility.md)
-- [第18章：VLA 后训练、长时序与 World-Action Models](part-05-fusion/ch18-vla-post-training-and-wam.md)
-- [第19章：物理仿真、Real2Sim 与 Sim2Real](part-06-systems/ch19-physical-simulation-and-sim2real.md)
-- [第20章：具身评测——从成功率到部署证据](part-06-systems/ch20-embodied-evaluation.md)
-- [第21章：部署、实时性与安全边界](part-06-systems/ch21-deployment-realtime-and-safety.md)
-- [第22章：端到端综合项目——一个可审计的具身研究闭环](part-07-capstone/ch22-auditable-capstone.md)
-- [读者术语表](glossary.md)
-- [贯穿案例与全书阅读地图](reading-map.md)
-- [研究雷达：怎样阅读快速演进的世界模型研究](research-radar.md)
-- [编写状态](status.md)
+- 区分 observation、state、belief、latent state 和 environment state；
+- 判断一个预测模型何时可以称为世界模型，何时只是表征或生成器；
+- 解释模型规划、想象学习、模仿学习和生成式动作策略的共同接口；
+- 分析 VLA 的 grounding、动作表示、跨本体迁移和后训练边界；
+- 识别 world-model exploitation、simulator gap、评测泄漏和实时系统失效；
+- 从 estimand、对照、真实性锚点和安全边界判断一项结果能支持什么结论。
 
-## 当前限制
+## 从哪里开始
 
-当前版本已接入 22 章正文。全书 116 道练习均有同编号的可折叠自检要点；这些内容给出最低合格推理、复核方法与证据边界，不是开放题的唯一答案，也不替代读者实际运行实验。
+### 第一次系统学习
 
-每章均有零下载或微型 CPU smoke；这些实验只验证定义、数据流、target、状态更新、几何、空间状态、动作合同和评测协议，不是 Dreamer、ACT、VLA、occupancy 网络、仿真 benchmark 或真实机器人/车辆的完整复现，也没有验证待办实验的 24 GB GPU 训练成本。
+从第 1 章顺序阅读。全书不要求预先掌握强化学习、机器人学、控制或 3D 视觉；遇到坐标、状态和动作概念时，第 3 章会提供最低必要基础。
+
+### 已有视觉或多模态背景
+
+先读第 1、2、4 章建立闭环与证据意识，再进入第 5-18 章的世界模型、预测表征、生成式策略和 VLA 主线。
+
+### 关注自动驾驶与系统落地
+
+沿[阅读地图](reading-map.md)中的“施工改道”案例阅读，并重点关注第 3、4、7、9、12、13、15、17、19-21 章。
+
+## 七部分知识结构
+
+| 部分 | 核心问题 | 章节 |
+| --- | --- | ---: |
+| 从视觉识别到闭环智能 | 为什么看见不等于能够行动？ | 1-4 |
+| 学习一个可用于决策的世界 | 怎样表示、预测并利用未来？ | 5-9 |
+| 可扩展的世界表征 | 哪些信息应被保留给行动？ | 10-12 |
+| 从看懂世界到生成动作 | 策略怎样产生可执行动作？ | 13-16 |
+| 世界模型与策略融合 | 世界模型究竟怎样帮助策略？ | 17-18 |
+| 仿真、评测与部署 | 一个结果怎样升级为系统证据？ | 19-21 |
+| 可审计研究闭环 | 怎样把问题、方法和边界连成完整主张？ | 22 |
+
+## 两个贯穿案例
+
+全书反复使用两个固定任务：遮挡条件下移动杯子，以及施工改道中的切入车辆。它们不是共享实验，而是帮助读者观察同一个任务怎样逐步增加状态、动作、时序、评测和安全语义。
+
+杯子案例强调部分可观测、接触、动作多解和恢复；施工改道案例强调动态交互、风险、规划时域和最小风险状态。完整对应关系见[贯穿案例与全书阅读地图](reading-map.md)。
+
+## 怎样理解书中的证据标签
+
+本书刻意区分几类陈述：数学与协议事实、论文或官方资料中的作者报告、本书的概念推导、教学反例，以及需要真实环境才能成立的部署结论。
+
+章节中的微型结果主要用于说明定义和暴露指标盲区，不代表大型模型、真实机器人或车辆性能。更详细的维护状态集中在[编写状态](status.md)，普通阅读无需先理解这些机器合同。
+
+## 当前版本与开放出版
+
+当前为 `v0.1.0-rc1` 在线开源发布候选。22 章内容已经形成完整知识链，后续重点是出版编辑、读者测试、引用整理、站点与 PDF/EPUB 发布，而不是把所有新模型持续塞进正文。
+
+欢迎通过[开放出版与勘误](open-book.md)参与改进。版本范围和未验证事项见[发布候选说明](release-notes.md)。

@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: 如果本书对你的研究、课程或项目有帮助，请引用此版本。
+title: 世界模型与具身智能：从表征、预测到行动
+type: book
+authors:
+  - name: dollars
+version: 0.1.0-rc1
+date-released: 2026-08-31
+license: MIT
+abstract: >-
+  面向计算机视觉工程师与具身智能学习者的中文开源教材，系统讨论
+  世界模型、预测表征、动作策略、VLA、仿真、评测与部署证据。
+keywords:
+  - world models
+  - embodied intelligence
+  - vision-language-action models
+  - robotics
+  - autonomous driving
+  - open textbook

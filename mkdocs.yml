@@ -31,11 +31,10 @@ extra_javascript:
 
 nav:
   - 首页: index.md
-  - 编写状态: status.md
-  - 发布候选说明: release-notes.md
-  - 读者术语表: glossary.md
-  - 贯穿案例与阅读地图: reading-map.md
-  - 研究雷达: research-radar.md
+  - 开始阅读:
+      - 前言: preface.md
+      - 贯穿案例与阅读地图: reading-map.md
+      - 读者术语表: glossary.md
   - 第一部分：从视觉识别到闭环智能:
       - 第1章 从看见到行动: part-01-loop/ch01-from-seeing-to-acting.md
       - 第2章 世界模型到底是什么: part-01-loop/ch02-what-is-a-world-model.md
@@ -65,3 +64,9 @@ nav:
       - 第21章 部署、实时性与安全边界: part-06-systems/ch21-deployment-realtime-and-safety.md
   - 第七部分：综合项目与持续研究:
       - 第22章 端到端综合项目：一个可审计的具身研究闭环: part-07-capstone/ch22-auditable-capstone.md
+  - 持续更新:
+      - 研究雷达: research-radar.md
+      - 开放出版、引用与勘误: open-book.md
+  - 版本与维护:
+      - 发布候选说明: release-notes.md
+      - 编写状态: status.md
