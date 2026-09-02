@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from math import isfinite
+from math import isclose, isfinite
 from pathlib import Path
 from typing import Any
 
@@ -138,6 +138,119 @@ def analyze_state_aliasing(case: Any) -> dict[str, Any]:
     }
 
 
+def analyze_noisy_history_belief(aliasing_case: Any, belief_case: Any) -> dict[str, Any]:
+    """Evaluate Bayes decisions from authored noisy history-cue likelihoods."""
+
+    aliasing = analyze_state_aliasing(aliasing_case)
+    if not isinstance(belief_case, dict):
+        raise ValueError("noisy_history_belief_case must be an object")
+    contexts = aliasing_case["contexts"]
+    context_ids = {context["id"] for context in contexts}
+    actions = sorted(contexts[0]["action_returns"])
+    returns = {
+        context["id"]: {
+            action: float(value) for action, value in context["action_returns"].items()
+        }
+        for context in contexts
+    }
+
+    priors = belief_case.get("context_priors")
+    if not isinstance(priors, dict) or set(priors) != context_ids:
+        raise ValueError("context priors must match the aliasing context IDs")
+    if any(
+        isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or not isfinite(value)
+        or value <= 0.0
+        for value in priors.values()
+    ) or not isclose(sum(float(value) for value in priors.values()), 1.0, abs_tol=1e-12):
+        raise ValueError("context priors must be finite positive probabilities summing to one")
+
+    cue_likelihoods = belief_case.get("cue_likelihoods")
+    if not isinstance(cue_likelihoods, dict) or len(cue_likelihoods) < 2:
+        raise ValueError("cue likelihoods must define at least two cues")
+    for cue, likelihoods in cue_likelihoods.items():
+        if not isinstance(cue, str) or not cue or not isinstance(likelihoods, dict):
+            raise ValueError("cue likelihood entries must use non-empty cue names and objects")
+        if set(likelihoods) != context_ids or any(
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not isfinite(value)
+            or not 0.0 <= value <= 1.0
+            for value in likelihoods.values()
+        ):
+            raise ValueError("each cue must define finite [0,1] likelihoods for every context")
+    for context_id in context_ids:
+        total = sum(float(likelihoods[context_id]) for likelihoods in cue_likelihoods.values())
+        if not isclose(total, 1.0, abs_tol=1e-12):
+            raise ValueError("cue likelihoods must sum to one within each context")
+
+    cue_probabilities: dict[str, float] = {}
+    posteriors: dict[str, dict[str, float]] = {}
+    expected_returns: dict[str, dict[str, float]] = {}
+    selected_actions: dict[str, str] = {}
+    noisy_history_mean_return = 0.0
+    for cue, likelihoods in cue_likelihoods.items():
+        cue_probability = sum(
+            float(priors[context_id]) * float(likelihoods[context_id])
+            for context_id in context_ids
+        )
+        if cue_probability <= 0.0:
+            raise ValueError("every declared cue must have positive marginal probability")
+        posterior = {
+            context_id: float(priors[context_id])
+            * float(likelihoods[context_id])
+            / cue_probability
+            for context_id in sorted(context_ids)
+        }
+        action_returns = {
+            action: sum(
+                posterior[context_id] * returns[context_id][action]
+                for context_id in context_ids
+            )
+            for action in actions
+        }
+        best_return = max(action_returns.values())
+        best_actions = [
+            action
+            for action, value in action_returns.items()
+            if isclose(value, best_return, rel_tol=0.0, abs_tol=1e-12)
+        ]
+        if len(best_actions) != 1:
+            raise ValueError("each noisy history cue must induce a unique Bayes-optimal action")
+        cue_probabilities[cue] = round(cue_probability, 12)
+        posteriors[cue] = {
+            context_id: round(value, 12) for context_id, value in posterior.items()
+        }
+        expected_returns[cue] = {
+            action: round(value, 12) for action, value in action_returns.items()
+        }
+        selected_actions[cue] = best_actions[0]
+        noisy_history_mean_return += cue_probability * best_return
+
+    oracle_return = float(aliasing["history_aware_mean_return"])
+    current_only_return = float(aliasing["aliased_mean_return"])
+    return {
+        "context_priors": {
+            context_id: round(float(priors[context_id]), 12)
+            for context_id in sorted(context_ids)
+        },
+        "cue_probabilities": cue_probabilities,
+        "posterior_by_cue": posteriors,
+        "expected_return_by_cue_action": expected_returns,
+        "selected_action_by_cue": selected_actions,
+        "current_only_mean_return": round(current_only_return, 12),
+        "noisy_history_mean_return": round(noisy_history_mean_return, 12),
+        "perfect_history_mean_return": round(oracle_return, 12),
+        "noisy_history_gain_over_current": round(
+            noisy_history_mean_return - current_only_return, 12
+        ),
+        "noisy_history_mean_regret": round(oracle_return - noisy_history_mean_return, 12),
+        "scope": (
+            "authored two-context one-step Bayes decision with known cue likelihoods; not a learned "
+            "belief model, calibrated perception, sequential filter, or POMDP benchmark"
+        ),
+    }
 def load_fixture(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -146,8 +259,8 @@ def validate_fixture(fixture: Any) -> list[str]:
     errors: list[str] = []
     if not isinstance(fixture, dict):
         return ["fixture must be an object"]
-    if fixture.get("fixture_version") != 3:
-        errors.append("fixture_version must be 3")
+    if fixture.get("fixture_version") != 4:
+        errors.append("fixture_version must be 4")
     if fixture.get("audit_date") != "2026-09-01":
         errors.append("audit_date must match the reviewed source snapshot")
     if not isinstance(fixture.get("scope"), str) or not fixture["scope"].strip():
@@ -161,6 +274,15 @@ def validate_fixture(fixture: Any) -> list[str]:
         aliasing = analyze_state_aliasing(fixture.get("state_aliasing_case"))
         if not aliasing["context_optimal_actions_differ"]:
             errors.append("state aliasing case must require different context-optimal actions")
+        belief = analyze_noisy_history_belief(
+            fixture.get("state_aliasing_case"), fixture.get("noisy_history_belief_case")
+        )
+        if not (
+            belief["current_only_mean_return"]
+            < belief["noisy_history_mean_return"]
+            < belief["perfect_history_mean_return"]
+        ):
+            errors.append("noisy history must improve on current-only without matching the oracle")
     except ValueError as error:
         errors.append(str(error))
 
@@ -259,4 +381,7 @@ def summarize(fixture: dict[str, Any]) -> dict[str, Any]:
         "scope_dependent_transition_cards": claim_count("temporal_or_transition_model", "scope_dependent"),
         "policy_without_transition_cards": claim_count("policy_without_independent_transition", "supported"),
         "state_aliasing": analyze_state_aliasing(fixture["state_aliasing_case"]),
+        "noisy_history_belief": analyze_noisy_history_belief(
+            fixture["state_aliasing_case"], fixture["noisy_history_belief_case"]
+        ),
     }

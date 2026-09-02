@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-02-01`（smoke）
-> 关联声明：`CLAIM-02-01`～`CLAIM-02-06`
-> 关联图表：`FIG-02-01` / `TAB-02-01` / `TAB-02-02` / `TAB-02-03`
+> 关联声明：`CLAIM-02-01`～`CLAIM-02-07`
+> 关联图表：`FIG-02-01` / `TAB-02-01` / `TAB-02-02` / `TAB-02-03` / `TAB-02-04`
 > 资源档位：S
 > GPU 状态：不需要
 
@@ -87,11 +87,25 @@ z_t=f_\theta(z_{t-1},o_t,a_{t-1})
 | clear | `occluded-corridor` | `corridor-seen-clear` | 1.0 | 0.0 | `advance` |
 | blocked | `occluded-corridor` | `obstacle-seen-before-occlusion` | -1.0 | 0.2 | `hold` |
 
-*TAB-02-03：`EXP-02-01` v3 的等权 state-aliasing fixture。return 是无单位教学效用，不是碰撞代价、驾驶 reward 或概率估计。*
+*TAB-02-03：`EXP-02-01` v4 的等权 state-aliasing fixture。return 是无单位教学效用，不是碰撞代价、驾驶 reward 或概率估计。*
 
 若 policy 只能看到当前编码，它必须在两个 context 中执行同一个动作。`advance` 的等权 mean return 为 0，`hold` 为 0.1，因此最优的 current-only 决策是 `hold`；相对逐 context oracle，它的 mean regret 是 0.5。若 state 保留唯一历史线索，则 clear 选 `advance`、blocked 选 `hold`，mean return 从 0.1 提高到 0.6，regret 变为 0。
 
 `CLAIM-02-06`（result）：在 `EXP-02-01` 的两个等权手工 context 中，current-only 表示把不同最优动作的历史合并，最优共享动作仍有 0.5 mean regret；保留历史线索后固定 regret 为 0。该差值只证明这组一次决策 fixture 是 memory-improvable，不证明某种 sequence model 必然能学会记忆，也不估计真实 POMDP、机器人或驾驶性能。
+
+### 2.2.2 有历史不等于 belief 已充分
+
+完美 history oracle 是上界，不应被误读成“只要把历史送进模型，regret 就会归零”。v4 为同一 `clear/blocked` context 增加两个 noisy cue：在真实 clear 时出现 `clear_signal/blocked_signal` 的概率为 `0.8/0.2`，在 blocked 时反过来。等权 prior 下，两个 cue 的 posterior 分别为 `P(clear|clear_signal)=0.8` 和 `P(blocked|blocked_signal)=0.8`。按 posterior 对原一步 return 求期望，Bayes policy 在 clear signal 选择 `advance`，在 blocked signal 选择 `hold`。
+
+| 表示/决策 | mean return | 相对 perfect-history oracle 的 regret |
+| --- | ---: | ---: |
+| current-only，共享 `hold` | 0.10 | 0.50 |
+| noisy-history Bayes belief | 0.38 | 0.22 |
+| perfect-history oracle | 0.60 | 0.00 |
+
+*TAB-02-04：`EXP-02-01` v4 的 noisy-history belief 负对照。cue likelihood 与 return 均为作者设定的一步无单位数值，不是感知校准或真实 POMDP。*
+
+`CLAIM-02-07`（result）：固定等权双 context 中，已知 `0.8/0.2` 对称 cue likelihood 的 Bayes belief 把 mean return 从 current-only 的0.1提高到0.38，但仍低于 perfect-history oracle 的0.6，保留0.22 mean regret。该结果只证明这组已知生成概率的一步 fixture 中 noisy history 部分减少 decision aliasing，不证明模型能学习、校准或跨时更新 belief，也不估计真实记忆、感知或规划性能。
 
 这里有三条需要分开的理论直觉。[DeepMDP](https://proceedings.mlr.press/v97/gelada19a.html) 用 reward prediction 与 next-latent distribution prediction 把表示质量连接到 MDP/bisimulation 条件；这说明只重建外观不是唯一目标，也不表示任意低预测 loss 都足够。[Value Equivalence](https://arxiv.org/abs/2011.03506) 则把模型等价定义在选定的 functions 与 policies 的 Bellman updates 上；它允许忽略无关细节，但“相关”随用途和函数集合变化。MuZero 的 reward/value/policy 预测是价值相关路线的代表，不是所有任务上的充分状态证明。
 
@@ -185,7 +199,7 @@ flowchart LR
 - `unsupported`：当前卡片证据不足以发布该声明，不等于已经证明能力不存在；
 - `scope_dependent`：系统族包含多种实现，必须锁定具体版本后再判断。
 
-下面的矩阵来自 `EXP-02-01` v3 的八张固定卡。它刻意拆开四个经常被错误合并的命题：有时间/转移预测、能输入候选动作、动态是学习得到的、以及直接输出策略却没有独立转移接口。
+下面的矩阵来自 `EXP-02-01` v4 的八张固定卡。它刻意拆开四个经常被错误合并的命题：有时间/转移预测、能输入候选动作、动态是学习得到的、以及直接输出策略却没有独立转移接口。
 
 | 固定卡片 | 时间/转移证据 | 候选动作干预 | 学习且动作条件的转移 | 策略输出但无独立转移 |
 | --- | --- | --- | --- | --- |
@@ -198,7 +212,7 @@ flowchart LR
 | 数字孪生 archetype | scope-dependent | scope-dependent | scope-dependent | unsupported |
 | CARLA | supported | supported | unsupported | unsupported |
 
-*TAB-02-02：`EXP-02-01` v3 的能力证据矩阵。状态描述锁定卡片，而不是对同名系统未来版本或整个研究方向作永久判断。*
+*TAB-02-02：`EXP-02-01` v4 的能力证据矩阵。状态描述锁定卡片，而不是对同名系统未来版本或整个研究方向作永久判断。*
 
 矩阵展示的是逻辑蕴含边界。VideoGPT 有时间预测，不代表可做动作反事实；π₀ 直接生成动作，不代表存在可单独调用的环境转移；MuJoCo 和 CARLA 接受控制并推进状态，但动态不是从数据学习得到；数字孪生若不锁定实例则不能强行二值化。2026-09-01 核查时，[V-JEPA 2 官方仓库](https://github.com/facebookresearch/vjepa2)同时提供无动作预训练表征与 V-JEPA 2-AC 动作条件 predictor，正说明同一项目族内部也必须按具体组件分类。[OpenPI 官方仓库](https://github.com/Physical-Intelligence/openpi)则明确把 π₀、π₀-FAST 和 π₀.₅列为 VLA 模型；能输出 action chunk 仍不自动提供独立环境 transition。
 
@@ -271,7 +285,7 @@ CV 工程师可以沿四步迁移已有经验：
 
 至少包含：无动作视频预测器、动作条件预测器、latent 世界模型、价值等价模型、VLA、物理仿真器、数字孪生和自动驾驶案例。评分不看“是否归入世界模型”这一列是否统一，而看理由、边界和证据是否自洽。
 
-本书已把八类对象和一个 state-aliasing case 写成结构化 JSON fixture，并用标准库校验器强制检查：类别覆盖、四轴字段、来源快照、VLA/仿真器边界、四项三态能力、每张卡的不可外推声明，以及历史线索、动作集合和唯一最优动作合同。运行命令：
+本书已把八类对象、一个 state-aliasing case 和一个 noisy-history belief case 写成结构化 JSON fixture，并用标准库校验器强制检查：类别覆盖、四轴字段、来源快照、VLA/仿真器边界、四项三态能力、每张卡的不可外推声明，以及历史线索、动作集合、唯一最优动作、prior 与 cue likelihood 归一化合同。运行命令：
 
 ```bash
 make ch02-test-local
@@ -279,11 +293,11 @@ make ch02-smoke-local
 make ch02-smoke
 ```
 
-固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有 HTTPS 证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。能力矩阵中，6 张有时间/转移证据、5 张支持候选动作干预、3 张同时满足学习动态与动作条件、1 张保持 scope-dependent、1 张是无独立转移的策略。state-aliasing 对照则得到 current-only mean return 0.1、history-aware 0.6 和 0.5 history value gap。14 个单元测试还会故意把 VLA 动作输出改写成转移证据、伪造 learned-action conjunction、破坏三态集合、证据 URL、四轴字段和身份唯一性，以及重复历史线索、改变动作集合、制造 context/共享策略最优动作 tie 和非有限 return，确认校验器能够拒绝这些变化。
+固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有 HTTPS 证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。能力矩阵中，6 张有时间/转移证据、5 张支持候选动作干预、3 张同时满足学习动态与动作条件、1 张保持 scope-dependent、1 张是无独立转移的策略。state-aliasing 对照得到 current-only mean return 0.1、perfect-history 0.6 和0.5 gap；noisy-history Bayes belief 得到0.38 return 和0.22 oracle regret。18 个单元测试还会故意破坏能力矩阵、证据与身份、动作/return 合同、prior、likelihood 归一化和 cue 决策唯一性，确认校验器能够拒绝这些变化。
 
 `CLAIM-02-04`（result）：`EXP-02-01` 在固定 fixture 上完成了 8/8 类别、8/8 来源和 8/8 证据限制检查。它证明分类契约可执行，不证明被列系统的性能、可复现性或完整能力。
 
-`CLAIM-02-05`（result）：`EXP-02-01` v3 中，只有 3/8 固定卡片同时满足“学习动态 + 候选动作条件”，而转移证据、动作干预和直接策略输出分别属于不同集合。该计数只描述本书选定的八个教学 archetype，不估计现实项目比例。
+`CLAIM-02-05`（result）：`EXP-02-01` v4 中，只有 3/8 固定卡片同时满足“学习动态 + 候选动作条件”，而转移证据、动作干预和直接策略输出分别属于不同集合。该计数只描述本书选定的八个教学 archetype，不估计现实项目比例。
 
 ## 2.9 失效模式与安全边界
 
@@ -323,6 +337,7 @@ make ch02-smoke
 4. **反例设计**：构造两个当前观测相同但最优动作不同的历史，说明需要怎样的信念状态。
 5. **自动驾驶迁移**：分别为驾驶视频生成器、轨迹预测器、规划器和 CARLA 填写四轴模型卡。
 6. **状态充分性**：修改 `TAB-02-03`，让两个 context 的最优动作相同；说明此时 history gap 为什么消失，以及这仍不能证明表示对其他任务充分。
+7. **噪声历史**：复算 `TAB-02-04` 的 posterior、Bayes action 与0.22 regret，并解释为什么“用了 history”不是充分状态证明。
 
 ## 自检要点
 
@@ -370,6 +385,13 @@ V-JEPA 2 encoder 提供观测/视频表征，可支持当前或历史特征，�
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-02-07：noisy history 只部分消除决策混叠</summary>
+
+等权 prior 与对称 `0.8/0.2` likelihood 使 `clear_signal` 后的 `P(clear)=0.8`，`blocked_signal` 后的 `P(blocked)=0.8`。前者的 `advance/hold` posterior expected return 为0.6/0.04，因此选 advance；后者为-0.6/0.16，因此选 hold。两个 cue 的边际概率都为0.5，所以 mean return 是 `0.5×0.6+0.5×0.16=0.38`；相对 perfect-history 0.6 仍有0.22 regret。合格答案必须保留 posterior 不确定性，并说明 likelihood 是已知手工数值，不是模型学到或校准得到的 belief。
+
+</details>
+
 ## 延伸阅读
 
 - Ha & Schmidhuber, [World Models](https://arxiv.org/abs/1803.10122)，`[A]`，经典视觉编码—动力学—控制分解；
@@ -398,6 +420,6 @@ V-JEPA 2 encoder 提供观测/视频表征，可支持当前或历史特征，�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch02-state-aliasing-review-2026-09-01.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
+- 审查记录路径：`reviews/ch02-state-aliasing-review-2026-09-01.md`、`reviews/ch02-noisy-history-belief-review-2026-09-02.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：系统卡基于论文与官方文档元数据，没有运行八个上游系统；
 - 下一步：与第6章 belief state、第9章 E2/E4 评测和第15章 policy memory 继续执行跨章语义审查。

@@ -8,6 +8,46 @@
     "cards_with_unsupported_claims": 8,
     "category_count": 8,
     "learned_action_conditioned_candidates": 3,
+    "noisy_history_belief": {
+      "context_priors": {
+        "blocked": 0.5,
+        "clear": 0.5
+      },
+      "cue_probabilities": {
+        "blocked_signal": 0.5,
+        "clear_signal": 0.5
+      },
+      "current_only_mean_return": 0.1,
+      "expected_return_by_cue_action": {
+        "blocked_signal": {
+          "advance": -0.6,
+          "hold": 0.16
+        },
+        "clear_signal": {
+          "advance": 0.6,
+          "hold": 0.04
+        }
+      },
+      "noisy_history_gain_over_current": 0.28,
+      "noisy_history_mean_regret": 0.22,
+      "noisy_history_mean_return": 0.38,
+      "perfect_history_mean_return": 0.6,
+      "posterior_by_cue": {
+        "blocked_signal": {
+          "blocked": 0.8,
+          "clear": 0.2
+        },
+        "clear_signal": {
+          "blocked": 0.2,
+          "clear": 0.8
+        }
+      },
+      "scope": "authored two-context one-step Bayes decision with known cue likelihoods; not a learned belief model, calibrated perception, sequential filter, or POMDP benchmark",
+      "selected_action_by_cue": {
+        "blocked_signal": "hold",
+        "clear_signal": "advance"
+      }
+    },
     "policy_without_transition_cards": 1,
     "scope_dependent_transition_cards": 1,
     "state_aliasing": {

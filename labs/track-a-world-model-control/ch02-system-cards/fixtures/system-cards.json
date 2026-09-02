@@ -1,5 +1,5 @@
 {
-  "fixture_version": 3,
+  "fixture_version": 4,
   "audit_date": "2026-09-01",
   "scope": "classification and state-sufficiency worksheet; not a performance benchmark",
   "state_aliasing_case": {
@@ -16,6 +16,13 @@
         "action_returns": {"advance": -1.0, "hold": 0.2}
       }
     ]
+  },
+  "noisy_history_belief_case": {
+    "context_priors": {"clear": 0.5, "blocked": 0.5},
+    "cue_likelihoods": {
+      "clear_signal": {"clear": 0.8, "blocked": 0.2},
+      "blocked_signal": {"clear": 0.2, "blocked": 0.8}
+    }
   },
   "cards": [
     {

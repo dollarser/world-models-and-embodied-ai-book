@@ -9,7 +9,13 @@ import unittest
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from system_cards import analyze_state_aliasing, load_fixture, summarize, validate_fixture  # noqa: E402
+from system_cards import (  # noqa: E402
+    analyze_noisy_history_belief,
+    analyze_state_aliasing,
+    load_fixture,
+    summarize,
+    validate_fixture,
+)
 
 
 class SystemCardTest(unittest.TestCase):
@@ -129,6 +135,54 @@ class SystemCardTest(unittest.TestCase):
             changed["contexts"][0]["action_returns"]["advance"] = invalid
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 analyze_state_aliasing(changed)
+
+    def test_noisy_history_retains_posterior_uncertainty_and_changes_action(self) -> None:
+        belief = summarize(self.fixture)["noisy_history_belief"]
+        self.assertEqual(
+            belief["posterior_by_cue"],
+            {
+                "clear_signal": {"blocked": 0.2, "clear": 0.8},
+                "blocked_signal": {"blocked": 0.8, "clear": 0.2},
+            },
+        )
+        self.assertEqual(
+            belief["selected_action_by_cue"],
+            {"clear_signal": "advance", "blocked_signal": "hold"},
+        )
+
+    def test_noisy_history_improves_but_does_not_close_oracle_regret(self) -> None:
+        belief = summarize(self.fixture)["noisy_history_belief"]
+        self.assertEqual(belief["current_only_mean_return"], 0.1)
+        self.assertEqual(belief["noisy_history_mean_return"], 0.38)
+        self.assertEqual(belief["perfect_history_mean_return"], 0.6)
+        self.assertEqual(belief["noisy_history_gain_over_current"], 0.28)
+        self.assertEqual(belief["noisy_history_mean_regret"], 0.22)
+
+    def test_noisy_history_rejects_invalid_priors(self) -> None:
+        for priors in (
+            {"clear": 0.6, "blocked": 0.6},
+            {"clear": 1.0},
+            {"clear": True, "blocked": 0.0},
+        ):
+            changed = deepcopy(self.fixture["noisy_history_belief_case"])
+            changed["context_priors"] = priors
+            with self.subTest(priors=priors), self.assertRaises(ValueError):
+                analyze_noisy_history_belief(self.fixture["state_aliasing_case"], changed)
+
+    def test_noisy_history_rejects_invalid_likelihood_contracts(self) -> None:
+        for mutation in ("missing_context", "not_normalized", "tie"):
+            changed = deepcopy(self.fixture["noisy_history_belief_case"])
+            if mutation == "missing_context":
+                del changed["cue_likelihoods"]["clear_signal"]["blocked"]
+            elif mutation == "not_normalized":
+                changed["cue_likelihoods"]["clear_signal"]["clear"] = 0.9
+            else:
+                changed["cue_likelihoods"] = {
+                    "tie_a": {"clear": 0.6, "blocked": 0.5},
+                    "tie_b": {"clear": 0.4, "blocked": 0.5},
+                }
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                analyze_noisy_history_belief(self.fixture["state_aliasing_case"], changed)
 
 
 if __name__ == "__main__":

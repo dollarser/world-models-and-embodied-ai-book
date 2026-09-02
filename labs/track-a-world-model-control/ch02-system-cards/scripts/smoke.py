@@ -28,6 +28,13 @@ def main() -> int:
         raise AssertionError("current-observation aliasing must retain the fixed decision regret")
     if metrics["state_aliasing"]["history_aware_mean_regret"] != 0.0:
         raise AssertionError("the fixed history cue must disambiguate both contexts")
+    belief = metrics["noisy_history_belief"]
+    if belief["noisy_history_mean_return"] != 0.38:
+        raise AssertionError("the authored noisy history must retain the fixed Bayes value")
+    if belief["noisy_history_gain_over_current"] != 0.28:
+        raise AssertionError("noisy history must improve over the current-only action")
+    if belief["noisy_history_mean_regret"] != 0.22:
+        raise AssertionError("noisy history must remain below the perfect-history oracle")
     report = {
         "experiment_id": "EXP-02-01",
         "status": "smoke",
