@@ -419,5 +419,4 @@ V-JEPA 2 encoder 提供观测/视频表征，可支持当前或历史特征，�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch02-state-aliasing-review-2026-09-01.md`、`reviews/ch02-noisy-history-belief-review-2026-09-02.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：系统卡基于论文与官方文档元数据，没有运行八个上游系统；

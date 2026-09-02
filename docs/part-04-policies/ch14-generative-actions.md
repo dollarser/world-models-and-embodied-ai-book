@@ -304,7 +304,7 @@ Push-T、LIBERO、LeRobot 数据、官方代码、checkpoint 与仿真资产分�
 | 论文/开源 | Diffusion Policy 方法与官方资产 | 论文/官方仓库 | `[P/O,R1]` | 本书未运行 |
 | 论文 | Flow Matching 通用训练框架 | 原论文 | `[P,R0]` | 非机器人 benchmark 复现 |
 | 开源案例 | openpi flow action head | 官方仓库 | `[O,R1]` | 大型 VLA，本书未下载 |
-| 未验证 | 24 GB 内 Push-T diffusion/flow 对照 | 后续 M/L1 | planned | GPU、数据、时延待测 |
+| 未验证 | 24 GB 内 Push-T diffusion/flow 对照 | 可选 M/L1 | planned | GPU、数据、时延待测 |
 
 ## 小结
 
@@ -399,5 +399,4 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 - 代码审查：通过；
 - 一致性审查：通过（第5章生成基础、第13章执行时域与第15章动作 schema 接口已核对）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch14-candidate-dependence-review-2026-09-02.md`、`reviews/ch14-generative-budget-review-2026-09-01.md`、`reviews/ch14-mode-frequency-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有训练 Diffusion Policy/flow policy、下载数据或 checkpoint，也未验证 GPU 与真实时延；

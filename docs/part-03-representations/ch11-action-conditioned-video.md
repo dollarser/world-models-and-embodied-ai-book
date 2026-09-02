@@ -446,5 +446,4 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch11-endpoint-cancellation-review-2026-09-02.md`、`reviews/batch-c-review.md`、`reviews/ch11-action-metric-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`；
 - 已知限制：没有训练视频模型、下载 checkpoint、申请 gated Guardrail、运行仿真或验证任何闭源案例；

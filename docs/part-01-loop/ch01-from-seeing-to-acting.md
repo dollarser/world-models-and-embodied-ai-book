@@ -280,5 +280,4 @@ u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch01-feedback-boundary-review-2026-09-01.md`、`reviews/ch01-terminal-state-aliasing-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：标量积分、比例反馈和手工 disturbance/residual，没有图像、学习模型、物理 controller、仿真、GPU、机器人或车辆。

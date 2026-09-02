@@ -228,7 +228,7 @@ make ch10-smoke
 
 本书的核心路径不下载 checkpoint。截至 2026-09-02，官方仓库列出的最小 V-JEPA 2.1 checkpoint 是 80M 参数、384 分辨率的 ViT-B/16，并提供 `vjepa2_1_vit_base_384` PyTorch Hub 符号；若扩展到官方特征，可先把它作为 S1 **预检候选**，而不是从 1B/2B 模型开始。这是型号存在性与资源排序，不是可运行结论。
 
-本次源码级预检还发现一个必须先处理的上游阻塞：[锁定快照的 `src/hub/backbones.py`](https://github.com/facebookresearch/vjepa2/blob/204698b45b3712590f06245fbfba32d3be539812/src/hub/backbones.py)把 `VJEPA_BASE_URL` 设为测试用 `http://localhost:8300`，而公开下载地址被注释。因此在普通新环境中调用 `torch.hub.load(..., pretrained=True)` 会尝试访问不存在的本地服务；README 中存在直接 checkpoint 链接不能证明 Hub 路径正常。S1 必须保持 `blocked-by-upstream-loader`，直到锁定一个经核验的修复 commit，或显式下载带校验和的 checkpoint 并使用与该权重兼容的本地 loader；本书当前不实施绕过下载。执行前还需要：
+对锁定源码的检查还发现一个必须先处理的上游阻塞：[锁定快照的 `src/hub/backbones.py`](https://github.com/facebookresearch/vjepa2/blob/204698b45b3712590f06245fbfba32d3be539812/src/hub/backbones.py)把 `VJEPA_BASE_URL` 设为测试用 `http://localhost:8300`，而公开下载地址被注释。因此在普通新环境中调用 `torch.hub.load(..., pretrained=True)` 会尝试访问不存在的本地服务；README 中存在直接 checkpoint 链接不能证明 Hub 路径正常。S1 必须保持 `blocked-by-upstream-loader`，直到锁定一个经核验的修复 commit，或显式下载带校验和的 checkpoint 并使用与该权重兼容的本地 loader；本书不采用未经核验的绕过下载。执行前还需要：
 
 1. 锁定 `facebookresearch/vjepa2` commit、实际 loader 路径、checkpoint URL 与校验和；
 2. 核验模型权重、代码和输入视频的各自许可；
@@ -282,7 +282,7 @@ M 档可在经许可的少量第一人称视频上训练轻量 masked predictor 
 | 本书结果 | 中间状态可读与时间方向/反转敏感分离 | `EXP-10-01` | CPU smoke | 八条手写三标量序列，不是视频 |
 | 方法事实 | I-JEPA/V-JEPA 预测 latent 目标 | 原论文/官方代码 | `[A/O,R1]` | 本书未运行 |
 | 方法更新 | V-JEPA 2.1 加入 dense loss 与深层监督 | 2026 预印本/官方代码 | `[A/O,R1]` | 论文结果未复现 |
-| 未验证 | 官方 ViT-B 特征的微型 probing | 后续 S1 | blocked-by-upstream-loader | 默认 Hub URL 指向 localhost；checkpoint 未下载 |
+| 未验证 | 官方 ViT-B 特征的微型 probing | 可选 S1 | blocked-by-upstream-loader | 默认 Hub URL 指向 localhost；checkpoint 未下载 |
 
 S0 使用 Python 标准库、CPU、0 字节下载和 MIT fixture，不需要 GPU。S1/M 的模型、数据、磁盘、时间和显存都保持待验证；默认不得超过 24 GB 单卡，2×80 GB 只保留为研究扩展且不是阅读前置。
 
@@ -377,5 +377,4 @@ Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-c-review.md`、`reviews/ch10-probe-shift-action-review-2026-09-01.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`；
 - 已知限制：没有下载或运行任何 I-JEPA/V-JEPA checkpoint，也没有第一人称或驾驶数据；

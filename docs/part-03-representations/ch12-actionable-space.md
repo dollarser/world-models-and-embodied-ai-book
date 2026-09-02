@@ -466,5 +466,4 @@ Observed mask 回答“哪些 cell 进入当前 benchmark 分母”，unknown �
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch12-occupancy-class-mask-review-2026-09-02.md`、`reviews/ch12-metric-grid-and-task-boundary-review-2026-09-02.md`、`reviews/part-03-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：固定 0.5 m fixture 未验证任意十进制分辨率的浮点边界；未训练 3D/occupancy 模型，Bresenham 不是 supercover 或 continuous collision checking，未下载真实数据，未运行仿真或 GPU；

@@ -348,5 +348,4 @@ gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch19-identifiability-review-2026-09-01.md`、`reviews/ch19-multi-condition-identifiability-review-2026-09-02.md`、`reviews/ch19-joint-randomization-support-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：只运行标准库标量 fixture；没有安装仿真器、下载资产、运行 GPU 或真实硬件。

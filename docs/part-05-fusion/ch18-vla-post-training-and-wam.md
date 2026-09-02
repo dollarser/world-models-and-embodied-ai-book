@@ -366,5 +366,4 @@ clean 流直接尝试两个 mixed medium 组，得到 `attempted=2 groups/6 roll
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch18-joint-support-review-2026-09-01.md`、`reviews/ch18-dynamic-rejection-distribution-review-2026-09-02.md`、`reviews/ch18-wam-implementation-snapshot-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：只有离线标量重加权，没有 VLA/RL/world-model 训练、LIBERO、物理仿真、GPU、机器人或车辆。

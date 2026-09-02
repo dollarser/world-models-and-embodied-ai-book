@@ -468,5 +468,4 @@ diffuse 行四个概率误差绝对值都是0.4，所以 squared error 都是0.1
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch09-probability-calibration-review-2026-09-02.md`、`reviews/ch09-probability-error-concentration-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：WorldArena 系列、KineBench 与两篇 2026 年预印本仅完成资料核查，未执行其数据与代码；概率 fixture 只有四行作者构造结果，不能估计总体 calibration、真实事件概率、uncertainty 或安全性；

@@ -380,5 +380,4 @@ S 档 capstone 可以在无 GPU 条件下完整表达研究问题、接口与证
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch22-artifact-provenance-review-2026-09-01.md`、`reviews/ch04-ch22-split-identity-propagation-review-2026-09-02.md`、`reviews/capstone-traceability-review-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/ch22-reproduction-receipt-review-2026-09-02.md`；
 - 已知限制：审计读取内存 fixture payload、重算摘要并执行受限本地 `python3` 字符串 probe，不遍历真实目录、不重建环境或运行模型；receipt 未签名，也没有数据、仿真、GPU、机器人、车辆或部署证据。

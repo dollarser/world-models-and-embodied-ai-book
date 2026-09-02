@@ -285,7 +285,7 @@ make ch15-smoke
 
 ## 15.9 可选 VLM API 基线
 
-闭源 API 不是必做依赖，也不要求购买额度。若用户已有权限，可在与本地策略相同的冻结观察上请求结构化高层候选，并保存：供应商、模型快照、日期、系统/用户提示、图像预处理、参数、原始响应、重试、限流、延迟、费用和安全拒绝。能力宣传标 `[V,R0]`；只有具体请求归档后，该次行为才可标 `[V,R1]`。
+闭源 API 不是必做依赖，也不要求购买额度。具备合法访问权限时，可以在与本地策略相同的冻结观察上请求结构化高层候选，并保存：供应商、模型快照、日期、系统提示与用户提示、图像预处理、参数、原始响应、重试、限流、延迟、费用和安全拒绝。能力宣传标 `[V,R0]`；只有具体请求归档后，该次行为才可标 `[V,R1]`。
 
 没有 API 时使用版本化规则基线或仓库内归档响应，不阻塞章节。不得把新请求和旧归档混进同一统计，也不能上传无授权机器人/驾驶影像。
 
@@ -414,5 +414,4 @@ Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺
 - 代码审查：通过；
 - 一致性审查：通过（已与第10/12/13/14/16/17章及第20/21章合同对齐）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch15-full-chunk-timetable-review-2026-09-02.md`、`reviews/ch15-command-integrity-review-2026-09-01.md`、`reviews/ch15-observation-action-timestep-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载或运行任何 VLA、VLM API、机器人、仿真或 GPU；

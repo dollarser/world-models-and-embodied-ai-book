@@ -383,5 +383,4 @@ critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch08-imagined-loss-weight-review-2026-09-01.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`、`reviews/ch08-truncation-trace-boundary-review-2026-09-02.md`；
 - 已知限制：只有解析 target、截断/trace 边界、累计 survival weight 和手工反例，没有 world model、actor/critic 更新、梯度、learned continuation、真实 replay 污染率、上游 checkpoint、仿真、GPU 或真实闭环。

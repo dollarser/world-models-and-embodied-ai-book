@@ -516,5 +516,4 @@ S 档只用 Python 标准库，下载 0、GPU 0、无外部资产，fixture 按 
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch20-evaluation-validity-review-2026-09-01.md`、`reviews/ch20-adaptive-retry-estimand-review-2026-09-02.md`、`reviews/ch20-clustered-paired-statistics-review-2026-09-01.md`、`reviews/ch20-zero-event-risk-review-2026-09-02.md`、`reviews/ch20-zero-event-pseudoreplication-review-2026-09-02.md`、`reviews/ch20-checkpoint-selection-bias-review-2026-09-02.md`、`reviews/ch20-paired-margin-review-2026-09-02.md`、`reviews/ch20-test-interval-equivalence-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：未运行 LIBERO、SimplerEnv、RoboArena、MetaDrive、CARLA 或真实硬件；Wilson 与零事件上界只覆盖各自声明的独立二项单位，pseudo-replication fixture 不估计 cluster 内相关性或有效样本量；cluster bootstrap 只有四个手工 route、简单 percentile 区间与宏平均 estimand，不能作为校准 population inference；exact McNemar 与独立-pair Hoeffding 负对照不提供 exact-compatible matched-binary interval、cluster/multiplicity/adaptivity 修正、正式等效性检验或功效计算；checkpoint 表是手工角色泄漏负对照，不估计期望 selection bias、候选优劣或泛化；2×2 格只是协议算术反事实；无效运行反例只验证拒绝路径，没有估计真实 reset/logging 故障率。

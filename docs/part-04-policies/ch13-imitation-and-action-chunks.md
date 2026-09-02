@@ -310,7 +310,7 @@ S 档下载量 0、无 GPU、无外部数据，代码和 fixture 按 MIT 发布�
 
 ## 下一章接口
 
-第14章会把单峰回归替换为生成式动作分布。本文的闭环协议、chunk 对照、时延和安全门禁继续适用；若不运行 GPU 实验，可以只使用 `EXP-13-01` 理解接口后继续阅读。
+第14章会把单峰回归替换为生成式动作分布。本章建立的闭环协议、chunk 对照、时延和安全门禁仍然适用；读者无需运行 GPU 实验，也可以通过 `EXP-13-01` 的反例理解接口后继续阅读。
 
 ## 验收与审查记录
 
@@ -325,5 +325,4 @@ S 档下载量 0、无 GPU、无外部数据，代码和 fixture 按 MIT 发布�
 - 代码审查：通过；
 - 一致性审查：通过（当前 schema 与策略主线接口；第3章进入 `reviewed` 后仍按全书统稿流程复核）；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch13-expert-support-rollout-review-2026-09-02.md`、`reviews/batch-b-review.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`、`reviews/ch13-action-error-correlation-review-2026-09-02.md`；
 - 已知限制：新增反馈 rollout 仍是单状态支持集和两个手写标量规则；未运行 LeRobot、BC 或 ACT，GPU 与数据资源均待验证。

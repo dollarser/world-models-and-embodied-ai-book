@@ -206,7 +206,7 @@ sequenceDiagram
 
 官方 API 还暴露按秒定义的 `delta_timestamps` 时间窗口和 `tolerance_s` 同步容差，但具体字段和行为可能继续变化。正式实验必须锁定 LeRobot commit 或发布版本，并先审计目标数据集自己的 metadata；不能仅凭“LeRobot 格式”推断数据质量、许可、缺帧策略或可复现性。
 
-本书当前不下载公开机器人数据。`EXP-04-01` 首先使用微型本地 metadata fixture 验证审计逻辑，之后才允许在用户确认下载量和许可后指向真实数据集。
+本章不依赖公开机器人数据下载。`EXP-04-01` 使用微型本地 metadata fixture 解释审计逻辑；若扩展到真实数据集，必须先确认下载量、用途与许可。
 
 ## 4.8 基线不是装饰
 
@@ -301,7 +301,7 @@ make ch04-smoke
 
 这仍只是已知错误注入测试。它不能证明真实 LeRobot、机器人或驾驶数据不存在其他问题，也没有检查视频解码、标定、隐私和第三方许可。
 
-M 档选做路径才会在用户确认后审计一个锁定版本的真实数据集，并报告预计下载量、磁盘占用和许可。
+M 档选做路径可以审计一个锁定版本的真实数据集，但必须在下载前报告预计下载量、磁盘占用和许可。
 
 ## 4.13 一份最低实验协议
 
@@ -432,5 +432,4 @@ S 档使用几条程序化 metadata：验证 schema、frame/unit/timestamp、spl
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch04-content-identity-leakage-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：真实 LeRobot/驾驶数据审计和复杂 normalization 管线尚未执行；

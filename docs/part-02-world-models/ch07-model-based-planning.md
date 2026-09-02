@@ -368,5 +368,4 @@ CEM/shooting 与 tree search 以不同方式分配模型查询；搜索更强既
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/final-book-review.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`、`reviews/ch07-fractional-tail-risk-review-2026-09-02.md`；
 - 已知限制：穷举已知三状态规则和五个手工风险场景；fixed-budget 对照只覆盖一个扰动、一个 deadline 和手工 terminal value，没有 learned model、CEM/MCTS、概率校准、仿真、GPU 或真实闭环。

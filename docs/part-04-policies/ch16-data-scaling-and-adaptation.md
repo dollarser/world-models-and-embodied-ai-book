@@ -352,7 +352,7 @@ L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游
 | 数据格式 | LeRobot Dataset v3 | 官方文档 | `[O,R1]` | 版本会漂移 |
 | 诊断基准 | XEWorld held-out-embodiment 协议 | arXiv v1 | `[A,R0]` | 协议已审计；代码、数据、模型和作者结果均未复现 |
 | 适配案例 | OpenVLA-OFT | 论文/官方仓库 | `[A/O,R1]` | 上游结果，本书未运行 |
-| 未验证 | 24 GB 内 adapter/SmolVLA 适配 | 后续 M/L1 | planned | 数据、GPU、迁移待测 |
+| 未验证 | 24 GB 内 adapter/SmolVLA 适配 | 可选 M/L1 | planned | 数据、GPU、迁移待测 |
 
 ## 小结
 
@@ -452,5 +452,4 @@ stride one、drop-tail 时，长度 `L` 的 episode 只有 `max(L-H+1,0)` 个连
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch16-adapter-version-review-2026-09-01.md`、`reviews/ch16-mixture-exposure-review-2026-09-02.md`、`reviews/ch16-held-out-embodiment-review-2026-09-02.md`、`reviews/ch16-source-snapshot-review-2026-09-02.md`、`reviews/part-04-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有下载真实数据、训练 adapter/VLA、运行仿真或 GPU；

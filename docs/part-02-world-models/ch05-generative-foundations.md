@@ -384,5 +384,4 @@ VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch05-diagnostic-review-2026-09-01.md`、`reviews/ch05-ch09-ch21-epistemic-gate-review-2026-09-02.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：只有解析标量 fixture；mode recall 与 support 外质量只相对手工观察集合定义，ensemble 成员、OOD/failure 标签、误差容差和阈值也是手写的，没有训练神经网络、估计 risk/calibration、图像/视频或 GPU。

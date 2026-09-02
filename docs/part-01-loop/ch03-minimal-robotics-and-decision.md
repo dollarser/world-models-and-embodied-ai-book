@@ -464,5 +464,4 @@ episode:
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch03-temporal-alignment-review-2026-09-01.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有真实相机、机器人、畸变、动力学、接触、clock synchronization、一般 `SE(3)` pose interpolation 或 scan deskew 运行；

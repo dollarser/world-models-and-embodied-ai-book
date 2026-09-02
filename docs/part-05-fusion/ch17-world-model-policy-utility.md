@@ -315,7 +315,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 | 论文/部分代码 | 同一 action-to-video 先验分化为 simulator 与 policy | A2World | `[P/O,R1]` | 当前仓库聚焦 world-model/A2World-sim；policy 与论文结果未复现 |
 | 开源平台 | 生成/动作条件 world foundation model | Cosmos | `[O,R1]` | 版本和许可会漂移 |
 | 论文/代码 | 世界模型代理策略评测 | WorldEval、WorldGym | `[A/O,R1]` | 相关/排序不等于真实绝对值 |
-| 未验证 | 24 GB 内 learned simulator 对照 | 后续 M/L1 | planned | GPU、仿真、数据待验证 |
+| 未验证 | 24 GB 内 learned simulator 对照 | 可选 M/L1 | planned | GPU、仿真、数据待验证 |
 
 ## 小结
 
@@ -410,5 +410,4 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch17-in-support-model-error-review-2026-09-01.md`、`reviews/ch17-dual-use-world-model-review-2026-09-02.md`、`reviews/ch17-component-attribution-review-2026-09-02.md`、`reviews/ch17-prospective-policy-ranking-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`、`reviews/upstream-runnability-audit-2026-09-02.md`（前序记录：`reviews/ch17-support-gate-review-2026-09-01.md`）；
 - 已知限制：两套 support、一个 held-out policy 与四段故障都是手工构造；只验证 coverage、时间化 policy split 与组件归因机制，不估计 learned simulator 的新策略泛化率、真实组件故障率、相关性或可加总预算；未运行上游 checkpoint、仿真、机器人、车辆或 GPU；

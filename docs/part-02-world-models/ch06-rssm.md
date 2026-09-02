@@ -455,5 +455,4 @@ filtering 在预测后读取当前观测；posterior-anchored one-step prior 的
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch06-posterior-leakage-review-2026-09-02.md`、`reviews/batch-a-review.md`、`reviews/ch06-kl-routing-review-2026-09-01.md`、`reviews/ch06-benchmark-kl-contract-review-2026-09-02.md`、`reviews/part-02-exercise-self-check-review-2026-09-02.md`；
-- 已知限制与下一步：PyTorch mini-RSSM、24 GB 单卡资源和完整训练仍待后续阶段验证。
+- 证据边界：PyTorch mini-RSSM、24 GB 单卡资源和完整训练均未验证，也不是理解本章状态递推与损失接口的前提。

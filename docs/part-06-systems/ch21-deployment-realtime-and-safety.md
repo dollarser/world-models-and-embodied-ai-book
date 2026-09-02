@@ -544,5 +544,4 @@ QoS deadline 能报告数据未按期到达，但不会证明 callback、模型�
 - 代码审查：通过；
 - 一致性审查：通过；
 - 教学审查：通过；
-- 审查记录路径：`reviews/ch21-command-epoch-idempotency-review-2026-09-02.md`、`reviews/ch21-runtime-fallback-review-2026-09-01.md`、`reviews/ch21-reactivation-authorization-review-2026-09-01.md`、`reviews/ch21-fallback-lifecycle-review-2026-09-02.md`、`reviews/ch15-ch21-reactivation-receipt-review-2026-09-02.md`、`reviews/current-asset-version-consistency-review-2026-09-02.md`、`reviews/fast-moving-source-audit-2026-09-01.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-05-part-07-exercise-self-check-review-2026-09-02.md`；
 - 已知限制：没有测量真实墙钟、调度器、网络、模型、uncertainty estimator、ROS、机器人、车辆或 GPU；严重度权重、异步 schedule、状态机和 receipt 均为手工离散合同，不验证真实后果、执行器可达性、MRM 完成、身份认证、消息完整性或安全认证。
