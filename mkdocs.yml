@@ -65,6 +65,7 @@ nav:
   - 第七部分：综合项目与持续研究:
       - 第22章 端到端综合项目：一个可审计的具身研究闭环: part-07-capstone/ch22-auditable-capstone.md
   - 持续更新:
+      - 核心参考文献与一手资料: references.md
       - 研究雷达: research-radar.md
       - 开放出版、引用与勘误: open-book.md
   - 版本与维护:
