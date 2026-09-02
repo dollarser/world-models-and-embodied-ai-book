@@ -179,6 +179,62 @@ def dynamic_rejection_report(
     }
 
 
+def resampling_history_audit() -> dict[str, object]:
+    """Contrast two attempt histories that yield the same used training batch."""
+    clean = dynamic_rejection_report(
+        (
+            ("medium", (1.0, 0.0, 0.0)),
+            ("medium", (0.0, 1.0, 0.0)),
+        )
+    )
+    rejection_heavy = dynamic_rejection_report(
+        (
+            ("easy", (1.0, 1.0, 1.0)),
+            ("hard", (0.0, 0.0, 0.0)),
+            ("medium", (1.0, 0.0, 0.0)),
+            ("medium", (0.0, 1.0, 0.0)),
+        )
+    )
+    clean_nonzero_used = {
+        label: fraction
+        for label, fraction in clean["used_difficulty_distribution"].items()
+        if fraction > 0.0
+    }
+    rejection_heavy_nonzero_used = {
+        label: fraction
+        for label, fraction in rejection_heavy["used_difficulty_distribution"].items()
+        if fraction > 0.0
+    }
+    same_used_batch_summary = (
+        clean["used_group_count"] == rejection_heavy["used_group_count"]
+        and clean["used_rollout_count"] == rejection_heavy["used_rollout_count"]
+        and clean_nonzero_used == rejection_heavy_nonzero_used
+    )
+    summary_keys = (
+        "attempted_group_count",
+        "attempted_rollout_count",
+        "rejected_group_count",
+        "rejected_rollout_count",
+        "used_group_count",
+        "used_rollout_count",
+        "attempted_difficulty_distribution",
+        "used_difficulty_distribution",
+    )
+    return {
+        "same_used_batch_summary": same_used_batch_summary,
+        "clean_history": {key: clean[key] for key in summary_keys},
+        "rejection_heavy_history": {key: rejection_heavy[key] for key in summary_keys},
+        "attempted_rollout_ratio": round(
+            rejection_heavy["attempted_rollout_count"] / clean["attempted_rollout_count"],
+            12,
+        ),
+        "hidden_extra_attempted_rollouts": (
+            rejection_heavy["attempted_rollout_count"] - clean["attempted_rollout_count"]
+        ),
+        "scope": "two authored deterministic attempt streams; not an expected resampling cost",
+    }
+
+
 def evaluate() -> dict[str, object]:
     uniform = summarize((1.0, 1.0, 1.0, 1.0))
     reward_weighted = summarize((3.0, 3.0, 1.0, 1.0))
@@ -212,4 +268,5 @@ def evaluate() -> dict[str, object]:
                 ("medium", (0.0, 1.0, 0.0)),
             )
         ),
+        "resampling_history_audit": resampling_history_audit(),
     }

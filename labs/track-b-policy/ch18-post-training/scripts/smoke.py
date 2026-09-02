@@ -36,6 +36,11 @@ def main() -> int:
         raise AssertionError("zero-advantage rejection must expose the changed used-context distribution")
     if metrics["dynamic_rejection"]["rejected_rollout_count"] != 6:
         raise AssertionError("rejected rollout count must remain explicit rather than inferred")
+    history = metrics["resampling_history_audit"]
+    if not history["same_used_batch_summary"]:
+        raise AssertionError("both histories must yield the same nonzero used-batch summary")
+    if history["attempted_rollout_ratio"] != 2.0:
+        raise AssertionError("rejection-heavy history must require twice the authored rollout attempts")
     report = {
         "experiment_id": "EXP-18-01",
         "status": "smoke",

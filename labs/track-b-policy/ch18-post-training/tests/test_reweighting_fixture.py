@@ -14,6 +14,7 @@ from reweighting_fixture import (  # noqa: E402
     joint_support_report,
     leave_one_out_advantages,
     mean_absolute_error,
+    resampling_history_audit,
     summarize,
     within_dataset_support,
 )
@@ -106,6 +107,28 @@ class ReweightingFixtureTests(unittest.TestCase):
                 summarize(weights)
         with self.assertRaises(ValueError):
             mean_absolute_error((0.0,), (0.0, 1.0))
+
+    def test_same_used_batch_can_hide_different_attempt_histories(self):
+        audit = resampling_history_audit()
+        self.assertTrue(audit["same_used_batch_summary"])
+        self.assertEqual(audit["clean_history"]["used_rollout_count"], 6)
+        self.assertEqual(audit["rejection_heavy_history"]["used_rollout_count"], 6)
+
+    def test_rejection_history_doubles_attempted_rollout_cost(self):
+        audit = resampling_history_audit()
+        self.assertEqual(audit["clean_history"]["attempted_rollout_count"], 6)
+        self.assertEqual(audit["rejection_heavy_history"]["attempted_rollout_count"], 12)
+        self.assertEqual(audit["attempted_rollout_ratio"], 2.0)
+
+    def test_used_only_summary_hides_rejected_contexts(self):
+        audit = resampling_history_audit()
+        self.assertEqual(audit["clean_history"]["rejected_group_count"], 0)
+        self.assertEqual(audit["rejection_heavy_history"]["rejected_group_count"], 2)
+        self.assertEqual(audit["hidden_extra_attempted_rollouts"], 6)
+
+    def test_evaluate_registers_resampling_history_audit(self):
+        audit = evaluate()["resampling_history_audit"]
+        self.assertEqual(audit["attempted_rollout_ratio"], 2.0)
 
 
 if __name__ == "__main__":

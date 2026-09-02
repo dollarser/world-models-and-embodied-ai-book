@@ -75,6 +75,32 @@
         ]
       }
     },
+    "resampling_history_audit": {
+      "attempted_rollout_ratio": 2.0,
+      "clean_history": {
+        "attempted_difficulty_distribution": {"medium": 1.0},
+        "attempted_group_count": 2,
+        "attempted_rollout_count": 6,
+        "rejected_group_count": 0,
+        "rejected_rollout_count": 0,
+        "used_difficulty_distribution": {"medium": 1.0},
+        "used_group_count": 2,
+        "used_rollout_count": 6
+      },
+      "hidden_extra_attempted_rollouts": 6,
+      "rejection_heavy_history": {
+        "attempted_difficulty_distribution": {"easy": 0.25, "hard": 0.25, "medium": 0.5},
+        "attempted_group_count": 4,
+        "attempted_rollout_count": 12,
+        "rejected_group_count": 2,
+        "rejected_rollout_count": 6,
+        "used_difficulty_distribution": {"easy": 0.0, "hard": 0.0, "medium": 1.0},
+        "used_group_count": 2,
+        "used_rollout_count": 6
+      },
+      "same_used_batch_summary": true,
+      "scope": "two authored deterministic attempt streams; not an expected resampling cost"
+    },
     "reward_weighted": {
       "action_target": [
         0.4,

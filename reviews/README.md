@@ -89,6 +89,7 @@
 - [第17章等准确率错误位置审查](ch17-equal-accuracy-error-location-review-2026-09-02.md)
 - [第18章联合支持审查](ch18-joint-support-review-2026-09-01.md)
 - [第18章 dynamic rejection 分布审查](ch18-dynamic-rejection-distribution-review-2026-09-02.md)
+- [第18章重采样历史可辨识性审查](ch18-resampling-history-identifiability-review-2026-09-02.md)
 - [第18章 WAM 实现快照审查](ch18-wam-implementation-snapshot-review-2026-09-02.md)
 - [第19章参数可辨识性审查](ch19-identifiability-review-2026-09-01.md)
 - [第19章多工况可辨识性审查](ch19-multi-condition-identifiability-review-2026-09-02.md)
