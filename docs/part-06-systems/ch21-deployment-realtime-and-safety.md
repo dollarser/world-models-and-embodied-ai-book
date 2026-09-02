@@ -107,15 +107,20 @@ Fail-closed 能防止未知命令继续执行，却可能让系统频繁停止�
 
 [OpenVLA-OFT 官方仓库](https://github.com/openvla/openvla) 报告连续动作和更快解码 `[O,R1]`，但“比基线快若干倍”不等于满足指定机器人端到端 deadline。部署前仍要用目标相机、预处理、网络、设备和控制器实测。
 
-## 21.4 EXP-21-01：均值通过，控制周期仍超时
+## 21.4 均值通过，控制周期仍超时（EXP-21-01）
 
 固定延迟为 `20, 22, 24, 26, 28, 150 ms`，deadline 为 50 ms。另用七个 packet 分别覆盖健康、旧观测、超时、非有限动作、越界、过期 chunk 和超过阈值的不确定性分数。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch21-test-local
 make ch21-smoke-local
 make ch21-smoke
 ```
+
+</details>
 
 | 延迟指标 | 固定结果 | 解释边界 |
 | --- | ---: | --- |

@@ -152,15 +152,20 @@ diffusion 与 flow 的核心共同点，是都引入一条从简单分布到数�
 
 视频生成器可能满足第一项的一部分，却忽略动作；动作条件生成器可能输出逼真片段，却没有稳定 latent 供规划反复查询；一个不生成像素的 latent dynamics 反而可能完整满足决策接口。因此“生成能力”“环境动力学”“可用于决策”应看成逐级增加的合同，而不是同义词。
 
-## 5.7 EXP-05-01：均值落在两个合法未来之间
+## 5.7 均值落在两个合法未来之间（EXP-05-01）
 
 fixture 有 `fork` 和 `left_only` 两种上下文。`fork` 的未来为 `-1/+1` 各半；MSE 点预测为 0。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch05-test-local
 make ch05-smoke-local
 make ch05-smoke
 ```
+
+</details>
 
 | 指标 | 固定结果 |
 | --- | ---: |

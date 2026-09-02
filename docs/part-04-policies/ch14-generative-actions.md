@@ -137,7 +137,7 @@ receding horizon 缩短了盲执行时间，却引入新的决策问题：相邻
 
 因此系统应分别描述 proposal distribution、acceptance rule 与 selection rule。前者回答模型提出什么，第二项回答什么被允许，第三项回答允许集合中执行什么。所谓 best-of-N 收益是整个生成与选择系统的性质，不能只归功于生成模型。
 
-## 14.5 EXP-14-01：双峰动作与采样接口
+## 14.5 双峰动作与采样接口（EXP-14-01）
 
 S 档 fixture 设同一观测下有两个等权有效标量动作 `-1` 和 `+1`，容差为 `0.25`。它比较：
 
@@ -145,11 +145,16 @@ S 档 fixture 设同一观测下有两个等权有效标量动作 `-1` 和 `+1`�
 - `mode_refinement`：从 10 个固定 base 样本迭代靠近最近模式，仅模拟多步调用接口；
 - `oracle_straight_flow`：已知 base—target 配对后沿直线积分，只验证 solver 合同。
 
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
+
 ```bash
 make ch14-test-local
 make ch14-smoke-local
 make ch14-smoke
 ```
+
+</details>
 
 | 方法 | 平均最近模式距离 ↓ | 无效动作率 ↓ | 覆盖模式数 ↑ | 每样本模型求值数 |
 | --- | ---: | ---: | ---: | ---: |

@@ -77,15 +77,20 @@ CV 工程师熟悉训练/测试域偏移；闭环还增加 policy-induced distri
 
 [DAgger](https://arxiv.org/abs/1011.0686)是理解 imitation learning 分布偏移的经典论文锚点 `[P,R1]`：它把学习策略诱导的状态分布纳入数据收集。该思想不表示所有问题都要在线向专家查询，也不能绕过真实交互成本和安全约束。
 
-## 1.3 EXP-01-01：相同 MAE，不同后果
+## 1.3 相同 MAE，不同后果（EXP-01-01）
 
 fixture 把视觉/策略误差抽象成施加到单位增益标量系统的 residual action。两组五步 residual 的绝对值都为 0.1：一组持续同号，另一组正负交替。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch01-test-local
 make ch01-smoke-local
 make ch01-smoke
 ```
+
+</details>
 
 | 序列 | 逐步 residual MAE | 最终 lateral state | 最大绝对 state | 是否越过 0.3 教学边界 |
 | --- | ---: | ---: | ---: | --- |

@@ -166,7 +166,7 @@ VLA 可能在内部表示物体、因果或未来，但 probe 读得出状态不
 
 架构图中的模块名称也不能替代行为证据。一个名为 planner 的网络可能只做下一动作回归，一个 action expert 可能隐式编码长时任务信息，一个带 future token 的主干也可能从未让策略使用这些 token。系统分类应依据输入、输出、训练信号和可查询行为，而不是依据论文命名或参数规模。
 
-## 15.6 EXP-15-01：统一动作合同与执行网关
+## 15.6 统一动作合同与执行网关（EXP-15-01）
 
 S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测最多 3 步但每次最多执行 1 步、命令最大年龄 100 ms，并要求单调 `command_id`、共同的 `control_monotonic_ms` clock、与当前调度槽一致的 `observation_timestep` 和 `first_action_timestep`，以及从首动作槽开始逐一递增的完整 `action_timesteps`。该 schema 现在只有一个可执行定义 `labs/shared/action_schema.py`；第15章负责生成/packet 合同，第21章直接导入同一对象做部署范围、逐字段变化与前序身份检查，不再复制第二份常量。
 
@@ -178,11 +178,16 @@ S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序
 - 五档教学 tokenizer 编码为 `(3,1)`，解码归一化值 `(0.5,-0.5)`；
 - flow 头产生三步 chunk，网关只放行一步前缀。
 
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
+
 ```bash
 make ch15-test-local
 make ch15-smoke-local
 make ch15-smoke
 ```
+
+</details>
 
 | 检查 | 固定结果 | 证据边界 |
 | --- | ---: | --- |

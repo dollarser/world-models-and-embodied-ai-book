@@ -266,7 +266,7 @@ prepare/smoke/train/evaluate/report 命令
 
 `CLAIM-04-05`（fact）：本书 Schema 允许 planned 实验没有指标，但从 smoke 开始强制要求 smoke/evaluate/report 命令和至少一个指标；到 reproducible 时还会拒绝 `UNCOMMITTED` 和 `license pending`。
 
-## 4.12 EXP-04-01：数据契约审计
+## 4.12 数据契约审计（EXP-04-01）
 
 S 档实验将使用一个可随书分发的微型 metadata fixture，检查：
 
@@ -280,11 +280,16 @@ S 档实验将使用一个可随书分发的微型 metadata fixture，检查：
 
 当前实验已达到 `smoke`，不会下载真实 LeRobot 数据。运行命令：
 
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
+
 ```bash
 make ch04-smoke-local
 make ch04-test-local
 make ch04-smoke
 ```
+
+</details>
 
 有效 fixture 含两个三帧 episode：一个自然终止、一个外部截断；两个相机流共有一个显式 masked sample，其余有效样本相对主时间戳最大偏差为 0.01 秒，审计问题数为 0。注入 fixture 的 13 类错误全部检出：动作越界、非布尔结束标志、跨 split group 泄漏、同源 raw log、相同精确内容指纹、相同近重复簇、缺少必需传感器记录、frame index 不连续、归一化 scope 错误、normalization source 含 eval、统计值与来源不一致、传感器偏差超限，以及主时间戳 cadence 错误。其中身份泄漏 episode 保持不同 `group_id`，避免把三项身份检查误解释为已有 group 检查的别名。
 

@@ -171,7 +171,7 @@ flowchart TB
 
 本书默认通用仿真选择为：机器人动力学优先 MuJoCo 或已有官方评测接口的轻量任务环境；驾驶闭环优先 MetaDrive，CARLA 作为高保真扩展。第19章已锁定这一分工；它们均不是完成 S 档正文的前提。
 
-## 20.5 EXP-20-01：同一结果表，四格协议
+## 20.5 同一结果表，四格协议（EXP-20-01）
 
 固定 fixture 有 8 个有效 episode：4 个 easy、4 个 hard；其中包含目标未达、到达后碰撞、到达但人工介入等情况。`hard-2` 是达到时间上限的有效 `truncated` episode：它没有完成任务，仍作为失败留在完整协议分母中。假想模型和原始结果完全不变，只在两个预先定义的因素上切换评测设置：任务总体为 `easy/full`，成功定义为 `goal-only/safety-aware`。
 
@@ -180,11 +180,16 @@ flowchart TB
 - `full_goal_only`：完整任务，达到目标即成功；
 - `full_safety_aware`：完整任务，达到目标且无碰撞、无介入。
 
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
+
 ```bash
 make ch20-test-local
 make ch20-smoke-local
 make ch20-smoke
 ```
+
+</details>
 
 | 任务总体 | 成功定义 | 成功数/episode | 成功率 | Wilson 95% 区间 | 碰撞率 | 介入率 |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |

@@ -202,15 +202,20 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 
 代理评测要预注册真实性锚点：至少保留一组未用于训练世界模型或 scorer 的独立仿真/硬件 episode，报告 Pearson/Spearman、逐策略偏差、置信区间、错误排序、失败视频、scorer confusion matrix 和新增策略后的校准漂移。策略数量很少或分数并列时，Spearman 必须使用平均秩并报告区间；全体分数相同则相关系数未定义，不能记成零。若只公布相关性最高的子集，就无法判断筛选器何时失效。
 
-## 17.8 EXP-17-01：8/9 正确仍选中碰撞策略
+## 17.8 8/9 正确仍选中碰撞策略（EXP-17-01）
 
 S 档 corridor fixture 有三个固定策略：四步前进的 `safe_route`、一步 `phantom_shortcut` 和原地等待的 `idle`。学习世界模型在 9 个测试转移中与真实规则一致 8 个，只把起点 `shortcut` 错误预测为直接到达；真实规则中它会碰撞。训练支持集只包含各位置的 `advance/wait`，所以 `shortcut` 虽然得到高置信回报，仍是显式 support 外查询。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch17-test-local
 make ch17-smoke-local
 make ch17-smoke
 ```
+
+</details>
 
 | 指标 | 固定结果 | 解释边界 |
 | --- | ---: | --- |

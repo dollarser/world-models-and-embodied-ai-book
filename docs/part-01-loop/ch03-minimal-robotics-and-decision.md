@@ -242,15 +242,20 @@ y=l_1\sin q_1+l_2\sin(q_1+q_2).
 
 `CLAIM-03-04`（fact）：在部分可观测任务中，单次观测通常不足以等同真实状态；历史或状态估计器用于形成任务相关信念。该定义与第2章术语契约一致。
 
-## 3.8 EXP-03-01：几何、时间与反馈的四个精确 smoke
+## 3.8 几何、时间与反馈的四个精确 smoke（EXP-03-01）
 
 实验完全使用 Python 标准库和程序化 fixture：三个 RGB-D 像素先反投影、变换和栅格化；同一 body 点用匹配/过期位姿变到世界坐标；二维机械臂再比较固定开环增量与带噪观测的比例反馈。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch03-test-local
 make ch03-smoke-local
 make ch03-smoke
 ```
+
+</details>
 
 | 检查 | 固定结果 | 应如何解释 |
 | --- | ---: | --- |

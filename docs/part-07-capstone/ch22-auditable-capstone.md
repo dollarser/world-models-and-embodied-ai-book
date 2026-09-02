@@ -143,15 +143,20 @@ flowchart LR
 
 本书采用一个轻量 manifest：每项资产至少有 `uri`、内容 `sha256`、`producer_stage`、`claim_ids`，trace stage 再记录 `artifact`、`chapter`、`revision`、`decision` 和冻结依赖。这借鉴 [SLSA provenance](https://slsa.dev/spec/v1.2/provenance)用 digest 绑定产物身份、记录产物怎样生成的原则，也与 [RO-Crate](https://www.researchobject.org/ro-crate/specification/1.2/introduction.html)把数据、代码、工作流和 provenance 聚合为 research object 的方向一致。SHA-256 能发现本次包内内容漂移，但不能证明内容真实、许可有效、程序无恶意或实验结论正确；这些仍需执行、复核和独立评测。
 
-## 22.5 EXP-22-01：先审项目包，再审模型
+## 22.5 先审项目包，再审模型（EXP-22-01）
 
 S 档审计器检查两个手工 driving project package fixture。完整包包含问题、claim、许可、三分区 × 四身份维度的数据隔离、五类带摘要的 artifact binding、绑定 command/result digest 的执行回执、可对照预期与实际问题的失败注入、局限、S 档资源、冻结且独立的评测、驾驶指标、可追溯 safety gateway，以及五段跨章证据 trace；故意不完整包违反这些合同。v5 还实际启动三个不经过 shell 的固定 `python3` 子进程，分离成功且输出摘要匹配、输出漂移和非零退出。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch22-test-local
 make ch22-smoke-local
 make ch22-smoke
 ```
+
+</details>
 
 | 包 | issue 数 | 是否接受 | 关键结果 |
 | --- | ---: | --- | --- |

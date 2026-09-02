@@ -167,15 +167,20 @@ probe 结果至少有三层解释：
 
 同样，高 probe 分数不证明因果可用。若天气与制动标签在训练集中相关，表示可以轻易读出天气并预测制动，却无法回答保持场景不变、改变动作后的后果。要进入规划用途，probe 之外仍需时间、动作和闭环层面的干预证据。
 
-## 10.6 EXP-10-01：重建、任务与时间 probe 的非等价性
+## 10.6 重建、任务与时间 probe 的非等价性（EXP-10-01）
 
 本章 S0 smoke 构造两个信号分量：低幅度的任务变量和高幅度纹理。probe 仅用四个训练样本拟合，再在未参与拟合的四个 ID 样本和四个纹理相关性反转样本上评测。三个手工表征分别保留纹理、任务变量或全部坍塌。这个双测试集设计特意让外观捷径先“看起来有效”，再暴露其失效。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch10-test-local
 make ch10-smoke-local
 make ch10-smoke
 ```
+
+</details>
 
 | 表征 | 重建 MSE ↓ | ID probe accuracy ↑ | shifted probe accuracy ↑ | shifted task RMSE ↓ |
 | --- | ---: | ---: | ---: | ---: |

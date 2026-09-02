@@ -140,15 +140,20 @@ ACT 的 temporal ensemble 会把不同查询对当前动作的重叠预测做指
 
 [ACT 原仓库评测脚本快照 `742c753`](https://github.com/tonyzhaozh/act/blob/742c753c0d4a5d87076c8f69e5628c79a8cc5488/imitate_episodes.py)把 `m` 固定为 `0.01`；LeRobot 快照 `128d332` 的[配置默认说明](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)也是 `0.01`，其 [`ACTTemporalEnsembler`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/modeling_act.py)明确让 `i=0` 对应最旧预测。正的 `m` 因而给旧预测更大权重：它能抑制逐次查询抖动，也会在目标真的变化时产生惯性。权重方向、系数、reset 时机和有效 mask 都是协议字段，不能只写“使用 temporal aggregation”。
 
-## 13.5 EXP-13-01：四个协议反例
+## 13.5 四个协议反例（EXP-13-01）
 
 S 档实验使用 Python 标准库，不训练模型。第一部分令专家动作始终为零，在单位增益标量积分器中比较两列 20 步动作误差：持续 `+0.02` 与 `+0.02/-0.02` 交替。两者 teacher-forced RMSE 和 MAE 都是 `0.02`，最终积分状态误差却分别是 `0.40` 与 `0`。这个系统没有观测依赖反馈，只是误差传播负对照，不能称为闭环策略评测。第二部分用一个专家支持点和两个手写反馈规则，显式连接离线拟合与扰动后的 rollout。第三部分固定 `K_pred=8`，只改变 `K_exec=1/4/8`，并枚举 16 步任务中初始查询之后的 15 个动作边界；这样 policy query—陈旧权衡来自固定周期执行政策，而不是同时更换模型输出长度。第四部分对四个重叠标量预测应用 `m=0.01` 的 temporal ensemble。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch13-test-local
 make ch13-smoke-local
 make ch13-smoke
 ```
+
+</details>
 
 ### 13.5.1 专家支持集上的零误差不约束离开支持集后的反馈方向
 

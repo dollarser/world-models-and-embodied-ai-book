@@ -137,15 +137,20 @@ MuZero 一类方法进一步说明：模型可以围绕规划所查询的 reward
 
 这揭示了“任务相关压缩”的精确含义：模型可以丢弃对指定决策族无影响的信息，但不能预先假定什么信息永远无关。改变任务、约束、控制频率或动作空间，都可能重新定义需要保留的状态。价值等价是一种带量词的关系，不是模型脱离使用场景后的永久属性。
 
-## 7.6 EXP-07-01：短视、terminal value 与重规划
+## 7.6 短视、terminal value 与重规划（EXP-07-01）
 
 手工 MDP 有状态 `0→1→2`。`advance` 前进并付出 `-0.1`，`harvest` 终止；只有状态 2 harvest 才得 `1.0`。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch07-test-local
 make ch07-smoke-local
 make ch07-smoke
 ```
+
+</details>
 
 | 设置 | 首个动作/序列 | 固定 return |
 | --- | --- | ---: |

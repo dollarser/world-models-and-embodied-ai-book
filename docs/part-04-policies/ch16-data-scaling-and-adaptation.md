@@ -154,7 +154,7 @@ canonical schema 至少包含字段名称/顺序、frame、单位、时间定义
 
 逐本体归一化会把不同物理范围映射到相似数值分布，有利于共享主干，却可能隐藏绝对能力差异。例如相同归一化值在小型机械臂和长臂上对应不同位移，在不同车辆上对应不同减速度。模型若需要依据能力边界决策，就必须同时获得本体参数或可执行范围，而不能只看到归一化动作。
 
-## 16.5 EXP-16-01：shape 相同，语义相反
+## 16.5 shape 相同，语义相反（EXP-16-01）
 
 S 档 fixture 有两个二维动作 schema，任务语义相同：
 
@@ -165,11 +165,16 @@ S 档 fixture 有两个二维动作 schema，任务语义相同：
 
 每条记录还携带由本体 ID、字段顺序、单位、缩放、夹爪极性和 canonical schema 计算的 SHA-256 fingerprint。fixture 注入缺失本体、缺失 fingerprint 和陈旧 fingerprint 三类合同错误；只要转换语义变化，fingerprint 就必须变化。它不是安全签名，也不能证明数据内容真实，只用于阻止“配置已变、旧记录仍被静默解码”。
 
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
+
 ```bash
 make ch16-test-local
 make ch16-smoke-local
 make ch16-smoke
 ```
+
+</details>
 
 | 检查 | 固定结果 | 解释 |
 | --- | ---: | --- |

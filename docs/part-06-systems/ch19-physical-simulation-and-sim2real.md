@@ -164,15 +164,20 @@ Domain randomization 不只是给参数加噪声，而是在训练目标中规�
 
 随机化范围应来自测量、不确定性或明确压力测试，而不是看到迁移失败后无限扩张。训练随机化、选择模型所用的 validation 分布和最终目标分布应分开；反复根据目标测试调范围，会把目标环境变成隐式训练集。
 
-## 19.6 EXP-19-01：零校准误差与“更多数据”都可能不可辨识
+## 19.6 零校准误差与“更多数据”都可能不可辨识（EXP-19-01）
 
 S 档 fixture 用一个标量状态演示执行器增益、动作延迟和观测尺度。目标系统固定为 `gain=0.8`、`delay=1`、`scale=1.25`；12 个候选组合在校准动作上网格搜索。关键是 observation 只依赖 `gain×scale`：目标的 `0.8×1.25` 与候选 `1.0×1.0` 相同，因此 observation-only 本来就无法分离二者。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch19-test-local
 make ch19-smoke-local
 make ch19-smoke
 ```
+
+</details>
 
 | 条件 | state MAE | observation MAE | terminal error |
 | --- | ---: | ---: | ---: |

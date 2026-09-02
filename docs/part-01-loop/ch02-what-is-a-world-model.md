@@ -261,7 +261,7 @@ CV 工程师可以沿四步迁移已有经验：
 
 `CLAIM-02-03`（inference）：判断驾驶世界模型时，动作接口和功能评测比“是否生成视频”更接近规划用途，但仿真结果仍不能替代真实车辆安全验证。
 
-## 2.8 EXP-02-01：八类系统的四轴模型卡
+## 2.8 八类系统的四轴模型卡（EXP-02-01）
 
 本章不训练模型。读者将选择八个具有不同用途的系统或系统族，为每个对象填写：
 
@@ -281,11 +281,16 @@ CV 工程师可以沿四步迁移已有经验：
 
 本书已把八类对象、一个 state-aliasing case 和一个 noisy-history belief case 写成结构化 JSON fixture，并用标准库校验器强制检查：类别覆盖、四轴字段、来源快照、VLA/仿真器边界、四项三态能力、每张卡的不可外推声明，以及历史线索、动作集合、唯一最优动作、prior 与 cue likelihood 归一化合同。运行命令：
 
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
+
 ```bash
 make ch02-test-local
 make ch02-smoke-local
 make ch02-smoke
 ```
+
+</details>
 
 固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有 HTTPS 证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。能力矩阵中，6 张有时间/转移证据、5 张支持候选动作干预、3 张同时满足学习动态与动作条件、1 张保持 scope-dependent、1 张是无独立转移的策略。state-aliasing 对照得到 current-only mean return 0.1、perfect-history 0.6 和0.5 gap；noisy-history Bayes belief 得到0.38 return 和0.22 oracle regret。18 个单元测试还会故意破坏能力矩阵、证据与身份、动作/return 合同、prior、likelihood 归一化和 cue 决策唯一性，确认校验器能够拒绝这些变化。
 

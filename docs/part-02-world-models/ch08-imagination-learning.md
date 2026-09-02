@@ -126,15 +126,20 @@ actor 学的是如何改变动作分布，使 imagined objective 提高。其梯
 
 因此，“critic 更准”和“actor 更好”也不能互相代替。critic 可能准确预测一个已经很差的策略；actor 可能在有偏 critic 下提升 imagined value，却降低真实回报。应当把 value calibration、policy improvement 和外部闭环结果作为三层不同问题。
 
-## 8.4 EXP-08-01：先把 target 算对
+## 8.4 先把 target 算对（EXP-08-01）
 
 S 档 fixture 使用三步手工序列：reward 为 `[0, 0, 1]`，discount/continuation 为 `[1, 1, 0]`，下一状态 value 为 `[0.4, 0.8, 0]`。为隔离递推语义，这里的 discount 取 1；它不是训练超参数建议。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch08-test-local
 make ch08-smoke-local
 make ch08-smoke
 ```
+
+</details>
 
 | 设置 | 三步 target | start target |
 | --- | --- | ---: |

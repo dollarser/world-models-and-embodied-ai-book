@@ -100,15 +100,20 @@ Credit assignment 有时间与结构两个维度。时间维度问早期动作�
 
 Policy support 或 KL 约束的作用是限制更新策略偏离有证据的行为分布，而不是证明分布内动作正确。约束过弱会让 critic 或 world model 在 OOD 动作上过度乐观，约束过强则只能复现 SFT 行为，难以超过示范。合适强度取决于数据质量、环境真实性和回退能力，不能把一个固定 KL 系数当成跨任务安全常数。
 
-## 18.3 EXP-18-01：target 改善与 coverage 损失同时发生
+## 18.3 target 改善与 coverage 损失同时发生（EXP-18-01）
 
 S 档 fixture 有四条两阶段标量轨迹：两条成功、两条最终失败但包含 `recover` 事件。成功轨迹动作均值 `(0.25,0.75)` 被手工设为参考；这只是教学 oracle，不是真实任务最优策略。
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch18-test-local
 make ch18-smoke-local
 make ch18-smoke
 ```
+
+</details>
 
 | 权重 | action target | reference MAE | ESS | recovery mass |
 | --- | --- | ---: | ---: | ---: |

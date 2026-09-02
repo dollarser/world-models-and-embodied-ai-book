@@ -175,7 +175,7 @@ E_{cf}=\sqrt{\frac{1}{d|P|}\sum_{(i,j)\in P}\left\|[(\hat{s}_j-\hat{s}_i)-(s_j-s
 
 多模态模型还要避免用单个“正确视频”惩罚所有其他合理未来。同一动作下可能同时存在多个合法他车反应。评测可比较状态分布、事件概率、coverage 和配对效果方向，而不只计算生成样本与唯一记录视频的逐像素距离。
 
-## 11.6 EXP-11-01：学习动作表，再组合未见序列
+## 11.6 学习动作表，再组合未见序列（EXP-11-01）
 
 S 档 fixture 是 `7×7` 网格。训练数据覆盖 forward、left、right、brake 的单步转移，但不含评测中的三步组合。模型从样本拟合位移：
 
@@ -184,11 +184,16 @@ S 档 fixture 是 `7×7` 网格。训练数据覆盖 forward、left、right、br
 - `action_conditioned` 为每个动作学习正确的独立位移；
 - 状态被渲染为 ASCII 帧，便于同时检查状态与观察输出。
 
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
+
 ```bash
 make ch11-test-local
 make ch11-smoke-local
 make ch11-smoke
 ```
+
+</details>
 
 | 模型 | one-step 状态 RMSE ↓ | 帧准确率 ↑ | 动作敏感度/直径 ↑ | 左→右有符号分离 | counterfactual vector RMSE ↓ |
 | --- | ---: | ---: | ---: | ---: | ---: |

@@ -197,7 +197,7 @@ E(h)=\frac{1}{N}\sum_{i=1}^{N} d\!\left(\hat{s}^{(i)}_{t+h},s^{(i)}_{t+h}\right)
 
 模型的决策价值还取决于搜索器如何查询它。固定策略集上的排序只覆盖预先给出的候选，而规划器会主动生成新候选，并倾向访问模型最乐观的区域。E3 评测应尽量复现实际候选生成机制，或明确把结论限定为离线策略筛选，不能从固定列表直接外推到在线优化。
 
-## 9.5 EXP-09-01：一个指标排序反转
+## 9.5 一个指标排序反转（EXP-09-01）
 
 本章提供两个手工构造的一维预测器：
 
@@ -206,11 +206,16 @@ E(h)=\frac{1}{N}\sum_{i=1}^{N} d\!\left(\hat{s}^{(i)}_{t+h},s^{(i)}_{t+h}\right)
 
 运行命令：
 
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
+
 ```bash
 make ch09-smoke-local
 make ch09-test-local
 make ch09-smoke
 ```
+
+</details>
 
 固定程序化 fixture 的第一个反例输出为：
 

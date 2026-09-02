@@ -224,7 +224,7 @@ PlaNet 学习潜在动力学后，用规划器在线搜索动作序列。随后 
 
 DreamerV2 进一步采用离散潜变量处理 Atari 等任务；DreamerV3 后来形成跨多类控制任务的统一配置，并于 2025 年发表于 *Nature*。这些进展属于第8章的重点。本章只建立它们共同依赖的状态与数据流，不把最新实现细节塞进 RSSM 的基本定义。
 
-## 6.7 EXP-06-01：RSSM 数据流 CPU smoke
+## 6.7 RSSM 数据流 CPU smoke（EXP-06-01）
 
 当前配套实验不是神经网络训练。它使用一个带位置、速度和观测噪声的一维程序化系统、一个教学版“预测—观测修正”状态更新器，以及二分类分布的解析 KL，验证六件事：
 
@@ -237,16 +237,26 @@ DreamerV2 进一步采用离散潜变量处理 Atari 等任务；DreamerV3 后�
 
 本地命令：
 
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
+
 ```bash
 make ch06-smoke-local
 make ch06-test-local
 ```
 
+</details>
+
 Docker 优先命令：
+
+<details markdown="1">
+<summary>可选：验证本章证据</summary>
 
 ```bash
 make ch06-smoke
 ```
+
+</details>
 
 该 smoke 只依赖 Python 标准库，不下载数据或模型。输出包含 filtering、posterior-anchored one-step prior、open-loop 和 persistence 四类 RMSE、五个 open-loop horizon、一个观测可见性负对照及两组 KL 诊断。它验证的是接口、前向算术和评测协议，不计算真实梯度，不证明 RSSM 已经学会环境，也不能升级为 PlaNet/Dreamer 复现结果。
 
