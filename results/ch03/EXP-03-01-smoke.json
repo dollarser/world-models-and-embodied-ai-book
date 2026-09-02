@@ -9,26 +9,127 @@
       "open_loop_q1_error_rad": 0.09999999999999998
     },
     "geometry": {
-      "body_points_m": [[2.5, 0.02, 0.21000000000000002], [1.5, 0.0, 0.2], [2.5, -0.02, 0.19]],
-      "camera_points_m": [[-0.02, -0.01, 2.0], [0.0, 0.0, 1.0], [0.02, 0.01, 2.0]],
+      "body_points_m": [
+        [
+          2.5,
+          0.02,
+          0.21000000000000002
+        ],
+        [
+          1.5,
+          0.0,
+          0.2
+        ],
+        [
+          2.5,
+          -0.02,
+          0.19
+        ]
+      ],
+      "camera_points_m": [
+        [
+          -0.02,
+          -0.01,
+          2.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          0.02,
+          0.01,
+          2.0
+        ]
+      ],
       "depth_unit_fault_scale_ratio": 1000.0,
       "extrinsic_fault_mean_shift_m": 0.10000000000000009,
       "identity_axis_mapping_mean_error_m": 2.3571816972636253,
       "max_reprojection_error_px": 0.0,
       "max_transform_chain_gap_m": 0.0,
       "max_transform_roundtrip_error_m": 8.673617379884035e-18,
-      "occupied_bev_cells": [[6, 0], [10, -1], [10, 0]],
+      "occupied_bev_cells": [
+        [
+          6,
+          0
+        ],
+        [
+          10,
+          -1
+        ],
+        [
+          10,
+          0
+        ]
+      ],
       "off_axis_z_depth_to_range_ratio": 1.4142135623730951,
-      "optical_forward_axis_in_body": [1.0, 0.0, 0.0],
+      "optical_forward_axis_in_body": [
+        1.0,
+        0.0,
+        0.0
+      ],
       "point_count": 3,
+      "pose_interpolation": {
+        "interpolated_pose": {
+          "alpha": 0.5,
+          "shortest_arc_delta_rad": 0.3490658503988658,
+          "timestamp_s": 0.5,
+          "x_m": 1.0,
+          "y_m": 0.0,
+          "yaw_rad": 3.141592653589793
+        },
+        "interpolated_world_point_m": [
+          -9.0,
+          0.0,
+          0.0
+        ],
+        "naive_angle_interpolation_error_m": 20.0,
+        "naive_arithmetic_yaw_rad": 0.0,
+        "naive_world_point_m": [
+          11.0,
+          0.0,
+          0.0
+        ],
+        "point_body_m": [
+          10.0,
+          0.0,
+          0.0
+        ],
+        "pose_samples": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            2.9670597283903604
+          ],
+          [
+            1.0,
+            2.0,
+            0.0,
+            -2.9670597283903604
+          ]
+        ],
+        "query_time_s": 0.5,
+        "scope": "two authored planar poses with a registered shortest-yaw-arc convention; not general SE(3) interpolation, localization, clock synchronization, or deskew",
+        "shortest_arc_interpolation_error_m": 0.0
+      },
       "temporal_alignment": {
         "rotation_only": {
           "point_range_m": 10.0,
           "pose_time_s": 0.9,
-          "pose_time_world_point_m": [9.004471023527, 4.349655341112, 0.0],
+          "pose_time_world_point_m": [
+            9.004471023527,
+            4.349655341112,
+            0.0
+          ],
           "sensor_time_s": 1.0,
           "spatial_error_m": 0.499947918294,
-          "timestamp_matched_world_point_m": [8.775825618904, 4.794255386042, 0.0],
+          "timestamp_matched_world_point_m": [
+            8.775825618904,
+            4.794255386042,
+            0.0
+          ],
           "timestamp_offset_s": -0.1,
           "world_x_velocity_mps": 0.0,
           "yaw_rate_radps": 0.5
@@ -37,10 +138,18 @@
         "timestamp_matched": {
           "point_range_m": 10.0,
           "pose_time_s": 1.0,
-          "pose_time_world_point_m": [10.775825618904, 4.794255386042, 0.0],
+          "pose_time_world_point_m": [
+            10.775825618904,
+            4.794255386042,
+            0.0
+          ],
           "sensor_time_s": 1.0,
           "spatial_error_m": 0.0,
-          "timestamp_matched_world_point_m": [10.775825618904, 4.794255386042, 0.0],
+          "timestamp_matched_world_point_m": [
+            10.775825618904,
+            4.794255386042,
+            0.0
+          ],
           "timestamp_offset_s": 0.0,
           "world_x_velocity_mps": 2.0,
           "yaw_rate_radps": 0.5
@@ -48,10 +157,18 @@
         "translation_only": {
           "point_range_m": 10.0,
           "pose_time_s": 0.9,
-          "pose_time_world_point_m": [11.8, 0.0, 0.0],
+          "pose_time_world_point_m": [
+            11.8,
+            0.0,
+            0.0
+          ],
           "sensor_time_s": 1.0,
           "spatial_error_m": 0.2,
-          "timestamp_matched_world_point_m": [12.0, 0.0, 0.0],
+          "timestamp_matched_world_point_m": [
+            12.0,
+            0.0,
+            0.0
+          ],
           "timestamp_offset_s": -0.1,
           "world_x_velocity_mps": 2.0,
           "yaw_rate_radps": 0.0
@@ -59,6 +176,6 @@
       }
     }
   },
-  "scope": "exact RGB-D, temporal-transform, and planar feedback fixtures; not calibrated hardware",
+  "scope": "exact RGB-D, temporal-transform/interpolation, and planar feedback fixtures; not calibrated hardware",
   "status": "smoke"
 }

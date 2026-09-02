@@ -3,23 +3,24 @@
   "id": "EXP-03-01",
   "chapter": 3,
   "status": "smoke",
-  "claim_ids": ["CLAIM-03-02", "CLAIM-03-03", "CLAIM-03-06", "CLAIM-03-07", "CLAIM-03-08", "CLAIM-03-09"],
+  "claim_ids": ["CLAIM-03-02", "CLAIM-03-03", "CLAIM-03-06", "CLAIM-03-07", "CLAIM-03-08", "CLAIM-03-09", "CLAIM-03-10"],
   "claim_scope": [
     "pinhole back-projection and explicit frame transforms can be validated by an exact projection round trip",
     "observation feedback can reduce fixed actuator-bias error in the deterministic planar-arm fixture",
     "camera optical axes must be explicitly rotated into body axes even when pixel projection round trips exactly",
     "optical-axis z-depth and Euclidean ray range are not interchangeable away from the principal point",
     "a camera-to-body-to-world rigid-transform chain matches its composed transform only after validating proper rotations and applying translation in the target frame",
-    "using a pose from the wrong timestamp creates a spatial transform error that depends on motion and timestamp offset, with rotational error also depending on point range"
+    "using a pose from the wrong timestamp creates a spatial transform error that depends on motion and timestamp offset, with rotational error also depending on point range",
+    "naively averaging wrapped yaw angles can choose the wrong interpolation arc even when translation and timestamps are correctly bracketed"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library v4 RGB-D, proper-rotation, transform-chain, temporal-alignment, and two-link planar-arm fixtures"
+    "config": "standard-library v5 RGB-D, proper-rotation, transform-chain, temporal-alignment/interpolation, and two-link planar-arm fixtures"
   },
   "data": {
-    "name": "procedural three-pixel RGB-D, temporal-transform, and planar-arm fixture",
-    "version": "v4",
+    "name": "procedural three-pixel RGB-D, temporal-transform/interpolation, and planar-arm fixture",
+    "version": "v5",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -49,6 +50,8 @@
     {"name": "translation_timestamp_error", "value": 0.2, "unit": "metre", "split": "constant-world-x-translation"},
     {"name": "rotation_timestamp_error", "value": 0.499947918294, "unit": "metre", "split": "constant-yaw-ten-metre-point"},
     {"name": "timestamp_matched_error", "value": 0.0, "unit": "metre", "split": "matched-pose-and-sensor-time"},
+    {"name": "shortest_arc_interpolation_error", "value": 0.0, "unit": "metre", "split": "wrapped-yaw-midpoint"},
+    {"name": "naive_angle_interpolation_error", "value": 20.0, "unit": "metre", "split": "wrapped-yaw-midpoint"},
     {"name": "open_loop_endpoint_error", "value": 0.12594964573326087, "unit": "metre", "split": "planar-arm-fixture"},
     {"name": "feedback_endpoint_error", "value": 0.019049255190981548, "unit": "metre", "split": "planar-arm-fixture"}
   ],
@@ -56,7 +59,8 @@
   "limitations": [
     "three exact pinhole samples plus one synthetic off-axis ray without lens distortion or missing depth",
     "fixed proper rotations and transforms rather than estimated calibration or localization",
-    "single body point with exact timestamps, constant world-x velocity, and constant yaw rate rather than clock synchronization, pose interpolation, rolling-shutter correction, or scan deskew",
+    "single body point with exact timestamps, constant world-x velocity, and constant yaw rate rather than clock synchronization, rolling-shutter correction, or scan deskew",
+    "two authored planar poses with shortest-arc yaw interpolation rather than general SE(3), uncertain poses, asynchronous clocks, or measured localization",
     "kinematic planar arm without contact, inertia, saturation, or timing jitter",
     "demonstrates interface checks rather than real sensor or controller performance"
   ]

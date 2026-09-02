@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-01
 > 关联实验：`EXP-03-01`
-> 关联声明：`CLAIM-03-01`～`CLAIM-03-09`
-> 关联图表：`FIG-03-01` / `FIG-03-02` / `TAB-03-01` / `TAB-03-02` / `TAB-03-03` / `TAB-03-04`
+> 关联声明：`CLAIM-03-01`～`CLAIM-03-10`
+> 关联图表：`FIG-03-01` / `FIG-03-02` / `TAB-03-01` / `TAB-03-02` / `TAB-03-03` / `TAB-03-04` / `TAB-03-05`
 > 资源档位：S
 > GPU 状态：不需要
 
@@ -167,6 +167,21 @@ p_world = T_world_body @ T_body_camera @ p_camera
 
 真实链路还要分别处理 clock offset、传输/排队延迟、一次扫描或 rolling shutter 内部的采样跨度，以及位姿插值。ROS 2 [`tf2` 时间旅行接口](https://docs.ros.org/en/lyrical/Tutorials/Intermediate/Tf2/Time-Travel-With-Tf2-Cpp.html)显式区分 source time、target time 与 fixed frame；Autoware 的 [point-cloud distortion corrector](https://autowarefoundation.github.io/autoware_universe/pr-10077/sensing/autoware_pointcloud_preprocessor/docs/distortion-corrector/)则按点时间戳结合 twist/IMU 做运动补偿，并把输入同步作为前提。这些接口说明“使用最新 transform”并不等价于“时间已经对齐”；本书没有运行 ROS 或 Autoware，也不据此声称完成真实 deskew。
 
+### 3.3.2 离散 pose 不能直接平均角度
+
+实际 pose 常以离散时间样本到达。查询时刻位于两个样本之间时，至少要预登记：平移如何插值、旋转走哪条弧、最大允许间隔，以及区间外是否允许外推。特别是 yaw 使用 `[-π,π]` 表示时，`+170°` 与 `-170°` 在物理上只差 20°；直接算术平均却得到 `0°`，等价于绕长弧经过错误方向。
+
+`EXP-03-01 v5` 固定两帧 planar pose：`t=0 s` 时 `(x=0 m,yaw=+170°)`，`t=1 s` 时 `(x=2 m,yaw=-170°)`，查询 `t=0.5 s`。线性平移与预登记最短 yaw 弧给出 `(x=1 m,yaw=180°)`；把 yaw 直接平均则得到 `0°`。对 body frame 中 `(10,0,0) m` 的点，两种 world point 相差 20 m。
+
+| 插值规则 | 中点 x | 中点 yaw | 10 m 点相对预登记中点误差 |
+| --- | ---: | ---: | ---: |
+| 最短角弧 + 线性平移 | 1 m | 180° | 0 m |
+| yaw 直接算术平均 | 1 m | 0° | 20 m |
+
+*TAB-03-05：角度 wrap 的确定性反例。20 m 来自作者构造的 10 m 点和对向角度，不是定位误差分布。*
+
+`CLAIM-03-10`（result）：`EXP-03-01 v5` 的两帧 wrapped-yaw fixture 中，最短角弧插值与预登记中点完全一致，而直接平均 `+170°/-170°` 得到的 world point 相差 20 m；实现同时拒绝无 bracket 的外推和非严格递增时间戳。该结果只验证 planar yaw wrap 与固定点，不证明一般 `SE(3)` 插值、pose 质量、同步、deskew 或真实车辆误差。
+
 ## 3.4 点云、遮挡与简化 BEV
 
 对每个有效深度像素执行反投影，就得到相机坐标点云。点云不是完整世界：它只包含传感器当前能看到且返回有效深度的表面。物体背后、视野外和透明/反光区域应标记为未知，不能默认为空闲。
@@ -235,7 +250,7 @@ y=l_1\sin q_1+l_2\sin(q_1+q_2).
 
 `CLAIM-03-04`（fact）：在部分可观测任务中，单次观测通常不足以等同真实状态；历史或状态估计器用于形成任务相关信念。该定义与第2章术语契约一致。
 
-## 3.8 EXP-03-01：几何、时间与反馈的三个精确 smoke
+## 3.8 EXP-03-01：几何、时间与反馈的四个精确 smoke
 
 实验完全使用 Python 标准库和程序化 fixture：三个 RGB-D 像素先反投影、变换和栅格化；同一 body 点用匹配/过期位姿变到世界坐标；二维机械臂再比较固定开环增量与带噪观测的比例反馈。
 
@@ -257,6 +272,8 @@ make ch03-smoke
 | 2 m/s 平移中的 100 ms 过期位姿 | 0.20 m | 时间偏移可直接成为空间平移误差 |
 | 0.5 rad/s 转动中的 100 ms 过期位姿（10 m 点） | 0.49995 m | 转动错位还依赖点到旋转中心的距离 |
 | 匹配时间戳的位姿 | 0 m | 固定解析模型的零偏移基线 |
+| wrapped yaw 最短角弧插值 | 0 m | 与预登记中点一致 |
+| wrapped yaw 直接平均 | 20 m | 角度表示跨 `±π` 时走错弧 |
 | 固定开环末端误差 | 0.12595 m | 执行偏差逐步累积 |
 | 观测反馈末端误差 | 0.01905 m | 在本 fixture 中反馈减小误差 |
 
@@ -270,9 +287,9 @@ make ch03-smoke
 
 `CLAIM-03-07`（result）：在归一化离轴坐标 `(1,0)` 上，把数值 1 m 当作 z-depth 得到的射线距离为 1.41421 m；这证明 z-depth 与 range 的接口不可混用，不估计真实深度传感器误差。
 
-`CLAIM-03-08`（result）：`EXP-03-01` v4 保留了 v3 的刚体链检查：将 `T_world_body @ T_body_camera` 的组合结果与逐段作用于三个点的结果比较，最大差为 0 m；测试同时拒绝缩放、镜像和剪切矩阵作为 rotation。它验证固定变换实现与输入合同，不证明真实外参或定位正确。
+`CLAIM-03-08`（result）：`EXP-03-01` v5 保留了 v3 的刚体链检查：将 `T_world_body @ T_body_camera` 的组合结果与逐段作用于三个点的结果比较，最大差为 0 m；测试同时拒绝缩放、镜像和剪切矩阵作为 rotation。它验证固定变换实现与输入合同，不证明真实外参或定位正确。
 
-`CLAIM-03-09`（result）：`EXP-03-01` v4 在常数 world-x 平移与常数 yaw 的解析夹具中，分别把 100 ms 过期位姿映射为 0.20 m 平移误差，以及 10 m 点上的 0.499947918294 m 转动误差；匹配时间戳时误差为 0 m。这只验证单点、精确时间戳和手工运动参数下的变换合同，不是 localization、pose interpolation、scan deskew、clock synchronization 或真实传感器精度结果。
+`CLAIM-03-09`（result）：`EXP-03-01` v5 在常数 world-x 平移与常数 yaw 的解析夹具中，分别把 100 ms 过期位姿映射为 0.20 m 平移误差，以及 10 m 点上的 0.499947918294 m 转动误差；匹配时间戳时误差为 0 m。这只验证单点、精确时间戳和手工运动参数下的变换合同，不是 localization、pose interpolation、scan deskew、clock synchronization 或真实传感器精度结果。
 
 ## 3.9 六类错误的定位顺序
 
@@ -368,6 +385,7 @@ episode:
 4. **控制练习**：把动作频率从 20 Hz 改为 5 Hz，同时保持每秒速度含义不变；指出代码需要改哪些量。
 5. **自动驾驶迁移**：为前视相机、车辆状态和规划轨迹填写本章 schema，并设计一次 100 ms 时间错位注入。
 6. **数量级练习**：车辆以 15 m/s 平移时，50 ms 过期位姿会产生多大平移误差？再说明为什么 yaw 造成的误差还需要点的距离才能确定。
+7. **插值练习**：解释为什么 `+170°` 与 `-170°` 的算术平均不是物理中点，并写出禁止无 bracket 外推的失败条件。
 
 ## 自检要点
 
@@ -415,6 +433,13 @@ episode:
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-03-07：插值练习</summary>
+
+两个角度的坐标表示跨过 `±π` 分支切口；应先把角差 wrap 到 `(-π,π]`，再沿预登记最短弧插值，因此中点是 `±180°` 而不是 `0°`。查询时间早于最早样本、晚于最晚样本、样本时间重复/倒序或时间非有限时都应 fail closed。该规则仍需声明最大 bracket 宽度，且 planar yaw 不能替代一般三维旋转插值。
+
+</details>
+
 ## 延伸阅读
 
 - Lynch & Park, [Modern Robotics 在线资源](https://modernrobotics.northwestern.edu/nu-gm-book-resource/)，刚体运动、运动学、规划与控制；
@@ -443,5 +468,5 @@ episode:
 - 一致性审查：通过；
 - 教学审查：通过；
 - 审查记录路径：`reviews/ch03-temporal-alignment-review-2026-09-01.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
-- 已知限制：没有真实相机、机器人、畸变、动力学、接触、clock synchronization、pose interpolation 或 scan deskew 运行；
+- 已知限制：没有真实相机、机器人、畸变、动力学、接触、clock synchronization、一般 `SE(3)` pose interpolation 或 scan deskew 运行；
 - 下一步：M 档再加入合法真实数据上的标定、畸变、时间同步与运动补偿审计；当前 S 档接口已与第4、12、13、19章核对。

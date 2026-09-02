@@ -1,4 +1,4 @@
-from math import sin
+from math import pi, sin
 from pathlib import Path
 import sys
 import unittest
@@ -16,7 +16,9 @@ from bridge_fixture import (  # noqa: E402
     control_audit,
     geometry_audit,
     inverse_transform,
+    interpolate_planar_pose,
     occupancy_cells,
+    pose_interpolation_audit,
     project,
     temporal_alignment_audit,
     temporal_transform_error,
@@ -148,6 +150,36 @@ class GeometryControlBridgeTests(unittest.TestCase):
             changed[field] = value
             with self.subTest(field=field), self.assertRaises(ValueError):
                 temporal_transform_error((10.0, 0.0, 0.0), **changed)
+
+    def test_pose_interpolation_uses_shortest_yaw_arc_across_wrap(self):
+        result = pose_interpolation_audit()["interpolated_pose"]
+        self.assertAlmostEqual(abs(result["yaw_rad"]), pi)
+        self.assertAlmostEqual(result["shortest_arc_delta_rad"], pi / 9.0)
+
+    def test_naive_angle_average_creates_twenty_metre_point_error(self):
+        result = pose_interpolation_audit()
+        self.assertEqual(result["shortest_arc_interpolation_error_m"], 0.0)
+        self.assertEqual(result["naive_angle_interpolation_error_m"], 20.0)
+
+    def test_pose_interpolation_matches_registered_midpoint_translation(self):
+        result = pose_interpolation_audit()["interpolated_pose"]
+        self.assertEqual(result["timestamp_s"], 0.5)
+        self.assertEqual(result["x_m"], 1.0)
+        self.assertEqual(result["y_m"], 0.0)
+        self.assertEqual(result["alpha"], 0.5)
+
+    def test_pose_interpolation_rejects_extrapolation_and_unordered_samples(self):
+        samples = ((0.0, 0.0, 0.0, 0.0), (1.0, 1.0, 0.0, 0.1))
+        for query_time in (-0.1, 1.1, float("nan")):
+            with self.subTest(query_time=query_time), self.assertRaises(ValueError):
+                interpolate_planar_pose(samples, query_time)
+        for invalid_samples in (
+            ((0.0, 0.0, 0.0, 0.0),),
+            ((0.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.1)),
+            ((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.1)),
+        ):
+            with self.subTest(samples=invalid_samples), self.assertRaises(ValueError):
+                interpolate_planar_pose(invalid_samples, 0.0)
 
 
 if __name__ == "__main__":

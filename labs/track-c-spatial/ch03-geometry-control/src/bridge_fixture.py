@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from math import cos, floor, hypot, isclose, isfinite, sin, sqrt
+from math import atan2, cos, floor, hypot, isclose, isfinite, pi, sin, sqrt
 
 
 INTRINSICS = {"fx": 100.0, "fy": 100.0, "cx": 1.0, "cy": 0.5}
@@ -232,6 +232,83 @@ def temporal_alignment_audit() -> dict[str, object]:
     }
 
 
+def interpolate_planar_pose(
+    pose_samples: tuple[tuple[float, float, float, float], ...],
+    query_time_s: float,
+) -> dict[str, float]:
+    """Interpolate x/y linearly and yaw along the registered shortest arc."""
+
+    if not isinstance(pose_samples, tuple) or len(pose_samples) < 2:
+        raise ValueError("pose_samples must contain at least two timestamped planar poses")
+    checked_samples = tuple(
+        _finite_vector(sample, "timestamped planar pose", 4) for sample in pose_samples
+    )
+    query_time_s = _finite_vector((query_time_s,), "query time", 1)[0]
+    timestamps = tuple(sample[0] for sample in checked_samples)
+    if any(right <= left for left, right in zip(timestamps, timestamps[1:])):
+        raise ValueError("pose sample timestamps must be strictly increasing")
+    if query_time_s < timestamps[0] or query_time_s > timestamps[-1]:
+        raise ValueError("query time must be bracketed; extrapolation is not allowed")
+
+    for left, right in zip(checked_samples, checked_samples[1:]):
+        if left[0] <= query_time_s <= right[0]:
+            alpha = (query_time_s - left[0]) / (right[0] - left[0])
+            yaw_delta = atan2(sin(right[3] - left[3]), cos(right[3] - left[3]))
+            yaw = left[3] + alpha * yaw_delta
+            return {
+                "timestamp_s": query_time_s,
+                "x_m": left[1] + alpha * (right[1] - left[1]),
+                "y_m": left[2] + alpha * (right[2] - left[2]),
+                "yaw_rad": atan2(sin(yaw), cos(yaw)),
+                "alpha": alpha,
+                "shortest_arc_delta_rad": yaw_delta,
+            }
+    raise AssertionError("bracketed query must match one pose interval")
+
+
+def pose_interpolation_audit() -> dict[str, object]:
+    """Contrast shortest-arc yaw interpolation with naive angle averaging."""
+
+    samples = (
+        (0.0, 0.0, 0.0, 17.0 * pi / 18.0),
+        (1.0, 2.0, 0.0, -17.0 * pi / 18.0),
+    )
+    point_body_m = (10.0, 0.0, 0.0)
+    interpolated_pose = interpolate_planar_pose(samples, 0.5)
+    interpolated_point = transform_yaw_translation(
+        point_body_m,
+        interpolated_pose["yaw_rad"],
+        (interpolated_pose["x_m"], interpolated_pose["y_m"], 0.0),
+    )
+    reference_point = transform_yaw_translation(point_body_m, pi, (1.0, 0.0, 0.0))
+    naive_yaw = (samples[0][3] + samples[1][3]) / 2.0
+    naive_point = transform_yaw_translation(point_body_m, naive_yaw, (1.0, 0.0, 0.0))
+
+    def point_error(point: tuple[float, float, float]) -> float:
+        return sqrt(
+            sum(
+                (actual - expected) ** 2
+                for actual, expected in zip(point, reference_point, strict=True)
+            )
+        )
+
+    return {
+        "pose_samples": samples,
+        "query_time_s": 0.5,
+        "point_body_m": point_body_m,
+        "interpolated_pose": interpolated_pose,
+        "interpolated_world_point_m": tuple(round(value, 12) for value in interpolated_point),
+        "naive_arithmetic_yaw_rad": naive_yaw,
+        "naive_world_point_m": tuple(round(value, 12) for value in naive_point),
+        "shortest_arc_interpolation_error_m": round(point_error(interpolated_point), 12),
+        "naive_angle_interpolation_error_m": round(point_error(naive_point), 12),
+        "scope": (
+            "two authored planar poses with a registered shortest-yaw-arc convention; "
+            "not general SE(3) interpolation, localization, clock synchronization, or deskew"
+        ),
+    }
+
+
 def occupancy_cells(points: list[tuple[float, float, float]], cell_size_m: float = 0.25) -> list[tuple[int, int]]:
     """Rasterize horizontal x-y positions into occupied BEV cells."""
     if (
@@ -301,6 +378,7 @@ def geometry_audit() -> dict[str, object]:
         "camera_points_m": camera_points,
         "body_points_m": body_points,
         "temporal_alignment": temporal_alignment_audit(),
+        "pose_interpolation": pose_interpolation_audit(),
     }
 
 
