@@ -3,8 +3,8 @@
 > 状态：`reviewed`
 > 资料核查日期：2026-09-02
 > 关联实验：`EXP-04-01`（smoke）
-> 关联声明：`CLAIM-04-01`～`CLAIM-04-09`
-> 关联图表：`FIG-04-01` / `TAB-04-01` / `TAB-04-02`
+> 关联声明：`CLAIM-04-01`～`CLAIM-04-10`
+> 关联图表：`FIG-04-01` / `TAB-04-01` / `TAB-04-02` / `TAB-04-03`
 > 资源档位：S
 > GPU 状态：不需要
 
@@ -133,6 +133,25 @@ sequenceDiagram
 - padding、缺失值和终止后的伪帧不能进入真实统计。
 
 数据版本变化后必须重新生成统计，并把统计资产与数据版本一起锁定。
+
+### 4.4.1 `train` 标签不是统计来源证据
+
+只在配置中写 `normalization_scope=train` 仍不足以证明没有泄漏：统计文件可能来自全数据、旧数据版本或同名但内容已变化的 episode。可审计 artifact 至少要登记 feature、统计定义、source episode/content identity、sample count 和逐维参数，并能从当前 source 重算。若无法保留原始值或可验证摘要，就只能把来源声明记为未验证，不能由文件名推断。
+
+`EXP-04-01 v5` 给 train episode 的三行二维原始 state 赋值 `[0,1]`、`[1,2]`、`[2,3]`，预登记 population standard deviation。审计器由 source episode ID 与 content fingerprint 找回这三行，再重算：
+
+| 字段 | artifact 登记值 | 从 train source 重算 | 结果 |
+| --- | --- | --- | --- |
+| sample count | 3 | 3 | 一致 |
+| mean | `[1,2]` | `[1,2]` | 最大逐维差 0 |
+| population scale | `[sqrt(2/3),sqrt(2/3)]` | 同左 | 最大逐维差 0 |
+| source split | train | train | 无非 train source |
+
+*TAB-04-03：微型 normalization provenance 合同。三行 state 是作者构造值，不代表真实数据分布。*
+
+错误 fixture 仍写 `normalization_scope=train`，但 artifact 同时登记一个 eval episode，且 mean/scale 与这些 source 不一致，因此分别触发 `normalization_source_split` 和 `normalization_stat_mismatch`。这两个原因码不能合并：来源违规与数值损坏需要不同修复路径。
+
+`CLAIM-04-10`（result）：`EXP-04-01 v5` 从已绑定的三行 train state 精确重算 count=3、mean=`[1,2]` 与 population scale=`[sqrt(2/3),sqrt(2/3)]`，最大 mean/scale gap 均为 0；错误 fixture 即使保留 `train` 标签，仍因 eval source 和不一致统计被拒绝。该结果只证明作者构造 metadata 的 provenance/recompute 合同，不验证真实数据统计、padding/mask、权重、周期变量、checkpoint compatibility 或泛化性能。
 
 ## 4.5 切分：按照会导致记忆的共同因素分组
 
@@ -275,13 +294,13 @@ make ch04-test-local
 make ch04-smoke
 ```
 
-有效 fixture 含两个三帧 episode：一个自然终止、一个外部截断；两个相机流共有一个显式 masked sample，其余有效样本相对主时间戳最大偏差为 0.01 秒，审计问题数为 0。注入 fixture 的 11 类错误全部检出：动作越界、非布尔结束标志、跨 split group 泄漏、同源 raw log、相同精确内容指纹、相同近重复簇、缺少必需传感器记录、frame index 不连续、归一化使用全部数据、传感器偏差超限，以及主时间戳 cadence 错误。其中身份泄漏 episode 保持不同 `group_id`，避免把三项新检查误解释为已有 group 检查的别名。
+有效 fixture 含两个三帧 episode：一个自然终止、一个外部截断；两个相机流共有一个显式 masked sample，其余有效样本相对主时间戳最大偏差为 0.01 秒，审计问题数为 0。注入 fixture 的 13 类错误全部检出：动作越界、非布尔结束标志、跨 split group 泄漏、同源 raw log、相同精确内容指纹、相同近重复簇、缺少必需传感器记录、frame index 不连续、归一化 scope 错误、normalization source 含 eval、统计值与来源不一致、传感器偏差超限，以及主时间戳 cadence 错误。其中身份泄漏 episode 保持不同 `group_id`，避免把三项身份检查误解释为已有 group 检查的别名。
 
-18 个单元测试除原有 schema/split/action 检查外，还验证：在最终观测有效的本 fixture 中，外部截断保留 value bootstrap 而自然终止关闭它；episode 最后一帧至少有一种结束标志、双真合法且关闭 bootstrap、非末帧不能结束、显式 mask 合法但缺字段非法、sensor timestamp 必须单调且满足 skew，以及 NaN/Inf 不会绕过数值检查。新增四个回归测试分别固定 source asset、精确指纹和 authored similarity cluster 在不同 `group_id` 下的泄漏检测，并拒绝空身份字段。
+22 个单元测试除原有 schema/split/action 检查外，还验证：在最终观测有效的本 fixture 中，外部截断保留 value bootstrap 而自然终止关闭它；episode 最后一帧至少有一种结束标志、双真合法且关闭 bootstrap、非末帧不能结束、显式 mask 合法但缺字段非法、sensor timestamp 必须单调且满足 skew，以及 NaN/Inf 不会绕过数值检查。身份回归测试固定 source asset、精确指纹和 authored similarity cluster 在不同 `group_id` 下的泄漏检测；normalization 回归测试则覆盖精确重算、eval source、篡改 mean 和 source fingerprint 错配。
 
-`CLAIM-04-08`（result）：`EXP-04-01` v4 中，有效 fixture 为 0 issue，11 类注入错误均被识别；双真结束标志作为合法边界另有测试。该结果只证明已编码规则覆盖已知手工反例，不估计真实数据错误率。
+`CLAIM-04-08`（result）：`EXP-04-01` v5 中，有效 fixture 为 0 issue，11 类注入错误均被识别；双真结束标志作为合法边界另有测试。该结果只证明已编码规则覆盖已知手工反例，不估计真实数据错误率。
 
-`CLAIM-04-09`（result）：`EXP-04-01` v4 的三个独立反例证明，即使 train/eval 的 `group_id` 不同，共享 `source_asset_id`、`content_fingerprint` 或 `similarity_cluster_id` 仍会分别触发跨 split 拒绝。该结果只验证已登记 metadata 的集合交集；不证明指纹生成正确、相似簇完备或真实媒体不存在未登记近重复。
+`CLAIM-04-09`（result）：`EXP-04-01` v5 的三个独立反例证明，即使 train/eval 的 `group_id` 不同，共享 `source_asset_id`、`content_fingerprint` 或 `similarity_cluster_id` 仍会分别触发跨 split 拒绝。该结果只验证已登记 metadata 的集合交集；不证明指纹生成正确、相似簇完备或真实媒体不存在未登记近重复。
 
 这仍只是已知错误注入测试。它不能证明真实 LeRobot、机器人或驾驶数据不存在其他问题，也没有检查视频解码、标定、隐私和第三方许可。
 
@@ -324,7 +343,7 @@ M 档选做路径才会在用户确认后审计一个锁定版本的真实数据
 | --- | --- | --- | --- | --- |
 | 仓库事实 | 实验卡生命周期由 JSON Schema 校验 | `specs/experiment-card.schema.json` | 已验证 | 不替代人工科学审查 |
 | 官方格式 | LeRobot v3 使用 metadata 恢复 episode 视图 | 官方文档 | `[O,R1]` | 本书未下载或执行 |
-| 本书结果 | 有效 fixture 0 问题；11 类注入问题全部检出 | `EXP-04-01` | CPU smoke | 只比较手工 metadata ID，不读取媒体或估计真实错误率 |
+| 本书结果 | 有效 fixture 0 问题；13 类注入问题全部检出 | `EXP-04-01` | CPU smoke | 只比较手工 metadata ID，不读取媒体或估计真实错误率 |
 | 未验证 | 某个真实数据集不存在泄漏或错位 | 无 | unverified | 必须逐数据集审计 |
 
 ### 资源、数据与许可
@@ -342,6 +361,7 @@ M 档选做路径才会在用户确认后审计一个锁定版本的真实数据
 3. **切分设计**：为“新物体、新任务、新机器人”三个目标分别设计 group split。
 4. **自动驾驶迁移**：同一路线在晴天和雨天分别采集。若目标是天气泛化，应如何避免路线记忆混入结果？
 5. **资源审查**：将一个需要完整视频数据的实验改写为 S/M 两档，S 档只检查 schema 与指标链路。
+6. **统计溯源**：某文件名为 `train_stats.json`，但没有 source identity。设计最小 artifact，使均值和尺度可以从当前 train split 重算并发现旧版本复用。
 
 ## 自检要点
 
@@ -382,6 +402,13 @@ S 档使用几条程序化 metadata：验证 schema、frame/unit/timestamp、spl
 
 </details>
 
+<details markdown="1">
+<summary>SELF-CHECK-04-06：统计溯源</summary>
+
+最小 artifact 应登记数据/feature 版本、统计定义、source episode 或 shard identity、内容 fingerprint、有效 sample count、逐维 mean/scale，以及 mask/权重规则。加载时先验证 source 仍属于 train，再从当前原始值或可信摘要重算并比较；只检查 `scope=train`、文件名或目录位置都不能证明来源。角度、四元数、padding、缺失值和加权采样还需要各自的统计规则，不能沿用普通欧氏均值。
+
+</details>
+
 ## 延伸阅读
 
 - [LeRobot Dataset v3 官方文档](https://huggingface.co/docs/lerobot/lerobot-dataset-v3)，`[O,R1]`，多模态 episode、metadata 与时间窗口；
@@ -409,5 +436,5 @@ S 档使用几条程序化 metadata：验证 schema、frame/unit/timestamp、spl
 - 一致性审查：通过；
 - 教学审查：通过；
 - 审查记录路径：`reviews/batch-a-review.md`、`reviews/ch04-content-identity-leakage-review-2026-09-02.md`、`reviews/reader-facing-source-snapshot-review-2026-09-02.md`、`reviews/part-01-exercise-self-check-review-2026-09-02.md`；
-- 已知限制：真实 LeRobot/驾驶数据审计尚未执行；
+- 已知限制：真实 LeRobot/驾驶数据审计和复杂 normalization 管线尚未执行；
 - 下一步：episode 截断、缺帧 mask、多传感器 skew 和已登记身份交集已进入 S 档；仍需在真实数据上冻结并验证近重复检索方法，同时审计 clock domain/漂移、视频解码、标定、隐私和许可。

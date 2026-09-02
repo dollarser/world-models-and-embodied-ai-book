@@ -9,7 +9,13 @@ import unittest
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from data_audit import audit, bootstrap_allowed, describe_fixture, load_fixture  # noqa: E402
+from data_audit import (  # noqa: E402
+    audit,
+    bootstrap_allowed,
+    describe_fixture,
+    describe_normalization_artifact,
+    load_fixture,
+)
 
 
 class DataAuditTest(unittest.TestCase):
@@ -53,6 +59,36 @@ class DataAuditTest(unittest.TestCase):
         changed = deepcopy(self.valid)
         changed["dataset"]["normalization_scope"] = "all"
         self.assertIn("normalization_scope", {issue.code for issue in audit(changed)})
+
+    def test_train_normalization_artifact_recomputes_exactly(self) -> None:
+        report = describe_normalization_artifact(self.valid)
+        self.assertEqual(report["declared_sample_count"], 3)
+        self.assertEqual(report["recomputed_sample_count"], 3)
+        self.assertEqual(report["reported_mean"], [1.0, 2.0])
+        self.assertEqual(report["maximum_mean_gap"], 0.0)
+        self.assertEqual(report["maximum_scale_gap"], 0.0)
+
+    def test_train_label_cannot_hide_eval_normalization_source(self) -> None:
+        changed = deepcopy(self.valid)
+        eval_episode = changed["episodes"][1]
+        changed["dataset"]["normalization_artifact"]["sources"].append({
+            "episode_id": eval_episode["episode_id"],
+            "content_fingerprint": eval_episode["content_fingerprint"],
+        })
+        self.assertIn("normalization_source_split", {issue.code for issue in audit(changed)})
+
+    def test_tampered_normalization_value_is_rejected(self) -> None:
+        changed = deepcopy(self.valid)
+        changed["dataset"]["normalization_artifact"]["mean"][0] = 1.5
+        self.assertIn("normalization_stat_mismatch", {issue.code for issue in audit(changed)})
+
+    def test_normalization_source_fingerprint_must_match_episode(self) -> None:
+        changed = deepcopy(self.valid)
+        changed["dataset"]["normalization_artifact"]["sources"][0]["content_fingerprint"] = "sha256:tampered"
+        self.assertIn(
+            "normalization_source_identity_mismatch",
+            {issue.code for issue in audit(changed)},
+        )
 
     def test_non_numeric_action_is_reported_instead_of_crashing(self) -> None:
         changed = deepcopy(self.valid)

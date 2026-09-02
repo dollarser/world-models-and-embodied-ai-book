@@ -5,15 +5,56 @@
     "fps": 10,
     "cadence_tolerance_seconds": 0.005,
     "normalization_scope": "train",
-    "action_range": [-1.0, 1.0],
+    "action_range": [
+      -1.0,
+      1.0
+    ],
     "sensor_sync": {
-      "required_sensors": ["front_camera", "wrist_camera"],
+      "required_sensors": [
+        "front_camera",
+        "wrist_camera"
+      ],
       "max_skew_seconds": 0.02
     },
     "features": {
-      "observation.state": {"dtype": "float32", "shape": [2], "unit": "normalized_position_velocity"},
-      "action": {"dtype": "float32", "shape": [1], "unit": "normalized_control"},
-      "timestamp": {"dtype": "float64", "shape": [], "unit": "seconds"}
+      "observation.state": {
+        "dtype": "float32",
+        "shape": [
+          2
+        ],
+        "unit": "normalized_position_velocity"
+      },
+      "action": {
+        "dtype": "float32",
+        "shape": [
+          1
+        ],
+        "unit": "normalized_control"
+      },
+      "timestamp": {
+        "dtype": "float64",
+        "shape": [],
+        "unit": "seconds"
+      }
+    },
+    "normalization_artifact": {
+      "feature": "observation.state",
+      "scale_definition": "population_standard_deviation",
+      "sources": [
+        {
+          "episode_id": "train-001",
+          "content_fingerprint": "sha256:8280c2b6e0df05587e5e72b230b4f1637b4747b73ea0b282b1aea566b2deb889"
+        }
+      ],
+      "sample_count": 3,
+      "mean": [
+        1.0,
+        2.0
+      ],
+      "scale": [
+        0.816496580927726,
+        0.816496580927726
+      ]
     }
   },
   "episodes": [
@@ -25,9 +66,70 @@
       "similarity_cluster_id": "near-duplicate-cluster-a",
       "split": "train",
       "frames": [
-        {"frame_index": 0, "timestamp": 0.0, "action": 0.1, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.005, "valid": true}}},
-        {"frame_index": 1, "timestamp": 0.1, "action": 0.0, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.101, "valid": true}, "wrist_camera": {"timestamp": 0.095, "valid": true}}},
-        {"frame_index": 2, "timestamp": 0.2, "action": null, "terminated": true, "truncated": false, "end_reason": "success", "sensors": {"front_camera": {"timestamp": 0.2, "valid": true}, "wrist_camera": {"timestamp": null, "valid": false}}}
+        {
+          "frame_index": 0,
+          "timestamp": 0.0,
+          "action": 0.1,
+          "terminated": false,
+          "truncated": false,
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.0,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.005,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            0.0,
+            1.0
+          ]
+        },
+        {
+          "frame_index": 1,
+          "timestamp": 0.1,
+          "action": 0.0,
+          "terminated": false,
+          "truncated": false,
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.101,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.095,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            1.0,
+            2.0
+          ]
+        },
+        {
+          "frame_index": 2,
+          "timestamp": 0.2,
+          "action": null,
+          "terminated": true,
+          "truncated": false,
+          "end_reason": "success",
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.2,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": null,
+              "valid": false
+            }
+          },
+          "observation_state": [
+            2.0,
+            3.0
+          ]
+        }
       ]
     },
     {
@@ -38,9 +140,70 @@
       "similarity_cluster_id": "near-duplicate-cluster-b",
       "split": "eval",
       "frames": [
-        {"frame_index": 0, "timestamp": 0.0, "action": -0.1, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.01, "valid": true}}},
-        {"frame_index": 1, "timestamp": 0.1, "action": 0.0, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.1, "valid": true}, "wrist_camera": {"timestamp": 0.09, "valid": true}}},
-        {"frame_index": 2, "timestamp": 0.2, "action": null, "terminated": false, "truncated": true, "end_reason": "time_limit", "sensors": {"front_camera": {"timestamp": 0.2, "valid": true}, "wrist_camera": {"timestamp": 0.19, "valid": true}}}
+        {
+          "frame_index": 0,
+          "timestamp": 0.0,
+          "action": -0.1,
+          "terminated": false,
+          "truncated": false,
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.0,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.01,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            10.0,
+            11.0
+          ]
+        },
+        {
+          "frame_index": 1,
+          "timestamp": 0.1,
+          "action": 0.0,
+          "terminated": false,
+          "truncated": false,
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.1,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.09,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            11.0,
+            12.0
+          ]
+        },
+        {
+          "frame_index": 2,
+          "timestamp": 0.2,
+          "action": null,
+          "terminated": false,
+          "truncated": true,
+          "end_reason": "time_limit",
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.2,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.19,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            12.0,
+            13.0
+          ]
+        }
       ]
     }
   ]

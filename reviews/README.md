@@ -70,6 +70,7 @@
 - [第3章 optical/body 坐标轴与深度语义审查](ch03-optical-body-review-2026-09-01.md)
 - [第4/22章 split identity 传播审查](ch04-ch22-split-identity-propagation-review-2026-09-02.md)
 - [第4章内容身份泄漏审查](ch04-content-identity-leakage-review-2026-09-02.md)
+- [第4章 normalization provenance 审查](ch04-normalization-provenance-review-2026-09-02.md)
 - [第10章 probe、shift 与动作反事实审查](ch10-probe-shift-action-review-2026-09-01.md)
 - [第10章时间顺序与反转敏感度审查](ch10-temporal-order-review-2026-09-02.md)
 - [第11章动作指标与方向负对照审查](ch11-action-metric-review-2026-09-01.md)

@@ -1,19 +1,64 @@
 {
   "fixture_version": 1,
   "dataset": {
-    "name": "procedural metadata with eleven injected failure types",
+    "name": "procedural metadata with thirteen injected failure types",
     "fps": 10,
     "cadence_tolerance_seconds": 0.005,
     "normalization_scope": "all",
-    "action_range": [-1.0, 1.0],
+    "action_range": [
+      -1.0,
+      1.0
+    ],
     "sensor_sync": {
-      "required_sensors": ["front_camera", "wrist_camera"],
+      "required_sensors": [
+        "front_camera",
+        "wrist_camera"
+      ],
       "max_skew_seconds": 0.02
     },
     "features": {
-      "observation.state": {"dtype": "float32", "shape": [2], "unit": "normalized_position_velocity"},
-      "action": {"dtype": "float32", "shape": [1], "unit": "normalized_control"},
-      "timestamp": {"dtype": "float64", "shape": [], "unit": "seconds"}
+      "observation.state": {
+        "dtype": "float32",
+        "shape": [
+          2
+        ],
+        "unit": "normalized_position_velocity"
+      },
+      "action": {
+        "dtype": "float32",
+        "shape": [
+          1
+        ],
+        "unit": "normalized_control"
+      },
+      "timestamp": {
+        "dtype": "float64",
+        "shape": [],
+        "unit": "seconds"
+      }
+    },
+    "normalization_artifact": {
+      "feature": "observation.state",
+      "scale_definition": "population_standard_deviation",
+      "sources": [
+        {
+          "episode_id": "train-bad",
+          "content_fingerprint": "sha256:78d1a177034b2ad2694bc8c8b312afbd5527c2facfcc5654986dd42854dc5f6c"
+        },
+        {
+          "episode_id": "eval-bad",
+          "content_fingerprint": "sha256:cef2342f078a944d4357619e66dc3dd8c5e22919a6421df74091d45e9f1ac054"
+        }
+      ],
+      "sample_count": 5,
+      "mean": [
+        999.0,
+        999.0
+      ],
+      "scale": [
+        1.0,
+        1.0
+      ]
     }
   },
   "episodes": [
@@ -25,9 +70,66 @@
       "similarity_cluster_id": "shared-near-duplicate-cluster",
       "split": "train",
       "frames": [
-        {"frame_index": 0, "timestamp": 0.0, "action": 1.5, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.0, "valid": true}}},
-        {"frame_index": 1, "timestamp": 0.1, "action": 0.0, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.16, "valid": true}}},
-        {"frame_index": 3, "timestamp": 0.35, "action": null, "terminated": true, "truncated": "yes", "end_reason": "ambiguous", "sensors": {"front_camera": {"timestamp": 0.35, "valid": true}, "wrist_camera": {"timestamp": 0.35, "valid": true}}}
+        {
+          "frame_index": 0,
+          "timestamp": 0.0,
+          "action": 1.5,
+          "terminated": false,
+          "truncated": false,
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.0,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.0,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            0.0,
+            1.0
+          ]
+        },
+        {
+          "frame_index": 1,
+          "timestamp": 0.1,
+          "action": 0.0,
+          "terminated": false,
+          "truncated": false,
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.16,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            1.0,
+            2.0
+          ]
+        },
+        {
+          "frame_index": 3,
+          "timestamp": 0.35,
+          "action": null,
+          "terminated": true,
+          "truncated": "yes",
+          "end_reason": "ambiguous",
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.35,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.35,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            2.0,
+            3.0
+          ]
+        }
       ]
     },
     {
@@ -38,8 +140,49 @@
       "similarity_cluster_id": "eval-near-duplicate-cluster",
       "split": "eval",
       "frames": [
-        {"frame_index": 0, "timestamp": 0.0, "action": -0.1, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.0, "valid": true}}},
-        {"frame_index": 1, "timestamp": 0.1, "action": null, "terminated": true, "truncated": false, "end_reason": "failure", "sensors": {"front_camera": {"timestamp": 0.1, "valid": true}, "wrist_camera": {"timestamp": 0.1, "valid": true}}}
+        {
+          "frame_index": 0,
+          "timestamp": 0.0,
+          "action": -0.1,
+          "terminated": false,
+          "truncated": false,
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.0,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.0,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            10.0,
+            11.0
+          ]
+        },
+        {
+          "frame_index": 1,
+          "timestamp": 0.1,
+          "action": null,
+          "terminated": true,
+          "truncated": false,
+          "end_reason": "failure",
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.1,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.1,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            11.0,
+            12.0
+          ]
+        }
       ]
     },
     {
@@ -50,8 +193,49 @@
       "similarity_cluster_id": "shared-near-duplicate-cluster",
       "split": "eval",
       "frames": [
-        {"frame_index": 0, "timestamp": 0.0, "action": -0.1, "terminated": false, "truncated": false, "sensors": {"front_camera": {"timestamp": 0.0, "valid": true}, "wrist_camera": {"timestamp": 0.0, "valid": true}}},
-        {"frame_index": 1, "timestamp": 0.1, "action": null, "terminated": true, "truncated": false, "end_reason": "failure", "sensors": {"front_camera": {"timestamp": 0.1, "valid": true}, "wrist_camera": {"timestamp": 0.1, "valid": true}}}
+        {
+          "frame_index": 0,
+          "timestamp": 0.0,
+          "action": -0.1,
+          "terminated": false,
+          "truncated": false,
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.0,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.0,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            20.0,
+            21.0
+          ]
+        },
+        {
+          "frame_index": 1,
+          "timestamp": 0.1,
+          "action": null,
+          "terminated": true,
+          "truncated": false,
+          "end_reason": "failure",
+          "sensors": {
+            "front_camera": {
+              "timestamp": 0.1,
+              "valid": true
+            },
+            "wrist_camera": {
+              "timestamp": 0.1,
+              "valid": true
+            }
+          },
+          "observation_state": [
+            21.0,
+            22.0
+          ]
+        }
       ]
     }
   ]

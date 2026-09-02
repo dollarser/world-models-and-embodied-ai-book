@@ -11,7 +11,14 @@ import sys
 LAB_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LAB_ROOT / "src"))
 
-from data_audit import audit, bootstrap_allowed, describe_fixture, load_fixture, summarize  # noqa: E402
+from data_audit import (  # noqa: E402
+    audit,
+    bootstrap_allowed,
+    describe_fixture,
+    describe_normalization_artifact,
+    load_fixture,
+    summarize,
+)
 
 
 EXPECTED_INJECTED_CODES = {
@@ -22,6 +29,8 @@ EXPECTED_INJECTED_CODES = {
     "missing_sensor_record",
     "noncontiguous_frame_index",
     "normalization_scope",
+    "normalization_source_split",
+    "normalization_stat_mismatch",
     "sensor_sync_skew",
     "similarity_cluster_split_overlap",
     "source_asset_split_overlap",
@@ -32,7 +41,8 @@ EXPECTED_INJECTED_CODES = {
 def main() -> int:
     valid_fixture = load_fixture(LAB_ROOT / "fixtures/valid-dataset.json")
     valid_issues = audit(valid_fixture)
-    injected_issues = audit(load_fixture(LAB_ROOT / "fixtures/injected-failures.json"))
+    injected_fixture = load_fixture(LAB_ROOT / "fixtures/injected-failures.json")
+    injected_issues = audit(injected_fixture)
     injected_codes = {issue.code for issue in injected_issues}
     if valid_issues:
         raise AssertionError(f"valid fixture produced issues: {valid_issues}")
@@ -46,6 +56,8 @@ def main() -> int:
         "metrics": {
             "valid_fixture": summarize(valid_issues),
             "valid_fixture_coverage": describe_fixture(valid_fixture),
+            "valid_normalization_artifact": describe_normalization_artifact(valid_fixture),
+            "injected_normalization_artifact": describe_normalization_artifact(injected_fixture),
             "injected_failures": summarize(injected_issues),
             "injected_issue_types_detected": len(injected_codes),
             "bootstrap_semantics": {

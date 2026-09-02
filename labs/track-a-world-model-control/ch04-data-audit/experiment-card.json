@@ -3,21 +3,22 @@
   "id": "EXP-04-01",
   "chapter": 4,
   "status": "smoke",
-  "claim_ids": ["CLAIM-04-01", "CLAIM-04-02", "CLAIM-04-03", "CLAIM-04-04", "CLAIM-04-05", "CLAIM-04-06", "CLAIM-04-07", "CLAIM-04-08", "CLAIM-04-09"],
+  "claim_ids": ["CLAIM-04-01", "CLAIM-04-02", "CLAIM-04-03", "CLAIM-04-04", "CLAIM-04-05", "CLAIM-04-06", "CLAIM-04-07", "CLAIM-04-08", "CLAIM-04-09", "CLAIM-04-10"],
   "claim_scope": [
     "audit episode boundaries terminated/truncated semantics timestamps action alignment and group splits",
     "require explicit validity masks and bounded timestamp skew for required sensor streams",
     "detect group source-asset exact-content and authored near-duplicate-cluster leakage plus invalid normalization scope",
+    "bind normalization statistics to explicit train episode identities and recompute count mean and population scale instead of trusting a scope label",
     "separate fixture smoke from real dataset validation"
   ],
   "code": {
     "repository": "cv2embodied",
     "commit": "UNCOMMITTED",
-    "config": "standard-library v4 audit of valid and injected-failure metadata fixtures"
+    "config": "standard-library v5 audit of valid and injected-failure metadata plus normalization provenance fixtures"
   },
   "data": {
     "name": "procedural multimodal episode metadata fixture",
-    "version": "v4",
+    "version": "v5",
     "license": "MIT",
     "classification": "fixture",
     "fixture": true,
@@ -38,14 +39,17 @@
   },
   "metrics": [
     {"name": "valid_fixture_issue_count", "value": 0, "unit": "issues", "split": "valid-fixture"},
-    {"name": "injected_issue_count", "value": 11, "unit": "issues", "split": "injected-failures"},
-    {"name": "injected_issue_types_detected", "value": 11, "unit": "issue-types", "split": "injected-failures"},
+    {"name": "injected_issue_count", "value": 13, "unit": "issues", "split": "injected-failures"},
+    {"name": "injected_issue_types_detected", "value": 13, "unit": "issue-types", "split": "injected-failures"},
     {"name": "group_overlap_count", "value": 1, "unit": "groups", "split": "injected-failures"},
     {"name": "identity_overlap_count", "value": 3, "unit": "identities", "split": "injected-failures"},
     {"name": "masked_sensor_sample_count", "value": 1, "unit": "samples", "split": "valid-fixture"},
     {"name": "maximum_valid_sensor_skew_seconds", "value": 0.01, "unit": "seconds", "split": "valid-fixture"},
     {"name": "terminated_episode_count", "value": 1, "unit": "episodes", "split": "valid-fixture"},
     {"name": "truncated_episode_count", "value": 1, "unit": "episodes", "split": "valid-fixture"}
+    ,{"name": "normalization_recomputed_sample_count", "value": 3, "unit": "samples", "split": "valid-fixture-train"}
+    ,{"name": "normalization_maximum_mean_gap", "value": 0.0, "unit": "state-unit", "split": "valid-fixture-train"}
+    ,{"name": "normalization_maximum_scale_gap", "value": 0.0, "unit": "state-unit", "split": "valid-fixture-train"}
   ],
   "artifacts": ["results/ch04/EXP-04-01-smoke.json"],
   "limitations": [
@@ -53,6 +57,7 @@
     "dataset-specific units calibration and licenses require separate review",
     "does not audit media decoding privacy or real sensor calibration",
     "authored fingerprints and cluster ids do not discover semantic near duplicates and require a separately frozen generation method threshold and review process",
+    "normalization recomputation covers three authored two-dimensional state rows without masks weighting robust statistics periodic variables or distributed sampling",
     "single-clock scalar timestamps do not test clock drift hardware triggering rolling shutter or motion compensation"
   ]
 }

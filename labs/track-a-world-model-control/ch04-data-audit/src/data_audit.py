@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
-from math import isfinite
+from math import isclose, isfinite, sqrt
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +43,142 @@ def bootstrap_allowed(frame: dict[str, Any]) -> bool:
     return not frame.get("terminated", False)
 
 
+def normalization_artifact_audit(
+    dataset: dict[str, Any], episodes: list[dict[str, Any]]
+) -> tuple[list[Issue], dict[str, Any]]:
+    """Bind reported normalization statistics to explicit source episodes."""
+
+    issues: list[Issue] = []
+    artifact = dataset.get("normalization_artifact")
+    empty_report = {
+        "declared_source_episode_count": 0,
+        "nontrain_source_episode_count": 0,
+        "declared_sample_count": None,
+        "recomputed_sample_count": 0,
+        "maximum_mean_gap": None,
+        "maximum_scale_gap": None,
+    }
+    if not isinstance(artifact, dict):
+        return [Issue("invalid_normalization_artifact", "dataset.normalization_artifact", "must be an object")], empty_report
+
+    sources = artifact.get("sources")
+    mean = artifact.get("mean")
+    scale = artifact.get("scale")
+    sample_count = artifact.get("sample_count")
+    if (
+        artifact.get("feature") != "observation.state"
+        or artifact.get("scale_definition") != "population_standard_deviation"
+        or not isinstance(sources, list)
+        or not sources
+        or not isinstance(sample_count, int)
+        or isinstance(sample_count, bool)
+        or sample_count <= 0
+        or not isinstance(mean, list)
+        or not mean
+        or not isinstance(scale, list)
+        or len(scale) != len(mean)
+        or any(not is_finite_number(value) for value in mean + scale)
+        or any(value <= 0.0 for value in scale)
+    ):
+        return [Issue("invalid_normalization_artifact", "dataset.normalization_artifact", "invalid source, feature, count, mean, or scale contract")], empty_report
+
+    episodes_by_id = {episode.get("episode_id"): episode for episode in episodes}
+    source_ids: set[str] = set()
+    observations: list[tuple[float, ...]] = []
+    nontrain_source_count = 0
+    identity_mismatch = False
+    invalid_input = False
+    for source in sources:
+        if not isinstance(source, dict):
+            invalid_input = True
+            continue
+        episode_id = source.get("episode_id")
+        fingerprint = source.get("content_fingerprint")
+        if (
+            not isinstance(episode_id, str)
+            or not episode_id
+            or episode_id in source_ids
+            or not isinstance(fingerprint, str)
+            or not fingerprint
+        ):
+            invalid_input = True
+            continue
+        source_ids.add(episode_id)
+        episode = episodes_by_id.get(episode_id)
+        if episode is None:
+            identity_mismatch = True
+            continue
+        if episode.get("content_fingerprint") != fingerprint:
+            identity_mismatch = True
+        if episode.get("split") != "train":
+            nontrain_source_count += 1
+        for frame in episode.get("frames", []):
+            state = frame.get("observation_state")
+            if (
+                not isinstance(state, list)
+                or len(state) != len(mean)
+                or any(not is_finite_number(value) for value in state)
+            ):
+                invalid_input = True
+                continue
+            observations.append(tuple(float(value) for value in state))
+
+    if invalid_input or not observations:
+        issues.append(Issue("invalid_normalization_input", "dataset.normalization_artifact", "sources and raw observation states must be complete, unique, finite, and dimensionally aligned"))
+    if identity_mismatch:
+        issues.append(Issue("normalization_source_identity_mismatch", "dataset.normalization_artifact.sources", "source episode or content fingerprint does not match current fixture"))
+    if nontrain_source_count:
+        issues.append(Issue("normalization_source_split", "dataset.normalization_artifact.sources", f"found {nontrain_source_count} non-train source episode(s)"))
+
+    if invalid_input or not observations:
+        return issues, {
+            **empty_report,
+            "declared_source_episode_count": len(sources),
+            "nontrain_source_episode_count": nontrain_source_count,
+            "declared_sample_count": sample_count,
+        }
+
+    recomputed_mean = [
+        sum(row[index] for row in observations) / len(observations)
+        for index in range(len(mean))
+    ]
+    recomputed_scale = [
+        sqrt(
+            sum((row[index] - recomputed_mean[index]) ** 2 for row in observations)
+            / len(observations)
+        )
+        for index in range(len(mean))
+    ]
+    mean_gaps = [abs(actual - expected) for actual, expected in zip(mean, recomputed_mean, strict=True)]
+    scale_gaps = [abs(actual - expected) for actual, expected in zip(scale, recomputed_scale, strict=True)]
+    if (
+        sample_count != len(observations)
+        or any(not isclose(gap, 0.0, rel_tol=0.0, abs_tol=1e-12) for gap in mean_gaps + scale_gaps)
+    ):
+        issues.append(Issue("normalization_stat_mismatch", "dataset.normalization_artifact", "reported count, mean, or population scale does not match declared sources"))
+    return issues, {
+        "declared_source_episode_count": len(sources),
+        "nontrain_source_episode_count": nontrain_source_count,
+        "declared_sample_count": sample_count,
+        "recomputed_sample_count": len(observations),
+        "reported_mean": mean,
+        "recomputed_mean": recomputed_mean,
+        "reported_scale": scale,
+        "recomputed_scale": recomputed_scale,
+        "maximum_mean_gap": max(mean_gaps),
+        "maximum_scale_gap": max(scale_gaps),
+    }
+
+
+def describe_normalization_artifact(fixture: dict[str, Any]) -> dict[str, Any]:
+    """Expose recomputation evidence without turning it into a quality score."""
+
+    _, report = normalization_artifact_audit(
+        fixture.get("dataset", {}), fixture.get("episodes", [])
+    )
+    return report
+
+
 def audit(fixture: dict[str, Any]) -> list[Issue]:
     issues: list[Issue] = []
     dataset = fixture.get("dataset", {})
@@ -54,6 +190,8 @@ def audit(fixture: dict[str, Any]) -> list[Issue]:
 
     if dataset.get("normalization_scope") != "train":
         issues.append(Issue("normalization_scope", "dataset.normalization_scope", "statistics must use train only"))
+    normalization_issues, _ = normalization_artifact_audit(dataset, episodes)
+    issues.extend(normalization_issues)
 
     fps = dataset.get("fps")
     expected_delta = 1.0 / fps if is_finite_number(fps) and fps > 0 else None

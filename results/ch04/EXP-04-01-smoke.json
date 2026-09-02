@@ -7,6 +7,8 @@
     "missing_sensor_record",
     "noncontiguous_frame_index",
     "normalization_scope",
+    "normalization_source_split",
+    "normalization_stat_mismatch",
     "sensor_sync_skew",
     "similarity_cluster_split_overlap",
     "source_asset_split_overlap",
@@ -22,10 +24,34 @@
     "injected_failures": {
       "group_overlap_count": 1,
       "identity_overlap_count": 3,
-      "issue_count": 11,
-      "issue_type_count": 11
+      "issue_count": 13,
+      "issue_type_count": 13
     },
-    "injected_issue_types_detected": 11,
+    "injected_issue_types_detected": 13,
+    "injected_normalization_artifact": {
+      "declared_sample_count": 5,
+      "declared_source_episode_count": 2,
+      "maximum_mean_gap": 994.2,
+      "maximum_scale_gap": 3.7074409183759283,
+      "nontrain_source_episode_count": 1,
+      "recomputed_mean": [
+        4.8,
+        5.8
+      ],
+      "recomputed_sample_count": 5,
+      "recomputed_scale": [
+        4.707440918375928,
+        4.707440918375928
+      ],
+      "reported_mean": [
+        999.0,
+        999.0
+      ],
+      "reported_scale": [
+        1.0,
+        1.0
+      ]
+    },
     "valid_fixture": {
       "group_overlap_count": 0,
       "identity_overlap_count": 0,
@@ -39,6 +65,30 @@
       "maximum_valid_sensor_skew_seconds": 0.01,
       "terminated_episode_count": 1,
       "truncated_episode_count": 1
+    },
+    "valid_normalization_artifact": {
+      "declared_sample_count": 3,
+      "declared_source_episode_count": 1,
+      "maximum_mean_gap": 0.0,
+      "maximum_scale_gap": 0.0,
+      "nontrain_source_episode_count": 0,
+      "recomputed_mean": [
+        1.0,
+        2.0
+      ],
+      "recomputed_sample_count": 3,
+      "recomputed_scale": [
+        0.816496580927726,
+        0.816496580927726
+      ],
+      "reported_mean": [
+        1.0,
+        2.0
+      ],
+      "reported_scale": [
+        0.816496580927726,
+        0.816496580927726
+      ]
     }
   },
   "scope": "metadata audit smoke; not validation of a real dataset",
