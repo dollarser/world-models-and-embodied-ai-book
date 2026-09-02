@@ -103,7 +103,7 @@ z_t=f_\theta(z_{t-1},o_t,a_{t-1})
 
 这里有三条需要分开的理论直觉。[DeepMDP](https://proceedings.mlr.press/v97/gelada19a.html) 用 reward prediction 与 next-latent distribution prediction 把表示质量连接到 MDP/bisimulation 条件；这说明只重建外观不是唯一目标，也不表示任意低预测 loss 都足够。[Value Equivalence](https://arxiv.org/abs/2011.03506) 则把模型等价定义在选定的 functions 与 policies 的 Bellman updates 上；它允许忽略无关细节，但“相关”随用途和函数集合变化。MuZero 的 reward/value/policy 预测是价值相关路线的代表，不是所有任务上的充分状态证明。
 
-较新的 [POBAX 论文](https://arxiv.org/abs/2508.00046) 与[锁定源码快照 `a5e1d62`](https://github.com/taodav/pobax/tree/a5e1d62d14e4efe783885b9d4f19cffa2a568eec)把“更多 state 信息或 memory 能否形成清晰 performance gap”作为部分可观测 benchmark 的设计信号，并覆盖多种 state aliasing。它是后续 M 档候选，不是当前零下载 S 档依赖；本书没有运行 JAX、训练 memory policy 或复现其论文结果。
+较新的 [POBAX 论文](https://arxiv.org/abs/2508.00046) 与[锁定源码快照 `a5e1d62`](https://github.com/taodav/pobax/tree/a5e1d62d14e4efe783885b9d4f19cffa2a568eec)把“更多 state 信息或 memory 能否形成清晰 performance gap”作为部分可观测 benchmark 的设计信号，并覆盖多种 state aliasing。它适合作为需要 JAX 与策略训练的可选 M 档证据路径，不是理解本章概念所依赖的 S 档内容；本书没有运行 JAX、训练 memory policy 或复现其论文结果。
 
 ## 2.3 世界模型的五个常见组件
 

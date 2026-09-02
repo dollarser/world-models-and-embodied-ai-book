@@ -186,7 +186,7 @@ u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
 
 正文关键结论分为 `fact`、`result`、`inference`、`recommendation` 和 `unverified`。外部资产用来源成熟度 `P/A/O/V/T` 与复现状态 `R0–R4` 两个维度；论文发表、GitHub 仓库存在或产品演示都不自动等于本书复现。
 
-本书当前设备无 GPU，默认只运行 Docker/CPU、零下载或微型 fixture：
+为了让概念学习不依赖专用硬件，本书默认的最低证据路径只使用 Docker/CPU、零下载或微型 fixture：
 
 - S：CPU、零/极小下载，验证定义、接口和反例；
 - M/L1：可选小模型/小数据，目标 24 GB 单卡以内；

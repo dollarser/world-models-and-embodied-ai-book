@@ -223,7 +223,7 @@ Reward model 与 world model 的错误也可能相关。例如两者都来自相
 
 ## 18.7 World-Action Model：按接口分，不按名字分
 
-截至核查日，WAM 仍是研究趋势标签而非统一标准。[World Models to World Action Models 教程快照 `8ae8d6a`](https://github.com/clearlab-sustech/WorldModelSurvey/blob/8ae8d6ad916728059559ae99417b8aacdaf22301/README.md)给出一组有用分类，本书将其改写为可审计接口：
+截至 2026-09-02，WAM 仍是研究趋势标签而非统一标准。[World Models to World Action Models 教程快照 `8ae8d6a`](https://github.com/clearlab-sustech/WorldModelSurvey/blob/8ae8d6ad916728059559ae99417b8aacdaf22301/README.md)给出一组有用分类，本书将其改写为可审计接口：
 
 | 路径 | 训练/推理接口 | 是否天然可 rollout | 关键检查 |
 | --- | --- | --- | --- |
@@ -267,7 +267,7 @@ reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预�
 | L1 | 小 policy/adapter 的短步后训练 | 可选、待验证 | 目标 24 GB 单卡；先测峰值 VRAM、墙钟和外部 return |
 | L2 | learned-world-model + VLA 对照 | 非必需、待验证 | 最多 2×80 GB；超限则只做论文/接口审计 |
 
-当前无 GPU，M/L1/L2 均未运行。RIPT-VLA 作者仓库的 OpenVLA-OFT 示例建议至少 3 GPU，超出本书最多双卡的默认范围，因此不能直接成为核心复现；只有经实测缩小且不削弱比较合同的配方才能进入 L1/L2。World-Gymnast 的固定脚本默认 `NUM_GPUS=4`、开启在线 W&B，并主动清理当前用户 Hugging Face 模块缓存和匹配的 `/tmp` 缓存；它只能在审查后复制到一次性 Docker 环境，关闭未授权网络记录并使用显式缓存挂载，不能在宿主机原样运行。VLA-RFT、WoVR 的 world model + policy 完整栈也未证明落入 24 GB 单卡。[WMPO 固定 README](https://github.com/WM-PO/WMPO/blob/c836d74ec6f4525c93fe980d54d0ca870118615a/README.md)标注完整 checkpoint 约 `364 GiB`、数据约 `530 GiB`，因此默认禁止整包下载；即使只选单任务资产，也必须先列出文件清单、字节数、缓存路径与许可。
+M/L1/L2 路径均未运行，也不是理解后训练机制的前置条件。RIPT-VLA 作者仓库的 OpenVLA-OFT 示例建议至少 3 GPU，超出本书最多双卡的默认范围，因此不能直接成为核心复现；只有经实测缩小且不削弱比较合同的配方才能进入 L1/L2。World-Gymnast 的固定脚本默认 `NUM_GPUS=4`、开启在线 W&B，并主动清理当前用户 Hugging Face 模块缓存和匹配的 `/tmp` 缓存；它只能在审查后复制到一次性 Docker 环境，关闭未授权网络记录并使用显式缓存挂载，不能在宿主机原样运行。VLA-RFT、WoVR 的 world model + policy 完整栈也未证明落入 24 GB 单卡。[WMPO 固定 README](https://github.com/WM-PO/WMPO/blob/c836d74ec6f4525c93fe980d54d0ca870118615a/README.md)标注完整 checkpoint 约 `364 GiB`、数据约 `530 GiB`，因此默认禁止整包下载；即使只选单任务资产，也必须先列出文件清单、字节数、缓存路径与许可。
 
 本章不要求购买硬件。S 档原创代码、数据和图表为 MIT；RIPT-VLA、World-Gymnast、LIBERO、OpenVLA-OFT、world model、checkpoint 和生成数据各有独立许可与来源要求，运行前必须锁定 commit 和资产条款。
 
@@ -321,7 +321,7 @@ World-model rollout 降低真实交互成本，同时给 policy 和 reward model
 <details markdown="1">
 <summary>SELF-CHECK-18-04：SimWAM 是辅助未来预测案例</summary>
 
-按本章当前公开实现说明，SimWAM 属于 `TAB-18-04` 的 auxiliary future prediction：action token 与 future-video token 隔离、两类 expert 不共享权重，部署时丢弃视频分支并走 action-only 路径。因果 ablation 应固定数据、action path、参数/训练预算和评测协议，只移除或置零 future-video loss/branch，比较 held-out 闭环 action outcome、碰撞和资源；若参数量变化，应再做容量匹配对照。仅比较视频 loss、或同时改变 action backbone，不能识别辅助未来预测的贡献。该分类不表示本书已复现其上游结果。
+根据本章引用的公开实现，SimWAM 属于 `TAB-18-04` 的 auxiliary future prediction：action token 与 future-video token 隔离、两类 expert 不共享权重，部署时丢弃视频分支并走 action-only 路径。因果 ablation 应固定数据、action path、参数/训练预算和评测协议，只移除或置零 future-video loss/branch，比较 held-out 闭环 action outcome、碰撞和资源；若参数量变化，应再做容量匹配对照。仅比较视频 loss、或同时改变 action backbone，不能识别辅助未来预测的贡献。该分类不表示本书已复现其上游结果。
 
 </details>
 

@@ -167,7 +167,7 @@ j=\left\lfloor\frac{y-y_{min}}{r}\right\rfloor.
 
 ## 12.5 重建得像，不等于可行动
 
-NeRF 和 3D Gaussian Splatting 以新视角渲染和场景重建见长。[Nerfstudio](https://github.com/nerfstudio-project/nerfstudio) 提供 Apache-2.0 的开源 NeRF 工具链 `[O,R1]`；本书没有在当前无 GPU 环境下载数据或训练。重建结果可以给 Real2Sim 提供外观和几何先验，但仍需回答：空闲空间如何定义、薄物体是否保留、尺度和坐标是否正确、动态对象如何更新、碰撞几何怎样生成。
+NeRF 和 3D Gaussian Splatting 以新视角渲染和场景重建见长。[Nerfstudio](https://github.com/nerfstudio-project/nerfstudio) 提供 Apache-2.0 的开源 NeRF 工具链 `[O,R1]`；本书没有下载数据或训练该工具链。重建结果可以给 Real2Sim 提供外观和几何先验，但仍需回答：空闲空间如何定义、薄物体是否保留、尺度和坐标是否正确、动态对象如何更新、碰撞几何怎样生成。
 
 2026 年 Google DeepMind 发布的 [D4RT](https://deepmind.google/blog/d4rt-teaching-ai-to-see-the-world-in-four-dimensions/) 将点图、深度、相机与跨时间跟踪统一为动态 4D 重建查询，项目页提供论文与可视结果 `[V/A,R0]`。它是“随时间重建与跟踪”的研究锚点，不自动证明机器人抓取、导航或驾驶安全有效；本书未运行其模型。
 
@@ -333,7 +333,7 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 
 S 档 `EXP-12-01` 使用 Python 标准库、CPU、零下载和 MIT 程序化 fixture；它只验证三态地图、连通、半开米制栅格边界、坐标误差、证据更新、Bresenham 路径段、离散 footprint 与观测过期。
 
-M 档可在用户明确同意数据条款与下载量后，使用许可允许的小型 RGB-D/仿真子集训练轻量 depth/occupancy baseline，默认不超过 24 GB 单卡。应先记录数据体积、预处理缓存、输入范围、体素分辨率和峰值显存。当前无 GPU 阶段不执行。
+M 档可在明确同意数据条款与下载量后，使用许可允许的小型 RGB-D/仿真子集训练轻量 depth/occupancy baseline，默认不超过 24 GB 单卡。应先记录数据体积、预处理缓存、输入范围、体素分辨率和峰值显存；该路径属于可选证据扩展，不是正文知识的前置条件。
 
 L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为明确选做的研究扩展，不是阅读前置。完整自动驾驶数据常达到数十 GB 以上且有独立许可，不应由命令自动下载。Nerfstudio、Occ3D、OpenScene 及底层数据的代码、权重、数据和衍生资产许可必须分别记录。
 
@@ -353,7 +353,7 @@ L1 可加入多相机或短时动态 occupancy；L2 最多 2×80 GB，只作为�
 | 开源基准 | Occ3D/OpenScene occupancy 资产 | 官方仓库/论文 | `[O/A,R1]` | 本书未下载或运行 |
 | 开源工具 | Nerfstudio 场景重建工具链 | 官方仓库 | `[O,R1]` | 本书未训练；非行动证明 |
 | 研究案例 | D4RT 动态 4D 重建与跟踪 | 官方页面/论文项目 | `[V/A,R0]` | 本书未独立验证 |
-| 未验证 | 24 GB 内轻量 occupancy baseline | 后续 M 档 | planned | 数据、GPU 与资源待测 |
+| 未验证 | 24 GB 内轻量 occupancy baseline | 可选 M 档 | planned | 数据、GPU 与资源待测 |
 
 ## 小结
 

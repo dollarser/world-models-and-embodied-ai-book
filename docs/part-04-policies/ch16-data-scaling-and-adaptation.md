@@ -18,7 +18,7 @@
 - 不把数据帧数等同有效任务多样性或质量；
 - 不声称跨本体预训练必然正迁移；
 - 不把 LoRA、OFT、量化或蒸馏当作无损且通用的加速按钮；
-- 不在当前设备自动下载大型数据、视频或 checkpoint。
+- 不把下载大型数据、视频或 checkpoint 设为理解数据迁移的前提。
 
 ### 学完后的可验证产出
 
@@ -330,7 +330,7 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 
 S 档 `EXP-16-01` 使用 Python 标准库、CPU、零下载和 MIT fixture，只验证 adapter 合同。
 
-M 档在用户确认许可和体积后选择少量 LeRobot episode，训练小 action head/adapter 或 SmolVLA 小规模适配，默认不超过 24 GB 单卡、2–8 小时。先做 1–4 episode 过拟合、schema round-trip 和数据 checksum，再扩大；当前无 GPU 阶段不执行。
+M 档在确认许可和体积后选择少量 LeRobot episode，训练小 action head/adapter 或 SmolVLA 小规模适配，默认不超过 24 GB 单卡、2–8 小时。先做 1–4 episode 过拟合、schema round-trip 和数据 checksum，再扩大；这是可选证据路径，不是理解跨本体迁移的前置条件。
 
 L1 可做 24 GB 单卡的 LoRA/蒸馏预检或 OpenVLA-OFT 量化推理；上游传统 OFT 训练下限约 27 GB，不能预先承诺符合 24 GB。L2 最多 2×80 GB，可做较大 adapter/部分解冻；若上游配方要求更多 GPU，则标记超出本书默认边界，而不是擅自缩小后声称复现。
 

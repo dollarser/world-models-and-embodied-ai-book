@@ -19,7 +19,7 @@
 
 - 不把 JEPA 定义为唯一正确的世界模型；
 - 不把分类或线性 probe 分数直接解释为物理理解、规划或安全；
-- 不在当前无 GPU 设备上下载官方大型 checkpoint 或第一人称完整视频；
+- 不把下载官方大型 checkpoint 或第一人称完整视频设为概念学习的前提；
 - 不把手工标量 fixture 写成 I-JEPA/V-JEPA 的实测结果。
 
 ### 学完后的可验证产出
@@ -224,9 +224,9 @@ make ch10-smoke
 
 该实验没有图像、视频、模型参数或训练，不估计 V-JEPA 的能力。其价值是建立官方特征到来前就能测试的评测合同，并把“静态表示信息”“时间顺序”“动作接口”和“规划用途”拆成不同验收项。
 
-## 10.7 官方特征路径：S1/M 档而非本次实测
+## 10.7 官方特征路径：S1/M 档的可选证据
 
-当前机器不下载 checkpoint。截至 2026-09-02，官方仓库列出的最小 V-JEPA 2.1 checkpoint 是 80M 参数、384 分辨率的 ViT-B/16，并提供 `vjepa2_1_vit_base_384` PyTorch Hub 符号；因此后续先把它作为 S1 **预检候选**，而不是从 1B/2B 模型开始。这是型号存在性与资源排序，不是可运行结论。
+本书的核心路径不下载 checkpoint。截至 2026-09-02，官方仓库列出的最小 V-JEPA 2.1 checkpoint 是 80M 参数、384 分辨率的 ViT-B/16，并提供 `vjepa2_1_vit_base_384` PyTorch Hub 符号；若扩展到官方特征，可先把它作为 S1 **预检候选**，而不是从 1B/2B 模型开始。这是型号存在性与资源排序，不是可运行结论。
 
 本次源码级预检还发现一个必须先处理的上游阻塞：[锁定快照的 `src/hub/backbones.py`](https://github.com/facebookresearch/vjepa2/blob/204698b45b3712590f06245fbfba32d3be539812/src/hub/backbones.py)把 `VJEPA_BASE_URL` 设为测试用 `http://localhost:8300`，而公开下载地址被注释。因此在普通新环境中调用 `torch.hub.load(..., pretrained=True)` 会尝试访问不存在的本地服务；README 中存在直接 checkpoint 链接不能证明 Hub 路径正常。S1 必须保持 `blocked-by-upstream-loader`，直到锁定一个经核验的修复 commit，或显式下载带校验和的 checkpoint 并使用与该权重兼容的本地 loader；本书当前不实施绕过下载。执行前还需要：
 

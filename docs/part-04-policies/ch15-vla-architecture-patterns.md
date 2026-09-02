@@ -316,7 +316,7 @@ OpenVLA 官方 README 的传统 LoRA 示例称至少约 27 GB，超出默认 24 
 | 论文案例 | RT-1/RT-2 与 FAST action token | 论文/项目 | `[A,R0/R1]` | 本书未运行 |
 | 开源案例 | OpenVLA、SmolVLA、openpi | 官方仓库/论文 | `[A/O,R1]` | checkpoint/训练未运行 |
 | 最新案例 | GR00T N1.7 双系统与 flow head | 官方仓库 | `[O,R1]` | 官方声明，版本会漂移 |
-| 未验证 | 24 GB 内 SmolVLA 适配 | 后续 M 档 | planned | GPU、数据和显存待测 |
+| 未验证 | 24 GB 内 SmolVLA 适配 | 可选 M 档 | planned | GPU、数据和显存待测 |
 
 ## 小结
 

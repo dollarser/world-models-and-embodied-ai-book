@@ -19,7 +19,7 @@
 - 不把一个解析双峰 fixture 当作 Diffusion Policy 或 flow policy 复现；
 - 不声称生成式策略必然优于 MSE、ACT、自回归动作 token 或分层规划；
 - 不把生成样本多样性等同闭环成功、校准或安全；
-- 不在当前无 GPU 设备下载 Push-T/LIBERO 或 openpi checkpoint；
+- 不把下载 Push-T、LIBERO 或 openpi checkpoint 设为理解生成式动作的前提；
 - 不让随机采样动作绕过单位还原、碰撞检查、限幅与急停。
 
 ### 学完后的可验证产出
@@ -103,7 +103,7 @@ Flow Matching 学习条件向量场 `v_θ(A,t,o)`，使 base action 沿常微分
 
 训练可直接回归所选概率路径的目标速度；推理用 Euler、Heun 或其他 ODE solver 积分。直线路径/rectified flow 可能允许较少求解步，但实际质量取决于配对、路径、向量场误差、solver、维度和条件分布。不能从“一步 oracle 直线可到达”推出“一步 learned flow 足够”。
 
-[Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747) 给出通用连续归一化流训练框架 `[P,R0]`。机器人领域的公开桥接案例是 [openpi README 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/README.md)：截至核查日期，其 README 将 π0 描述为 flow-based VLA，并说明公开 π0.5 训练/推理当前只支持 flow matching head `[O,R1]`。这些大模型属于第15章；本章只借它说明 flow 已成为动作生成接口，不引用其性能作为本书结果。
+[Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747) 给出通用连续归一化流训练框架 `[P,R0]`。机器人领域的公开桥接案例是 [openpi README 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/README.md)：截至 2026-09-02，该 README 将 π0 描述为 flow-based VLA，并说明公开 π0.5 训练/推理只支持 flow matching head `[O,R1]`。这些大模型属于第15章；本章只借它说明 flow 已成为动作生成接口，不引用其性能作为本书结果。
 
 Diffusion 与 flow 不应按营销标签做速度结论。公平比较至少固定：观测编码器、训练数据与划分、动作表示、chunk/horizon、参数量、训练更新、采样 solver、模型调用数、硬件、batch、随机种子与闭环协议。
 

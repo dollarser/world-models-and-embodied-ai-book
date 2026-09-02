@@ -284,7 +284,7 @@ make ch11-smoke
 
 迁移代际时仍应重新登记输入输出模态、运行后端、checkpoint、许可与失败边界，不能沿用 2.5 的实验卡。
 
-本书当前不下载 checkpoint，不执行其训练或试玩。若后续作为 M/L1 实验，必须锁定 commit、模型代际、环境 ROM/数据权利、checkpoint 许可、Guardrail 开关与 revision、GPU、采样步数、真实 FPS 定义和自由 rollout horizon。论文速度不能直接换算当前设备性能；模型名和参数量也不能直接推出 24 GB 可行。
+这些系统不是核心阅读所依赖的下载项，本书也没有执行其训练或试玩。若作为 M/L1 扩展，必须锁定 commit、模型代际、环境 ROM/数据权利、checkpoint 许可、Guardrail 开关与 revision、GPU、采样步数、真实 FPS 定义和自由 rollout horizon。论文速度不能直接换算到未测硬件；模型名和参数量也不能直接推出 24 GB 可行。
 
 V-JEPA 2-AC 是非像素动作条件路线的另一个锚点；它与视频扩散模型的共同点是接收动作并预测未来，输出空间和规划接口不同。第17章会在统一用途框架下比较。
 
@@ -302,7 +302,7 @@ Waymo 2026 年官方博客称其驾驶世界模型基于 Genie 3 做领域适配
 
 GAIA-2 有公开技术报告，描述多相机、文本、动作和结构条件的 latent/flow 视频模型；GAIA-3/4 的最新闭环与安全评测内容主要来自 Wayve 官方研究页面。2026 年 8 月发布的 [GAIA-4 页面](https://wayve.ai/thinking/gaia-4/)强调把 AI Driver 放回闭环、world-on-rails 与多模态生成。
 
-`CLAIM-11-05`（fact）：截至核查日期，Wayve 官方页面把 GAIA-4 定位为闭环驾驶模拟与安全评测组件；本书只把它记录为供应商声明 `[V,R0]`，不把相关性、保真或安全结论视为独立验证。
+`CLAIM-11-05`（fact）：截至 2026-09-02，Wayve 官方页面把 GAIA-4 定位为闭环驾驶模拟与安全评测组件；本书只把它记录为供应商声明 `[V,R0]`，不把相关性、保真或安全结论视为独立验证。
 
 这些闭源案例的教学价值是展示用途演进：视频生成 → 可控场景 → 闭环策略评测。版本越新，越需要更新案例卡，而不是改写稳定的动作条件公式。
 
@@ -352,7 +352,7 @@ M 档可训练小型离散帧或 latent predictor：默认 24 GB 单卡以内，
 | 开源案例 | Cosmos 3 forward/inverse/policy action modes | 官方快照/cookbook | `[O,R1]` | OpenMDW-1.1；Guardrail 授权/开关、资源与有效性未验证 |
 | 论文案例 | GameNGen 用帧与动作生成交互未来 | 论文/项目页 | `[A,R1]` | 本书未运行 |
 | 闭源案例 | Genie 3、Waymo WM、GAIA-4 的交互/驾驶声明 | 官方页面 | `[V,R0/R1]` | 无独立复现 |
-| 未验证 | 小型视频/latent predictor | 后续 M 档 | planned | GPU、数据与资源待测 |
+| 未验证 | 小型视频/latent predictor | 可选 M 档 | planned | GPU、数据与资源待测 |
 
 ## 小结
 
