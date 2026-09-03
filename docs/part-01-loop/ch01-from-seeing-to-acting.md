@@ -116,7 +116,7 @@ u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
 
 这里 $d_t$ 是每步固定为 $0.1$ 的外部扰动，$\tilde{x}_t$ 是 controller 实际拿到的当前或延迟 state，$k$ 是比例增益，$u_{\max}$ 是动作权限。这个式子只回答三个机制问题：及时观测下的负反馈能否抵消持续扰动；旧观测会不会让动作落后；动作权限不足时 controller 是否只能持续饱和。MIT Underactuated Robotics 的 [Output Feedback](https://underactuated.mit.edu/output_feedback.html) 讲义强调实际决策依赖 measurement 而非不可直接获得的真实 state，estimator dynamics 也会进入闭环；其 [torque-limited pendulum](https://underactuated.mit.edu/pend.html) 例子则展示 actuator limit 会约束可实现的控制。它们为机制提供课程级来源，但不是本 fixture 数值的外部验证。
 
-| case | $k$ | 观测时延 | $u_{\max}$ | 最大 $|x|$ | 最终 $x$ | 首次越过 0.3 / 饱和步数 |
+| case | $k$ | 观测时延 | $u_{\max}$ | 最大 $\lvert x\rvert$ | 最终 $x$ | 首次越过 0.3 / 饱和步数 |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | open loop | 0.0 | 0 | 0.25 | 1.2000 | 1.2000 | 第 4 步 / 0 |
 | timely feedback | 0.8 | 0 | 0.25 | 0.1250 | 0.1250 | 未越界 / 0 |
@@ -132,7 +132,7 @@ u_t=\operatorname{clip}(-k\tilde{x}_t,-u_{\max},u_{\max}).
 
 只报告 rollout 最终 state 还会丢失路径信息。v3 固定两条八步扰动序列，它们都含五个 `-0.1` 和三个 `+0.1`，因此长度、元素 multiset 与平均绝对扰动完全相同；controller 也固定为 $k=0.8$、两步观测延迟和 $u_{\max}=0.25$。只交换第 7、8 步扰动顺序，就得到相同终态和不同瞬态：
 
-| 扰动顺序 | 最终 state | 最大绝对 state | 严格 $|x|>0.3$ |
+| 扰动顺序 | 最终 state | 最大绝对 state | 严格 $\lvert x\rvert>0.3$ |
 | --- | ---: | ---: | --- |
 | `[-,-,-,+,+,-,-,+] × 0.1` | 0.264 | 0.300 | 否；只触及边界 |
 | `[-,-,-,+,+,-,+,-] × 0.1` | 0.264 | 0.476 | 是；第 7 步 |
