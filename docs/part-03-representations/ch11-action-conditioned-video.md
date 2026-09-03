@@ -446,7 +446,7 @@ OpenDV 等视频数据可用于外观/运动预训练，但若缺少同步控制
 <details markdown="1">
 <summary>自检 11-6：终点正确但轨迹错误</summary>
 
-可选一对会互相抵消的动作，例如先把真实 `left/right` 语义交换，再执行包含左右各一次的序列；当前 fixture 的 `left→forward→right` 在 swapped 模型中得到 oracle/swapped 的 y 轨迹 `3→2→2→3` 与 `3→4→4→3`，终点误差为0但中间最大误差为2。最低报告应包含序列身份、attempted/available 数、每个 horizon 的状态误差、最大中间误差、终点误差、碰撞/终止与失败保留规则；不能只给跨序列平均终点。还需把这类序列在 protocol 中预登记，不能观察结果后才挑出最戏剧性的抵消案例。
+可选一对会互相抵消的动作，例如先把真实 `left/right` 语义交换，再执行包含左右各一次的序列；当前 fixture 的 `left→forward→right` 在 swapped 模型中得到 oracle/swapped 的 y 轨迹 `3→2→2→3` 与 `3→4→4→3`，终点误差为 0 但中间最大误差为 2。最低报告应包含序列身份、attempted/available 数、每个 horizon 的状态误差、最大中间误差、终点误差、碰撞/终止与失败保留规则；不能只给跨序列平均终点。还需把这类序列在 protocol 中预登记，不能观察结果后才挑出最戏剧性的抵消案例。
 
 </details>
 

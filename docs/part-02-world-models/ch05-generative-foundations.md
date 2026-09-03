@@ -272,7 +272,7 @@ u(x)=\max_m \hat y_m(x)-\min_m \hat y_m(x),
 <!-- CLAIM_META: CLAIM-05-08 result -->
 固定 range gate 拒绝了成员分歧为 2 的 `diverse_ood`，却接受了三个成员完全一致、ensemble mean 绝对误差仍为 4 的 `shared_error_ood`。该结果只证明低 disagreement 不蕴含正确，也不测量 learned ensemble、OOD 检出率、校准、真实错误相关性或安全性。
 
-v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为2，但 ensemble mean error 为0；于是 score 排序同时包含“低分但错”和“高分但对”。令绝对误差大于1为手工 failure，range 不超过阈值才接受：
+v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为 2，但 ensemble mean error 为 0；于是 score 排序同时包含“低分但错”和“高分但对”。令绝对误差大于 1 为手工 failure，range 不超过阈值才接受：
 
 | range 阈值 | coverage | 接受 failure rate | 接受 mean absolute error | 正确样本 defer rate |
 | ---: | ---: | ---: | ---: | ---: |
@@ -280,10 +280,10 @@ v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为
 | 0.25 | 0.50 | 0.50 | 2.00 | 0.50 |
 | 2 | 1.00 | 0.50 | 2.00 | 0.00 |
 
-*表 5-5：实验 5-1 v4 的四例 disagreement risk–coverage 扫描。failure 标签、误差容差1和阈值均由作者设定，不是总体风险估计。*<!-- INTERNAL_ASSET_ID: TAB-05-05 -->
+*表 5-5：实验 5-1 v4 的四例 disagreement risk–coverage 扫描。failure 标签、误差容差 1 和阈值均由作者设定，不是总体风险估计。*<!-- INTERNAL_ASSET_ID: TAB-05-05 -->
 
 <!-- CLAIM_META: CLAIM-05-09 result -->
-固定四例 panel 中，range 阈值0只接受 `shared_error_ood`，coverage 为0.25且接受 failure rate 为1；阈值0.25接受低误差 ID 与共同错误，coverage/risk 为0.5/0.5；阈值2接受全部，coverage/risk 为1/0.5。它只证明该手工排序中收紧 disagreement gate 可降低 coverage 却提高接受错误比例，不能估计 learned ensemble 的 risk–coverage、阈值泛化、OOD 检出率、校准或安全收益。
+固定四例 panel 中，range 阈值 0 只接受 `shared_error_ood`，coverage 为 0.25 且接受 failure rate 为 1；阈值 0.25 接受低误差 ID 与共同错误，coverage/risk 为 0.5/0.5；阈值 2 接受全部，coverage/risk 为 1/0.5。它只证明该手工排序中收紧 disagreement gate 可降低 coverage 却提高接受错误比例，不能估计 learned ensemble 的 risk–coverage、阈值泛化、OOD 检出率、校准或安全收益。
 
 因此，成员训练数据、初始化、架构和 checkpoint 数量必须登记，且要在冻结的 ID/shift/OOD/stress split 上把 score 与真实错误配对。若所有成员共享数据捷径、标签错误、架构盲点或 simulator bias，它们可能一致地自信犯错；此时仍需覆盖测试、外部 detector、约束检查与真实/高保真后果验证。
 
@@ -371,7 +371,7 @@ VAE posterior 通常写成 $q(z\mid x)$，用当前样本推断生成 latent，�
 <details markdown="1">
 <summary>自检 5-7：严格 disagreement gate 也可能留下最差接受集</summary>
 
-阈值0只接受 range 恰为0的 `shared_error_ood`，而它的 mean error 为4并超过手工容差1，所以 coverage 是1/4、accepted failure rate 是1。放宽到0.25后，低误差 ID case 也被接受，coverage变成2/4、risk降为1/2；放宽到2后四例全收，risk仍为2/4。合格答案必须指出 risk 不随阈值收紧而保证单调下降，因为 range 排序本身可能错误；四个手工点也不能用于选择生产阈值或估计总体风险。
+阈值 0 只接受 range 恰为 0 的 `shared_error_ood`，而它的 mean error 为 4 并超过手工容差 1，所以 coverage 是 1/4、accepted failure rate 是 1。放宽到 0.25 后，低误差 ID case 也被接受，coverage 变成 2/4、risk 降为 1/2；放宽到 2 后四例全收，risk 仍为 2/4。合格答案必须指出 risk 不随阈值收紧而保证单调下降，因为 range 排序本身可能错误；四个手工点也不能用于选择生产阈值或估计总体风险。
 
 </details>
 

@@ -93,15 +93,15 @@ XEWorld在物理场景保持一致时留出整台机器人，分别检查视觉�
 
 ### Riemann-1.0：一个模型、两种角色仍需两套证据
 
-Riemann-1.0把多视角观测、机器人state和本体特定action放进因果自回归序列，并同时声明在线policy与action-conditioned simulator两种角色。它把第15章的可执行动作和第17章的代理仿真放到同一个接口里，因而特别适合追问：训练目标、推理路径、时延和校准是否对两种用途分别成立。
+Riemann-1.0 把多视角观测、机器人state和本体特定action放进因果自回归序列，并同时声明在线policy与action-conditioned simulator两种角色。它把第15章的可执行动作和第17章的代理仿真放到同一个接口里，因而特别适合追问：训练目标、推理路径、时延和校准是否对两种用途分别成立。
 
-截至2026-09-02，本书只核对 `arXiv:2608.27033v1`；代码、权重和数据都登记为unknown。论文中的数据规模、benchmark和真实机器人数字全部是上游报告，既不是本书结果，也不能推出24 GB路径。没有版本化资产前，该卡保持 `monitor/R0`，不进入稳定章节。
+截至 2026-09-02，本书只核对 `arXiv:2608.27033v1`；代码、权重和数据都登记为unknown。论文中的数据规模、benchmark和真实机器人数字全部是上游报告，既不是本书结果，也不能推出 24 GB路径。没有版本化资产前，该卡保持 `monitor/R0`，不进入稳定章节。
 
 ### A2World：开源的是哪一段，要逐项回答
 
-A2World从action-to-video预训练出发，再分成history-aware的A2World-sim和联合video-action的A2World-policy。[ECCV 2026官方收录页](https://eccv.ecva.net/virtual/2026/poster/3656)确认论文已接收；官方仓库快照[`077e10a`](https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834)提供Apache-2.0代码、world-model入口和部分checkpoint元数据。这让“同一动力学先验能否服务simulator与policy”有了可审计接口，而不只是摘要措辞。
+A2World从action-to-video预训练出发，再分成history-aware的A2World-sim和联合video-action的A2World-policy。[ECCV 2026 官方收录页](https://eccv.ecva.net/virtual/2026/poster/3656)确认论文已接收；官方仓库快照[`077e10a`](https://github.com/LogosRoboticsGroup/A2World/tree/077e10ad6cee07342b5e779f11fea78247584834)提供Apache-2.0 代码、world-model入口和部分checkpoint元数据。这让“同一动力学先验能否服务simulator与policy”有了可审计接口，而不只是摘要措辞。
 
-当前发布仍以world-model组件为重点，外部base weights、数据集、policy路径和论文结果不是一个自动闭合的复现包。本书只完成README、许可、锁定源码和入口的零下载预检，没有拉取checkpoint、安装环境、运行GPU或验证24 GB适配。因此该卡保持 `R1` 的资产审计；第17章已经吸收“共享先验、两条分支独立验收”的证据设计，但这不构成policy或simulator能力复现。
+当前发布仍以world-model组件为重点，外部base weights、数据集、policy路径和论文结果不是一个自动闭合的复现包。本书只完成README、许可、锁定源码和入口的零下载预检，没有拉取checkpoint、安装环境、运行GPU或验证 24 GB适配。因此该卡保持 `R1` 的资产审计；第17章已经吸收“共享先验、两条分支独立验收”的证据设计，但这不构成policy或simulator能力复现。
 
 ## 怎样决定是否更新正文
 

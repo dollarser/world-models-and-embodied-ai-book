@@ -25,9 +25,9 @@
 
 ### 本章的两层阅读方式
 
-主线只回答两个问题：一条动作为什么仍被允许在此刻执行，以及高层策略失效后谁负责把系统带到可确认的安全状态。第一次阅读可依次抓住21.1–21.3的时间语义、21.5的具名 fallback、21.8的完整故障生命周期，再回看21.4中的固定反例。
+主线只回答两个问题：一条动作为什么仍被允许在此刻执行，以及高层策略失效后谁负责把系统带到可确认的安全状态。第一次阅读可依次抓住 21.1–21.3 的时间语义、21.5 的具名 fallback、21.8 的完整故障生命周期，再回看 21.4 中的固定反例。
 
-21.4.1–21.4.6把端点、重试、阈值、严重度、连续超时和异步队列分别拆开；21.5.1–21.5.2进一步讨论 fallback 完成与重新激活授权。它们属于深入接口审计，不是部署教程或认证规范。读者无需记忆字段名，但应保留三条边界：生成不等于执行，发出 fallback 请求不等于进入安全状态，一次旧授权不能自动复用于下一次故障。
+21.4.1–21.4.6 把端点、重试、阈值、严重度、连续超时和异步队列分别拆开；21.5.1–21.5.2 进一步讨论 fallback 完成与重新激活授权。它们属于深入接口审计，不是部署教程或认证规范。读者无需记忆字段名，但应保留三条边界：生成不等于执行，发出 fallback 请求不等于进入安全状态，一次旧授权不能自动复用于下一次故障。
 
 ## 21.1 实时不是“跑得快”，而是按时完成
 
@@ -179,7 +179,7 @@ fixture 的 mean 为 45 ms，看似通过 50 ms deadline，但 p95/max 为 150 m
 <!-- CLAIM_META: CLAIM-21-03 result -->
 七个 packet 中只有健康包通过，六种注入分别产生唯一原因码并进入 fallback。该结果验证网关实现，不估计真实系统故障率或安全性。
 
-结果保存在 `results/ch21/EXP-21-01-smoke.json`；36 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系、授权序列长度/类型错误、跳过 `operating` 的生命周期、含糊状态机配置、非法 receipt、重复 case ID、非有限后果权重、未知接受 ID，以及缺失/错步/错维度、schema/单位/频率/ack/session/boot 错配的前序已执行动作；命令审计另区分精确重试、同 ID 改写、倒序和显式新 epoch。第15章另以第19项测试确认两章导入同一共享 schema 对象。
+结果保存在 `results/ch21/EXP-21-01-smoke.json`；36 个单元测试还拒绝非法 config、非有限 latency、错误 percentile、非法 uncertainty score、不可能的 chunk 时间关系、授权序列长度/类型错误、跳过 `operating` 的生命周期、含糊状态机配置、非法 receipt、重复 case ID、非有限后果权重、未知接受 ID，以及缺失/错步/错维度、schema/单位/频率/ack/session/boot 错配的前序已执行动作；命令审计另区分精确重试、同 ID 改写、倒序和显式新 epoch。第15章另以第 19 项测试确认两章导入同一共享 schema 对象。
 
 ### 21.4.1 合法端点不等于合法跃迁
 
@@ -211,26 +211,26 @@ fixture 的 mean 为 45 ms，看似通过 50 ms deadline，但 p95/max 为 150 m
 | `current_schema` | 当前 `schema_id` 改为旧版 | `schema_mismatch` |
 | `previous_units` | 前序单位改成 `km/h, deg/s` | `previous_unit_mismatch` |
 | `previous_control_rate` | 前序频率从 10 Hz 改为 20 Hz | `previous_control_rate_mismatch` |
-| `previous_ack` | 命令7却声称 ack 命令6 | `invalid_applied_action_ack` |
-| `previous_session` | 前序生产者会话从003改为002 | `previous_command_session_mismatch` |
-| `previous_boot` | 前序执行器启动 epoch 从012改为011 | `previous_executor_boot_mismatch` |
+| `previous_ack` | 命令 7 却声称 ack 命令 6 | `invalid_applied_action_ack` |
+| `previous_session` | 前序生产者会话从 003 改为 002 | `previous_command_session_mismatch` |
+| `previous_boot` | 前序执行器启动 epoch 从 012 改为 011 | `previous_executor_boot_mismatch` |
 
 *表 21-4：共享 schema 与前序执行身份的单字段负对照。字段均为手工构造，没有认证或防篡改。*<!-- INTERNAL_ASSET_ID: TAB-21-04 -->
 
 <!-- CLAIM_META: CLAIM-21-16 result -->
-实验 21-1 v11<!-- INTERNAL_ASSET_ID: EXP-21-01 v11 --> 的六个身份负对照分别以 `schema_mismatch`、`previous_unit_mismatch`、`previous_control_rate_mismatch`、`invalid_applied_action_ack`、`previous_command_session_mismatch` 和 `previous_executor_boot_mismatch` 拒绝，没有退化成同一个“动作异常”。这只验证第15/21章共享代码来源、epoch 绑定和原因码，不证明文本/数值身份真实、ack 来自执行器、跨进程状态原子持久化、通信完整性或控制安全。
+实验 21-1 v11<!-- INTERNAL_ASSET_ID: EXP-21-01 v11 --> 的六个身份负对照分别以 `schema_mismatch`、`previous_unit_mismatch`、`previous_control_rate_mismatch`、`invalid_applied_action_ack`、`previous_command_session_mismatch` 和 `previous_executor_boot_mismatch` 拒绝，没有退化成同一个“动作异常”。这只验证第 15/21 章共享代码来源、epoch 绑定和原因码，不证明文本/数值身份真实、ack 来自执行器、跨进程状态原子持久化、通信完整性或控制安全。
 
 [Autoware Velocity Smoother 官方文档](https://autowarefoundation.github.io/autoware_core/main/planning/autoware_velocity_smoother/)把速度、加速度、jerk、横向加速度和转向角速度列为不同约束，并在初始状态中使用当前或上一规划值 `[O,R1]`；这支持“跨点约束需要状态且必须保留量纲”的工程模式，但不为本书的 `0.25` 教学阈值背书。真实 profile 应按动作单位、控制周期、执行器动态与运行域分别标定限制，并用仿真、封闭场地和目标硬件逐级验证。
 
 ### 21.4.2 重试不应变成第二次物理动作
 
-单调 `command_id` 只在其命名空间内有意义。生产者或执行器重启后，计数器可能从零开始；若只比较整数，旧命令8和新命令8无法区分。本书把执行身份写成三元组：
+单调 `command_id` 只在其命名空间内有意义。生产者或执行器重启后，计数器可能从零开始；若只比较整数，旧命令 8 和新命令 8 无法区分。本书把执行身份写成三元组：
 
 \[
 K=(\text{command_session_id},\ \text{executor_boot_id},\ \text{command_id}).
 \]
 
-`command_session_id` 标识一次明确建立的命令生产会话，`executor_boot_id` 标识执行器启动 epoch，二者都不能由接收方根据“最近看到的包”静默猜测。实验 21-1 v11<!-- INTERNAL_ASSET_ID: EXP-21-01 v11 --> 的不可变内存 ledger 在 gate 之后执行以下状态转移：首次见到有效 `K` 时生成一条回执；完全相同的 `K+payload+step` 重试只返回缓存回执，不新增执行记录；相同 `K` 携带不同 payload 以 `command_identity_conflict` 拒绝；同 epoch 中未登记却不大于最高序号的命令以 `stale_or_out_of_order_command` 拒绝。只有显式建立新的 session 与 boot epoch 后，命令号0才可重新开始。
+`command_session_id` 标识一次明确建立的命令生产会话，`executor_boot_id` 标识执行器启动 epoch，二者都不能由接收方根据“最近看到的包”静默猜测。实验 21-1 v11<!-- INTERNAL_ASSET_ID: EXP-21-01 v11 --> 的不可变内存 ledger 在 gate 之后执行以下状态转移：首次见到有效 `K` 时生成一条回执；完全相同的 `K+payload+step` 重试只返回缓存回执，不新增执行记录；相同 `K` 携带不同 payload 以 `command_identity_conflict` 拒绝；同 epoch 中未登记却不大于最高序号的命令以 `stale_or_out_of_order_command` 拒绝。只有显式建立新的 session 与 boot epoch 后，命令号 0 才可重新开始。
 
 | 输入 | 状态 | 新增执行记录 |
 | --- | --- | ---: |

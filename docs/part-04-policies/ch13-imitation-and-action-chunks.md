@@ -174,7 +174,7 @@ make ch13-smoke
 
 ### 13.5.1 专家支持集上的零误差不约束离开支持集后的反馈方向
 
-固定标量转移 $x_{t+1}=x_t+a_t$，专家数据只有一行 $(x=0,a^*=0)$。手写 negative-feedback policy 为 $a=-0.5x$，positive-feedback policy 为 $a=+0.5x$；二者在唯一专家支持点上的 action MSE 都为0。若从支持点开始且不扰动，它们的轨迹也完全相同。只有把 reset state 改为 $x_0=0.25$，才会看到六步后一个收敛、一个放大：
+固定标量转移 $x_{t+1}=x_t+a_t$，专家数据只有一行 $(x=0,a^*=0)$。手写 negative-feedback policy 为 $a=-0.5x$，positive-feedback policy 为 $a=+0.5x$；二者在唯一专家支持点上的 action MSE 都为 0。若从支持点开始且不扰动，它们的轨迹也完全相同。只有把 reset state 改为 $x_0=0.25$，才会看到六步后一个收敛、一个放大：
 
 | 手写策略 | expert-support action MSE | $x_0$ | 六步状态序列末值 | 最大绝对状态 |
 | --- | ---: | ---: | ---: | ---: |
@@ -184,7 +184,7 @@ make ch13-smoke
 *表 13-1：实验 13-1 v4 的 support—rollout 负对照。两条规则是为暴露接口而手写的确定性标量函数，不是从单点数据学出的 BC，也不代表真实控制器、机器人或车辆。*<!-- INTERNAL_ASSET_ID: TAB-13-01 -->
 
 <!-- CLAIM_META: CLAIM-13-08 result -->
-实验 13-1 v4<!-- INTERNAL_ASSET_ID: EXP-13-01 v4 --> 的两个手写策略在唯一专家支持点 `(0,0)` 上 action MSE 同为0；同受 $x_0=0.25$ 的 reset disturbance 后，六步最终绝对状态分别为0.00390625和2.84765625。该固定反例只证明 expert-support loss 不识别 off-support feedback behavior，不估计 learned policy 的泛化、DAgger 收益、真实扰动概率、稳定域或安全性。
+实验 13-1 v4<!-- INTERNAL_ASSET_ID: EXP-13-01 v4 --> 的两个手写策略在唯一专家支持点 `(0,0)` 上 action MSE 同为 0；同受 $x_0=0.25$ 的 reset disturbance 后，六步最终绝对状态分别为 0.00390625 和 2.84765625。该固定反例只证明 expert-support loss 不识别 off-support feedback behavior，不估计 learned policy 的泛化、DAgger 收益、真实扰动概率、稳定域或安全性。
 
 | $K_{\text{pred}}$ | $K_{\text{exec}}$ | 每次完整查询丢弃后缀/步 | policy query | 平均/最大反应延迟 | 2 步期限通过率 |
 | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -281,7 +281,7 @@ make ch13-smoke
 3. **协议设计**：为 ACT 实验列出避免 episode 泄漏的划分与三类闭环失败。
 4. **迁移分析**：将 $K_{\text{exec}}=8$ 分别换算到 20Hz 车辆控制和 5Hz 机械臂控制，讨论安全含义。
 5. **指标审计**：构造两列 RMSE 和 MAE 相同、但有符号误差和不同的动作误差；解释还缺哪些闭环证据才能讨论策略安全性。
-6. **支持集审计**：保持两个策略在专家支持点上的 action MSE 都为0，分别改变 reset disturbance、policy gain 和 horizon；解释为什么该扫描仍不是 learned BC 的 OOD 泛化评测。
+6. **支持集审计**：保持两个策略在专家支持点上的 action MSE 都为 0，分别改变 reset disturbance、policy gain 和 horizon；解释为什么该扫描仍不是 learned BC 的 OOD 泛化评测。
 
 ## 自检要点
 
@@ -297,7 +297,7 @@ make ch13-smoke
 <details markdown="1">
 <summary>自检 13-2：调用、反应与时间集成 Pareto</summary>
 
-先固定 $K_{\text{pred}}=8$，单独扫描 $K_{\text{exec}}$。当前16步 fixture 中，$K_{\text{exec}}=1/4/8$ 的查询数为 16/4/2，平均反应延迟为 0/1.6/3.733 步，deadline=2 时通过率为 1/0.733/0.333；这只是离散调用—陈旧性，不是实测推理 latency。再固定 $K_{\text{exec}}=1$ 扫 deadline 和 temporal coefficient `m`：正 m 按当前“最旧到最新”索引给旧预测更大相对权重，稳态更平滑但真实突变更滞后。分别画 query/最大延迟与 stationary-error/change-error 的非支配点；LeRobot 协议中 temporal ensembling 要求每步查询，不能把它与任意 $K_{\text{exec}}>1$ 组合成不存在的实验格。
+先固定 $K_{\text{pred}}=8$，单独扫描 $K_{\text{exec}}$。当前 16 步 fixture 中，$K_{\text{exec}}=1/4/8$ 的查询数为 16/4/2，平均反应延迟为 0/1.6/3.733 步，deadline=2 时通过率为 1/0.733/0.333；这只是离散调用—陈旧性，不是实测推理 latency。再固定 $K_{\text{exec}}=1$ 扫 deadline 和 temporal coefficient `m`：正 m 按当前“最旧到最新”索引给旧预测更大相对权重，稳态更平滑但真实突变更滞后。分别画 query/最大延迟与 stationary-error/change-error 的非支配点；LeRobot 协议中 temporal ensembling 要求每步查询，不能把它与任意 $K_{\text{exec}}>1$ 组合成不存在的实验格。
 
 </details>
 
@@ -311,7 +311,7 @@ make ch13-smoke
 <details markdown="1">
 <summary>自检 13-4：八步执行窗口的真实时长</summary>
 
-20 Hz 下8步覆盖 `8/20=0.4 s`，若扰动刚错过查询边界，最多还执行7个旧步，即约0.35 s 才按固定周期重规划；5 Hz 下分别是1.6 s和1.4 s。对车辆，0.35 s 在高速下已对应显著行驶距离，必须有事件触发中断、独立制动和更短安全时域；机械臂的1.4 s 也可能跨越接触阶段，需力/碰撞触发和 chunk invalidation。控制频率低不等于任务风险低，且推理/通信时延还要另加。
+20 Hz 下 8 步覆盖 `8/20=0.4 s`，若扰动刚错过查询边界，最多还执行 7 个旧步，即约 0.35 s 才按固定周期重规划；5 Hz 下分别是 1.6 s 和 1.4 s。对车辆，0.35 s 在高速下已对应显著行驶距离，必须有事件触发中断、独立制动和更短安全时域；机械臂的 1.4 s 也可能跨越接触阶段，需力/碰撞触发和 chunk invalidation。控制频率低不等于任务风险低，且推理/通信时延还要另加。
 
 </details>
 
@@ -325,7 +325,7 @@ make ch13-smoke
 <details markdown="1">
 <summary>自检 13-6：支持集拟合与扰动 rollout</summary>
 
-在唯一专家点 $(x=0,a^*=0)$ 上，$a=-0.5x$ 与 $a=+0.5x$ 都输出0，所以 action MSE 同为0；无扰动地从 $x=0$ 出发也无法区分它们。固定 $x_{t+1}=x_t+a_t$ 并令 $x_0=0.25$ 后，六步末值分别为 `0.25×0.5^6=0.00390625` 与 `0.25×1.5^6=2.84765625`。这只说明单点支持集没有约束其外部函数值。要评测 learned BC，还需真实训练过程、独立 episode/source split、支持距离或扰动分桶、相同初态闭环 rollout、随机种子、限幅/终止/失败分母与安全接管；不能把手写正负反馈差称为算法效果。
+在唯一专家点 $(x=0,a^*=0)$ 上，$a=-0.5x$ 与 $a=+0.5x$ 都输出 0，所以 action MSE 同为 0；无扰动地从 $x=0$ 出发也无法区分它们。固定 $x_{t+1}=x_t+a_t$ 并令 $x_0=0.25$ 后，六步末值分别为 `0.25×0.5^6=0.00390625` 与 `0.25×1.5^6=2.84765625`。这只说明单点支持集没有约束其外部函数值。要评测 learned BC，还需真实训练过程、独立 episode/source split、支持距离或扰动分桶、相同初态闭环 rollout、随机种子、限幅/终止/失败分母与安全接管；不能把手写正负反馈差称为算法效果。
 
 </details>
 

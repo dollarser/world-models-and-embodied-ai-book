@@ -72,7 +72,7 @@ flowchart TB
 | protocol | 如何抽样、干预、运行系统、处理缺失并形成比较单位？ |
 | metric/estimator | 用什么有限样本统计量近似 estimand？ |
 
-同一个 metric 可以服务不同 estimand，也可以因 protocol 不同而完全不可比。例如“平均第4步误差”可能指所有启动 rollout 的端到端误差，也可能只指仍然成功输出到第4步的条件误差。公式相同而分母不同，回答的已经是两个问题。
+同一个 metric 可以服务不同 estimand，也可以因 protocol 不同而完全不可比。例如“平均第 4 步误差”可能指所有启动 rollout 的端到端误差，也可能只指仍然成功输出到第 4 步的条件误差。公式相同而分母不同，回答的已经是两个问题。
 
 这也解释了为什么指标不能脱离目标总体解释。模型在随机视频片段上的平均质量、在规划器候选上的预测质量和在安全关键场景桶上的失败率，分别由不同抽样机制产生。除非明确给出目标总体和权重，否则一个总体平均数不会自动代表部署分布。
 
@@ -122,12 +122,12 @@ MSE、PSNR 和 SSIM 对局部像素误差敏感，便于定位模糊、漂移和
 
 *表 9-1：粗分箱 ECE 负对照。单 bin 只比较整体均值 `0.5` 与整体事件率 `0.5`，因此两行都为零；所有结果均为作者构造。*<!-- INTERNAL_ASSET_ID: TAB-09-01 -->
 
-uniform 行在这四例上只复述 base rate，预测方差为0；informative 行把正负例分开，预测方差为0.16。单 bin ECE 看不到这一差别；改成 `[0,0.5)` 与 `[0.5,1]` 两个预注册 bin 后，informative 行的经验 gap 为0.1。不能由此反过来宣称 uniform “更校准”或“更好”：四例不足以估计总体 calibration，而 ECE 单独不奖励有用的分辨率。合格报告应并列 proper score、reliability diagram/分箱定义、样本数和按 horizon/场景分桶，并在独立 calibration split 上选择任何温度或阈值，再到未参与选择的 final split 评估。
+uniform 行在这四例上只复述 base rate，预测方差为 0；informative 行把正负例分开，预测方差为 0.16。单 bin ECE 看不到这一差别；改成 `[0,0.5)` 与 `[0.5,1]` 两个预注册 bin 后，informative 行的经验 gap 为 0.1。不能由此反过来宣称 uniform “更校准”或“更好”：四例不足以估计总体 calibration，而 ECE 单独不奖励有用的分辨率。合格报告应并列 proper score、reliability diagram/分箱定义、样本数和按 horizon/场景分桶，并在独立 calibration split 上选择任何温度或阈值，再到未参与选择的 final split 评估。
 
 <!-- CLAIM_META: CLAIM-09-09 result -->
-实验 9-1 v4<!-- INTERNAL_ASSET_ID: EXP-09-01 v4 --> 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
+实验 9-1 v4<!-- INTERNAL_ASSET_ID: EXP-09-01 v4 --> 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为 0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
 
-平均 proper score 也不是完整的失败分布。v4 在同一 `y=(1,1,0,0)` 上构造 `diffuse=(0.6,0.6,0.4,0.4)` 与 `concentrated=(0.3,0.7,0.2,sqrt(0.02))`；两行四个 squared error 的总和都为0.64，因此 mean Brier 都是0.16，但误差位置不同：
+平均 proper score 也不是完整的失败分布。v4 在同一 `y=(1,1,0,0)` 上构造 `diffuse=(0.6,0.6,0.4,0.4)` 与 `concentrated=(0.3,0.7,0.2,sqrt(0.02))`；两行四个 squared error 的总和都为 0.64，因此 mean Brier 都是 0.16，但误差位置不同：
 
 | forecast | mean Brier | 0.5 threshold accuracy | 最大单例 Brier | 最大单例 log loss |
 | --- | ---: | ---: | ---: | ---: |
@@ -137,7 +137,7 @@ uniform 行在这四例上只复述 base rate，预测方差为0；informative �
 *表 9-2：实验 9-1 v4 的 equal-mean-Brier 误差集中负对照。概率按构造给出，不是模型输出或总体 tail estimate。*<!-- INTERNAL_ASSET_ID: TAB-09-02 -->
 
 <!-- CLAIM_META: CLAIM-09-10 result -->
-固定四 outcome 表中，diffuse 与 concentrated forecast 的 mean Brier 都为0.16；前者0.5阈值准确率为1且最大单例 log loss 为0.510826，后者准确率为0.75且最大单例 log loss 为1.203973。该结果只证明相同平均 Brier 不能恢复误差是否集中在单个样本，不估计总体概率质量、tail risk、calibration、真实事件严重度或安全性。
+固定四 outcome 表中，diffuse 与 concentrated forecast 的 mean Brier 都为 0.16；前者 0.5 阈值准确率为 1 且最大单例 log loss 为 0.510826，后者准确率为 0.75 且最大单例 log loss 为 1.203973。该结果只证明相同平均 Brier 不能恢复误差是否集中在单个样本，不估计总体概率质量、tail risk、calibration、真实事件严重度或安全性。
 
 ### one-step 与 multi-step
 
@@ -236,7 +236,7 @@ make ch09-smoke
 
 第二个反例固定三条 stable rollout 和三条 fragile rollout。fragile 只剩一条能够到达第 4 步；若直接对幸存输出求均值，它以 0.40 看似优于 stable 的 0.80。协议预先把缺失 rollout 记为误差 2.0 后，固定分母均值变为 1.4667，排序反转：
 
-| 系统 | 第4步 attempted / available | coverage | 幸存样本均值 ↓ | 固定分母均值 ↓ |
+| 系统 | 第 4 步 attempted / available | coverage | 幸存样本均值 ↓ | 固定分母均值 ↓ |
 | --- | ---: | ---: | ---: | ---: |
 | stable | 3 / 3 | 1.000 | 0.8000 | **0.8000** |
 | fragile | 3 / 1 | 0.333 | **0.4000** | 1.4667 |
@@ -341,7 +341,7 @@ resources + experiment_ids + artifacts + limitations
 
 仓库中的 `specs/benchmark-card.schema.json` 是 Draft 2020-12 Schema；`benchmarks/BENCH-06-01.json`、`BENCH-09-01.json` 和 `BENCH-20-01.json` 分别覆盖 prior/posterior 与 KL 路由算术、指标排序/概率质量反转，以及闭环比例/配对/暴露统计。严格检查还验证 claim/experiment 的章节归属、benchmark 与 experiment 双向引用、metric layer、ID 前缀、产物路径、系统名唯一性和下载量总和。它能阻止字段缺失和跨资产漂移，不能判断指标是否科学充分，也不能替代领域评审。
 
-基准测试 9-1 v4<!-- INTERNAL_ASSET_ID: BENCH-09-01 v4 --> 明确把 E1 的 12 个 one-step 转移、6 条多步误差行与4行二元概率表、E2 action sensitivity、E4 的两个闭环 episode 分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值、缺失惩罚与概率 bin edge，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。概率表只是评分机制 fixture，不是 learned uncertainty estimator、calibration split 或 OOD 总体，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构风险曲线。
+基准测试 9-1 v4<!-- INTERNAL_ASSET_ID: BENCH-09-01 v4 --> 明确把 E1 的 12 个 one-step 转移、6 条多步误差行与 4 行二元概率表、E2 action sensitivity、E4 的两个闭环 episode 分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值、缺失惩罚与概率 bin edge，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。概率表只是评分机制 fixture，不是 learned uncertainty estimator、calibration split 或 OOD 总体，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构风险曲线。
 
 <!-- CLAIM_META: CLAIM-09-07 recommendation -->
 可审计比较应在运行前冻结 benchmark card，并把评测协议、单次运行来源和测量结果拆成可互相引用的资产；机器 Schema 只证明结构与追溯关系成立，不证明 benchmark 有外部效度。
@@ -357,7 +357,7 @@ benchmark card 还应记录**决策冻结顺序**。场景桶、主指标、缺�
 | 类型 | 声明/结果 | 来源或实验 ID | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
 | 本书结果 | one-step/闭环与缺失分母分别造成排序反转 | 实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> | CPU smoke | 手工一维反例与预注册惩罚 |
-| 本书结果 | 单 bin ECE 同为0，但 Brier 为 `0.25/0.01` | 实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> | CPU smoke | 四个手工二元结果；不估计总体校准 |
+| 本书结果 | 单 bin ECE 同为 0，但 Brier 为 `0.25/0.01` | 实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> | CPU smoke | 四个手工二元结果；不估计总体校准 |
 | 外部事实 | WorldArena 分开评估感知与功能用途 | 官方仓库 | `[O,R1]` | 本书未运行 |
 | 外部案例 | WorldArena 2.0 扩展模态、用途与平台维度 | 论文/官方项目 | `[P/O,R0–R1]` | 接口与排行榜会变化 |
 | 外部案例 | KineBench 显式移除额外逆动力学模型（inverse dynamics model, IDM）的归因混淆 | arXiv:2607.19876 | `[P,R0]` | 本书未运行，仅限论文设置 |
@@ -440,14 +440,14 @@ E1 可冻结对象/相机 group test split，要求多 horizon pose/keypoint err
 <details markdown="1">
 <summary>自检 9-7：概率质量不能压成一个 ECE</summary>
 
-先固定共同 event definition、样本总体、概率方向、bin edges、边界归属和空 bin 政策。Brier 与 log loss 在同一结果表上评价完整概率；log loss 对接近0/1的错误更敏感，不能事后裁剪而不登记。ECE 还要给 reliability diagram、每 bin 样本数与置信区间，并报告不同合理分箱或自适应估计的敏感性，但不能看完后只选最小值。实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> 的单 bin ECE=0 只说明整体 mean probability 等于 event rate；恒定 base-rate forecast 没有区分样本。概率经 calibration split 调温后，应在独立 final split 按 horizon、场景与严重度重新报告，并把概率质量与实际阈值决策、fallback 后果分开。
+先固定共同 event definition、样本总体、概率方向、bin edges、边界归属和空 bin 政策。Brier 与 log loss 在同一结果表上评价完整概率；log loss 对接近 0/1 的错误更敏感，不能事后裁剪而不登记。ECE 还要给 reliability diagram、每 bin 样本数与置信区间，并报告不同合理分箱或自适应估计的敏感性，但不能看完后只选最小值。实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> 的单 bin ECE=0 只说明整体 mean probability 等于 event rate；恒定 base-rate forecast 没有区分样本。概率经 calibration split 调温后，应在独立 final split 按 horizon、场景与严重度重新报告，并把概率质量与实际阈值决策、fallback 后果分开。
 
 </details>
 
 <details markdown="1">
 <summary>自检 9-8：相同 mean Brier 不等于相同失败形状</summary>
 
-diffuse 行四个概率误差绝对值都是0.4，所以 squared error 都是0.16；concentrated 行误差为 $0.7,0.3,0.2,\sqrt{0.02}$，平方和同样是0.64，mean Brier 仍为0.16。但 concentrated 第一行把正例报成0.3，造成一次0.5阈值错误，单例 Brier 0.49、log loss `-log(0.3)=1.203973`。合格答案要保留逐样本 loss、事件/场景分桶和最大/尾部摘要，同时说明四行最大值不是总体 tail-risk 估计。
+diffuse 行四个概率误差绝对值都是 0.4，所以 squared error 都是 0.16；concentrated 行误差为 $0.7,0.3,0.2,\sqrt{0.02}$，平方和同样是 0.64，mean Brier 仍为 0.16。但 concentrated 第一行把正例报成 0.3，造成一次 0.5 阈值错误，单例 Brier 0.49、log loss `-log(0.3)=1.203973`。合格答案要保留逐样本 loss、事件/场景分桶和最大/尾部摘要，同时说明四行最大值不是总体 tail-risk 估计。
 
 </details>
 

@@ -33,7 +33,7 @@
 2. **18.6：再审时间组织。** 即使局部动作得到改善，长任务仍需要分层目标、进度确认、记忆、恢复和可撤销承诺；这不是把 action chunk 或 context 无限加长。
 3. **18.7–18.10：最后审模型接口。** WAM 只有在动作干预、未来递归、reward/termination 或策略读取未来等接口明确时才具有相应能力；名称和联合损失不能替代接口证据。
 
-这三个层次分别回答“用什么信号更新”“怎样跨时间维持能力”和“模型实际向策略提供什么”。读者只关心后训练时可以先读前两段与18.8；研究 WAM 时仍应保留18.1的证据边界，避免把未来预测辅助目标直接解释为闭环能力。
+这三个层次分别回答“用什么信号更新”“怎样跨时间维持能力”和“模型实际向策略提供什么”。读者只关心后训练时可以先读前两段与 18.8；研究 WAM 时仍应保留 18.1 的证据边界，避免把未来预测辅助目标直接解释为闭环能力。
 
 ## 18.1 SFT 之后还缺什么
 
@@ -160,11 +160,11 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 
 ## 18.4 交互式后训练：稀疏成功信号也有代价
 
-[RIPT-VLA](https://arxiv.org/abs/2505.17016)用稀疏二元 success 做 VLA interactive post-training，并采用动态 rollout sampling 与 leave-one-out advantage estimation；作者[训练入口快照 `440990e`](https://github.com/Ariostgx/ript-vla/blob/440990e8864e12e4578b490ff6359e4f2c49ae3e/train_ript.py)显式传递 `rloo_batch_size`、dynamic sampling、PPO epoch/batch 和 clipping 配置，[同 commit 的 rollout generator](https://github.com/Ariostgx/ript-vla/blob/440990e8864e12e4578b490ff6359e4f2c49ae3e/ript/algos/rl_optimizers/rollout_generator.py)在 rollout 全0或全1时丢弃当前样本、继续收集有效组，提供 QueST + LIBERO 路线 `[A/O,R1]`。这些文件本身不能证明 OpenVLA-OFT 路线已经接入或上游结果已复现；项目级支持范围应另查配置、README 和 revision。它展示的是交互环境中的 RL，不是 learned world model 路线。
+[RIPT-VLA](https://arxiv.org/abs/2505.17016)用稀疏二元 success 做 VLA interactive post-training，并采用动态 rollout sampling 与 leave-one-out advantage estimation；作者[训练入口快照 `440990e`](https://github.com/Ariostgx/ript-vla/blob/440990e8864e12e4578b490ff6359e4f2c49ae3e/train_ript.py)显式传递 `rloo_batch_size`、dynamic sampling、PPO epoch/batch 和 clipping 配置，[同 commit 的 rollout generator](https://github.com/Ariostgx/ript-vla/blob/440990e8864e12e4578b490ff6359e4f2c49ae3e/ript/algos/rl_optimizers/rollout_generator.py)在 rollout 全 0 或全 1 时丢弃当前样本、继续收集有效组，提供 QueST + LIBERO 路线 `[A/O,R1]`。这些文件本身不能证明 OpenVLA-OFT 路线已经接入或上游结果已复现；项目级支持范围应另查配置、README 和 revision。它展示的是交互环境中的 RL，不是 learned world model 路线。
 
 二元 success 避免手工 dense reward 的部分偏置，却没有消除 credit assignment：需要同任务/初态下足够多的成功与失败 rollout 才能形成可用组内相对信号。若一组全失败或全成功，fixture 所示的 REINFORCE Leave-One-Out（RLOO）相对优势退化。dynamic sampling 丢弃并重采这类组可以恢复梯度信号，却会改变实际 task/难度分布、增加 rollout 成本，并可能长期饿死过难或过易任务；必须报告 attempted、discarded、resampled 和 used group 数。若 policy 更新太快，旧 rollout 与新 policy 不匹配；若 simulator success 使用 privileged state，真实部署未必拥有同一 verifier。
 
-实验 18-1 v4<!-- INTERNAL_ASSET_ID: EXP-18-01 v4 --> 把该警告变成一个固定负对照：4个手工 context group 各含3条二元 reward。easy 组全成功、hard 组全失败，两个 medium 组均混合成败；按“零 LOO signal 即拒绝”的规则，只留下两个 medium 组。
+实验 18-1 v4<!-- INTERNAL_ASSET_ID: EXP-18-01 v4 --> 把该警告变成一个固定负对照：4 个手工 context group 各含 3 条二元 reward。easy 组全成功、hard 组全失败，两个 medium 组均混合成败；按“零 LOO signal 即拒绝”的规则，只留下两个 medium 组。
 
 | 分母/分层 | attempted | rejected | used |
 | --- | ---: | ---: | ---: |
@@ -177,9 +177,9 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 *表 18-4：实验 18-1 v4 的 dynamic rejection 分母。难度标签、reward 和组构成都由本书手工指定；“rejected rollout 数”只是被拒组所含样本数，不含为了补满 batch 后续可能新增的重采样成本。*<!-- INTERNAL_ASSET_ID: TAB-18-04 -->
 
 <!-- CLAIM_META: CLAIM-18-10 result -->
-在该四组 fixture 中，零优势拒绝使 group acceptance rate 为 `2/4=0.5`，训练使用分布中的 medium context 从 attempted 的50%变为100%，easy/hard 从各25%变为0%。这只证明选择规则能改变本 fixture 的 used 分布，不估计 RIPT-VLA 的真实 context 发生率、重采样成本、梯度偏差、收敛或策略性能。
+在该四组 fixture 中，零优势拒绝使 group acceptance rate 为 `2/4=0.5`，训练使用分布中的 medium context 从 attempted 的 50%变为 100%，easy/hard 从各 25%变为 0%。这只证明选择规则能改变本 fixture 的 used 分布，不估计 RIPT-VLA 的真实 context 发生率、重采样成本、梯度偏差、收敛或策略性能。
 
-只保存最终 used batch 仍不足以恢复成本与选择历史。实验 18-1 v4<!-- INTERNAL_ASSET_ID: EXP-18-01 v4 --> 固定两个最终都使用“两组 medium、共6条 rollout”的流：clean 流直接尝试这两组；rejection-heavy 流先尝试并拒绝 easy/hard，再得到同样两组 medium。
+只保存最终 used batch 仍不足以恢复成本与选择历史。实验 18-1 v4<!-- INTERNAL_ASSET_ID: EXP-18-01 v4 --> 固定两个最终都使用“两组 medium、共 6 条 rollout”的流：clean 流直接尝试这两组；rejection-heavy 流先尝试并拒绝 easy/hard，再得到同样两组 medium。
 
 | 尝试历史 | attempted groups | rejected groups | attempted rollouts | used rollouts | used 非零难度分布 |
 | --- | ---: | ---: | ---: | ---: | --- |
@@ -189,7 +189,7 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 *表 18-5：实验 18-1 v4 的同 used batch—异尝试历史负对照。两条确定性流不是从未知接受概率推导的期望成本。rejection-heavy 的完整 used 字典还保留 easy/hard 的零占比，以便追溯被拒来源。*<!-- INTERNAL_ASSET_ID: TAB-18-05 -->
 
 <!-- CLAIM_META: CLAIM-18-11 result -->
-实验 18-1 v4<!-- INTERNAL_ASSET_ID: EXP-18-01 v4 --> 的 clean 与 rejection-heavy 流具有相同 used group/rollout 数和相同非零 used 难度分布，但后者 attempted rollout 为12、是前者6的两倍，并隐藏6条被拒 rollout。该结果只证明 used-batch 摘要不能识别这两条手工尝试历史，不估计真实接受概率、期望重采样成本、并行效率、梯度偏差、收敛或策略性能。
+实验 18-1 v4<!-- INTERNAL_ASSET_ID: EXP-18-01 v4 --> 的 clean 与 rejection-heavy 流具有相同 used group/rollout 数和相同非零 used 难度分布，但后者 attempted rollout 为 12、是前者 6 的两倍，并隐藏 6 条被拒 rollout。该结果只证明 used-batch 摘要不能识别这两条手工尝试历史，不估计真实接受概率、期望重采样成本、并行效率、梯度偏差、收敛或策略性能。
 
 人类纠正可记录 intervention 前观察、模型原动作、纠正动作、触发原因和恢复结果。只保存纠正动作会丢失“为何接管”和 policy-induced state，无法区分动作学习与数据选择效应。高风险机器人/车辆必须先用保守 controller 和安全员协议限定探索范围。
 
@@ -278,7 +278,7 @@ Reward model 与 world model 的错误也可能相关。例如两者都来自相
 
 reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预和最小风险状态。碰撞/越界属于硬 gate，不应仅作为可被路线进度抵消的负 reward。episode-level “到达终点”会像 实验 18-1<!-- INTERNAL_ASSET_ID: EXP-18-01 --> 一样压低失败轨迹中的正确避险和恢复动作，需要 phase/progress 与事件级标注。
 
-驾驶后训练若只保存最终进入 optimizer 的 cut-in 或避障 batch，也会漏掉为了得到这些样本而尝试、拒绝或超时的路线。easy/hard 场景可能在 used 数据中都为0，却分别代表“全成功无相对信号”和“全失败无相对信号”，两者对 coverage、安全缺口和仿真成本的含义相反。应按 route/scenario/severity 同时保存 attempt index、拒绝原因、rollout 时长、simulator seed 与 used identity。
+驾驶后训练若只保存最终进入 optimizer 的 cut-in 或避障 batch，也会漏掉为了得到这些样本而尝试、拒绝或超时的路线。easy/hard 场景可能在 used 数据中都为 0，却分别代表“全成功无相对信号”和“全失败无相对信号”，两者对 coverage、安全缺口和仿真成本的含义相反。应按 route/scenario/severity 同时保存 attempt index、拒绝原因、rollout 时长、simulator seed 与 used identity。
 
 [WorldRFT](https://arxiv.org/abs/2512.19133)是 latent world model、分层规划和 reinforcement fine-tuning 的驾驶案例 `[A,R0]`；[SimWAM 快照 `68b426c`](https://github.com/H-EmbodVis/SimWAM/tree/68b426c162827cb7701396895dbb3572d29f3420)则代表 future-prediction auxiliary + action-only inference。两者都只能作为架构证据，不能把上游 nuScenes/NAVSIM 数字当作本书或道路部署结果。
 
@@ -364,7 +364,7 @@ World-model rollout 降低真实交互成本，同时给 policy 和 reward model
 <details markdown="1">
 <summary>自检 18-7：相同 used batch 不能恢复尝试历史</summary>
 
-clean 流直接尝试两个 mixed medium 组，得到 `attempted=2 groups/6 rollouts`、`rejected=0`、`used=2/6`；rejection-heavy 流先遇到全成功 easy 与全失败 hard，再遇到相同两个 medium，得到 `attempted=4/12`、`rejected=2/6`、`used=2/6`。若只保存 optimizer 看到的6条 medium rollout，两条历史不可区分，因而无法恢复 rollout 成本、easy/hard coverage、拒绝原因或接受率。完整日志还需保存 attempt 顺序、context/task/seed、reward vector、终止原因、重采样策略、并行 worker 与 policy version。这里的2倍只是两条手工流之比，不是长期期望成本。
+clean 流直接尝试两个 mixed medium 组，得到 `attempted=2 groups/6 rollouts`、`rejected=0`、`used=2/6`；rejection-heavy 流先遇到全成功 easy 与全失败 hard，再遇到相同两个 medium，得到 `attempted=4/12`、`rejected=2/6`、`used=2/6`。若只保存 optimizer 看到的 6 条 medium rollout，两条历史不可区分，因而无法恢复 rollout 成本、easy/hard coverage、拒绝原因或接受率。完整日志还需保存 attempt 顺序、context/task/seed、reward vector、终止原因、重采样策略、并行 worker 与 policy version。这里的 2 倍只是两条手工流之比，不是长期期望成本。
 
 </details>
 

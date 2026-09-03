@@ -236,17 +236,17 @@ make ch12-smoke
 
 ### 12.7.1 overall accuracy 会奖励错误的多数类
 
-三态地图有36个 unknown、10个 free 和3个 occupied。若在全49格上预测全 unknown，正确36格；若 benchmark 只在13个 observed cell 上计分并预测全 free，正确10格。两个错误 predictor 的 overall accuracy 都超过70%，却漏掉全部 occupied：
+三态地图有 36 个 unknown、10 个 free 和 3 个 occupied。若在全 49 格上预测全 unknown，正确 36 格；若 benchmark 只在 13 个 observed cell 上计分并预测全 free，正确 10 格。两个错误 predictor 的 overall accuracy 都超过 70%，却漏掉全部 occupied：
 
 | 计分域 / predictor | 分母 | accuracy | occupied recall | occupied IoU | 被 mask 排除 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 全49格 / all-unknown | 49 | 73.47% | 0% | 0% | 0格 |
-| 仅 observed / all-free | 13 | 76.92% | 0% | 0% | 36格 unknown |
+| 全 49 格 / all-unknown | 49 | 73.47% | 0% | 0% | 0 格 |
+| 仅 observed / all-free | 13 | 76.92% | 0% | 0% | 36 格 unknown |
 
 *表 12-3：实验 12-1 v5 的类别与 mask 负对照。两个 predictor 均为手写多数类诊断，不是 learned baseline；评测 mask 排除 unknown 只改变计分分母，不改变规划地图中的 unknown 语义。*<!-- INTERNAL_ASSET_ID: TAB-12-03 -->
 
 <!-- CLAIM_META: CLAIM-12-12 result -->
-实验 12-1 v5<!-- INTERNAL_ASSET_ID: EXP-12-01 v5 --> 中，all-unknown 在全域取得36/49即73.47% accuracy，observed-only all-free 取得10/13即76.92%，但两者 occupied recall 与 IoU 都为0。该固定三射线网格只证明 overall accuracy 可能掩盖稀少 occupied，不估计真实数据类别比例、模型性能或碰撞风险。
+实验 12-1 v5<!-- INTERNAL_ASSET_ID: EXP-12-01 v5 --> 中，all-unknown 在全域取得 36/49 即 73.47% accuracy，observed-only all-free 取得 10/13 即 76.92%，但两者 occupied recall 与 IoU 都为 0。该固定三射线网格只证明 overall accuracy 可能掩盖稀少 occupied，不估计真实数据类别比例、模型性能或碰撞风险。
 
 | 可行动性诊断 | 固定结果 | 分母/解释 |
 | --- | ---: | --- |
@@ -446,7 +446,7 @@ Affordance 是状态、本体、动作和任务阶段之间的关系，还要检
 <details markdown="1">
 <summary>自检 12-8：计分 mask 与规划 unknown</summary>
 
-Observed mask 回答“哪些 cell 进入当前 benchmark 分母”，unknown 则回答“规划器对哪些空间缺少自由/占用证据”，二者属于不同接口。当前 fixture 的 observed-only 分母为13，排除36个 unknown；all-free 在其中命中10个 free，accuracy 为10/13，但三个 occupied 全漏，recall/IoU 都为0。最低报告应同时列全域与 masked 分母、free/occupied/unknown support、逐类 precision/recall/IoU、距离/遮挡分桶，以及规划 swept-footprint 冲突。被评测 mask 排除的 cell 在规划地图中仍应保留 unknown，除非另有清空证据；不能把“不计分”改写成“可通行”。
+Observed mask 回答“哪些 cell 进入当前 benchmark 分母”，unknown 则回答“规划器对哪些空间缺少自由/占用证据”，二者属于不同接口。当前 fixture 的 observed-only 分母为 13，排除 36 个 unknown；all-free 在其中命中 10 个 free，accuracy 为 10/13，但三个 occupied 全漏，recall/IoU 都为 0。最低报告应同时列全域与 masked 分母、free/occupied/unknown support、逐类 precision/recall/IoU、距离/遮挡分桶，以及规划 swept-footprint 冲突。被评测 mask 排除的 cell 在规划地图中仍应保留 unknown，除非另有清空证据；不能把“不计分”改写成“可通行”。
 
 </details>
 

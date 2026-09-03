@@ -77,23 +77,23 @@ $w_d$ 可以按数据集、任务、本体或温度采样设定。它不是“�
 
 [Open X-Embodiment 官方仓库快照 `9eeb68b`](https://github.com/google-deepmind/open_x_embodiment/tree/9eeb68b989efbcf474e8fb9019e01d02b962a604)将各贡献数据转换为 RLDS episode，并为每个子数据集保留 metadata 与引用 `[P/O,R1]`。其论文报告多机器人联合训练的正迁移案例，但该 README 同时说明动作七维可能分别表示绝对值、delta 或速度。统一成七维并没有消除控制语义差异；每个贡献数据的引用与许可仍需单独检查。
 
-[DROID](https://droid-dataset.github.io/) 聚焦分布式真实机器人采集。论文报告 76k demonstration、350 小时、564 场景和 84 任务 `[P/O,R1]`；这些是上游数据说明，不是本书下载或审计结果。DROID适合研究同类平台上的场景/任务多样性，也不能单独回答不同关节、夹爪或底盘的动作对齐。
+[DROID](https://droid-dataset.github.io/) 聚焦分布式真实机器人采集。论文报告 76k demonstration、350 小时、564 场景和 84 任务 `[P/O,R1]`；这些是上游数据说明，不是本书下载或审计结果。DROID 适合研究同类平台上的场景/任务多样性，也不能单独回答不同关节、夹爪或底盘的动作对齐。
 
 [LeRobot Dataset v3 文档快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/docs/source/lerobot-dataset-v3.mdx)把低维 Parquet、分相机 MP4 与 episode metadata 解耦，并提供 schema、fps、统计量和 streaming 接口 `[O,R1]`。第4章已经解释：一个文件可含多个 episode，实验切分必须读 metadata。streaming 减少本地磁盘，不会消除网络、revision、缓存、许可和可重复性问题。
 
 ### 16.2.1 中国具身数据生态：规模数字之后还要问什么
 
-中国团队近年的开放数据补充了三种不同的异质性。[AGIBOT WORLD 2026](https://agibot-world.com/)按研究主题分阶段发布真实交互数据，首阶段强调任务、动作、原子技能、对象标注与恢复轨迹；[RoboMIND 2.0](https://log2r.github.io/RoboMIND2.0/)由作者报告超过31万条双臂移动操作轨迹、6种本体和739项任务；[RoboCOIN](https://FlagOpen.github.io/RoboCOIN/)由作者报告超过18万条示范、15种双臂平台、421项任务和16类场景 `[A/O,R0/R1]`。这些规模均来自项目或论文说明，本书没有下载、清点或验证。
+中国团队近年的开放数据补充了三种不同的异质性。[AGIBOT WORLD 2026](https://agibot-world.com/)按研究主题分阶段发布真实交互数据，首阶段强调任务、动作、原子技能、对象标注与恢复轨迹；[RoboMIND 2.0](https://log2r.github.io/RoboMIND2.0/)由作者报告超过 31 万条双臂移动操作轨迹、6 种本体和 739 项任务；[RoboCOIN](https://FlagOpen.github.io/RoboCOIN/)由作者报告超过 18 万条示范、15 种双臂平台、421 项任务和 16 类场景 `[A/O,R0/R1]`。这些规模均来自项目或论文说明，本书没有下载、清点或验证。
 
 | 案例 | 主要增加的覆盖轴 | 对本章最有价值的问题 | 不能由规模数字推出 |
 | --- | --- | --- | --- |
 | AGIBOT WORLD 2026 | 真实场景、任务阶段、物理交互与恢复片段 | 分阶段数据如何进入 mixture，失败与恢复是否保留 | 每一阶段许可、schema 和质量相同 |
-| RoboMIND 2.0 | 多模态、双臂移动操作、六种本体 | 移动底盘、双臂和多传感器怎样对齐时间与动作 | 31万轨迹等于31万个独立任务条件 |
+| RoboMIND 2.0 | 多模态、双臂移动操作、六种本体 | 移动底盘、双臂和多传感器怎样对齐时间与动作 | 31 万轨迹等于 31 万个独立任务条件 |
 | RoboCOIN | 十五种平台与多类双臂场景 | 跨平台 canonical action 在哪里需要 adapter | 平台数自动带来零样本迁移 |
 
-*表 16-2：中国具身数据案例的异质性轴。来源：项目页与论文作者报告，核查于2026-09-03；表中数字不是本书审计结果。*<!-- INTERNAL_ASSET_ID: TAB-16-02 -->
+*表 16-2：中国具身数据案例的异质性轴。来源：项目页与论文作者报告，核查于 2026-09-03；表中数字不是本书审计结果。*<!-- INTERNAL_ASSET_ID: TAB-16-02 -->
 
-这些案例的价值不在于建立地区排行榜，而在于迫使 mixture 同时回答来源、平台、任务、操作者、成功/失败、控制频率和许可。旧版 AGIBOT World 论文材料曾说明其数据采用 CC BY-NC-SA 4.0，但这不能自动覆盖2026年每个阶段、模型和工具；RoboMIND、RoboCOIN也必须按实际下载页分别核验数据、代码、权重与衍生资产。所谓“开放”不能替代逐资产授权。
+这些案例的价值不在于建立地区排行榜，而在于迫使 mixture 同时回答来源、平台、任务、操作者、成功/失败、控制频率和许可。旧版 AGIBOT World 论文材料曾说明其数据采用 CC BY-NC-SA 4.0，但这不能自动覆盖 2026 年每个阶段、模型和工具；RoboMIND、RoboCOIN 也必须按实际下载页分别核验数据、代码、权重与衍生资产。所谓“开放”不能替代逐资产授权。
 
 <!-- CLAIM_META: CLAIM-16-01 fact -->
 统一 episode 存储与加载 API 只解决格式层兼容；动作 frame、单位、absolute/delta、频率、本体和许可仍需逐数据集对齐与审计。
@@ -216,7 +216,7 @@ fixture 中缩放或字段合同改变会产生不同 schema fingerprint；该�
 
 ### 16.5.1 同一来源清单，三种实际暴露
 
-实验 16-1 v4<!-- INTERNAL_ASSET_ID: EXP-16-01 v4 --> 固定两个来源：`short_dataset` 有1条、长度2的 episode；`long_dataset` 有3条、每条长度4的 episode。来源身份、episode 与 transition 总数分别是2、4和14，不引入真实数据。
+实验 16-1 v4<!-- INTERNAL_ASSET_ID: EXP-16-01 v4 --> 固定两个来源：`short_dataset` 有 1 条、长度 2 的 episode；`long_dataset` 有 3 条、每条长度 4 的 episode。来源身份、episode 与 transition 总数分别是 2、4 和 14，不引入真实数据。
 
 | 均匀抽样单位 | short 暴露 | long 暴露 | long:short |
 | --- | ---: | ---: | ---: |
@@ -227,7 +227,7 @@ fixture 中缩放或字段合同改变会产生不同 schema fingerprint；该�
 *表 16-5：实验 16-1 v4 的采样单位负对照。比例是对固定计数的解析期望，不含有限 batch 随机波动、窗口重叠、过滤、token mask 或质量权重。*<!-- INTERNAL_ASSET_ID: TAB-16-05 -->
 
 <!-- CLAIM_META: CLAIM-16-09 result -->
-在该 fixture 中，仅把“均匀”的单位从 dataset 改为 episode 或 transition，就会把 long 来源的期望暴露从50%改为75%或约85.71%。该结果只证明采样单位会改变这两个手工来源的 mixture，不判断哪一种权重更优，也不估计真实训练 batch、梯度贡献、数据质量或迁移性能。
+在该 fixture 中，仅把“均匀”的单位从 dataset 改为 episode 或 transition，就会把 long 来源的期望暴露从 50%改为 75%或约 85.71%。该结果只证明采样单位会改变这两个手工来源的 mixture，不判断哪一种权重更优，也不估计真实训练 batch、梯度贡献、数据质量或迁移性能。
 
 ### 16.5.2 raw transition 占比仍不是 loss window 占比
 
@@ -249,7 +249,7 @@ N_{\text{window}}=\max(L-H+1,0)
 *表 16-6：实验 16-1 v4 的 raw-transition—合格 action-window 负对照。这里固定 stride one、drop-tail、无 padding；比例是解析计数，不是随机采样或梯度实测。*<!-- INTERNAL_ASSET_ID: TAB-16-06 -->
 
 <!-- CLAIM_META: CLAIM-16-10 result -->
-在该固定 fixture 中，long 来源占12/14个 raw transition，但三步 drop-tail 窗口的6个合格样本全部来自 long，short 来源从14.2857%降为0。该结果只证明 horizon 与尾部策略会改变可训练窗口分母，不估计 padding/mask、过滤、重复采样、分布式 shard、有效 token、梯度贡献、数据质量或模型迁移性能。
+在该固定 fixture 中，long 来源占 12/14 个 raw transition，但三步 drop-tail 窗口的 6 个合格样本全部来自 long，short 来源从 14.2857%降为 0。该结果只证明 horizon 与尾部策略会改变可训练窗口分母，不估计 padding/mask、过滤、重复采样、分布式 shard、有效 token、梯度贡献、数据质量或模型迁移性能。
 
 ## 16.6 正迁移与负迁移必须用矩阵判断
 
@@ -403,7 +403,7 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 <details markdown="1">
 <summary>自检 16-1：单位改变必须更新 fingerprint</summary>
 
-`arm_b` 原来用厘米，scale-to-meter 为0.01；改成毫米后应为0.001。同一个 raw `2.0` 会从0.02 m变成0.002 m，语义已变化十倍。旧 fingerprint 却声称记录仍按厘米 adapter 生成，继续算误差会得到数值正常但身份虚假的结果，且无法判断应重解码还是数据被污染。正确做法是生成新 adapter fingerprint/schema revision，迁移或重新导出有来源记录；不能根据数值范围猜单位。当前 fixture 正是用 stale fingerprint 拒绝阻断这种静默错配。
+`arm_b` 原来用厘米，scale-to-meter 为 0.01；改成毫米后应为 0.001。同一个 raw `2.0` 会从 0.02 m变成 0.002 m，语义已变化十倍。旧 fingerprint 却声称记录仍按厘米 adapter 生成，继续算误差会得到数值正常但身份虚假的结果，且无法判断应重解码还是数据被污染。正确做法是生成新 adapter fingerprint/schema revision，迁移或重新导出有来源记录；不能根据数值范围猜单位。当前 fixture 正是用 stale fingerprint 拒绝阻断这种静默错配。
 
 </details>
 
@@ -438,14 +438,14 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 <details markdown="1">
 <summary>自检 16-6：配置权重不等于实际 loss 暴露</summary>
 
-对短来源1条×2步、长来源3条×4步：dataset-uniform 先等概率选来源，比例为 `1/2,1/2`；episode-uniform 在4条轨迹中等概率选，比例为 `1/4,3/4`；transition-uniform 在14步中等概率选，比例为 `2/14,12/14≈0.1429,0.8571`。实现审计还要记录 action/window horizon、尾部 padding/drop、无语言/缺相机过滤、异常样本 `ignore_errors`、mask 后有效 token、重复采样和分布式 shard，因为这些步骤会让 realized batch/loss 暴露偏离配置期望。哪一种 sampler 合理取决于目标量；不能用“大数据集占比更高”或“来源等权”替代预注册目标和分层评测。
+对短来源 1 条×2 步、长来源 3 条×4 步：dataset-uniform 先等概率选来源，比例为 `1/2,1/2`；episode-uniform 在 4 条轨迹中等概率选，比例为 `1/4,3/4`；transition-uniform 在 14 步中等概率选，比例为 `2/14,12/14≈0.1429,0.8571`。实现审计还要记录 action/window horizon、尾部 padding/drop、无语言/缺相机过滤、异常样本 `ignore_errors`、mask 后有效 token、重复采样和分布式 shard，因为这些步骤会让 realized batch/loss 暴露偏离配置期望。哪一种 sampler 合理取决于目标量；不能用“大数据集占比更高”或“来源等权”替代预注册目标和分层评测。
 
 </details>
 
 <details markdown="1">
 <summary>自检 16-7：transition 多不代表合格 action window 多</summary>
 
-stride one、drop-tail 时，长度 `L` 的 episode 只有 `max(L-H+1,0)` 个连续窗口。固定 $H=3$ 后，短来源 `(2,)` 贡献0个窗口，长来源三条长度4的 episode 各贡献2个、共6个；所以 long 的 raw-transition 暴露是 `12/14≈85.71%`，window-uniform 暴露却是 `6/6=100%`。若 padding 保留短 episode，必须把真实动作与 padding 的 mask、终止/截断原因、有效 horizon 和 loss denominator 一起记录；否则零填充值可能被当作监督动作。实际训练还需审计过滤、窗口 stride/重叠、重复采样、分布式 shard 与每来源有效 token/梯度，不能把这个解析端点当作真实数据质量或迁移结果。
+stride one、drop-tail 时，长度 `L` 的 episode 只有 `max(L-H+1,0)` 个连续窗口。固定 $H=3$ 后，短来源 `(2,)` 贡献 0 个窗口，长来源三条长度 4 的 episode 各贡献 2 个、共 6 个；所以 long 的 raw-transition 暴露是 `12/14≈85.71%`，window-uniform 暴露却是 `6/6=100%`。若 padding 保留短 episode，必须把真实动作与 padding 的 mask、终止/截断原因、有效 horizon 和 loss denominator 一起记录；否则零填充值可能被当作监督动作。实际训练还需审计过滤、窗口 stride/重叠、重复采样、分布式 shard 与每来源有效 token/梯度，不能把这个解析端点当作真实数据质量或迁移结果。
 
 </details>
 

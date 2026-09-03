@@ -220,7 +220,7 @@ P(\text{any accepted})=1-(1-q)^N.
 *表 14-3：固定边际 $q=0.2$ 下的候选依赖结构负对照。q、iid 和完全相关结构均为手写解析端点；forward 只是抽象 batch 计数，不是实测时延。*<!-- INTERNAL_ASSET_ID: TAB-14-03 -->
 
 <!-- CLAIM_META: CLAIM-14-10 result -->
-实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 中，单候选接受概率固定为0.2时，16个 iid 候选的至少一个接受概率为0.971852502329、fallback 概率为0.028147497671；16个完全相关候选对应数值仍为0.2和0.8。该反例只证明 best-of-N 可靠性计算需要候选联合依赖假设，不估计生成器多样性、真实接受率、在线 selector、碰撞风险或闭环成功率。
+实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 中，单候选接受概率固定为 0.2 时，16 个 iid 候选的至少一个接受概率为 0.971852502329、fallback 概率为 0.028147497671；16 个完全相关候选对应数值仍为 0.2 和 0.8。该反例只证明 best-of-N 可靠性计算需要候选联合依赖假设，不估计生成器多样性、真实接受率、在线 selector、碰撞风险或闭环成功率。
 
 fixture 还把“接近演示模式”和“当前场景允许执行”分开。手工安全门把左模式 `[-1.25,-0.75]` 设为当前场景阻塞区：
 
@@ -234,7 +234,7 @@ fixture 还把“接近演示模式”和“当前场景允许执行”分开。
 <!-- CLAIM_META: CLAIM-14-08 result -->
 fixture 中 10 个候选全部靠近数据模式，但独立门禁只接受 5 个；当两个模式有效候选都落入阻塞区时，系统不继续随机重采样，而是使用确定性 fallback。模式有效率不能替代场景安全接受率。
 
-fixture 还固定目标条件分布为 $P(-1)=P(+1)=0.5$，比较两组都完全模式有效的10个样本。对经验模式频率 $\hat{p}$ 与已知目标频率 `p`，这里只计算描述性距离
+fixture 还固定目标条件分布为 $P(-1)=P(+1)=0.5$，比较两组都完全模式有效的 10 个样本。对经验模式频率 $\hat{p}$ 与已知目标频率 `p`，这里只计算描述性距离
 
 \[
 \operatorname{TV}(\hat p,p)=\frac{1}{2}\sum_m\left|\hat p(m)-p(m)\right|.
@@ -245,10 +245,10 @@ fixture 还固定目标条件分布为 $P(-1)=P(+1)=0.5$，比较两组都完全
 | 5:5 | 100% | 2 | 0.5:0.5 | 0.0 |
 | 9:1 | 100% | 2 | 0.9:0.1 | 0.4 |
 
-*表 14-5：实验 14-1 的模式覆盖—频率负对照。两组样本都覆盖全部模式且每个动作都有效，但对已知等权目标的经验频率距离不同；10个手工样本不估计总体校准。*<!-- INTERNAL_ASSET_ID: TAB-14-05 -->
+*表 14-5：实验 14-1 的模式覆盖—频率负对照。两组样本都覆盖全部模式且每个动作都有效，但对已知等权目标的经验频率距离不同；10 个手工样本不估计总体校准。*<!-- INTERNAL_ASSET_ID: TAB-14-05 -->
 
 <!-- CLAIM_META: CLAIM-14-09 result -->
-实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 中，`5:5` 与 `9:1` 两组样本的动作有效率均为100%、模式覆盖均为2，但相对已知等权目标的经验 total variation 为 `0/0.4`。该反例只证明 support coverage 丢失模式频率信息，不证明真实策略失配程度、训练 mode collapse、总体 calibration 或统计显著性。
+实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 中，`5:5` 与 `9:1` 两组样本的动作有效率均为 100%、模式覆盖均为 2，但相对已知等权目标的经验 total variation 为 `0/0.4`。该反例只证明 support coverage 丢失模式频率信息，不证明真实策略失配程度、训练 mode collapse、总体 calibration 或统计显著性。
 
 ## 14.6 怎么评测多峰动作
 
@@ -288,7 +288,7 @@ fixture 还固定目标条件分布为 $P(-1)=P(+1)=0.5$，比较两组都完全
 
 急刹、避碰和最小风险停车不能依赖“多采几个样本或许会出现安全动作”。若所有候选无效、推理超时或观测过期，系统应进入确定性的安全降级。正文评测同时报告路线完成、碰撞、舒适度、干预、模式覆盖和 deadline miss，而不是只用 trajectory ADE/FDE。
 
-对驾驶轨迹做 best-of-N 时，还要报告候选内相关性：16条只在微小控制噪声上不同、却共享同一错误意图或错误交通预测的轨迹，不能按16次独立安全机会计算。至少按意图、交互假设和场景约束给出 effective diversity/cluster 诊断，并直接统计每次重规划 `generated / accepted / fallback`；即便历史上观察到至少一个可行候选，也不能把该概率当成紧急制动保证。
+对驾驶轨迹做 best-of-N 时，还要报告候选内相关性：16 条只在微小控制噪声上不同、却共享同一错误意图或错误交通预测的轨迹，不能按 16 次独立安全机会计算。至少按意图、交互假设和场景约束给出 effective diversity/cluster 诊断，并直接统计每次重规划 `generated / accepted / fallback`；即便历史上观察到至少一个可行候选，也不能把该概率当成紧急制动保证。
 
 驾驶中的多个未来还涉及策略与预测的耦合。其他车辆是否让行可能取决于 ego 是否开始并线，因此不能先把其他主体未来当成与 ego 候选无关的固定分布，再独立采样 ego 动作。更完整的候选应说明它基于哪一种交互假设，以及该假设在执行前缀后如何更新。否则，表面多样的 ego 轨迹可能共享同一个错误的他车反应前提。
 
@@ -319,7 +319,7 @@ fixture 还固定目标条件分布为 $P(-1)=P(+1)=0.5$，比较两组都完全
 | 本书结果 | 条件均值落在双峰无效区 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 一维对称解析 fixture |
 | 本书结果 | refinement 求值—模式距离权衡 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 不是 DDPM/learned denoiser |
 | 本书结果 | oracle straight flow 一步到目标 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 已知配对，不能比较方法 |
-| 本书结果 | 相同有效率/模式覆盖可隐藏频率失真 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 已知等权目标与10个手工样本 |
+| 本书结果 | 相同有效率/模式覆盖可隐藏频率失真 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 已知等权目标与 10 个手工样本 |
 | 本书结果 | 相同边际接受率下，候选相关性改变 best-of-N 可用性 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 手写概率与 iid/完全相关端点 |
 | 本书结果 | 候选—batch forward 预算与安全筛选 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 抽象计数与手工阻塞区 |
 | 论文/开源 | Diffusion Policy 方法与官方资产 | 论文/官方仓库 | `[P/O,R1]` | 本书未运行 |
@@ -344,8 +344,8 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 3. **公平对照**：为 Push-T 的 MSE、diffusion、flow 三个策略列出必须固定的 10 个变量。
 4. **选择偏差**：解释为什么从 32 个样本中用真实终点挑最好不是合法在线评测。
 5. **自动驾驶迁移**：设计保持/变道/减速三模式轨迹评测，并定义无有效候选时的降级动作。
-6. **频率诊断**：目标模式概率为 `0.7/0.3` 时，比较 `7:3` 与 `5:5` 两组10样本的覆盖率和经验 total variation；说明为什么这仍不是总体校准结论。
-7. **候选相关性**：单候选接受率为0.1时，分别计算 N=8 的 iid 与完全相关至少一个通过概率；再说明真实采样器需要记录什么才能判断更接近哪个端点。
+6. **频率诊断**：目标模式概率为 `0.7/0.3` 时，比较 `7:3` 与 `5:5` 两组 10 样本的覆盖率和经验 total variation；说明为什么这仍不是总体校准结论。
+7. **候选相关性**：单候选接受率为 0.1 时，分别计算 N=8 的 iid 与完全相关至少一个通过概率；再说明真实采样器需要记录什么才能判断更接近哪个端点。
 
 ## 自检要点
 
@@ -354,28 +354,28 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 <details markdown="1">
 <summary>自检 14-1：不对称双峰的均值</summary>
 
-若 `-2` 的权重为 p、`+1` 的权重为 `1-p`，条件均值为 $\mu=1-3p$；等权时 $\mu=-0.5$，距两个 mode 都是1.5，因此不是任一有效模式。若同时把 fixture 的 `VALID_MODES` 改为 `(-2,1)` 并保留 tolerance 0.25，均值有效当且仅当 $3\min(p,1-p)\le0.25$，即 $p\le1/12$ 或 $p\ge11/12$；严格只承认 mode 本身时则只有 p=0或1。必须同步更新 mode oracle，不能只改 demonstrations、仍用旧 `(-1,1)` 计算有效性。
+若 `-2` 的权重为 p、`+1` 的权重为 `1-p`，条件均值为 $\mu=1-3p$；等权时 $\mu=-0.5$，距两个 mode 都是 1.5，因此不是任一有效模式。若同时把 fixture 的 `VALID_MODES` 改为 `(-2,1)` 并保留 tolerance 0.25，均值有效当且仅当 $3\min(p,1-p)\le0.25$，即 $p\le1/12$ 或 $p\ge11/12$；严格只承认 mode 本身时则只有 p=0 或 1。必须同步更新 mode oracle，不能只改 demonstrations、仍用旧 `(-1,1)` 计算有效性。
 
 </details>
 
 <details markdown="1">
 <summary>自检 14-2：50 ms 内的抽象采样预算</summary>
 
-扣除18 ms 后只剩32 ms；若把每一步都保守按单次调用 P95 7 ms 串行估算，算术上限是 `floor(32/7)=4` 步，预算28 ms，5步需35 ms而超限。它不是可部署的 P95 保证：多个调用的尾延迟不能简单由单次 P95 相加，预处理可能相关，batch size 也改变 latency。应在目标 runtime 上测完整4步链路的 P50/P95/P99、deadline miss rate 和安全余量；候选若批处理，还要分别记录 forward 次数与 sample-model evaluations。
+扣除 18 ms 后只剩 32 ms；若把每一步都保守按单次调用 P95 7 ms 串行估算，算术上限是 `floor(32/7)=4` 步，预算 28 ms，5 步需 35 ms 而超限。它不是可部署的 P95 保证：多个调用的尾延迟不能简单由单次 P95 相加，预处理可能相关，batch size 也改变 latency。应在目标 runtime 上测完整 4 步链路的 P50/P95/P99、deadline miss rate 和安全余量；候选若批处理，还要分别记录 forward 次数与 sample-model evaluations。
 
 </details>
 
 <details markdown="1">
 <summary>自检 14-3：Push-T 三策略公平对照</summary>
 
-至少冻结十项：①原始 demonstrations/许可与 train-selection-test seed；②观察模态、历史长度、图像预处理；③动作 frame、单位、频率、归一化；④预测时域 $K_{\text{pred}}$、执行时域 $K_{\text{exec}}$ 与重规划规则；⑤backbone、conditioning 与参数预算；⑥训练更新数、batch、optimizer/schedule；⑦数据增广与采样权重；⑧候选数、solver steps、随机 seed 和选择规则；⑨硬件、precision、batching/runtime 与端到端时延测法；⑩闭环初态、任务 horizon、成功/失败分母和统计区间。MSE 头无需生成32候选也应在相同执行协议下比较，不能靠给某一方法额外 oracle 或计算预算取胜。
+至少冻结十项：①原始 demonstrations/许可与 train-selection-test seed；②观察模态、历史长度、图像预处理；③动作 frame、单位、频率、归一化；④预测时域 $K_{\text{pred}}$、执行时域 $K_{\text{exec}}$ 与重规划规则；⑤backbone、conditioning 与参数预算；⑥训练更新数、batch、optimizer/schedule；⑦数据增广与采样权重；⑧候选数、solver steps、随机 seed 和选择规则；⑨硬件、precision、batching/runtime 与端到端时延测法；⑩闭环初态、任务 horizon、成功/失败分母和统计区间。MSE 头无需生成 32 候选也应在相同执行协议下比较，不能靠给某一方法额外 oracle 或计算预算取胜。
 
 </details>
 
 <details markdown="1">
 <summary>自检 14-4：真实终点选择造成泄漏</summary>
 
-真实终点只有执行候选后才能知道；用它从32个样本挑最优等于把 test outcome 当在线 selector 输入，会得到随样本数增大的 best-of-N 乐观偏差。这可单独标成 oracle upper bound，用于诊断生成器 support，但不能称可执行策略。合法在线选择只能使用当时可得的状态、冻结 world model/critic、任务代价与安全门，并要独立验证 selector error；最终评测仍按所有 attempted episodes 统计真实 outcome。
+真实终点只有执行候选后才能知道；用它从 32 个样本挑最优等于把 test outcome 当在线 selector 输入，会得到随样本数增大的 best-of-N 乐观偏差。这可单独标成 oracle upper bound，用于诊断生成器 support，但不能称可执行策略。合法在线选择只能使用当时可得的状态、冻结 world model/critic、任务代价与安全门，并要独立验证 selector error；最终评测仍按所有 attempted episodes 统计真实 outcome。
 
 </details>
 
@@ -389,14 +389,14 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 <details markdown="1">
 <summary>自检 14-6：覆盖相同，频率不同</summary>
 
-两组都包含两个模式，因此覆盖模式数都是2；若每个样本都落在有效模式内，有效率也都是100%。`7:3` 的经验分布与目标 `0.7/0.3` 相同，TV为0；`5:5` 的 TV 为 `0.5(|0.5-0.7|+|0.5-0.3|)=0.2`。这只是已知目标和固定10样本上的描述性诊断：真实任务的目标条件分布通常要从独立数据估计，还受有限样本、条件混合、标注歧义、模式发现误差和闭环选择器影响。应报告置信区间或重复采样，并配合 log score/Brier 等 proper score；不能把一次经验频率相等称为总体校准。
+两组都包含两个模式，因此覆盖模式数都是 2；若每个样本都落在有效模式内，有效率也都是 100%。`7:3` 的经验分布与目标 `0.7/0.3` 相同，TV 为 0；`5:5` 的 TV 为 `0.5(|0.5-0.7|+|0.5-0.3|)=0.2`。这只是已知目标和固定 10 样本上的描述性诊断：真实任务的目标条件分布通常要从独立数据估计，还受有限样本、条件混合、标注歧义、模式发现误差和闭环选择器影响。应报告置信区间或重复采样，并配合 log score/Brier 等 proper score；不能把一次经验频率相等称为总体校准。
 
 </details>
 
 <details markdown="1">
 <summary>自检 14-7：best-of-N 与候选相关性</summary>
 
-若8个候选在给定场景下条件独立，至少一个通过概率为 `1-(1-0.1)^8=0.56953279`，fallback 概率为0.43046721；若候选完全相关，至少一个通过仍为0.1、fallback 仍为0.9。真实 sampler 通常位于两端之间，不能只由单候选边际率恢复联合可用性。至少应保存同一重规划内的候选、mode/intent cluster、约束失败原因和 accept bitmap，按场景/seed 估计 any-accepted、候选内相关或有效多样性，并把 selector、batch/solver 成本及所有 attempted replans 的 fallback 纳入分母；这些观测仍不等于安全保证。
+若 8 个候选在给定场景下条件独立，至少一个通过概率为 `1-(1-0.1)^8=0.56953279`，fallback 概率为 0.43046721；若候选完全相关，至少一个通过仍为 0.1、fallback 仍为 0.9。真实 sampler 通常位于两端之间，不能只由单候选边际率恢复联合可用性。至少应保存同一重规划内的候选、mode/intent cluster、约束失败原因和 accept bitmap，按场景/seed 估计 any-accepted、候选内相关或有效多样性，并把 selector、batch/solver 成本及所有 attempted replans 的 fallback 纳入分母；这些观测仍不等于安全保证。
 
 </details>
 

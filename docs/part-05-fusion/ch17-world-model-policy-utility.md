@@ -190,7 +190,7 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 
 代理评测最容易产生的泄漏不是 episode 重复，而是**策略参与了代理选择**：同一批 checkpoint 被用来挑 world model、调 scorer、定阈值，再用它们报告相关性。这个数字是 retrospective fit，不能回答优化器下一次提交的新策略是否仍保持排序。
 
-[Interactive World Simulator](https://arxiv.org/abs/2603.08546)报告将 DP、ACT、`π0`、`π0.5` 的 final/intermediate checkpoints 放入 world simulator 与真实机器人，在四项任务、每项20个来自 simulator 训练分布的初态上比较，并给出相关性和 Clopper–Pearson 区间 `[P]`。这是作者协议下的有价值配对证据；但正文同时应保留它的总体边界：这些结果不能自动覆盖未参与选择的新 policy family、训练数据来源、动作 schema 或分布外初态。本书没有运行该模型或核验其数值。
+[Interactive World Simulator](https://arxiv.org/abs/2603.08546)报告将 DP、ACT、`π0`、`π0.5` 的 final/intermediate checkpoints 放入 world simulator 与真实机器人，在四项任务、每项 20 个来自 simulator 训练分布的初态上比较，并给出相关性和 Clopper–Pearson 区间 `[P]`。这是作者协议下的有价值配对证据；但正文同时应保留它的总体边界：这些结果不能自动覆盖未参与选择的新 policy family、训练数据来源、动作 schema 或分布外初态。本书没有运行该模型或核验其数值。
 
 | 分区 | 可用于什么 | 不得做什么 |
 | --- | --- | --- |
@@ -253,7 +253,7 @@ make ch17-smoke
 
 ### 17.8.1 同为 8/9，错误位置决定当前策略后果
 
-为了避免把上述结果误读成“88.89% 这个数字本身太低”，实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 再构造一个等准确率模型。两个模型都只在同一9格均匀 transition panel 上错1格，但把错误放在不同 query：
+为了避免把上述结果误读成“88.89% 这个数字本身太低”，实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 再构造一个等准确率模型。两个模型都只在同一 9 格均匀 transition panel 上错 1 格，但把错误放在不同 query：
 
 | 单故障模型 | 错误 query | 均匀准确率 | 当前候选 panel 访问次数 | 模型选择 | 真实终点 | regret |
 | --- | --- | ---: | ---: | --- | --- | ---: |
@@ -263,7 +263,7 @@ make ch17-smoke
 *表 17-4：实验 17-1 v6 的等均匀准确率—异决策后果负对照。访问次数只针对三个固定候选策略从固定初态产生的 query；它不是总体 occupancy 或未来 planner 分布。*<!-- INTERNAL_ASSET_ID: TAB-17-04 -->
 
 <!-- CLAIM_META: CLAIM-17-12 result -->
-实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 的两个单故障模型在同一9格 transition panel 上均为8/9正确，但错误落在当前候选可达 shortcut 时，模型选择碰撞策略且 regret 为1.85；错误落在当前 panel 不访问的 `(3,wait)` 时，仍选择真实最优且 regret 为0。该结果只证明均匀准确率不能识别这个固定候选集下的错误位置与决策后果；不表示 `(3,wait)` 对其他初态、策略、planner 或部署分布安全，也不估计真实 occupancy、严重度或故障率。
+实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 的两个单故障模型在同一 9 格 transition panel 上均为 8/9 正确，但错误落在当前候选可达 shortcut 时，模型选择碰撞策略且 regret 为 1.85；错误落在当前 panel 不访问的 `(3,wait)` 时，仍选择真实最优且 regret 为 0。该结果只证明均匀准确率不能识别这个固定候选集下的错误位置与决策后果；不表示 `(3,wait)` 对其他初态、策略、planner 或部署分布安全，也不估计真实 occupancy、严重度或故障率。
 
 <!-- CLAIM_META: CLAIM-17-07 result -->
 在 fixture 的 support 外设置中，gate 拒绝唯一未覆盖的 `phantom_shortcut`，从剩余两个策略选中 `safe_route`，使真实 exploitation regret 从 `1.85` 降为 `0`。这是手工已知 support 的机制对照，不证明 learned OOD estimator 校准。
@@ -384,7 +384,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 <details markdown="1">
 <summary>自检 17-6：均匀准确率不包含决策访问与后果</summary>
 
-两个模型都在9个等权 transition 中只错1个，所以均匀准确率同为 `8/9`。但固定候选 panel 会查询 `(0,shortcut)` 一次、不会查询 `(3,wait)`：前一个错误把 shortcut 从真实碰撞错误评为成功，模型因而选择它并产生1.85 regret；后一个错误不改变当前三策略 return，仍选 safe route。这里的“零访问”只相对于固定初态与候选集；换成从 position 3 开始、允许 wait 的策略或新的 planner 后，它可能立即变成关键错误。完整审计要冻结并分别报告 benchmark 分布、真实策略 occupancy、planner proposal/query 分布与风险严重度，保留未加权分桶和样本量，并在策略或 ODD 更新后重算。
+两个模型都在 9 个等权 transition 中只错 1 个，所以均匀准确率同为 `8/9`。但固定候选 panel 会查询 `(0,shortcut)` 一次、不会查询 `(3,wait)`：前一个错误把 shortcut 从真实碰撞错误评为成功，模型因而选择它并产生 1.85 regret；后一个错误不改变当前三策略 return，仍选 safe route。这里的“零访问”只相对于固定初态与候选集；换成从 position 3 开始、允许 wait 的策略或新的 planner 后，它可能立即变成关键错误。完整审计要冻结并分别报告 benchmark 分布、真实策略 occupancy、planner proposal/query 分布与风险严重度，保留未加权分桶和样本量，并在策略或 ODD 更新后重算。
 
 </details>
 

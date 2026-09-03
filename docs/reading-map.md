@@ -1,12 +1,12 @@
 # 全书阅读地图：沿着两个任务理解闭环
 
-这页解决一个容易被章节结构掩盖的问题：同一个具身任务怎样从“看见一帧”逐步变成可信的闭环系统？全书用两个虚拟但具体的任务作为贯穿线索。它们不是新增实验、数据集或性能结果，而是帮助读者把22章放到同一条知识链上。
+这页解决一个容易被章节结构掩盖的问题：同一个具身任务怎样从“看见一帧”逐步变成可信的闭环系统？全书用两个虚拟但具体的任务作为贯穿线索。它们不是新增实验、数据集或性能结果，而是帮助读者把 22 章放到同一条知识链上。
 
 ## 如果你只想理解概念
 
 本书不要求读者运行实验才能理解正文。每章中的 `EXP-*`、命令、固定 fixture 数值和资源升级路线用于说明证据怎样落地，可以整节跳过；核心问题、概念推导、反例、失效模式与小结构成知识主线。
 
-时间有限时，可以先读下面11章：
+时间有限时，可以先读下面 11 章：
 
 1. 第1、2、3章建立闭环、世界模型和最小决策语言；
 2. 第6、7章理解信念状态、预测与规划怎样连接；
@@ -27,7 +27,7 @@
 | VLA 与策略 | 1 → 3 → 4 → 10 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 20 → 21 → 22 | 表征、语言和本体条件怎样变成可执行动作，跨本体与后训练的边界在哪里？ |
 | 系统与自动驾驶 | 1 → 3 → 4 → 7 → 9 → 11 → 12 → 14 → 15 → 16 → 17 → 19 → 20 → 21 → 22 | 从动作条件预测到仿真、评测、deadline 和降级，需要哪些不能互相替代的证据？ |
 
-第一次系统学习仍可按第1至22章顺序阅读。若某条路线暂时跳过一章，只表示当前问题不以它为主，不表示真实系统可以永久省略相应合同。
+第一次系统学习仍可按第 1 至 22 章顺序阅读。若某条路线暂时跳过一章，只表示当前问题不以它为主，不表示真实系统可以永久省略相应合同。
 
 ## 七个部分为什么按这个顺序出现
 
@@ -87,7 +87,7 @@
 | [6](part-02-world-models/ch06-rssm.md) | 抓取后遮挡时怎样用历史维持belief？ | 暂时看不到车辆时prior与posterior怎样分工？ | 循环latent、观测修正、prior rollout与KL接口 |
 | [7](part-02-world-models/ch07-model-based-planning.md) | 候选抓取和放置动作怎样比较后果？ | 不同制动/换道轨迹怎样在固定预算内排序？ | MPC/CEM接口、terminal value、风险目标与重规划 |
 | [8](part-02-world-models/ch08-imagination-learning.md) | 是否能用想象轨迹更新操作policy？ | imagined collision/reward错误怎样污染actor？ | $\lambda$-return、continuation、survival weight与误差传播 |
-| [9](part-02-world-models/ch09-evaluation.md) | 漂亮视频是否真的提高抓取成功？ | 视频指标、动作敏感度和路线outcome是否一致？ | E0–E4证据阶梯、固定分母与risk–coverage |
+| [9](part-02-world-models/ch09-evaluation.md) | 漂亮视频是否真的提高抓取成功？ | 视频指标、动作敏感度和路线outcome是否一致？ | E0–E4 证据阶梯、固定分母与risk–coverage |
 | [10](part-03-representations/ch10-jepa-representations.md) | 冻结特征能否读出杯子/夹爪状态？ | 特征能否读出相对速度、车道偏移与TTC？ | ID/shift probe、负对照与动作反事实分离 |
 | [11](part-03-representations/ch11-action-conditioned-video.md) | 左/右移动是否产生方向正确的未来？ | 保持、急刹、切入是否改变正确的ego/他车状态？ | 配对动作干预、方向、自由rollout与状态oracle |
 | [12](part-03-representations/ch12-actionable-space.md) | 深度射线、unknown与杯子footprint怎样进入可达空间？ | 锥桶、遮挡区和动态占用怎样进入可行走廊？ | 三态occupancy、米制栅格、时效、路径段与affordance |
@@ -109,13 +109,13 @@
 | [21](part-06-systems/ch21-deployment-realtime-and-safety.md) | 迟到或越界动作怎样进入hold/stop？ | 旧轨迹、定位故障和模式恢复怎样触发MRM？ | deadline、异步队列、watchdog、fallback生命周期与receipt |
 | [22](part-07-capstone/ch22-auditable-capstone.md) | 第三方能否从问题追到失败和artifact？ | route隔离、终测、安全gate和停止规则是否完整？ | 问题—数据—方法—评测—部署—证据包的端到端trace |
 
-## 没有3D经验时怎样读
+## 没有 3D经验时怎样读
 
-第一次阅读不要把“补完3D课程”设为前置任务：
+第一次阅读不要把“补完 3D课程”设为前置任务：
 
 1. 先读第1、2章，理解反馈、部分可观测和能力边界；
 2. 第3章只要求掌握像素/深度、frame、单位、时间戳和正逆变换；暂时跳过不影响后文的推导细节；
-3. 读第4–11章时，把state先理解成任务相关变量或latent，不假设它一定是完整3D；
+3. 读第4–11章时，把state先理解成任务相关变量或latent，不假设它一定是完整 3D；
 4. 到第12章从单条深度射线和free/occupied/unknown重新进入空间证据；需要计算时再回查第3章；
 5. 第13章以后优先审查动作和证据接口。NeRF、3DGS、大型occupancy网络或多视图重建都不是必读实验。
 

@@ -185,17 +185,17 @@ make ch08-smoke
 
 这里没有矛盾：外部截断之后不能把下一 episode 的 reward 接到当前序列上，但若截断时保存了有效最终观测，仍可用该观测估计截断点的 value。[Gymnasium 的官方 time-limit 指南](https://gymnasium.farama.org/main/tutorials/handling_time_limits/)明确区分 termination 与 truncation 的 bootstrap 语义 `[O,R1]`；Pardo et al. 的[Time Limits in Reinforcement Learning](https://proceedings.mlr.press/v80/pardo18a.html)把训练用外部 time limit 下的末状态 bootstrap 形式化为 partial-episode bootstrapping `[P,R1]`。若最终观测丢失，正确做法是把 target 标为不可构造并暴露数据问题，而不是猜成 terminal。
 
-但 bootstrap 正确还不够。实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 故意把两个不同 episode 的行相邻放置：第一行 reward 为1，因外部截断而结束，保存的下一状态 value 为4；第二行是新 episode 的终止 transition，reward 为100。
+但 bootstrap 正确还不够。实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 故意把两个不同 episode 的行相邻放置：第一行 reward 为 1，因外部截断而结束，保存的下一状态 value 为 4；第二行是新 episode 的终止 transition，reward 为 100。
 
 | 第一行处理 | bootstrap discount `d₀` | $\lambda$-trace `m₀` | $\lambda=1$ 的第一行 target |
 | --- | ---: | ---: | ---: |
 | 正确：截断并关闭跨行 trace | 1 | 0 | 5 |
 | 错误：只保留 bootstrap、默认 trace 连续 | 1 | 1 | 101 |
 
-*表 8-3：截断 bootstrap 与 $\lambda$-trace 边界的双信号反例。来源：实验 8-1 v4，本书原创，CC BY-NC 4.0，2026-09-02。第二行的100是手工放大的新 episode reward。*<!-- INTERNAL_ASSET_ID: TAB-08-03 -->
+*表 8-3：截断 bootstrap 与 $\lambda$-trace 边界的双信号反例。来源：实验 8-1 v4，本书原创，CC BY-NC 4.0，2026-09-02。第二行的 100 是手工放大的新 episode reward。*<!-- INTERNAL_ASSET_ID: TAB-08-03 -->
 
 <!-- CLAIM_META: CLAIM-08-09 result -->
-实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 的两行跨 episode 反例中，正确的 $d_0=1,\,m_0=0$ 得到第一行 target 5；若保留 bootstrap discount 却遗漏 trace 边界，target 变为101，产生96的跨 episode 泄漏。该结果只验证数组边界与递推接口，不估计真实 replay 污染率、critic bias、训练稳定性或策略性能。
+实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 的两行跨 episode 反例中，正确的 $d_0=1,\,m_0=0$ 得到第一行 target 5；若保留 bootstrap discount 却遗漏 trace 边界，target 变为 101，产生 96 的跨 episode 泄漏。该结果只验证数组边界与递推接口，不估计真实 replay 污染率、critic bias、训练稳定性或策略性能。
 
 ### 8.5.1 Target 正确不等于 loss 权重正确
 
@@ -357,14 +357,14 @@ critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的
 <details markdown="1">
 <summary>自检 8-5：累计 loss weight</summary>
 
-按 $w_0=1,\,w_t=\prod_{i<t}d_i$，discount `[0.9,0.9,0]` 对三个 step 的权重是 `[1,0.9,0.81]`；最后一个 0 只会关闭下一步，不能反向把终止 transition 自身权重清零。只检查 $\lambda$-return target 会漏掉另一条路径：即使 target 已正确 mask，终止后的伪 latent 仍可能以错误的非零 survival weight进入 actor/critic loss。应分别测试 target recursion 和 loss contribution，含一个终止后超大伪 loss 的负对照。
+按 $w_0=1,\,w_t=\prod_{i<t}d_i$，discount `[0.9,0.9,0]` 对三个 step 的权重是 `[1,0.9,0.81]`；最后一个 0 只会关闭下一步，不能反向把终止 transition 自身权重清零。只检查 $\lambda$-return target 会漏掉另一条路径：即使 target 已正确 mask，终止后的伪 latent 仍可能以错误的非零 survival weight 进入 actor/critic loss。应分别测试 target recursion 和 loss contribution，含一个终止后超大伪 loss 的负对照。
 
 </details>
 
 <details markdown="1">
 <summary>自检 8-6：bootstrap 与 $\lambda$-trace 是两个问题</summary>
 
-例如三行 reward 为 `[0,1,100]`，第二行是外部截断且其有效 final observation 的 value 为4，第三行来自新 episode。可令 bootstrap discounts 为 `[1,1,0]`，因为第二行需要 $1+V(\text{final})=5$；trace masks 应为 `[1,0,0]`，因为第二行之后不得读取第三行 return。$\lambda=1$ 时正确 targets 的前两项为 `[5,5]`；若错误使用全1 trace，第二行会变成101，第一行也变成101，两个当前 episode target 都被新 episode 的100污染。若第二行是自然终止，则其 discount 应为0；若 final observation 无效，则不能用“设成0”伪造合法 target。生产实现还必须确认 replay sampler 是否已经在边界切片；切片保证与 mask 仍应至少有一个可测试合同。
+例如三行 reward 为 `[0,1,100]`，第二行是外部截断且其有效 final observation 的 value 为 4，第三行来自新 episode。可令 bootstrap discounts 为 `[1,1,0]`，因为第二行需要 $1+V(\text{final})=5$；trace masks 应为 `[1,0,0]`，因为第二行之后不得读取第三行 return。$\lambda=1$ 时正确 targets 的前两项为 `[5,5]`；若错误使用全 1 trace，第二行会变成 101，第一行也变成 101，两个当前 episode target 都被新 episode 的 100 污染。若第二行是自然终止，则其 discount 应为 0；若 final observation 无效，则不能用“设成 0”伪造合法 target。生产实现还必须确认 replay sampler 是否已经在边界切片；切片保证与 mask 仍应至少有一个可测试合同。
 
 </details>
 

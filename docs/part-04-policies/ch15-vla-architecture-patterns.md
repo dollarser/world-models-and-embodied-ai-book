@@ -222,10 +222,10 @@ make ch15-smoke
 | 新生成、旧观测 | 10 ms | 40 | 42 | `observation_timestep_mismatch` |
 | 新生成、动作槽错位 | 10 ms | 42 | 43 | `action_timestep_mismatch` |
 
-*表 15-4：实验 15-1 的墙钟新鲜度—逻辑 timestep 负对照。fixture 预登记当前观测与首动作槽均为42；它不表示所有系统都必须采用同号 timestep。*<!-- INTERNAL_ASSET_ID: TAB-15-04 -->
+*表 15-4：实验 15-1 的墙钟新鲜度—逻辑 timestep 负对照。fixture 预登记当前观测与首动作槽均为 42；它不表示所有系统都必须采用同号 timestep。*<!-- INTERNAL_ASSET_ID: TAB-15-04 -->
 
 <!-- CLAIM_META: CLAIM-15-10 result -->
-实验 15-1 v4<!-- INTERNAL_ASSET_ID: EXP-15-01 v4 --> 中，两个错误 packet 的生成时间年龄均只有10 ms、低于100 ms上限，但因观测 timestep 为40或首动作 timestep 为43而被拒绝；对齐 packet 的年龄为50 ms且 `42→42`，能够通过。该结果只证明本 fixture 的双重时间身份会拒绝两类错位，不证明跨机时钟同步、真实队列时序、deadline 或控制安全。
+实验 15-1 v4<!-- INTERNAL_ASSET_ID: EXP-15-01 v4 --> 中，两个错误 packet 的生成时间年龄均只有 10 ms、低于 100 ms 上限，但因观测 timestep 为 40 或首动作 timestep 为 43 而被拒绝；对齐 packet 的年龄为 50 ms 且 `42→42`，能够通过。该结果只证明本 fixture 的双重时间身份会拒绝两类错位，不证明跨机时钟同步、真实队列时序、deadline 或控制安全。
 
 首动作对齐仍不足以定义整个 action chunk。实验 15-1 v4<!-- INTERNAL_ASSET_ID: EXP-15-01 v4 --> 为每个预测动作携带一个逻辑执行槽，并要求与 `first_action_timestep` 和动作长度共同形成连续序列：
 
@@ -238,7 +238,7 @@ make ch15-smoke
 *表 15-5：实验 15-1 v4 的首动作—完整 chunk timetable 负对照。整数槽是教学调度身份，不是墙钟时间，也不证明 runtime 会在对应周期真正执行。*<!-- INTERNAL_ASSET_ID: TAB-15-05 -->
 
 <!-- CLAIM_META: CLAIM-15-11 result -->
-实验 15-1 v4<!-- INTERNAL_ASSET_ID: EXP-15-01 v4 --> 中，合法三步 chunk 的动作槽为 `(42,43,44)`；两个错误 chunk 的 `first_action_timestep` 都仍为42，但因后续序列分别重复或跳过槽位而被拒绝。该固定反例只证明首步对齐不能替代逐动作 timetable，不估计真实队列故障率、deadline、丢帧、动作消费进度或控制安全。
+实验 15-1 v4<!-- INTERNAL_ASSET_ID: EXP-15-01 v4 --> 中，合法三步 chunk 的动作槽为 `(42,43,44)`；两个错误 chunk 的 `first_action_timestep` 都仍为 42，但因后续序列分别重复或跳过槽位而被拒绝。该固定反例只证明首步对齐不能替代逐动作 timetable，不估计真实队列故障率、deadline、丢帧、动作消费进度或控制安全。
 
 | 动作包字段 | 作用 | 仍未提供的保证 |
 | --- | --- | --- |
@@ -361,21 +361,21 @@ VLA 首先是绑定到具体本体、时间和动作 schema 的策略。语言�
 <details markdown="1">
 <summary>自检 15-2：九档 token 的误差与词表</summary>
 
-当前 normalized action `(0.6,-0.4)` 在9档时 step 为0.25，编码得到 `(6,2)`，解码仍是 `(0.5,-0.5)`，平均绝对归一化误差仍为0.1；档数增加没有保证这个特定点误差下降。复用同一标量 token 集时动作量化词表从5增到9，两个动作维的序列长度仍为2；若每维使用独立 token ID 则需要10/18个 ID，若把二维组合成一个 joint token 则是25/81种。必须声明 tokenizer 设计，不能把 bins、词表基数和序列长度混为一个量。
+当前 normalized action `(0.6,-0.4)` 在 9 档时 step 为 0.25，编码得到 `(6,2)`，解码仍是 `(0.5,-0.5)`，平均绝对归一化误差仍为 0.1；档数增加没有保证这个特定点误差下降。复用同一标量 token 集时动作量化词表从 5 增到 9，两个动作维的序列长度仍为 2；若每维使用独立 token ID 则需要 10/18 个 ID，若把二维组合成一个 joint token 则是 25/81 种。必须声明 tokenizer 设计，不能把 bins、词表基数和序列长度混为一个量。
 
 </details>
 
 <details markdown="1">
-<summary>自检 15-3：两份互不兼容的7-DoF schema</summary>
+<summary>自检 15-3：两份互不兼容的 7-DoF schema</summary>
 
-Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺序的 `q1…q7`（rad）、每维限位/速度、robot joint frame、control_hz、timestamp 与 gripper 独立字段。Delta-EEF schema 则定义 `mode=delta_pose`、`dx,dy,dz`（m）、`dRx,dRy,dRz`（rad，明确 axis-angle/Euler）、参考 `base` 或 `tool` frame、增量组合方向、dt/horizon 和 gripper。二者即使都是7维也不能逐维互换：EEF 到 joint 需要带当前 q 的 IK，存在冗余、奇异、限位和多解；joint absolute 也不等于局部笛卡尔增量。
+Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺序的 `q1…q7`（rad）、每维限位/速度、robot joint frame、control_hz、timestamp 与 gripper 独立字段。Delta-EEF schema 则定义 `mode=delta_pose`、`dx,dy,dz`（m）、`dRx,dRy,dRz`（rad，明确 axis-angle/Euler）、参考 `base` 或 `tool` frame、增量组合方向、dt/horizon 和 gripper。二者即使都是 7 维也不能逐维互换：EEF 到 joint 需要带当前 q 的 IK，存在冗余、奇异、限位和多解；joint absolute 也不等于局部笛卡尔增量。
 
 </details>
 
 <details markdown="1">
 <summary>自检 15-4：2 Hz/20 Hz 双系统缓存失效</summary>
 
-慢层每0.5 s发布带 `instruction_revision,command_id,observation_time,expires_at,schema_id` 的目标，快层每0.05 s只消费当前 revision 下未过期的动作 prefix。新指令到达时原子增加 revision、清空旧 chunk/在途请求并等待新目标；晚到的旧响应因 revision/command ID 不匹配而拒绝。急停走独立最高优先级通道，立即清队列、锁存 safe mode，并要求完成检查与新的显式授权才能恢复；健康恢复或新文本不能自动解锁。日志保存 capture/receive/infer/execute 时间和 ACK，避免同一 chunk 重放。
+慢层每 0.5 s 发布带 `instruction_revision,command_id,observation_time,expires_at,schema_id` 的目标，快层每 0.05 s 只消费当前 revision 下未过期的动作 prefix。新指令到达时原子增加 revision、清空旧 chunk/在途请求并等待新目标；晚到的旧响应因 revision/command ID 不匹配而拒绝。急停走独立最高优先级通道，立即清队列、锁存 safe mode，并要求完成检查与新的显式授权才能恢复；健康恢复或新文本不能自动解锁。日志保存 capture/receive/infer/execute 时间和 ACK，避免同一 chunk 重放。
 
 </details>
 
@@ -396,7 +396,7 @@ Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺
 <details markdown="1">
 <summary>自检 15-7：首动作对齐不代表完整 chunk 对齐</summary>
 
-合法三步序列应为 `(42,43,44)`；`(42,42,44)` 重复第二槽，`(42,44,45)` 跳过43，`(42,44,43)` 还发生乱序。三者的首元素都为42，所以只检查 `first_action_timestep` 会漏检。真实时间映射还需共同 `clock_id`、控制周期或每步目标 timestamp、允许 jitter、packet/session/command identity、队列接收与消费进度、取消/过期规则和执行 ACK；随后仍要检查连续轨迹的速度、加速度、jerk、碰撞与控制器可行性。连续整数槽只证明结构一致，不证明动作按时或安全执行。
+合法三步序列应为 `(42,43,44)`；`(42,42,44)` 重复第二槽，`(42,44,45)` 跳过 43，`(42,44,43)` 还发生乱序。三者的首元素都为 42，所以只检查 `first_action_timestep` 会漏检。真实时间映射还需共同 `clock_id`、控制周期或每步目标 timestamp、允许 jitter、packet/session/command identity、队列接收与消费进度、取消/过期规则和执行 ACK；随后仍要检查连续轨迹的速度、加速度、jerk、碰撞与控制器可行性。连续整数槽只证明结构一致，不证明动作按时或安全执行。
 
 </details>
 

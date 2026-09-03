@@ -102,7 +102,7 @@ $z_t$ 不是“世界本身”，而是模型基于历史形成的任务相关�
 *表 2-2：实验 2-1 v4 的 noisy-history belief 负对照。cue likelihood 与 return 均为作者设定的一步无单位数值，不是感知校准或真实 POMDP。*<!-- INTERNAL_ASSET_ID: TAB-02-02 -->
 
 <!-- CLAIM_META: CLAIM-02-07 result -->
-固定等权双 context 中，已知 `0.8/0.2` 对称 cue likelihood 的 Bayes belief 把 mean return 从 current-only 的0.1提高到0.38，但仍低于 perfect-history oracle 的0.6，保留0.22 mean regret。该结果只证明这组已知生成概率的一步 fixture 中 noisy history 部分减少 decision aliasing，不证明模型能学习、校准或跨时更新 belief，也不估计真实记忆、感知或规划性能。
+固定等权双 context 中，已知 `0.8/0.2` 对称 cue likelihood 的 Bayes belief 把 mean return 从 current-only 的 0.1 提高到 0.38，但仍低于 perfect-history oracle 的 0.6，保留 0.22 mean regret。该结果只证明这组已知生成概率的一步 fixture 中 noisy history 部分减少 decision aliasing，不证明模型能学习、校准或跨时更新 belief，也不估计真实记忆、感知或规划性能。
 
 这里有三条需要分开的理论直觉。[DeepMDP](https://proceedings.mlr.press/v97/gelada19a.html) 用 reward prediction 与 next-latent distribution prediction 把表示质量连接到 MDP/bisimulation 条件；这说明只重建外观不是唯一目标，也不表示任意低预测 loss 都足够。[Value Equivalence](https://arxiv.org/abs/2011.03506) 则把模型等价定义在选定的 functions 与 policies 的 Bellman updates 上；它允许忽略无关细节，但“相关”随用途和函数集合变化。MuZero 的 reward/value/policy 预测是价值相关路线的代表，不是所有任务上的充分状态证明。
 
@@ -406,7 +406,7 @@ make ch02-smoke
 
 </details>
 
-固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有 HTTPS 证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。能力矩阵中，6 张有时间/转移证据、5 张支持候选动作干预、3 张同时满足学习动态与动作条件、1 张保持 scope-dependent、1 张是无独立转移的策略。state-aliasing 对照得到 current-only mean return 0.1、perfect-history 0.6 和0.5 gap；noisy-history Bayes belief 得到0.38 return 和0.22 oracle regret。18 个单元测试还会故意破坏能力矩阵、证据与身份、动作/return 合同、prior、likelihood 归一化和 cue 决策唯一性，确认校验器能够拒绝这些变化。
+固定 fixture 的 smoke 结果为：8 张系统卡覆盖 8 类对象，8 张卡都有 HTTPS 证据 URL，8 张卡都记录了至少一项不可由现有证据推出的能力。能力矩阵中，6 张有时间/转移证据、5 张支持候选动作干预、3 张同时满足学习动态与动作条件、1 张保持 scope-dependent、1 张是无独立转移的策略。state-aliasing 对照得到 current-only mean return 0.1、perfect-history 0.6 和 0.5 gap；noisy-history Bayes belief 得到 0.38 return 和 0.22 oracle regret。18 个单元测试还会故意破坏能力矩阵、证据与身份、动作/return 合同、prior、likelihood 归一化和 cue 决策唯一性，确认校验器能够拒绝这些变化。
 
 <!-- CLAIM_META: CLAIM-02-04 result -->
 实验 2-1<!-- INTERNAL_ASSET_ID: EXP-02-01 --> 在固定 fixture 上完成了 8/8 类别、8/8 来源和 8/8 证据限制检查。它证明分类契约可执行，不证明被列系统的性能、可复现性或完整能力。
@@ -456,7 +456,7 @@ make ch02-smoke
 4. **反例设计**：构造两个当前观测相同但最优动作不同的历史，说明需要怎样的信念状态。
 5. **自动驾驶迁移**：分别为驾驶视频生成器、轨迹预测器、规划器和 CARLA 填写四轴模型卡。
 6. **状态充分性**：修改 表 2-1<!-- INTERNAL_ASSET_ID: TAB-02-01 -->，让两个 context 的最优动作相同；说明此时 history gap 为什么消失，以及这仍不能证明表示对其他任务充分。
-7. **噪声历史**：复算 表 2-2<!-- INTERNAL_ASSET_ID: TAB-02-02 --> 的 posterior、Bayes action 与0.22 regret，并解释为什么“用了 history”不是充分状态证明。
+7. **噪声历史**：复算 表 2-2<!-- INTERNAL_ASSET_ID: TAB-02-02 --> 的 posterior、Bayes action 与 0.22 regret，并解释为什么“用了 history”不是充分状态证明。
 
 ## 自检要点
 
@@ -507,7 +507,7 @@ V-JEPA 2 encoder 提供观测/视频表征，可支持当前或历史特征，�
 <details markdown="1">
 <summary>自检 2-7：noisy history 只部分消除决策混叠</summary>
 
-等权 prior 与对称 `0.8/0.2` likelihood 使 `clear_signal` 后的 $P(\text{clear})=0.8$，`blocked_signal` 后的 $P(\text{blocked})=0.8$。前者的 `advance/hold` posterior expected return 为0.6/0.04，因此选 advance；后者为-0.6/0.16，因此选 hold。两个 cue 的边际概率都为0.5，所以 mean return 是 `0.5×0.6+0.5×0.16=0.38`；相对 perfect-history 0.6 仍有0.22 regret。合格答案必须保留 posterior 不确定性，并说明 likelihood 是已知手工数值，不是模型学到或校准得到的 belief。
+等权 prior 与对称 `0.8/0.2` likelihood 使 `clear_signal` 后的 $P(\text{clear})=0.8$，`blocked_signal` 后的 $P(\text{blocked})=0.8$。前者的 `advance/hold` posterior expected return 为 0.6/0.04，因此选 advance；后者为-0.6/0.16，因此选 hold。两个 cue 的边际概率都为 0.5，所以 mean return 是 `0.5×0.6+0.5×0.16=0.38`；相对 perfect-history 0.6 仍有 0.22 regret。合格答案必须保留 posterior 不确定性，并说明 likelihood 是已知手工数值，不是模型学到或校准得到的 belief。
 
 </details>
 

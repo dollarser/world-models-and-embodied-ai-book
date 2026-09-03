@@ -276,7 +276,7 @@ make ch06-smoke
 
 原始结果记录在 `results/ch06/EXP-06-01-smoke.json`。这些数字只属于 实验 6-1<!-- INTERNAL_ASSET_ID: EXP-06-01 --> 的固定教学 fixture，不与论文分数比较，也不用于声称学习方法优于其他模型。
 
-同一协议已冻结为 `benchmarks/BENCH-06-01.json` v3：它除登记31个有效转移、seed 7、四种预测视图、五个 open-loop horizon 与未来观测可见性负对照，还登记两组 categorical posterior/prior、$\text{KL}(q\,\|\,p)$ 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、状态是否从 posterior 重置、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
+同一协议已冻结为 `benchmarks/BENCH-06-01.json` v3：它除登记 31 个有效转移、seed 7、四种预测视图、五个 open-loop horizon 与未来观测可见性负对照，还登记两组 categorical posterior/prior、$\text{KL}(q\,\|\,p)$ 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、状态是否从 posterior 重置、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
 
 <!-- CLAIM_META: CLAIM-06-03 result -->
 在 实验 6-1<!-- INTERNAL_ASSET_ID: EXP-06-01 --> 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
@@ -285,7 +285,7 @@ make ch06-smoke
 
 从时刻 `t-1` 的 posterior 状态预测 `t`，虽然预测式本身只调用 prior，但该起点已经吸收截至 `t-1` 的观测。对每个时刻重复这种重置，得到的是 **posterior-anchored one-step prior**，不是从同一初态连续展开到 horizon `H` 的 open-loop。二者适合回答不同问题，不能只因函数名都叫 `prior` 就合并。
 
-实验 6-1 v3<!-- INTERNAL_ASSET_ID: EXP-06-01 v3 --> 固定 actions、真值位置和初始观测，仅给后续31个观测统一加 `+1`。真正 open-loop 初始化后不再读取这些值，因此 RMSE 必须逐位不变；filtering 与 posterior-anchored one-step 分支会改变：
+实验 6-1 v3<!-- INTERNAL_ASSET_ID: EXP-06-01 v3 --> 固定 actions、真值位置和初始观测，仅给后续 31 个观测统一加 `+1`。真正 open-loop 初始化后不再读取这些值，因此 RMSE 必须逐位不变；filtering 与 posterior-anchored one-step 分支会改变：
 
 | 分支 | 原始 RMSE | 未来观测 `+1` 后 RMSE | 是否读取偏移后的观测 |
 | --- | ---: | ---: | --- |
