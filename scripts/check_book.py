@@ -32,7 +32,7 @@ REQUIRED = (
     "specs/license-and-data-policy.md",
     "specs/book-quality-gates.md",
     "docs/index.md",
-    "docs/status.md",
+    "maintenance/status.md",
     "docs/glossary.md",
     "docs/reading-map.md",
     "docs/research-radar.md",

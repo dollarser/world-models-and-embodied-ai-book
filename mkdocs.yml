@@ -76,7 +76,3 @@ nav:
   - 版本与维护:
       - 发布候选说明: release-notes.md
       - 勘误与内容反馈: errata.md
-  - 项目文档（面向贡献者与维护者）:
-      - 编写状态: status.md
-      - 出版与版本策略: publication.md
-      - 读者试读方案: reader-study.md
