@@ -41,7 +41,7 @@ p(x_{t+1:t+H}\mid x_{\le t}, a_{t:t+H-1}, c),
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-05-01 生成式预测的共同合同
+    accTitle: FIG-05-01 图 5-1 生成式预测的共同合同
     accDescr: 历史、上下文和可选动作条件进入生成模型，模型产生分布或样本；样本还要按覆盖、校准、任务效用和安全等用途分别验证。
     C[历史/动作/上下文] --> E[可选 encoder/tokenizer]
     E --> G{分布参数化}
@@ -56,7 +56,7 @@ flowchart TB
     S --> X[条件/校准/rollout/下游检查]
 ```
 
-*FIG-05-01：生成式预测的共同合同。来源：本书原创，CC BY-NC 4.0，2026-08-31。分支可组合，输出样本仍需用途驱动验证。*
+*图 5-1：生成式预测的共同合同。来源：本书原创，CC BY-NC 4.0，2026-08-31。分支可组合，输出样本仍需用途驱动验证。*<!-- INTERNAL_ASSET_ID: FIG-05-01 -->
 
 ### 5.1.1 “生成式”至少包含四个不同问题
 
@@ -138,7 +138,7 @@ diffusion 与 flow 的核心共同点，是都引入一条从简单分布到数�
 | diffusion | 噪声层级上的 denoising/score 参数化 | 给定噪声状态，如何朝数据移动 | 多步反向去噪或其加速变体 | 条件使用、函数评估次数、采样误差 |
 | flow | 概率路径上的速度场 | 路径中间点应沿哪个方向移动 | 数值积分 ODE 或少步近似 | 路径选择、求解误差、端到端成本 |
 
-*TAB-05-01：按概率对象与使用方式组织的生成模型谱系。VQ 可接自回归或 masked prior，VAE decoder 也可由 diffusion 实现，因此表中行可以组合。*
+*表 5-1：按概率对象与使用方式组织的生成模型谱系。VQ 可接自回归或 masked prior，VAE decoder 也可由 diffusion 实现，因此表中行可以组合。*<!-- INTERNAL_ASSET_ID: TAB-05-01 -->
 
 一个实用选择顺序是：先确定下游需要单点、分位数、样本集合还是概率；再确定输出在像素、token、latent 还是任务状态中；随后根据延迟、内存和可校准性选择分解与生成过程；最后才选择网络规模。反过来从“当前最流行的生成器”出发，通常会把表示问题、概率问题和系统预算混在一起。
 
@@ -153,7 +153,7 @@ diffusion 与 flow 的核心共同点，是都引入一条从简单分布到数�
 
 视频生成器可能满足第一项的一部分，却忽略动作；动作条件生成器可能输出逼真片段，却没有稳定 latent 供规划反复查询；一个不生成像素的 latent dynamics 反而可能完整满足决策接口。因此“生成能力”“环境动力学”“可用于决策”应看成逐级增加的合同，而不是同义词。
 
-## 5.7 均值落在两个合法未来之间（EXP-05-01）
+## 5.7 均值落在两个合法未来之间（实验 5-1<!-- INTERNAL_ASSET_ID: EXP-05-01 -->）
 
 fixture 有 `fork` 和 `left_only` 两种上下文。`fork` 的未来为 `-1/+1` 各半；MSE 点预测为 0。
 
@@ -177,7 +177,7 @@ make ch05-smoke
 | 条件/无条件全数据 NLL | 0.346574 / 0.562335 nats |
 | 四个确定性分位样本 support coverage | 100% |
 
-*TAB-05-02：`EXP-05-01` 解析结果。它不是神经生成模型 benchmark。*
+*表 5-2：实验 5-1 解析结果。它不是神经生成模型 benchmark。*<!-- INTERNAL_ASSET_ID: TAB-05-02 -->
 
 <!-- CLAIM_META: CLAIM-05-02 result -->
 固定 fork 中 MSE 最优均值为 0，但距两个观测到的未来都为 1。
@@ -233,7 +233,7 @@ D_{TV}(p,q)=\frac{1}{2}\sum_x |p(x)-q(x)|.
 
 它可以量化“改变条件后预测分布变化多少”，但较大不自动代表变化方向正确；仍需与真实条件分布或可执行后果对照。连续模型的 density 还会随变量单位、离散化和可逆预处理改变，因此只在输出表示和评测实现一致时比较 NLL。
 
-`EXP-05-01` 增加三个故障分布：`collapsed` 给第二个已观察 mode 的概率低于 1%，`hallucinated` 给未观察的中间值 10% 概率，`context_ignored` 对不同上下文返回相同边际分布。
+实验 5-1<!-- INTERNAL_ASSET_ID: EXP-05-01 --> 增加三个故障分布：`collapsed` 给第二个已观察 mode 的概率低于 1%，`hallucinated` 给未观察的中间值 10% 概率，`context_ignored` 对不同上下文返回相同边际分布。
 
 | fixture | 条件 TV | 已观察 mode recall | 观察 support 外概率质量 |
 | --- | ---: | ---: | ---: |
@@ -242,7 +242,7 @@ D_{TV}(p,q)=\frac{1}{2}\sum_x |p(x)-q(x)|.
 | collapsed | — | 50% | 0% |
 | hallucinated | — | 100% | 10% |
 
-*TAB-05-03：离散 fixture 的互补诊断。这里的“观察 support”只指八个手工样本，不是真实连续数据分布的完整 support。*
+*表 5-3：离散 fixture 的互补诊断。这里的“观察 support”只指八个手工样本，不是真实连续数据分布的完整 support。*<!-- INTERNAL_ASSET_ID: TAB-05-03 -->
 
 <!-- CLAIM_META: CLAIM-05-07 result -->
 在固定 fixture 中，条件模型跨 `fork/left_only` 的 TV 为 `0.5`，条件忽略模型为 `0`；mode collapse 与虚构 mode 又分别表现为 50% mode recall 和 10% 观察 support 外概率质量。任一单项指标都无法识别全部三类错误。
@@ -253,7 +253,7 @@ D_{TV}(p,q)=\frac{1}{2}\sum_x |p(x)-q(x)|.
 
 [Deep Ensembles](https://proceedings.neurips.cc/paper_files/paper/2017/hash/9ef2ed4b7fd2c810847ffa5fa85bce38-Abstract.html)把独立初始化成员的预测聚合作为可扩展不确定性基线；[Ovadia et al.](https://proceedings.neurips.cc/paper/2019/hash/8558cb408c1d76621371888657d2eb1d-Abstract.html)则在多种 dataset shift 严重度上比较准确率与校准退化 `[P,R1]`。这些工作支持“必须在 shift 下评估估计器”，不支持把任意成员分歧直接解释成 epistemic 概率，也不保证 ensemble 成员会学到不同错误。
 
-`EXP-05-01` v4 用三个手写标量成员演示这个边界。为便于初学者直接计算，定义 range score
+实验 5-1 v4<!-- INTERNAL_ASSET_ID: EXP-05-01 v4 --> 用三个手写标量成员演示这个边界。为便于初学者直接计算，定义 range score
 
 \[
 u(x)=\max_m \hat y_m(x)-\min_m \hat y_m(x),
@@ -267,7 +267,7 @@ u(x)=\max_m \hat y_m(x)-\min_m \hat y_m(x),
 | `diverse_ood` | `1, 2, 3` | -2 | 4 | 2 | 是 |
 | `shared_error_ood` | `2, 2, 2` | -2 | 4 | 0 | 否 |
 
-*TAB-05-04：ensemble range 的有用拒绝与共同错误假阴性。所有值均为手写教学 fixture。*
+*表 5-4：ensemble range 的有用拒绝与共同错误假阴性。所有值均为手写教学 fixture。*<!-- INTERNAL_ASSET_ID: TAB-05-04 -->
 
 <!-- CLAIM_META: CLAIM-05-08 result -->
 固定 range gate 拒绝了成员分歧为 2 的 `diverse_ood`，却接受了三个成员完全一致、ensemble mean 绝对误差仍为 4 的 `shared_error_ood`。该结果只证明低 disagreement 不蕴含正确，也不测量 learned ensemble、OOD 检出率、校准、真实错误相关性或安全性。
@@ -280,7 +280,7 @@ v4 再加入 `diverse_correct=(-1,0,1), target=0`。它的成员 range 同样为
 | 0.25 | 0.50 | 0.50 | 2.00 | 0.50 |
 | 2 | 1.00 | 0.50 | 2.00 | 0.00 |
 
-*TAB-05-05：`EXP-05-01` v4 的四例 disagreement risk–coverage 扫描。failure 标签、误差容差1和阈值均由作者设定，不是总体风险估计。*
+*表 5-5：实验 5-1 v4 的四例 disagreement risk–coverage 扫描。failure 标签、误差容差1和阈值均由作者设定，不是总体风险估计。*<!-- INTERNAL_ASSET_ID: TAB-05-05 -->
 
 <!-- CLAIM_META: CLAIM-05-09 result -->
 固定四例 panel 中，range 阈值0只接受 `shared_error_ood`，coverage 为0.25且接受 failure rate 为1；阈值0.25接受低误差 ID 与共同错误，coverage/risk 为0.5/0.5；阈值2接受全部，coverage/risk 为1/0.5。它只证明该手工排序中收紧 disagreement gate 可降低 coverage 却提高接受错误比例，不能估计 learned ensemble 的 risk–coverage、阈值泛化、OOD 检出率、校准或安全收益。
@@ -320,56 +320,56 @@ latent、token、自回归、masked、diffusion 和 flow 可以组合，不能�
 4. **条件设计**：为车辆切入写出 ego action 与他车 behavior 的条件 schema，并设计 context-shuffle 对照。
 5. **反例设计**：构造一个 TV 很高但条件响应方向错误的模型，说明为什么敏感性不等于正确性。
 6. **不确定性计算**：把 `shared_error_ood` 的一个成员改为 `-2`，计算 range、mean error 和 defer 结果；解释为何“更分歧”与“平均预测更正确”是两个问题。
-7. **排序审计**：复算 `TAB-05-05` 三个阈值的 coverage/risk，并解释为什么阈值只能在冻结真值 split 上选择。
+7. **排序审计**：复算 表 5-5<!-- INTERNAL_ASSET_ID: TAB-05-05 --> 三个阈值的 coverage/risk，并解释为什么阈值只能在冻结真值 split 上选择。
 
 ## 自检要点
 
 以下答案给出可核算的最小闭环；开放题允许其他设计，但必须写清分布、条件变量、时间预算和判定阈值，不能只用“更真实”代替指标。
 
 <details markdown="1">
-<summary>SELF-CHECK-05-01：三模态分布</summary>
+<summary>自检 5-1：三模态分布</summary>
 
 例如把等权 support 设为 `{-1,0,1}`，均值仍为 0，但这次均值恰好落在真实 support 上；这说明“均值是否离开 support”依赖具体分布，不能从“多模态”三个字直接推出。忠实采样器的 mode recall 为 1、support 外质量为 0；只生成一个 mode 的 collapsed sampler recall 为 `1/3`；若三个 mode 都覆盖但另有 10% 质量落在 support 外，则 recall 仍可为 1，而 support 外质量为 0.1。均值、覆盖率和非法质量回答的是三个不同问题，应并列报告。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-05-02：posterior 与 dynamics prior</summary>
+<summary>自检 5-2：posterior 与 dynamics prior</summary>
 
 VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并通过 prior regularization 使其可采样。RSSM posterior 是序列过滤分布，如 `q(s_t|h_t,o_t)`，会用当前观测修正由历史和动作形成的 belief。learned dynamics prior 如 `p(s_t|h_t)` 或 `p(s_t|s_{t-1},a_{t-1})` 不看当前 `o_t`，用于想象与 open-loop rollout。三者都叫“分布”不等于条件集合或训练职责相同；RSSM 还要让 posterior state 与可预测的 prior 对齐。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-05-03：采样步数与控制时限</summary>
+<summary>自检 5-3：采样步数与控制时限</summary>
 
 先把 deadline 写成预算：`N × t_step + t_condition + t_decode + t_io + safety_margin ≤ T_control`。增加 diffusion step 可能改善样本，却线性或近线性增加延迟；若 action chunk 每 100 ms 必须刷新，而 20 步去噪每步 6 ms，仅去噪已需 120 ms，方案即使离线指标更好也不可部署。应比较少步蒸馏、并行化、较长 action chunk 和 fallback，并同时报告端到端 P50/P95/P99、deadline miss rate 与闭环质量，而不是只报单步 GPU latency。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-05-04：车辆切入条件与 shuffle 对照</summary>
+<summary>自检 5-4：车辆切入条件与 shuffle 对照</summary>
 
 一个最小 schema 可含 `history_id,timestamp,ego_state,ego_action_chunk,other_vehicle_history,other_behavior_intent,map_context,horizon,target_future`；其中 ego action 与他车行为必须是可独立干预的字段，不能埋在同一个视频 token 中。固定历史与地图，交换 batch 内 `ego_action_chunk` 或 `other_behavior_intent`，分别测预测位移、碰撞概率和响应方向变化；再保留“不 shuffle”的 matched control。若 shuffle 后指标几乎不变，模型可能忽略条件；变化很大仍需与真实反事实方向比对，不能只称“敏感”。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-05-05：高 TV 但方向错误</summary>
+<summary>自检 5-5：高 TV 但方向错误</summary>
 
 令真实条件规律为 `x=0 → y=0`、`x=1 → y=1`，错误模型却给出 `x=0 → y=1`、`x=1 → y=0`，且两者都是确定分布。模型两个条件输出之间的 TV 为 1，说明它强烈响应了 `x`；但每个条件都与真值反向，条件准确率为 0。故 context sensitivity 只能排查“完全忽略条件”，正确性还需有配对反事实、方向一致性或条件真值误差。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-05-06：ensemble 分歧与 defer</summary>
+<summary>自检 5-6：ensemble 分歧与 defer</summary>
 
 把 `(2,2,2)` 改成 `(-2,2,2)`、真值保持 `-2`：range 从 0 变为 4；ensemble mean 为 `2/3`；mean prediction error 的绝对值为 `|2/3-(-2)|=8/3≈2.667`，比原来的 4 小但仍然错误。fixture 阈值为 0.25，因此 range 4 会触发 defer。分歧是拒绝/路由信号，均值误差是预测质量；一次修改可让两者同时改善，也可能让一个改善另一个恶化，不能互相替代。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-05-07：严格 disagreement gate 也可能留下最差接受集</summary>
+<summary>自检 5-7：严格 disagreement gate 也可能留下最差接受集</summary>
 
 阈值0只接受 range 恰为0的 `shared_error_ood`，而它的 mean error 为4并超过手工容差1，所以 coverage 是1/4、accepted failure rate 是1。放宽到0.25后，低误差 ID case 也被接受，coverage变成2/4、risk降为1/2；放宽到2后四例全收，risk仍为2/4。合格答案必须指出 risk 不随阈值收紧而保证单调下降，因为 range 排序本身可能错误；四个手工点也不能用于选择生产阈值或估计总体风险。
 

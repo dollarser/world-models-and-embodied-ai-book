@@ -49,7 +49,7 @@
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-09-01 从模型用途到可发布声明
+    accTitle: FIG-09-01 图 9-1 从模型用途到可发布声明
     accDescr: 先声明模型用途、目标分布与动作干预层级，再选择预测、反事实、长时和闭环证据，最后限定能够发布的结论。
     U[声明的用途] --> D[目标分布与干预]
     D --> M[指标组合]
@@ -59,7 +59,7 @@ flowchart TB
     C -.失败定位.-> M
 ```
 
-*FIG-09-01：从用途到可发布声明的评测链。指标不是起点；用途、分布和干预共同决定需要哪些证据。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
+*图 9-1：从用途到可发布声明的评测链。指标不是起点；用途、分布和干预共同决定需要哪些证据。来源：本书原创，CC BY-NC 4.0，2026-08-31。*<!-- INTERNAL_ASSET_ID: FIG-09-01 -->
 
 ### 9.1.1 从问题到数字，中间还有两层
 
@@ -113,19 +113,19 @@ MSE、PSNR 和 SSIM 对局部像素误差敏感，便于定位模糊、漂移和
 \left|\operatorname{mean}_{i\in I_b}(p_i)-\operatorname{mean}_{i\in I_b}(y_i)\right|.
 \]
 
-[Guo et al.](https://proceedings.mlr.press/v70/guo17a.html)使用分箱可靠性图与 ECE 研究神经网络校准 `[P]`。ECE 是指定分箱与样本上的诊断，不是 proper score；bin edge、空 bin、边界归属和样本数都属于协议。下面的 `EXP-09-01` v4 用四个手工结果 `1,1,0,0` 比较两组概率：
+[Guo et al.](https://proceedings.mlr.press/v70/guo17a.html)使用分箱可靠性图与 ECE 研究神经网络校准 `[P]`。ECE 是指定分箱与样本上的诊断，不是 proper score；bin edge、空 bin、边界归属和样本数都属于协议。下面的 实验 9-1 v4<!-- INTERNAL_ASSET_ID: EXP-09-01 v4 --> 用四个手工结果 `1,1,0,0` 比较两组概率：
 
 | forecast | 概率 | 0.5 阈值准确率 | Brier ↓ | Log loss ↓ | 1-bin ECE | 2-bin ECE |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | uniform base rate | 0.5, 0.5, 0.5, 0.5 | 0.50 | 0.2500 | 0.6931 | 0.0000 | 0.0000 |
 | informative | 0.9, 0.9, 0.1, 0.1 | 1.00 | 0.0100 | 0.1054 | 0.0000 | 0.1000 |
 
-*TAB-09-03：粗分箱 ECE 负对照。单 bin 只比较整体均值 `0.5` 与整体事件率 `0.5`，因此两行都为零；所有结果均为作者构造。*
+*表 9-1：粗分箱 ECE 负对照。单 bin 只比较整体均值 `0.5` 与整体事件率 `0.5`，因此两行都为零；所有结果均为作者构造。*<!-- INTERNAL_ASSET_ID: TAB-09-01 -->
 
 uniform 行在这四例上只复述 base rate，预测方差为0；informative 行把正负例分开，预测方差为0.16。单 bin ECE 看不到这一差别；改成 `[0,0.5)` 与 `[0.5,1]` 两个预注册 bin 后，informative 行的经验 gap 为0.1。不能由此反过来宣称 uniform “更校准”或“更好”：四例不足以估计总体 calibration，而 ECE 单独不奖励有用的分辨率。合格报告应并列 proper score、reliability diagram/分箱定义、样本数和按 horizon/场景分桶，并在独立 calibration split 上选择任何温度或阈值，再到未参与选择的 final split 评估。
 
 <!-- CLAIM_META: CLAIM-09-09 result -->
-`EXP-09-01` v4 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
+实验 9-1 v4<!-- INTERNAL_ASSET_ID: EXP-09-01 v4 --> 的四结果手工表中，uniform 与 informative forecast 的单 bin ECE 都为0，但 Brier loss 分别为 `0.25/0.01`、log loss 为 `0.693147/0.105361`；informative forecast 改用两个固定 bin 后 ECE 为 `0.1`。该结果只证明粗分箱 ECE 可隐藏信息差异且数值依赖分箱，不估计总体 calibration、真实事件概率、世界模型 uncertainty 或安全性。
 
 平均 proper score 也不是完整的失败分布。v4 在同一 `y=(1,1,0,0)` 上构造 `diffuse=(0.6,0.6,0.4,0.4)` 与 `concentrated=(0.3,0.7,0.2,sqrt(0.02))`；两行四个 squared error 的总和都为0.64，因此 mean Brier 都是0.16，但误差位置不同：
 
@@ -134,7 +134,7 @@ uniform 行在这四例上只复述 base rate，预测方差为0；informative �
 | diffuse error | 0.16 | 1.00 | 0.16 | 0.510826 |
 | concentrated error | 0.16 | 0.75 | 0.49 | 1.203973 |
 
-*TAB-09-04：`EXP-09-01` v4 的 equal-mean-Brier 误差集中负对照。概率按构造给出，不是模型输出或总体 tail estimate。*
+*表 9-2：实验 9-1 v4 的 equal-mean-Brier 误差集中负对照。概率按构造给出，不是模型输出或总体 tail estimate。*<!-- INTERNAL_ASSET_ID: TAB-09-02 -->
 
 <!-- CLAIM_META: CLAIM-09-10 result -->
 固定四 outcome 表中，diffuse 与 concentrated forecast 的 mean Brier 都为0.16；前者0.5阈值准确率为1且最大单例 log loss 为0.510826，后者准确率为0.75且最大单例 log loss 为1.203973。该结果只证明相同平均 Brier 不能恢复误差是否集中在单个样本，不估计总体概率质量、tail risk、calibration、真实事件严重度或安全性。
@@ -200,7 +200,7 @@ E(h)=\frac{1}{N}\sum_{i=1}^{N} d\!\left(\hat{s}^{(i)}_{t+h},s^{(i)}_{t+h}\right)
 
 模型的决策价值还取决于搜索器如何查询它。固定策略集上的排序只覆盖预先给出的候选，而规划器会主动生成新候选，并倾向访问模型最乐观的区域。E3 评测应尽量复现实际候选生成机制，或明确把结论限定为离线策略筛选，不能从固定列表直接外推到在线优化。
 
-## 9.5 一个指标排序反转（EXP-09-01）
+## 9.5 一个指标排序反转（实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 -->）
 
 本章提供两个手工构造的一维预测器：
 
@@ -227,10 +227,10 @@ make ch09-smoke
 | action-blind | **0.05774** | 0.00 | 0% | 2.00 |
 | action-faithful-biased | 0.12000 | **0.20** | **100%** | **0.10** |
 
-*TAB-09-01：`EXP-09-01` 的 one-step—干预—闭环排序反转。action sensitivity 是同一状态下三个候选动作预测值的极差。*
+*表 9-3：实验 9-1 的 one-step—干预—闭环排序反转。action sensitivity 是同一状态下三个候选动作预测值的极差。*<!-- INTERNAL_ASSET_ID: TAB-09-03 -->
 
 <!-- CLAIM_META: CLAIM-09-01 result -->
-在 `EXP-09-01` 的固定 fixture 中，one-step RMSE 与闭环成功率给出了相反的模型排序；这只构成指标错位反例，不证明真实世界模型必然发生同一排序反转。
+在 实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> 的固定 fixture 中，one-step RMSE 与闭环成功率给出了相反的模型排序；这只构成指标错位反例，不证明真实世界模型必然发生同一排序反转。
 
 这项结果只证明排序反转在逻辑上可以发生。它使用两个确定性函数、两个目标和一维动力学，不能估计这种现象在真实世界模型中的频率，也不能证明所有感知指标与控制性能负相关。它的作用是给评测代码建立一个必须能识别的反例。
 
@@ -241,20 +241,24 @@ make ch09-smoke
 | stable | 3 / 3 | 1.000 | 0.8000 | **0.8000** |
 | fragile | 3 / 1 | 0.333 | **0.4000** | 1.4667 |
 
-*TAB-09-02：`EXP-09-01` 的长时缺失分母反例。缺失惩罚 2.0 是本 fixture 的预注册失败语义，不是推荐给其他任务的通用常数。*
+*表 9-4：实验 9-1 的长时缺失分母反例。缺失惩罚 2.0 是本 fixture 的预注册失败语义，不是推荐给其他任务的通用常数。*<!-- INTERNAL_ASSET_ID: TAB-09-04 -->
 
 <!-- CLAIM_META: CLAIM-09-08 result -->
-在 `EXP-09-01` 的固定三 rollout 反例中，available-case 聚合选择 fragile，而预注册缺失惩罚的固定分母聚合选择 stable。该结果证明分母语义可以改变排序，不估计真实模型崩溃率，也不证明任意惩罚值都合理。
+在 实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> 的固定三 rollout 反例中，available-case 聚合选择 fragile，而预注册缺失惩罚的固定分母聚合选择 stable。该结果证明分母语义可以改变排序，不估计真实模型崩溃率，也不证明任意惩罚值都合理。
 
 ## 9.6 WorldArena：同时测感知与功能，但不要抹平任务边界
 
-[WorldArena 官方仓库快照 `2da2ae2`](https://github.com/tsinghua-fib-lab/WorldArena/tree/2da2ae253b8637ba9de3afc7bea4e087f778ee4d) 将评测分为视频感知质量、合成数据、策略评估、动作规划与人工评价，并使用 RoboTwin 2.0 的 Clean-50 仿真子集。官方说明的视频质量部分包含多个维度和指标，功能部分则面向不同下游用途；这里按官方资产与部分公开复现材料记为 `[O,R1]`。`CLAIM-09-03`（fact）：该 WorldArena 快照的设计把感知质量与功能用途分开，而不是假设一个视频分数能够代表全部能力。
+[WorldArena 官方仓库快照 `2da2ae2`](https://github.com/tsinghua-fib-lab/WorldArena/tree/2da2ae253b8637ba9de3afc7bea4e087f778ee4d) 将评测分为视频感知质量、合成数据、策略评估、动作规划与人工评价，并使用 RoboTwin 2.0 的 Clean-50 仿真子集。官方说明的视频质量部分包含多个维度和指标，功能部分则面向不同下游用途；这里按官方资产与部分公开复现材料记为 `[O,R1]`。
+<!-- CLAIM_META: CLAIM-09-03 fact -->
+该 WorldArena 快照的设计把感知质量与功能用途分开，而不是假设一个视频分数能够代表全部能力。
 
 本书当前没有下载其数据、运行官方命令或核对排行榜结果，因此不能标记为 `R2` 或本书复现。使用时还应锁定仓库 commit、测试集发布日期、RoboTwin 版本、所选 track 与外部模型/API；不能把 v1、后续版本或在线 Arena 的覆盖范围混成一个稳定结论。
 
 2026 年的 [WorldArena 2.0](https://arxiv.org/abs/2605.17912) 又把范围扩展到更多生成模态、功能用途和平台。这里最值得吸收的不是“项目更新了”，而是评测对象必须写成 `模型版本 × 输入输出模态 × 下游用途 × 执行平台 × 协议版本`；只写 WorldArena 分数已经不足以定位证据。截至 2026-09-01，arXiv 一手元数据只显示 2026-05-18 提交的 v1，没有列出已接收场次，因此论文按 `[A]` 而不是 `[P]`；官方项目资产另记 `[O,R1]`。本书不抄录可能漂移的排行榜数字。
 
-[KineBench](https://arxiv.org/abs/2607.19876) 则从另一侧暴露闭环归因问题：若评测需要额外 inverse dynamics model 把生成状态转回动作，最终结果会同时包含世界模型和逆动力学模型的误差。该论文提出直接以运动学落地的闭环协议，并报告 ManiSkill3 任务上的多个泛化分组；arXiv 元数据明确标注已接收 ECCV 2026，本书只核对论文而未运行资产，因此记为 `[P,R0]`。`CLAIM-09-05`（inference）：闭环评测应把额外控制器、逆动力学模型和动作落地层登记为独立组件；否则不能把端到端成败全部归因于被测世界模型。本书尚未运行 KineBench，也不把论文中的任务数或结果当作本书测量。
+[KineBench](https://arxiv.org/abs/2607.19876) 则从另一侧暴露闭环归因问题：若评测需要额外 inverse dynamics model 把生成状态转回动作，最终结果会同时包含世界模型和逆动力学模型的误差。该论文提出直接以运动学落地的闭环协议，并报告 ManiSkill3 任务上的多个泛化分组；arXiv 元数据明确标注已接收 ECCV 2026，本书只核对论文而未运行资产，因此记为 `[P,R0]`。
+<!-- CLAIM_META: CLAIM-09-05 inference -->
+闭环评测应把额外控制器、逆动力学模型和动作落地层登记为独立组件；否则不能把端到端成败全部归因于被测世界模型。本书尚未运行 KineBench，也不把论文中的任务数或结果当作本书测量。
 
 ## 9.7 幻觉、覆盖缺口与模型利用
 
@@ -273,11 +277,11 @@ make ch09-smoke
 
 ### 9.7.1 OOD 分数要用选择性风险评测
 
-OOD AUROC 回答分数能否把两个冻结总体排序，却没有直接回答“执行多少、留下多少失败”。对会拒绝或降级的系统，还应扫描阈值并报告：coverage、接受样本 risk、危险失败被拒绝的 recall、误拒绝成本，以及 fallback 后的最终任务/安全结果。第21章给出可执行定义和 `EXP-21-01` 手工反例。
+OOD AUROC 回答分数能否把两个冻结总体排序，却没有直接回答“执行多少、留下多少失败”。对会拒绝或降级的系统，还应扫描阈值并报告：coverage、接受样本 risk、危险失败被拒绝的 recall、误拒绝成本，以及 fallback 后的最终任务/安全结果。第21章给出可执行定义和 实验 21-1<!-- INTERNAL_ASSET_ID: EXP-21-01 --> 手工反例。
 
 阈值必须在 calibration split 上选择，再在未参与调参的 ID、shift、OOD/stress 和不同严重度分桶上冻结评估。若没有接受样本，selective risk 未定义；若分数只在合成 OOD 上有效，也不能宣称覆盖真实未知。一个 estimator 还可能把常见失败排在低不确定性端，因此“coverage 降低”不保证 risk 单调改善。
 
-第5章 `EXP-05-01` 的 correlated-error 负对照给出最小实例：三个成员对 OOD target 同时错 4，却因预测完全相同而得到 range 0。评测不能只统计“高分歧 OOD 被拒绝多少”，还要报告低分歧高损失 false negative、按 shift 类型/严重度分桶，并检查成员是否共享训练数据捷径、架构盲点或 simulator bias。
+第5章 实验 5-1<!-- INTERNAL_ASSET_ID: EXP-05-01 --> 的 correlated-error 负对照给出最小实例：三个成员对 OOD target 同时错 4，却因预测完全相同而得到 range 0。评测不能只统计“高分歧 OOD 被拒绝多少”，还要报告低分歧高损失 false negative、按 shift 类型/严重度分桶，并检查成员是否共享训练数据捷径、架构盲点或 simulator bias。
 
 <!-- CLAIM_META: CLAIM-09-06 recommendation -->
 用于动作拒绝的 uncertainty/OOD score 应报告完整 risk–coverage 关系、预注册工作点、分桶失败捕获率与 fallback 后果，并保存分数方向、估计器版本和校准数据；单一 AUROC 或拒绝率不能替代部署用途证据。
@@ -337,7 +341,7 @@ resources + experiment_ids + artifacts + limitations
 
 仓库中的 `specs/benchmark-card.schema.json` 是 Draft 2020-12 Schema；`benchmarks/BENCH-06-01.json`、`BENCH-09-01.json` 和 `BENCH-20-01.json` 分别覆盖 prior/posterior 与 KL 路由算术、指标排序/概率质量反转，以及闭环比例/配对/暴露统计。严格检查还验证 claim/experiment 的章节归属、benchmark 与 experiment 双向引用、metric layer、ID 前缀、产物路径、系统名唯一性和下载量总和。它能阻止字段缺失和跨资产漂移，不能判断指标是否科学充分，也不能替代领域评审。
 
-`BENCH-09-01` v4 明确把 E1 的 12 个 one-step 转移、6 条多步误差行与4行二元概率表、E2 action sensitivity、E4 的两个闭环 episode 分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值、缺失惩罚与概率 bin edge，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。概率表只是评分机制 fixture，不是 learned uncertainty estimator、calibration split 或 OOD 总体，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构风险曲线。
+基准测试 9-1 v4<!-- INTERNAL_ASSET_ID: BENCH-09-01 v4 --> 明确把 E1 的 12 个 one-step 转移、6 条多步误差行与4行二元概率表、E2 action sensitivity、E4 的两个闭环 episode 分开，固定 4/24 步 horizon、动作集合、tie-breaking、失败阈值、缺失惩罚与概率 bin edge，并禁止把手工反例外推到 learned world model、机器人、车辆、OOD 或安全表现。概率表只是评分机制 fixture，不是 learned uncertainty estimator、calibration split 或 OOD 总体，因此 `distribution_shift.enabled=false`；不能为了让卡片“完整”而虚构风险曲线。
 
 <!-- CLAIM_META: CLAIM-09-07 recommendation -->
 可审计比较应在运行前冻结 benchmark card，并把评测协议、单次运行来源和测量结果拆成可互相引用的资产；机器 Schema 只证明结构与追溯关系成立，不证明 benchmark 有外部效度。
@@ -352,19 +356,19 @@ benchmark card 还应记录**决策冻结顺序**。场景桶、主指标、缺�
 
 | 类型 | 声明/结果 | 来源或实验 ID | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | one-step/闭环与缺失分母分别造成排序反转 | `EXP-09-01` | CPU smoke | 手工一维反例与预注册惩罚 |
-| 本书结果 | 单 bin ECE 同为0，但 Brier 为 `0.25/0.01` | `EXP-09-01` | CPU smoke | 四个手工二元结果；不估计总体校准 |
+| 本书结果 | one-step/闭环与缺失分母分别造成排序反转 | 实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> | CPU smoke | 手工一维反例与预注册惩罚 |
+| 本书结果 | 单 bin ECE 同为0，但 Brier 为 `0.25/0.01` | 实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> | CPU smoke | 四个手工二元结果；不估计总体校准 |
 | 外部事实 | WorldArena 分开评估感知与功能用途 | 官方仓库 | `[O,R1]` | 本书未运行 |
 | 外部案例 | WorldArena 2.0 扩展模态、用途与平台维度 | 论文/官方项目 | `[P/O,R0–R1]` | 接口与排行榜会变化 |
 | 外部案例 | KineBench 显式移除额外逆动力学模型（inverse dynamics model, IDM）的归因混淆 | arXiv:2607.19876 | `[P,R0]` | 本书未运行，仅限论文设置 |
 | 外部案例 | 幻觉与覆盖缺口可被量化关联 | arXiv:2606.27326 | `[A,R0]` | 仅限论文设置 |
 | 方法建议 | 决策用途至少需要干预与功能评测 | 本章综合 | recommendation | 尚无单一通用协议 |
 | 方法建议 | OOD 执行门报告 risk–coverage 与 fallback 后果 | 本章/第21章 | recommendation | 分数本身可能失准 |
-| 协议资产 | 三张机器可读 benchmark card 通过 Schema 与跨资产检查 | `BENCH-06-01/09-01/20-01` | executed fixture | 结构有效不等于科学有效 |
+| 协议资产 | 三张机器可读 benchmark card 通过 Schema 与跨资产检查 | 基准测试 6-1/09-01/20-01 | executed fixture | 结构有效不等于科学有效 |
 
 ### 资源、数据与许可
 
-`EXP-09-01` 使用 Python 标准库、MIT 程序化 fixture、CPU 和 0 字节下载；不需要 GPU。WorldArena、视频指标和仿真评测属于可选 M 档证据路径，执行前需单独核验下载量、依赖、数据许可和资源。本书报告的结果不包含 GPU、大数据或真实车辆实验。
+实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> 使用 Python 标准库、MIT 程序化 fixture、CPU 和 0 字节下载；不需要 GPU。WorldArena、视频指标和仿真评测属于可选 M 档证据路径，执行前需单独核验下载量、依赖、数据许可和资源。本书报告的结果不包含 GPU、大数据或真实车辆实验。
 
 ## 9.11 小结
 
@@ -379,69 +383,69 @@ benchmark card 还应记录**决策冻结顺序**。场景桶、主指标、缺�
 ## 练习
 
 1. **概念判断**：一个模型 FVD 更低，但策略排序相关性更差。若用途分别是视频展示和动作规划，应如何选择？
-2. **代码实验**：修改 `EXP-09-01` 的动作分布，让非零动作占比逐渐升高，先判断两个预测器的 one-step 排名能否翻转；若不能，推导还需改变哪个量并验证临界点。
+2. **代码实验**：修改 实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> 的动作分布，让非零动作占比逐渐升高，先判断两个预测器的 one-step 排名能否翻转；若不能，推导还需改变哪个量并验证临界点。
 3. **分母审计**：分别把 fragile rollout 的缺失处理为运行无效、任务失败和条件于幸存输出，写出三种 estimand 及允许声明。
-4. **协议设计**：复制 `BENCH-09-01` 为一个抓取视频世界模型填写 benchmark card，分别给出 E1、E2 和 E4 的退出条件；若使用随机任务，说明 seed、group split 和置信区间方法。
+4. **协议设计**：复制 基准测试 9-1<!-- INTERNAL_ASSET_ID: BENCH-09-01 --> 为一个抓取视频世界模型填写 benchmark card，分别给出 E1、E2 和 E4 的退出条件；若使用随机任务，说明 seed、group split 和置信区间方法。
 5. **自动驾驶迁移**：设计一个平均 ADE 很低却高风险的驾驶数据分布，说明需要增加哪些分桶指标。
 6. **反例审查**：解释为何“闭环成功率高”仍可能掩盖安全问题，并给出至少两个补充指标。
 7. **概率评分**：为同一组碰撞事件概率同时计算 Brier、log loss 与两种分箱 ECE；说明哪些设置必须在看结果前冻结，以及为什么 ECE=0 仍不充分。
-8. **误差集中**：复算 `TAB-09-04` 的逐行 squared/log loss，解释为什么相同 mean Brier 仍需保存逐样本与场景分桶。
+8. **误差集中**：复算 表 9-2<!-- INTERNAL_ASSET_ID: TAB-09-02 --> 的逐行 squared/log loss，解释为什么相同 mean Brier 仍需保存逐样本与场景分桶。
 
 ## 自检要点
 
 评测答案必须先写用途和 estimand，再写指标与分母。低层指标不能自动替代动作干预、策略排序或外部闭环证据。
 
 <details markdown="1">
-<summary>SELF-CHECK-09-01：展示用途与规划用途</summary>
+<summary>自检 9-1：展示用途与规划用途</summary>
 
 视频展示优先检查感知质量、时间一致性和人评，可在预先声明的展示分布上偏向 FVD 更低者，但仍需防 cherry-pick。动作规划应优先选择能保持动作响应与策略排序的模型；排序相关性更差的低 FVD 模型不能仅凭画面质量进入 planner。两种用途可以选择不同模型，也可以用生成头负责展示、决策 latent 负责规划；发布时分别限定 E1 展示声明与 E2/E3/E4 决策声明。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-09-02：动作占比与排名临界点</summary>
+<summary>自检 9-2：动作占比与排名临界点</summary>
 
 当前非零动作幅度为 `a=0.1`。若其占比为 `p`，action-blind 的 RMSE 为 `a√p`，action-faithful-biased 的误差恒为 0.12；翻转要求 `p>(0.12/a)^2=1.44`，不可能。因此只提高占比不会翻转，这正是应先发现的边界。若把非零幅度改为 `a>0.12`，临界占比为 `p*=(0.12/a)^2`；例如 `a=0.2` 时 `p*=0.36`，打平时还需预先声明 tie rule。代码应扫描整数样本可实现的 p，并与解析阈值的离散邻点核对。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-09-03：缺失 rollout 的三个 estimand</summary>
+<summary>自检 9-3：缺失 rollout 的三个 estimand</summary>
 
 若缺失视为运行无效，estimand 是“满足预注册有效性条件的完整 runs 上的性能”，整次 run 排除并报告 invalid rate，不能称 attempted-run 性能。若缺失视为任务失败，estimand 是“所有 attempted tasks 的端到端性能”，缺失进入固定分母并用预注册 failure score/事件计数。若条件于幸存输出，estimand 是“仍能产生有效预测的 rollout 在 horizon h 的误差”，必须同时报告 coverage，声明不能外推到所有任务或比较稳定性。三者不能在看完排名后再选。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-09-04：抓取 benchmark card</summary>
+<summary>自检 9-4：抓取 benchmark card</summary>
 
 E1 可冻结对象/相机 group test split，要求多 horizon pose/keypoint error 的 CI 上界低于阈值且 coverage 达标；E2 固定同一前缀替换 grasp action，要求预测接触点/物体位移方向与 simulator counterfactual 一致，并设 sensitivity 下限与错误方向上限；E4 在未参与选择的对象组执行闭环，要求成功率 CI 下界、碰撞/掉落 CI 上界和 intervention 阈值同时通过。随机任务保存 master seed、每 episode seed 与生成器版本；同一对象资产及派生纹理只进一个 group；二项率用预注册 Wilson 或 bootstrap-by-group 区间，连续指标按独立 group cluster bootstrap，禁止按 frame 当独立样本。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-09-05：低平均 ADE 的高风险分布</summary>
+<summary>自检 9-5：低平均 ADE 的高风险分布</summary>
 
 例如 99% 直道常见帧 ADE 为 0.05 m，1% 行人横穿/高速 cut-in 的 ADE 为 3 m，总平均仍约 0.0795 m，却把风险集中在关键事件。至少按交互类型、TTC、速度、遮挡、天气/光照和预测 horizon 分桶，分别报告 ADE/FDE、miss rate、碰撞或轨迹重叠率、最坏分位/下尾与每桶样本数/coverage。切分应按 scenario group 隔离，稀有桶需置信区间；不能用大量静态帧 micro average 稀释风险。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-09-06：高成功率隐藏的安全问题</summary>
+<summary>自检 9-6：高成功率隐藏的安全问题</summary>
 
 成功率只看是否最终完成，可能把一次险些碰撞、频繁急刹、越界后恢复或依赖安全员接管的 episode 仍记为成功，也可能被大量简单场景主导。至少补充碰撞/接触率与独立网关干预率；驾驶还应报告最小 TTC/阈值违例、规则违规、jerk/急减速和严重度分层，机器人可报力/力矩超限、掉落和 near-miss。所有指标都要有 attempted episode 分母、场景分桶和区间，不能只在成功子集上统计。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-09-07：概率质量不能压成一个 ECE</summary>
+<summary>自检 9-7：概率质量不能压成一个 ECE</summary>
 
-先固定共同 event definition、样本总体、概率方向、bin edges、边界归属和空 bin 政策。Brier 与 log loss 在同一结果表上评价完整概率；log loss 对接近0/1的错误更敏感，不能事后裁剪而不登记。ECE 还要给 reliability diagram、每 bin 样本数与置信区间，并报告不同合理分箱或自适应估计的敏感性，但不能看完后只选最小值。`EXP-09-01` 的单 bin ECE=0 只说明整体 mean probability 等于 event rate；恒定 base-rate forecast 没有区分样本。概率经 calibration split 调温后，应在独立 final split 按 horizon、场景与严重度重新报告，并把概率质量与实际阈值决策、fallback 后果分开。
+先固定共同 event definition、样本总体、概率方向、bin edges、边界归属和空 bin 政策。Brier 与 log loss 在同一结果表上评价完整概率；log loss 对接近0/1的错误更敏感，不能事后裁剪而不登记。ECE 还要给 reliability diagram、每 bin 样本数与置信区间，并报告不同合理分箱或自适应估计的敏感性，但不能看完后只选最小值。实验 9-1<!-- INTERNAL_ASSET_ID: EXP-09-01 --> 的单 bin ECE=0 只说明整体 mean probability 等于 event rate；恒定 base-rate forecast 没有区分样本。概率经 calibration split 调温后，应在独立 final split 按 horizon、场景与严重度重新报告，并把概率质量与实际阈值决策、fallback 后果分开。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-09-08：相同 mean Brier 不等于相同失败形状</summary>
+<summary>自检 9-8：相同 mean Brier 不等于相同失败形状</summary>
 
 diffuse 行四个概率误差绝对值都是0.4，所以 squared error 都是0.16；concentrated 行误差为 `0.7,0.3,0.2,sqrt(0.02)`，平方和同样是0.64，mean Brier 仍为0.16。但 concentrated 第一行把正例报成0.3，造成一次0.5阈值错误，单例 Brier 0.49、log loss `-log(0.3)=1.203973`。合格答案要保留逐样本 loss、事件/场景分桶和最大/尾部摘要，同时说明四行最大值不是总体 tail-risk 估计。
 

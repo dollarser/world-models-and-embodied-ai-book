@@ -34,7 +34,7 @@ RGB 告诉我们表面看起来怎样，深度把像素连接到尺度，标定�
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-12-01 从传感器证据到可行动空间
+    accTitle: FIG-12-01 图 12-1 从传感器证据到可行动空间
     accDescr: RGB-D、激光雷达和多视图证据变换为带坐标系与时间的点，再压缩成体素或俯视表示、三态占用、语义速度和可行动区域供规划使用。
     S[RGB-D / lidar / 多视图] --> P[带 frame 与时间戳的点]
     P --> V[体素 / BEV / 对象与关系]
@@ -44,7 +44,7 @@ flowchart TB
     A --> C[规划、控制与独立安全检查]
 ```
 
-*FIG-12-01：从传感器证据到可行动空间的最小链路。每次压缩都应保留 frame、时间与未知状态。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
+*图 12-1：从传感器证据到可行动空间的最小链路。每次压缩都应保留 frame、时间与未知状态。来源：本书原创，CC BY-NC 4.0，2026-08-31。*<!-- INTERNAL_ASSET_ID: FIG-12-01 -->
 
 <!-- CLAIM_META: CLAIM-12-01 recommendation -->
 面向行动的空间表征至少要声明 frame、单位、时间戳、分辨率、已知/未知规则和下游动作；只有外观或点集合不足以定义规划合同。
@@ -71,14 +71,14 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-12-02 单条深度射线提供的三态证据
+    accTitle: FIG-12-02 图 12-2 单条深度射线提供的三态证据
     accDescr: 传感器发出射线，有效回波之前被穿过的空间获得自由证据，回波端点附近获得占用证据，回波之后因遮挡没有观测证据而保持未知。
     S[传感器原点<br/>有效射线开始] --> F[回波前被射线穿过<br/>observed free]
     F --> O[有效回波附近<br/>occupied]
     O -.射线被表面截断.-> U[回波之后或视野之外<br/>unknown]
 ```
 
-*FIG-12-02：单条射线的三态证据。回波之后没有被射线穿过，仍是未知；unknown 不是低概率 occupied，也不是默认 free。来源：本书原创，CC BY-NC 4.0，2026-09-02。*
+*图 12-2：单条射线的三态证据。回波之后没有被射线穿过，仍是未知；unknown 不是低概率 occupied，也不是默认 free。来源：本书原创，CC BY-NC 4.0，2026-09-02。*<!-- INTERNAL_ASSET_ID: FIG-12-02 -->
 
 ### 12.2.1 Unknown 也有不同原因
 
@@ -110,7 +110,7 @@ flowchart TB
 | NeRF/3DGS | 连续或显式辐射外观 | novel view、场景重建 | 不自动给出 free、碰撞或动态合同 |
 | affordance map | 对特定动作的可行区域/概率 | 接近、抓取、放置、通行 | 强依赖本体、动作与安全约束 |
 
-*TAB-12-01：常见空间表征及其行动接口。它们可以组合，不应按“新旧”排成单一路线。*
+*表 12-1：常见空间表征及其行动接口。它们可以组合，不应按“新旧”排成单一路线。*<!-- INTERNAL_ASSET_ID: TAB-12-01 -->
 
 体素边长为 `r`，覆盖范围为 `L_x×L_y×L_z` 时，稠密格子数量约为：
 
@@ -198,7 +198,7 @@ affordance 是状态、动作与本体约束下的关系；物体类别或二维
 
 affordance 也不等于策略。它描述哪些动作可能成功或满足约束，策略还需在多个可行选项中根据目标、代价和信息价值作选择。把二者分开，有助于复用同一空间状态支持不同任务。
 
-## 12.7 三态射线、遮挡和坐标偏移（EXP-12-01）
+## 12.7 三态射线、遮挡和坐标偏移（实验 12-1<!-- INTERNAL_ASSET_ID: EXP-12-01 -->）
 
 S 档实验在 `7×7` BEV 上从固定原点发出三条无噪声深度射线：射线内部标 free，三个回波端点标 occupied，其余保持 unknown。实验再计算从原点可达的 free 区、障碍旁接近位置、占用格的一格坐标偏移、证据约束的动态更新、方形 footprint 扫掠和观测过期。
 
@@ -223,10 +223,10 @@ make ch12-smoke
 | unknown 当 free：同一路径安全 | true | 暴露一次假安全判断 |
 | 动态目标移动到路径后安全 | false | 更新后的占用阻断路径 |
 
-*TAB-12-02：`EXP-12-01` 的确定性 CPU smoke。结果由报告脚本生成，不是学习模型 benchmark。*
+*表 12-2：实验 12-1 的确定性 CPU smoke。结果由报告脚本生成，不是学习模型 benchmark。*<!-- INTERNAL_ASSET_ID: TAB-12-02 -->
 
 <!-- CLAIM_META: CLAIM-12-02 result -->
-在 `EXP-12-01` 中，回波后方格子保持 unknown；49 个格子中只有 10 个 free、3 个 occupied，另有 36 个 unknown。
+在 实验 12-1<!-- INTERNAL_ASSET_ID: EXP-12-01 --> 中，回波后方格子保持 unknown；49 个格子中只有 10 个 free、3 个 occupied，另有 36 个 unknown。
 
 <!-- CLAIM_META: CLAIM-12-03 result -->
 三个 occupied 格整体横移一格后 occupied IoU 从自对齐的 1 降为 0；这说明该 fixture 对一格坐标偏移敏感，不代表所有真实 occupancy 指标都会降为 0。
@@ -243,10 +243,10 @@ make ch12-smoke
 | 全49格 / all-unknown | 49 | 73.47% | 0% | 0% | 0格 |
 | 仅 observed / all-free | 13 | 76.92% | 0% | 0% | 36格 unknown |
 
-*TAB-12-03：`EXP-12-01` v5 的类别与 mask 负对照。两个 predictor 均为手写多数类诊断，不是 learned baseline；评测 mask 排除 unknown 只改变计分分母，不改变规划地图中的 unknown 语义。*
+*表 12-3：实验 12-1 v5 的类别与 mask 负对照。两个 predictor 均为手写多数类诊断，不是 learned baseline；评测 mask 排除 unknown 只改变计分分母，不改变规划地图中的 unknown 语义。*<!-- INTERNAL_ASSET_ID: TAB-12-03 -->
 
 <!-- CLAIM_META: CLAIM-12-12 result -->
-`EXP-12-01` v5 中，all-unknown 在全域取得36/49即73.47% accuracy，observed-only all-free 取得10/13即76.92%，但两者 occupied recall 与 IoU 都为0。该固定三射线网格只证明 overall accuracy 可能掩盖稀少 occupied，不估计真实数据类别比例、模型性能或碰撞风险。
+实验 12-1 v5<!-- INTERNAL_ASSET_ID: EXP-12-01 v5 --> 中，all-unknown 在全域取得36/49即73.47% accuracy，observed-only all-free 取得10/13即76.92%，但两者 occupied recall 与 IoU 都为0。该固定三射线网格只证明 overall accuracy 可能掩盖稀少 occupied，不估计真实数据类别比例、模型性能或碰撞风险。
 
 | 可行动性诊断 | 固定结果 | 分母/解释 |
 | --- | ---: | --- |
@@ -255,7 +255,7 @@ make ch12-smoke
 | 半径 1 格 footprint 安全 | false | 扫过 15 个有效格：1 occupied、6 unknown |
 | 新鲜 / 过期后的 free 路径安全 | true / false | 1 个过期格回退为 unknown |
 
-*TAB-12-04：`EXP-12-01` 的证据更新、footprint 与新鲜度反例。footprint 是静态方形离散近似，不是连续车辆或机械臂碰撞器。*
+*表 12-4：实验 12-1 的证据更新、footprint 与新鲜度反例。footprint 是静态方形离散近似，不是连续车辆或机械臂碰撞器。*<!-- INTERNAL_ASSET_ID: TAB-12-04 -->
 
 <!-- CLAIM_META: CLAIM-12-07 result -->
 动态回波离开旧格后，fixture 在没有额外清空证据时把旧格恢复为 unknown；只有显式声明射线已穿过旧格时才标为 free。
@@ -281,14 +281,14 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 | 只查 waypoint | 2 | 2 | 0 | safe |
 | 栅格化连接段 | 2 | 3 | 1 | unsafe |
 
-*TAB-12-05：`EXP-12-01` v5 保留的稀疏 waypoint 反例。第二行只修复整数栅格上的跳格，不是连续时间、连续姿态或车辆动力学碰撞检测。*
+*表 12-5：实验 12-1 v5 保留的稀疏 waypoint 反例。第二行只修复整数栅格上的跳格，不是连续时间、连续姿态或车辆动力学碰撞检测。*<!-- INTERNAL_ASSET_ID: TAB-12-05 -->
 
 <!-- CLAIM_META: CLAIM-12-10 result -->
-`EXP-12-01` v5 保留的稀疏路径 `(3,3)→(3,5)` 只检查两个 waypoint 时没有命中 occupied，因允许 unknown 而误判 safe；Bresenham 段栅格化检查三个中心格并检出一个中间 occupied，判为 unsafe。这只验证固定二维整数格的离散路径合同，不证明 continuous collision、转弯扫掠、动态可达性或真实车辆安全。
+实验 12-1 v5<!-- INTERNAL_ASSET_ID: EXP-12-01 v5 --> 保留的稀疏路径 `(3,3)→(3,5)` 只检查两个 waypoint 时没有命中 occupied，因允许 unknown 而误判 safe；Bresenham 段栅格化检查三个中心格并检出一个中间 occupied，判为 unsafe。这只验证固定二维整数格的离散路径合同，不证明 continuous collision、转弯扫掠、动态可达性或真实车辆安全。
 
 ### 12.7.3 栅格边界也需要负对照
 
-`EXP-12-01` v5 固定 `origin=(0,0) m`、`resolution=0.5 m` 和 `7×7` 半开栅格。格 `(1,0)` 的中心 `(0.75,0.25) m` 可精确往返；另外两例专门检查有限地图边界：
+实验 12-1 v5<!-- INTERNAL_ASSET_ID: EXP-12-01 v5 --> 固定 `origin=(0,0) m`、`resolution=0.5 m` 和 `7×7` 半开栅格。格 `(1,0)` 的中心 `(0.75,0.25) m` 可精确往返；另外两例专门检查有限地图边界：
 
 | 米制点 | floor cell / 是否在界内 | 向 0 截断 baseline | 正确解释 |
 | --- | --- | --- | --- |
@@ -296,10 +296,10 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 | `(-0.01,0.25) m` | `(-1,0)` / 否 | `(0,0)` / 是 | 截断产生假纳入 |
 | `(3.5,0.25) m` | `(7,0)` / 否 | `(7,0)` / 否 | 半开上边界在格外 |
 
-*TAB-12-06：`EXP-12-01` v5 的米制点—栅格边界负对照。它验证本书固定索引合同，不代表任何外部地图实现。*
+*表 12-6：实验 12-1 v5 的米制点—栅格边界负对照。它验证本书固定索引合同，不代表任何外部地图实现。*<!-- INTERNAL_ASSET_ID: TAB-12-06 -->
 
 <!-- CLAIM_META: CLAIM-12-11 result -->
-`EXP-12-01` v5 中，原点左侧 `0.01 m` 的点经 floor 映射到越界 cell `(-1,0)`，而向 0 截断会错误映射到界内 `(0,0)`；`3.5 m` 的上边界映射到 `(7,0)` 并被拒绝。这只验证固定 `0.5 m`、`7×7` 半开栅格的边界合同，不证明 ROS/Nav2、连续碰撞或真实定位行为。
+实验 12-1 v5<!-- INTERNAL_ASSET_ID: EXP-12-01 v5 --> 中，原点左侧 `0.01 m` 的点经 floor 映射到越界 cell `(-1,0)`，而向 0 截断会错误映射到界内 `(0,0)`；`3.5 m` 的上边界映射到 `(7,0)` 并被拒绝。这只验证固定 `0.5 m`、`7×7` 半开栅格的边界合同，不证明 ROS/Nav2、连续碰撞或真实定位行为。
 
 ## 12.8 自动驾驶：BEV occupancy、flow 与安全时域
 
@@ -331,7 +331,7 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 | action-conditioned occupancy world model | 历史 + 候选 ego action/trajectory | “采取该动作后可能出现什么？” | 动作覆盖、反事实有效性、独立 outcome scorer |
 | 4D scene generation | noise/布局/轨迹/命令等条件 | “能生成哪些时空场景样本？” | 与真实状态的绑定、覆盖度、simulator validity |
 
-*TAB-12-07：occupancy 相关任务的接口区分。来源锚点：UniOcc（ICCV 2025）、Drive-OccWorld（AAAI 2025）、DynamicCity（ICLR 2025）；本书均未运行，表中不引用其性能数字。*
+*表 12-7：occupancy 相关任务的接口区分。来源锚点：UniOcc（ICCV 2025）、Drive-OccWorld（AAAI 2025）、DynamicCity（ICLR 2025）；本书均未运行，表中不引用其性能数字。*<!-- INTERNAL_ASSET_ID: TAB-12-07 -->
 
 即使 action-conditioned 模型生成了视觉上合理的未来，也不能自动得到正确反事实：训练数据可能没有覆盖该动作，生成器可能只学到场景先验，cost function 还可能遗漏舒适度或交通规则。第11章处理“动作是否真正影响预测”，第17章处理代理 rollout 与 outcome scorer 的误差，第20章处理评测协议；本节只建立空间输出的接口边界。
 
@@ -347,7 +347,7 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 
 ## 12.10 资源、许可与进一步验证
 
-全书资源档位采用[术语表](../glossary.md)中的统一定义。`EXP-12-01` 的 S 档三态栅格只隔离射线证据、坐标边界、路径段、footprint 和观测过期；升级到 RGB-D、多相机或动态 occupancy 时，应按顺序增加传感器噪声、标定与定位误差、时间同步和动态真值，而不是直接用更大的网络掩盖空间合同缺失。
+全书资源档位采用[术语表](../glossary.md)中的统一定义。实验 12-1<!-- INTERNAL_ASSET_ID: EXP-12-01 --> 的 S 档三态栅格只隔离射线证据、坐标边界、路径段、footprint 和观测过期；升级到 RGB-D、多相机或动态 occupancy 时，应按顺序增加传感器噪声、标定与定位误差、时间同步和动态真值，而不是直接用更大的网络掩盖空间合同缺失。
 
 外部数据和模型不是理解三态 occupancy 的前提。确需使用时，应先登记数据体积、输入范围、体素分辨率、预处理缓存和资产许可；Nerfstudio、Occ3D、OpenScene 及其底层数据、权重和衍生资产必须分别核验。完整自动驾驶数据不得由正文命令自动下载。
 
@@ -363,11 +363,11 @@ C_{path}=\bigcup_k \operatorname{trace}(q_k,q_{k+1}),
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 三态射线、米制栅格边界、坐标偏移、证据更新、路径段、footprint 与过期 smoke | `EXP-12-01` | CPU smoke | 2D 无噪声手工格子；非外部地图或连续碰撞器 |
+| 本书结果 | 三态射线、米制栅格边界、坐标偏移、证据更新、路径段、footprint 与过期 smoke | 实验 12-1<!-- INTERNAL_ASSET_ID: EXP-12-01 --> | CPU smoke | 2D 无噪声手工格子；非外部地图或连续碰撞器 |
 | 开源基准 | Occ3D/OpenScene occupancy 资产 | 官方仓库/论文 | `[O/A,R1]` | 本书未下载或运行 |
 | 开源工具 | Nerfstudio 场景重建工具链 | 官方仓库 | `[O,R1]` | 本书未训练；非行动证明 |
 | 研究案例 | D4RT 动态 4D 重建与跟踪 | 官方页面/论文项目 | `[V/A,R0]` | 本书未独立验证 |
-| 未验证 | 24 GB 内轻量 occupancy baseline | 可选 M 档 | planned | 数据、GPU 与资源待测 |
+| 未验证 | 24 GB 内轻量 occupancy baseline | 可选 L1 档 | planned | 数据、GPU 与资源待测 |
 
 ## 小结
 
@@ -381,7 +381,7 @@ Affordance 是状态、本体、动作和任务阶段之间的关系，还要检
 
 ## 练习
 
-1. **射线更新**：给 `EXP-12-01` 增加最大量程未命中射线，说明哪些格子可标 free。
+1. **射线更新**：给 实验 12-1<!-- INTERNAL_ASSET_ID: EXP-12-01 --> 增加最大量程未命中射线，说明哪些格子可标 free。
 2. **分辨率实验**：把一格解释为 0.1 m 与 0.5 m，比较同一 footprint 的膨胀结果。
 3. **时间实验**：改变 free 证据的新鲜度阈值，按速度和制动距离解释路径判定在哪个时刻改变。
 4. **机器人迁移**：为吸盘和两指夹爪分别定义 approach affordance，列出额外状态。
@@ -395,56 +395,56 @@ Affordance 是状态、本体、动作和任务阶段之间的关系，还要检
 空间题先冻结 frame、米制原点、分辨率、时间和 unknown 规则。以下答案对应本章二维、半开、三态栅格合同，不外推为连续几何或真实传感器证明。
 
 <details markdown="1">
-<summary>SELF-CHECK-12-01：最大量程未命中射线</summary>
+<summary>自检 12-1：最大量程未命中射线</summary>
 
 只有当传感器协议明确“该束有效发射、量程内未收到回波”，且无 dropout、透明/低反射无效码时，才能把从传感器原点之后到最大有效量程之前被射线穿过的格子标为 observed free；没有 occupied endpoint，量程之外仍为 unknown。最大量程落在格子边界时应按半开区间和 ray traversal 规则决定最后一格，不能因 endpoint 数值等于 max range 就标 occupied。还要保存 observation time，旧 free 证据过期后回到 unknown。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-12-02：分辨率与同一物理 footprint</summary>
+<summary>自检 12-2：分辨率与同一物理 footprint</summary>
 
 必须保持米制 footprint 不变，而不是保持 `footprint_radius_cells` 不变。对半宽 `R` 的方形近似，可先取保守半径 `k=ceil(R/r)`：例如 `R=0.5 m` 时，0.1 m 格取 k=5、检查 11×11 邻域，0.5 m 格取 k=1、检查 3×3；粗格覆盖更量化、薄缝和窄障碍更容易混叠。这个 cell dilation 还不是精确车辆/机器人形状，边界保守度与 cell-center 约定有关；正式比较应在同一米制地图上栅格化 polygon/Minkowski footprint，并报告 false-safe/false-blocked。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-12-03：新鲜度、速度与制动距离</summary>
+<summary>自检 12-3：新鲜度、速度与制动距离</summary>
 
 当前 fixture 的 cell 在 step 0 观测、step 3 查询，规则是 `age>max_age` 才过期：阈值 0、1、2 时路径因该 cell 变 unknown 而不安全，阈值≥3 时仍保留 free。工程阈值应换算为秒，并约束未观测期间可能位移 `v_rel τ`，同时考虑感知/规划/制动延迟和停止距离 `v²/(2a)`；速度越高、相对目标越快或定位误差越大，可接受 τ 通常越小。路径从 safe 变 unknown 的时刻只是触发重新观测、减速或 fallback，不证明此处已有障碍。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-12-04：吸盘与两指夹爪 affordance</summary>
+<summary>自检 12-4：吸盘与两指夹爪 affordance</summary>
 
 吸盘 approach 至少要求目标表面片平整、法向与接近轴对齐、有效密封面积、材质/孔隙可吸附、末端和手臂路径无碰撞，并保留真空状态与负载上限。两指夹爪还需可达的对向接触面、开口/指厚、抓取宽度、摩擦锥、夹持力、质心/扭矩、手指闭合扫掠和防碰撞姿态。二者都依赖机器人 base/EEF frame、IK、关节限位、对象 pose uncertainty 和任务后的搬运方向；“与 occupied 相邻的 free cell”只够做接近位置 fixture。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-12-05：遮挡切入的 occupancy-flow</summary>
+<summary>自检 12-5：遮挡切入的 occupancy-flow</summary>
 
 构造同一 ego 轨迹下的三时刻真值：车辆先在遮挡后为 unknown，随后进入相邻车道，并在预测 horizon 与 ego swept footprint 相交；模型输出每个未来时刻的 occupied probability/flow。逐 horizon 报 observed-mask 与全规划域 IoU、flow endpoint error、risk coverage，再用同一 footprint 做碰撞/最小 TTC。IoU 与碰撞必须分开：大量道路格预测正确可使 IoU 很高，但漏掉唯一冲突格仍产生碰撞；反之整体 IoU 低也不必然碰撞。不得用评测 mask 排除 unknown 后，再让 planner 把这些格当 free。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-12-06：waypoint 间距与碰撞结论</summary>
+<summary>自检 12-6：waypoint 间距与碰撞结论</summary>
 
 间距 1 格时相邻整数 waypoint 已覆盖中心格，但 footprint、对角角落和两时刻之间的连续扫掠仍可能遗漏；间距 2 或 4 格时 waypoint-only 会产生 1 或 3 格级空洞，可能直接跳过障碍。Bresenham 能检查连接线经过的离散中心格，当前 fixture 因而发现 `(3,4)`，但它不是 supercover，也不覆盖 sub-cell 障碍、姿态变化或曲线偏离。更细连续碰撞器只有在几何、插值、采样上界和 swept volume 都冻结后，才能支持相应连续路径结论。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-12-07：半开边界映射</summary>
+<summary>自检 12-7：半开边界映射</summary>
 
 相对坐标除以 0.5 得 `(-0.02,0.5)`。Floor 映射为 `(-1,0)`，正确表示 x 在原点左侧、整体越界；向 0 截断得到 `(0,0)`，错误吸入地图。Python 的 ties-to-even `round` 得 `(0,0)`；其他 round 规则可能把 y 映为 1，但无论哪种都不符合按下边界分格的半开合同。对有限 7×7、原点 0、分辨率 0.5 m 的栅格，x 上边界 3.5 m 映为 index 7，必须判 out of bounds；任一内部边界也属于右/上侧下一格，而不是前一格。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-12-08：计分 mask 与规划 unknown</summary>
+<summary>自检 12-8：计分 mask 与规划 unknown</summary>
 
 Observed mask 回答“哪些 cell 进入当前 benchmark 分母”，unknown 则回答“规划器对哪些空间缺少自由/占用证据”，二者属于不同接口。当前 fixture 的 observed-only 分母为13，排除36个 unknown；all-free 在其中命中10个 free，accuracy 为10/13，但三个 occupied 全漏，recall/IoU 都为0。最低报告应同时列全域与 masked 分母、free/occupied/unknown support、逐类 precision/recall/IoU、距离/遮挡分桶，以及规划 swept-footprint 冲突。被评测 mask 排除的 cell 在规划地图中仍应保留 unknown，除非另有清空证据；不能把“不计分”改写成“可通行”。
 

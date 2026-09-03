@@ -36,7 +36,7 @@
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-15-01 VLA 的稳定架构骨架
+    accTitle: FIG-15-01 图 15-1 VLA 的稳定架构骨架
     accDescr: 视觉、语言和本体状态进入模型主干与动作头，输出经解码、反归一化、坐标单位时序合同和安全网关后才交给低层控制器。
     V[图像/视频] --> E[视觉编码器]
     L[语言指令] --> M[语言/多模态主干]
@@ -53,7 +53,7 @@ flowchart TB
     K --> R[低层控制器]
 ```
 
-*FIG-15-01：VLA 的稳定架构骨架。模型主干和动作头可以变化，但动作解码、合同与安全网关不可省略。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
+*图 15-1：VLA 的稳定架构骨架。模型主干和动作头可以变化，但动作解码、合同与安全网关不可省略。来源：本书原创，CC BY-NC 4.0，2026-08-31。*<!-- INTERNAL_ASSET_ID: FIG-15-01 -->
 
 <!-- CLAIM_META: CLAIM-15-01 fact -->
 VLA 的最低合同是条件动作策略；除非系统还提供并验证动作条件状态转移、rollout 或反事实接口，不能仅因其具备大模型或隐式知识就称为世界模型。
@@ -104,7 +104,13 @@ VLA 描述的是输入语义与输出能力，不规定内部必须恰好有视�
 | diffusion/flow expert | 条件生成连续 action chunk | 表达多峰与时间相关性 | 多步采样、随机性、时延 | π0、SmolVLA、GR00T |
 | 分层/双系统 | 慢语义模块条件化快动作模块 | 分离语义与高频控制 | 接口延迟、两层目标不一致 | GR00T 等 |
 
-*TAB-15-01：动作头按表示与执行接口分类。一个项目可以同时提供多种头，名称不决定部署质量。*
+*表 15-1：动作头按表示与执行接口分类。一个项目可以同时提供多种头，名称不决定部署质量。*<!-- INTERNAL_ASSET_ID: TAB-15-01 -->
+
+### openpi：同一仓库中的不同动作接口
+
+[openpi 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/tree/215abfb217dbac7d5f1273282331b9b1866c0479)把差异直接落在模型与策略接口上：π0 是以 PaliGemma 表征为基础、通过较小 action expert 和 flow matching 生成连续 action chunk 的 VLA；π0-FAST 改用 FAST tokenizer 做自回归动作生成；当前 π0.5 实现则继续提供 flow-matching head `[P/O,R1]`。仓库把模型放在 `src/openpi/models`，把数据映射、归一化与训练配置放在 `src/openpi/training`，再由 policy 层把 observation 转换为 action chunk；这说明“主干—动作头—数据适配—部署策略”是四个需要分别锁定的对象，而不是一个模型名。
+
+[配置快照](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/src/openpi/models/pi0_config.py)中的默认 `action_horizon=50` 表示一次输出包含 50 个动作步，不表示控制频率是 50 Hz。实际覆盖的物理时长还取决于数据与机器人控制频率，执行时又可能只消费 chunk 前缀；把 horizon、Hz 和 execution horizon 混写，会直接破坏第13章建立的时间合同。本书据此分析接口，不声称运行了 openpi 或复现其论文结果。
 
 ### 逐维 token：统一词表的代价
 
@@ -139,7 +145,7 @@ VLA 描述的是输入语义与输出能力，不规定内部必须恰好有视�
 | policy 输出 | `T` 由训练配置和 modality config 决定 | 当前 checkpoint 实际返回多少步，字段/单位是什么 |
 | rollout 执行 | `execution-horizon` 选择本次消费的 prefix | 何时重规划、剩余 chunk 如何失效或融合 |
 
-*TAB-15-04：模型最大 horizon、数据窗口、实际输出和执行窗口是四个相关但不同的量。数字来自核查日的官方 N1.7 README、模型配置与入门文档；本书未运行 checkpoint。*
+*表 15-2：模型最大 horizon、数据窗口、实际输出和执行窗口是四个相关但不同的量。数字来自核查日的官方 N1.7 README、模型配置与入门文档；本书未运行 checkpoint。*<!-- INTERNAL_ASSET_ID: TAB-15-02 -->
 
 <!-- CLAIM_META: CLAIM-15-09 recommendation -->
 VLA 实验卡必须分别记录模型最大 action horizon、数据 `delta_indices`、checkpoint 实际输出 horizon 与 rollout execution horizon；不得从其中一个数字推断另外三个，改变数据窗口后还要重算与其时间维一致的归一化统计。
@@ -160,7 +166,7 @@ VLA 实验卡必须分别记录模型最大 action horizon、数据 `delta_indic
 | planner/critic | 候选动作排序、价值或计划 | 指定模型下的选择规则 | 模型/代价真实 |
 | safety layer | 约束、拒绝、降级 | 已实现的安全门禁 | 任务智能或零风险 |
 
-*TAB-15-02：相邻系统角色。它们可以组合，但证据不能越级。*
+*表 15-3：相邻系统角色。它们可以组合，但证据不能越级。*<!-- INTERNAL_ASSET_ID: TAB-15-03 -->
 
 VLA 可能在内部表示物体、因果或未来，但 probe 读得出状态不等于模型能 rollout。若要声称“VLA 内含世界模型”，至少需要固定历史改变动作的反事实预测、长期状态一致性或显式 rollout 接口，并证明策略真的使用这些预测。
 
@@ -168,7 +174,7 @@ VLA 可能在内部表示物体、因果或未来，但 probe 读得出状态不
 
 架构图中的模块名称也不能替代行为证据。一个名为 planner 的网络可能只做下一动作回归，一个 action expert 可能隐式编码长时任务信息，一个带 future token 的主干也可能从未让策略使用这些 token。系统分类应依据输入、输出、训练信号和可查询行为，而不是依据论文命名或参数规模。
 
-## 15.6 统一动作合同与执行网关（EXP-15-01）
+## 15.6 统一动作合同与执行网关（实验 15-1<!-- INTERNAL_ASSET_ID: EXP-15-01 -->）
 
 S 档 fixture 定义移动底盘 schema：`base_link` frame、固定字段顺序、线速度 `[-0.5,0.5] m/s`、角速度 `[-1,1] rad/s`、10 Hz、预测最多 3 步但每次最多执行 1 步、命令最大年龄 100 ms，并要求单调 `command_id`、共同的 `control_monotonic_ms` clock、与当前调度槽一致的 `observation_timestep` 和 `first_action_timestep`，以及从首动作槽开始逐一递增的完整 `action_timesteps`。该 schema 现在只有一个可执行定义 `labs/shared/action_schema.py`；第15章负责生成/packet 合同，第21章直接导入同一对象做部署范围、逐字段变化与前序身份检查，不再复制第二份常量。
 
@@ -200,7 +206,7 @@ make ch15-smoke
 | flow chunk 预测/执行 | 3 / 1 步 | 验证 receding horizon 字段 |
 
 <!-- CLAIM_META: CLAIM-15-02 result -->
-`EXP-15-01` 中，连续、离散 token 和 flow chunk 三类手工输出都通过同一带 frame、单位、时间与 horizon 的动作 schema；这只验证统一解码合同，不比较三类动作头的学习或闭环性能。
+实验 15-1<!-- INTERNAL_ASSET_ID: EXP-15-01 --> 中，连续、离散 token 和 flow chunk 三类手工输出都通过同一带 frame、单位、时间与 horizon 的动作 schema；这只验证统一解码合同，不比较三类动作头的学习或闭环性能。
 
 <!-- CLAIM_META: CLAIM-15-03 result -->
 五档逐维 tokenizer 将 `(0.6,-0.4)` 量化为 `(0.5,-0.5)`，平均归一化绝对误差为 `0.1`。该值只属于教学词表，不能外推 FAST 或真实 VLA。
@@ -216,12 +222,12 @@ make ch15-smoke
 | 新生成、旧观测 | 10 ms | 40 | 42 | `observation_timestep_mismatch` |
 | 新生成、动作槽错位 | 10 ms | 42 | 43 | `action_timestep_mismatch` |
 
-*TAB-15-05：`EXP-15-01` 的墙钟新鲜度—逻辑 timestep 负对照。fixture 预登记当前观测与首动作槽均为42；它不表示所有系统都必须采用同号 timestep。*
+*表 15-4：实验 15-1 的墙钟新鲜度—逻辑 timestep 负对照。fixture 预登记当前观测与首动作槽均为42；它不表示所有系统都必须采用同号 timestep。*<!-- INTERNAL_ASSET_ID: TAB-15-04 -->
 
 <!-- CLAIM_META: CLAIM-15-10 result -->
-`EXP-15-01` v4 中，两个错误 packet 的生成时间年龄均只有10 ms、低于100 ms上限，但因观测 timestep 为40或首动作 timestep 为43而被拒绝；对齐 packet 的年龄为50 ms且 `42→42`，能够通过。该结果只证明本 fixture 的双重时间身份会拒绝两类错位，不证明跨机时钟同步、真实队列时序、deadline 或控制安全。
+实验 15-1 v4<!-- INTERNAL_ASSET_ID: EXP-15-01 v4 --> 中，两个错误 packet 的生成时间年龄均只有10 ms、低于100 ms上限，但因观测 timestep 为40或首动作 timestep 为43而被拒绝；对齐 packet 的年龄为50 ms且 `42→42`，能够通过。该结果只证明本 fixture 的双重时间身份会拒绝两类错位，不证明跨机时钟同步、真实队列时序、deadline 或控制安全。
 
-首动作对齐仍不足以定义整个 action chunk。`EXP-15-01` v4 为每个预测动作携带一个逻辑执行槽，并要求与 `first_action_timestep` 和动作长度共同形成连续序列：
+首动作对齐仍不足以定义整个 action chunk。实验 15-1 v4<!-- INTERNAL_ASSET_ID: EXP-15-01 v4 --> 为每个预测动作携带一个逻辑执行槽，并要求与 `first_action_timestep` 和动作长度共同形成连续序列：
 
 | chunk | first action timestep | 完整 `action_timesteps` | 结果 |
 | --- | ---: | --- | --- |
@@ -229,10 +235,10 @@ make ch15-smoke
 | 第二步重复 | 42 | `(42,42,44)` | `action_timestep_sequence_noncontiguous` |
 | 第二步跳槽 | 42 | `(42,44,45)` | `action_timestep_sequence_noncontiguous` |
 
-*TAB-15-06：`EXP-15-01` v4 的首动作—完整 chunk timetable 负对照。整数槽是教学调度身份，不是墙钟时间，也不证明 runtime 会在对应周期真正执行。*
+*表 15-5：实验 15-1 v4 的首动作—完整 chunk timetable 负对照。整数槽是教学调度身份，不是墙钟时间，也不证明 runtime 会在对应周期真正执行。*<!-- INTERNAL_ASSET_ID: TAB-15-05 -->
 
 <!-- CLAIM_META: CLAIM-15-11 result -->
-`EXP-15-01` v4 中，合法三步 chunk 的动作槽为 `(42,43,44)`；两个错误 chunk 的 `first_action_timestep` 都仍为42，但因后续序列分别重复或跳过槽位而被拒绝。该固定反例只证明首步对齐不能替代逐动作 timetable，不估计真实队列故障率、deadline、丢帧、动作消费进度或控制安全。
+实验 15-1 v4<!-- INTERNAL_ASSET_ID: EXP-15-01 v4 --> 中，合法三步 chunk 的动作槽为 `(42,43,44)`；两个错误 chunk 的 `first_action_timestep` 都仍为42，但因后续序列分别重复或跳过槽位而被拒绝。该固定反例只证明首步对齐不能替代逐动作 timetable，不估计真实队列故障率、deadline、丢帧、动作消费进度或控制安全。
 
 | 动作包字段 | 作用 | 仍未提供的保证 |
 | --- | --- | --- |
@@ -243,10 +249,10 @@ make ch15-smoke
 | `command_id` | 拒绝当前会话内 replay/乱序 | 不提供认证、防篡改或跨重启持久性 |
 | prediction / execution horizon | 限制 chunk 长度和执行前缀 | 不检查连续碰撞或动力学 |
 
-*TAB-15-03：`EXP-15-01` 的最小执行身份。生产协议还需要 session/boot ID、认证、完整性保护、ACK 和安全控制器。*
+*表 15-6：实验 15-1 的最小执行身份。生产协议还需要 session/boot ID、认证、完整性保护、ACK 和安全控制器。*<!-- INTERNAL_ASSET_ID: TAB-15-06 -->
 
 <!-- CLAIM_META: CLAIM-15-07 result -->
-`EXP-15-01` 修复了 packet 可把 schema 执行时域从 1 扩到 3 的漏洞；重复 `command_id=7` 和乱序 6 在已接受 7 后被拒绝，而新命令 8 通过。该结果只验证单会话手工 packet 合同，不证明网络安全、并发顺序或控制安全。
+实验 15-1<!-- INTERNAL_ASSET_ID: EXP-15-01 --> 修复了 packet 可把 schema 执行时域从 1 扩到 3 的漏洞；重复 `command_id=7` 和乱序 6 在已接受 7 后被拒绝，而新命令 8 通过。该结果只验证单会话手工 packet 合同，不证明网络安全、并发顺序或控制安全。
 
 <!-- CLAIM_META: CLAIM-15-08 recommendation -->
 远程或异步 VLA chunk 必须携带版本化字段顺序、共同 clock、观测/动作 timestep、单调命令身份和明确失效规则；仅有网络时间戳不能防止 replay、乱序或旧队列继续执行。
@@ -318,12 +324,12 @@ make ch15-smoke
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 三类动作头统一进入动作合同 | `EXP-15-01` | CPU smoke | 手工移动底盘 packet |
-| 本书结果 | 十四类错误包、完整 chunk timetable、执行时域越权、step 错位与 replay/乱序被拒绝 | `EXP-15-01` | CPU smoke | 不是时钟同步、真实队列、认证或功能安全验证 |
+| 本书结果 | 三类动作头统一进入动作合同 | 实验 15-1<!-- INTERNAL_ASSET_ID: EXP-15-01 --> | CPU smoke | 手工移动底盘 packet |
+| 本书结果 | 十四类错误包、完整 chunk timetable、执行时域越权、step 错位与 replay/乱序被拒绝 | 实验 15-1<!-- INTERNAL_ASSET_ID: EXP-15-01 --> | CPU smoke | 不是时钟同步、真实队列、认证或功能安全验证 |
 | 论文案例 | RT-1/RT-2 与 FAST action token | 论文/项目 | `[A,R0/R1]` | 本书未运行 |
 | 开源案例 | OpenVLA、SmolVLA、openpi | 官方仓库/论文 | `[A/O,R1]` | checkpoint/训练未运行 |
 | 最新案例 | GR00T N1.7 双系统与 flow head | 官方仓库 | `[O,R1]` | 官方声明，版本会漂移 |
-| 未验证 | 24 GB 内 SmolVLA 适配 | 可选 M 档 | planned | GPU、数据和显存待测 |
+| 未验证 | 24 GB 内 SmolVLA 适配 | 可选 L1 档 | planned | GPU、数据和显存待测 |
 
 ## 小结
 
@@ -334,7 +340,7 @@ VLA 是视觉、语言和本体条件下的动作策略族，不是一种固定�
 ## 练习
 
 1. **系统分类**：一个 VLM 输出“向左移动”但没有动作数据训练，它是 VLA 吗？缺什么 grounding？
-2. **token 误差**：把 `EXP-15-01` 的 bin 从 5 改为 9，比较误差和词表长度。
+2. **token 误差**：把 实验 15-1<!-- INTERNAL_ASSET_ID: EXP-15-01 --> 的 bin 从 5 改为 9，比较误差和词表长度。
 3. **本体适配**：为 7-DoF 机械臂列出 absolute joint 与 delta EEF 两份互不兼容 schema。
 4. **双系统时序**：慢层 2 Hz、快层 20 Hz 时，设计指令变化和急停的缓存失效协议。
 5. **自动驾驶迁移**：定义 VLM 输出的低频意图 JSON，以及它进入规划器前必须通过的字段检查。
@@ -346,49 +352,49 @@ VLA 是视觉、语言和本体条件下的动作策略族，不是一种固定�
 VLA 首先是绑定到具体本体、时间和动作 schema 的策略。语言输出、token、连续 chunk 和高层意图只有经过解码与执行网关后才具有可执行含义。
 
 <details markdown="1">
-<summary>SELF-CHECK-15-01：VLM 文本不是已 grounding 的 VLA</summary>
+<summary>自检 15-1：VLM 文本不是已 grounding 的 VLA</summary>
 
 按本书定义，它仍是产生空间语言建议的 VLM，不是已证明可执行的 VLA。缺少把“左”绑定到 camera/base/world frame、当前对象与可达目标的 grounding，也没有动作示范/交互数据学得本体动力学和 controller 接口。升级证据至少包括版本化 action schema、状态/相机时间对齐、动作训练或可靠 controller mapping、可达/碰撞检查、E2 干预与闭环评测。把文本用规则翻成动作可以构成组合系统，但规则控制器的证据不能归功于 VLM。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-15-02：九档 token 的误差与词表</summary>
+<summary>自检 15-2：九档 token 的误差与词表</summary>
 
 当前 normalized action `(0.6,-0.4)` 在9档时 step 为0.25，编码得到 `(6,2)`，解码仍是 `(0.5,-0.5)`，平均绝对归一化误差仍为0.1；档数增加没有保证这个特定点误差下降。复用同一标量 token 集时动作量化词表从5增到9，两个动作维的序列长度仍为2；若每维使用独立 token ID 则需要10/18个 ID，若把二维组合成一个 joint token 则是25/81种。必须声明 tokenizer 设计，不能把 bins、词表基数和序列长度混为一个量。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-15-03：两份互不兼容的7-DoF schema</summary>
+<summary>自检 15-3：两份互不兼容的7-DoF schema</summary>
 
 Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺序的 `q1…q7`（rad）、每维限位/速度、robot joint frame、control_hz、timestamp 与 gripper 独立字段。Delta-EEF schema 则定义 `mode=delta_pose`、`dx,dy,dz`（m）、`dRx,dRy,dRz`（rad，明确 axis-angle/Euler）、参考 `base` 或 `tool` frame、增量组合方向、dt/horizon 和 gripper。二者即使都是7维也不能逐维互换：EEF 到 joint 需要带当前 q 的 IK，存在冗余、奇异、限位和多解；joint absolute 也不等于局部笛卡尔增量。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-15-04：2 Hz/20 Hz 双系统缓存失效</summary>
+<summary>自检 15-4：2 Hz/20 Hz 双系统缓存失效</summary>
 
 慢层每0.5 s发布带 `instruction_revision,command_id,observation_time,expires_at,schema_id` 的目标，快层每0.05 s只消费当前 revision 下未过期的动作 prefix。新指令到达时原子增加 revision、清空旧 chunk/在途请求并等待新目标；晚到的旧响应因 revision/command ID 不匹配而拒绝。急停走独立最高优先级通道，立即清队列、锁存 safe mode，并要求完成检查与新的显式授权才能恢复；健康恢复或新文本不能自动解锁。日志保存 capture/receive/infer/execute 时间和 ACK，避免同一 chunk 重放。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-15-05：驾驶低频意图 JSON</summary>
+<summary>自检 15-5：驾驶低频意图 JSON</summary>
 
 一个最小对象可含 `intent_id,observation_id,issued_at,expires_at,clock_id,map_frame,route_segment,maneuver,target_lane,target_speed_range,horizon_s,confidence,reason,schema_version`，但不含可直接执行的 steering/brake。进入 planner 前检查 JSON/schema、枚举和值域、frame/clock/新鲜度、观测与地图版本、目标车道存在且可达、速度/法规约束、语言来源授权和重复/乱序 ID；随后仍须生成动力学可行候选，通过 occupancy/碰撞/舒适与最小风险门禁。字段合法只证明接口可解析，不证明意图真实或安全。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-15-06：新生成不等于基于新观测</summary>
+<summary>自检 15-6：新生成不等于基于新观测</summary>
 
 `timestamp_ms` 回答 packet 何时生成以及相对共同 clock 是否过期；它不能说明模型用了哪一帧。`observation_timestep` 绑定推理依据，能拒绝“刚生成但输入已落后”的响应；`first_action_timestep` 则声明 chunk 第一个动作预期占用哪个执行槽，防止晚到响应整体错位。三者都必须与同一 session、控制频率和队列规则解释。真实系统还要处理允许的观测 lag、跳帧、网络重排、跨机 clock offset、动作已消费进度和原子队列失效；本章 `42→42` 只是预登记的教学约定，不是通用编号规则。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-15-07：首动作对齐不代表完整 chunk 对齐</summary>
+<summary>自检 15-7：首动作对齐不代表完整 chunk 对齐</summary>
 
 合法三步序列应为 `(42,43,44)`；`(42,42,44)` 重复第二槽，`(42,44,45)` 跳过43，`(42,44,43)` 还发生乱序。三者的首元素都为42，所以只检查 `first_action_timestep` 会漏检。真实时间映射还需共同 `clock_id`、控制周期或每步目标 timestamp、允许 jitter、packet/session/command identity、队列接收与消费进度、取消/过期规则和执行 ACK；随后仍要检查连续轨迹的速度、加速度、jerk、碰撞与控制器可行性。连续整数槽只证明结构一致，不证明动作按时或安全执行。
 
@@ -401,7 +407,7 @@ Absolute-joint schema 可定义 `mode=joint_position`、按固定 joint name 顺
 - Kim et al., [OpenVLA](https://arxiv.org/abs/2406.09246) 与[官方仓库](https://github.com/openvla/openvla)，`[A/O,R1]`；
 - Pertsch et al., [FAST](https://arxiv.org/abs/2501.09747)，`[A,R1]`；
 - Shukor et al., [SmolVLA](https://arxiv.org/abs/2506.01844) 与 [LeRobot](https://github.com/huggingface/lerobot)，`[A/O,R1]`；
-- Physical Intelligence, [openpi](https://github.com/Physical-Intelligence/openpi)，`[O,R1]`；
+- Physical Intelligence, [openpi 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/tree/215abfb217dbac7d5f1273282331b9b1866c0479)与 [π0 论文](https://www.physicalintelligence.company/download/pi0.pdf)，`[P/O,R1]`；
 - NVIDIA, [Isaac GR00T](https://github.com/NVIDIA/Isaac-GR00T) 与 [N1 论文](https://arxiv.org/abs/2503.14734)，`[O/A,R1]`。
 
 ## 下一章接口

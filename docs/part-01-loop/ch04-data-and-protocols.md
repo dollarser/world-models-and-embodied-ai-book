@@ -52,7 +52,9 @@ m_t^{\text{value}}=1-\mathbb{1}[\text{terminated}_t].
 
 外部截断后只有在最终观测真实存在且有效时才能据此 bootstrap；“理论上应延续”不能补出丢失的下一观测。有限时域若本来就是任务定义的一部分，则时间上限属于 termination，且剩余时间应进入状态。
 
-上述协议语义由官方文档与实现直接支持，来源成熟度记为 `[O]`；本书 fixture 只复核了保存与聚合合同。`CLAIM-04-06`（fact）：自然终止与外部截断对序列边界都有效，但对 value bootstrap 的语义不同；只保存 `done` 会丢失这一区别。
+上述协议语义由官方文档与实现直接支持，来源成熟度记为 `[O]`；本书 fixture 只复核了保存与聚合合同。
+<!-- CLAIM_META: CLAIM-04-06 fact -->
+自然终止与外部截断对序列边界都有效，但对 value bootstrap 的语义不同；只保存 `done` 会丢失这一区别。
 
 ## 4.2 先写清楚一行数据代表什么
 
@@ -82,7 +84,7 @@ p(o_{t+1},r_t,d_t\mid o_{\le t},a_t)
 
 ```mermaid
 sequenceDiagram
-    accTitle: FIG-04-01 观测动作与下一观测的时序
+    accTitle: FIG-04-01 图 4-1 观测动作与下一观测的时序
     accDescr: 传感器把带来源时间戳的观测交给策略，策略下发带命令时间戳的动作，控制器和环境经过排队与执行延迟后产生下一观测。
     participant S as 传感器
     participant P as 策略
@@ -94,7 +96,7 @@ sequenceDiagram
     S->>P: o_t+1
 ```
 
-*FIG-04-01：观测、动作与下一观测的时间关系。数据审计必须记录传感器、命令和执行时钟，而不是只假设相邻数组已经对齐。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
+*图 4-1：观测、动作与下一观测的时间关系。数据审计必须记录传感器、命令和执行时钟，而不是只假设相邻数组已经对齐。来源：本书原创，CC BY-NC 4.0，2026-08-31。*<!-- INTERNAL_ASSET_ID: FIG-04-01 -->
 
 建议检查：
 
@@ -133,7 +135,7 @@ sequenceDiagram
 
 只在配置中写 `normalization_scope=train` 仍不足以证明没有泄漏：统计文件可能来自全数据、旧数据版本或同名但内容已变化的 episode。可审计 artifact 至少要登记 feature、统计定义、source episode/content identity、sample count 和逐维参数，并能从当前 source 重算。若无法保留原始值或可验证摘要，就只能把来源声明记为未验证，不能由文件名推断。
 
-`EXP-04-01 v5` 给 train episode 的三行二维原始 state 赋值 `[0,1]`、`[1,2]`、`[2,3]`，预登记 population standard deviation。审计器由 source episode ID 与 content fingerprint 找回这三行，再重算：
+实验 4-1 v5<!-- INTERNAL_ASSET_ID: EXP-04-01 v5 --> 给 train episode 的三行二维原始 state 赋值 `[0,1]`、`[1,2]`、`[2,3]`，预登记 population standard deviation。审计器由 source episode ID 与 content fingerprint 找回这三行，再重算：
 
 | 字段 | artifact 登记值 | 从 train source 重算 | 结果 |
 | --- | --- | --- | --- |
@@ -142,12 +144,12 @@ sequenceDiagram
 | population scale | `[sqrt(2/3),sqrt(2/3)]` | 同左 | 最大逐维差 0 |
 | source split | train | train | 无非 train source |
 
-*TAB-04-01：微型 normalization provenance 合同。三行 state 是作者构造值，不代表真实数据分布。*
+*表 4-1：微型 normalization provenance 合同。三行 state 是作者构造值，不代表真实数据分布。*<!-- INTERNAL_ASSET_ID: TAB-04-01 -->
 
 错误 fixture 仍写 `normalization_scope=train`，但 artifact 同时登记一个 eval episode，且 mean/scale 与这些 source 不一致，因此分别触发 `normalization_source_split` 和 `normalization_stat_mismatch`。这两个原因码不能合并：来源违规与数值损坏需要不同修复路径。
 
 <!-- CLAIM_META: CLAIM-04-10 result -->
-`EXP-04-01 v5` 从已绑定的三行 train state 精确重算 count=3、mean=`[1,2]` 与 population scale=`[sqrt(2/3),sqrt(2/3)]`，最大 mean/scale gap 均为 0；错误 fixture 即使保留 `train` 标签，仍因 eval source 和不一致统计被拒绝。该结果只证明作者构造 metadata 的 provenance/recompute 合同，不验证真实数据统计、padding/mask、权重、周期变量、checkpoint compatibility 或泛化性能。
+实验 4-1 v5<!-- INTERNAL_ASSET_ID: EXP-04-01 v5 --> 从已绑定的三行 train state 精确重算 count=3、mean=`[1,2]` 与 population scale=`[sqrt(2/3),sqrt(2/3)]`，最大 mean/scale gap 均为 0；错误 fixture 即使保留 `train` 标签，仍因 eval source 和不一致统计被拒绝。该结果只证明作者构造 metadata 的 provenance/recompute 合同，不验证真实数据统计、padding/mask、权重、周期变量、checkpoint compatibility 或泛化性能。
 
 ## 4.5 切分：按照会导致记忆的共同因素分组
 
@@ -166,7 +168,7 @@ sequenceDiagram
 
 这里至少有四层不同身份，不能用一个 `group_id` 代替全部检查：
 
-`TAB-04-02` 把每一层能发现和不能发现的问题分开：
+表 4-2<!-- INTERNAL_ASSET_ID: TAB-04-02 --> 把每一层能发现和不能发现的问题分开：
 
 | 层次 | fixture 字段 | 跨 split 重叠说明什么 | 仍不能证明什么 |
 | --- | --- | --- | --- |
@@ -175,7 +177,7 @@ sequenceDiagram
 | 精确内容 | `content_fingerprint` | 冻结规范化流程产出的内容身份相同 | 转码、裁剪、轻微时移后的近重复 |
 | 近重复簇 | `similarity_cluster_id` | 预计算或人工复核已把样本归入同一相似簇 | 聚类漏检、误合并或阈值外样本 |
 
-*TAB-04-02：四层数据身份合同。后三个字段是数据准备阶段写入的审计证据；本书 smoke 只比较 ID，不读取媒体，也不自动推断相似性。来源：本书原创，CC BY-NC 4.0，2026-09-02。*
+*表 4-2：四层数据身份合同。后三个字段是数据准备阶段写入的审计证据；本书 smoke 只比较 ID，不读取媒体，也不自动推断相似性。来源：本书原创，CC BY-NC 4.0，2026-09-02。*<!-- INTERNAL_ASSET_ID: TAB-04-02 -->
 
 因此，精确 digest 只能约束它所对应的字节或冻结规范化表示；perceptual hash、embedding 或人工聚类也必须登记算法、模型 revision、预处理和阈值，并抽查边界样本。相似度工具既可能漏掉近重复，也可能把不同内容合并，不能把“cluster ID 无交集”写成“测试集独立”的充分证明。更稳妥的流程是先按来源和任务语义分组，再用精确/近重复检查寻找协议遗漏，发现跨 split 重叠时回到组级重切分，而不是删除最容易发现的单帧来美化数字。
 
@@ -211,7 +213,7 @@ sequenceDiagram
 
 官方 API 还暴露按秒定义的 `delta_timestamps` 时间窗口和 `tolerance_s` 同步容差，但具体字段和行为可能继续变化。正式实验必须锁定 LeRobot commit 或发布版本，并先审计目标数据集自己的 metadata；不能仅凭“LeRobot 格式”推断数据质量、许可、缺帧策略或可复现性。
 
-本章不依赖公开机器人数据下载。`EXP-04-01` 使用微型本地 metadata fixture 解释审计逻辑；若扩展到真实数据集，必须先确认下载量、用途与许可。
+本章不依赖公开机器人数据下载。实验 4-1<!-- INTERNAL_ASSET_ID: EXP-04-01 --> 使用微型本地 metadata fixture 解释审计逻辑；若扩展到真实数据集，必须先确认下载量、用途与许可。
 
 ## 4.8 基线不是装饰
 
@@ -273,7 +275,7 @@ prepare/smoke/train/evaluate/report 命令
 <!-- CLAIM_META: CLAIM-04-05 fact -->
 本书 Schema 允许 planned 实验没有指标，但从 smoke 开始强制要求 smoke/evaluate/report 命令和至少一个指标；到 reproducible 时还会拒绝 `UNCOMMITTED` 和 `license pending`。
 
-## 4.12 数据契约审计（EXP-04-01）
+## 4.12 数据契约审计（实验 4-1<!-- INTERNAL_ASSET_ID: EXP-04-01 -->）
 
 S 档实验将使用一个可随书分发的微型 metadata fixture，检查：
 
@@ -303,10 +305,10 @@ make ch04-smoke
 22 个单元测试除原有 schema/split/action 检查外，还验证：在最终观测有效的本 fixture 中，外部截断保留 value bootstrap 而自然终止关闭它；episode 最后一帧至少有一种结束标志、双真合法且关闭 bootstrap、非末帧不能结束、显式 mask 合法但缺字段非法、sensor timestamp 必须单调且满足 skew，以及 NaN/Inf 不会绕过数值检查。身份回归测试固定 source asset、精确指纹和 authored similarity cluster 在不同 `group_id` 下的泄漏检测；normalization 回归测试则覆盖精确重算、eval source、篡改 mean 和 source fingerprint 错配。
 
 <!-- CLAIM_META: CLAIM-04-08 result -->
-`EXP-04-01` v5 中，有效 fixture 为 0 issue，11 类注入错误均被识别；双真结束标志作为合法边界另有测试。该结果只证明已编码规则覆盖已知手工反例，不估计真实数据错误率。
+实验 4-1 v5<!-- INTERNAL_ASSET_ID: EXP-04-01 v5 --> 中，有效 fixture 为 0 issue，11 类注入错误均被识别；双真结束标志作为合法边界另有测试。该结果只证明已编码规则覆盖已知手工反例，不估计真实数据错误率。
 
 <!-- CLAIM_META: CLAIM-04-09 result -->
-`EXP-04-01` v5 的三个独立反例证明，即使 train/eval 的 `group_id` 不同，共享 `source_asset_id`、`content_fingerprint` 或 `similarity_cluster_id` 仍会分别触发跨 split 拒绝。该结果只验证已登记 metadata 的集合交集；不证明指纹生成正确、相似簇完备或真实媒体不存在未登记近重复。
+实验 4-1 v5<!-- INTERNAL_ASSET_ID: EXP-04-01 v5 --> 的三个独立反例证明，即使 train/eval 的 `group_id` 不同，共享 `source_asset_id`、`content_fingerprint` 或 `similarity_cluster_id` 仍会分别触发跨 split 拒绝。该结果只验证已登记 metadata 的集合交集；不证明指纹生成正确、相似簇完备或真实媒体不存在未登记近重复。
 
 这仍只是已知错误注入测试。它不能证明真实 LeRobot、机器人或驾驶数据不存在其他问题，也没有检查视频解码、标定、隐私和第三方许可。
 
@@ -314,7 +316,7 @@ M 档选做路径可以审计一个锁定版本的真实数据集，但必须在
 
 ## 4.13 一份最低实验协议
 
-`TAB-04-03` 可复制到新章节：
+表 4-3<!-- INTERNAL_ASSET_ID: TAB-04-03 --> 可复制到新章节：
 
 | 项目 | 冻结内容 |
 | --- | --- |
@@ -349,7 +351,7 @@ M 档选做路径可以审计一个锁定版本的真实数据集，但必须在
 | --- | --- | --- | --- | --- |
 | 仓库事实 | 实验卡生命周期由 JSON Schema 校验 | `specs/experiment-card.schema.json` | 已验证 | 不替代人工科学审查 |
 | 官方格式 | LeRobot v3 使用 metadata 恢复 episode 视图 | 官方文档 | `[O,R1]` | 本书未下载或执行 |
-| 本书结果 | 有效 fixture 0 问题；13 类注入问题全部检出 | `EXP-04-01` | CPU smoke | 只比较手工 metadata ID，不读取媒体或估计真实错误率 |
+| 本书结果 | 有效 fixture 0 问题；13 类注入问题全部检出 | 实验 4-1<!-- INTERNAL_ASSET_ID: EXP-04-01 --> | CPU smoke | 只比较手工 metadata ID，不读取媒体或估计真实错误率 |
 | 未验证 | 某个真实数据集不存在泄漏或错位 | 无 | unverified | 必须逐数据集审计 |
 
 ### 资源、数据与许可
@@ -374,42 +376,42 @@ M 档选做路径可以审计一个锁定版本的真实数据集，但必须在
 数据题没有脱离目标声明的“万能切分”。展开答案前先写清评测要证明什么、独立单位是什么、哪些身份必须隔离，以及技术无效样本如何进入分母。
 
 <details markdown="1">
-<summary>SELF-CHECK-04-01：概念判断</summary>
+<summary>自检 4-1：概念判断</summary>
 
 奇偶帧来自同一原始视频、同一路径/场景和相邻时间，外观与运动高度相关；模型可以依赖背景、对象身份或近重复内容，而无需泛化到新时间段。合格答案应至少在 `source_asset_id` 和时间 block/episode 级切分，同一视频的派生帧不得跨 train/test；不同文件名或不同 `group_id` 也不能替代精确内容与近重复审计。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-04-02：时间审计</summary>
+<summary>自检 4-2：时间审计</summary>
 
 协议一：若动作戳是实际开始执行时刻且 80 ms 是已标定固定感知到执行延迟，可把 `o(t)` 与 `a(t+0.08)` 配成因果样本，并用随后状态验证作用区间。协议二：若动作戳来自独立 logger 的固定 clock offset，可先校正时钟，再按 10 Hz 的保持区间 `[t,t+0.1)` 配对，而不是直接最近邻。两者都必须声明 timestamp 语义、clock、保持方式和容差；不知道 80 ms 来源时不能任选一种当真值。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-04-03：切分设计</summary>
+<summary>自检 4-3：切分设计</summary>
 
 “新物体”可按物理 object/instance ID 或原始资产家族分组；“新任务”按 task template/goal family 分组，避免仅换自然语言措辞；“新机器人”按 robot serial 或 embodiment/schema family 分组，并隔离同一示范的重定向副本。每种切分只能支持对应泛化声明，最好另报交叉矩阵；一个总 `group_id` 不能替代 source、content fingerprint 和 similarity cluster 三个身份维度。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-04-04：自动驾驶迁移</summary>
+<summary>自检 4-4：自动驾驶迁移</summary>
 
 先按 route/source identity 把路线分为 train、selection 和独立 test；每条 test route 同时保留晴/雨配对运行，模型从未在训练阶段见过这些路线，再在 route 内计算雨—晴差并按 route 聚合。这样天气比较不会由训练时路线记忆解释，也不会把“雨天 + 新路线”的混合差异误称纯天气效应。应同时报告路线总体和配对天气效应，而不是只汇总 episode micro 平均。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-04-05：资源审查</summary>
+<summary>自检 4-5：资源审查</summary>
 
 S 档使用几条程序化 metadata：验证 schema、frame/unit/timestamp、split identity、缺帧 mask、`terminated/truncated` 和指标分母，并注入一个可命名失败；零下载、CPU、结果只证明链路。M 档在明确许可和下载体积后读取一个小型真实视频子集，冻结预处理与 checksum，运行轻量 baseline 并记录资源峰值。S 档不能写成视频模型性能，M 档也不能自动升级为完整数据集或目标域复现。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-04-06：统计溯源</summary>
+<summary>自检 4-6：统计溯源</summary>
 
 最小 artifact 应登记数据/feature 版本、统计定义、source episode 或 shard identity、内容 fingerprint、有效 sample count、逐维 mean/scale，以及 mask/权重规则。加载时先验证 source 仍属于 train，再从当前原始值或可信摘要重算并比较；只检查 `scope=train`、文件名或目录位置都不能证明来源。角度、四元数、padding、缺失值和加权采样还需要各自的统计规则，不能沿用普通欧氏均值。
 

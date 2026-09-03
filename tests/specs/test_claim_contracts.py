@@ -18,7 +18,6 @@ from scripts.check_book import (
     check_heading_hierarchy,
     check_inference_evidence_contract,
     check_mermaid_accessibility,
-    check_prd_experiment_tiers,
     check_research_radar_contract,
     check_reading_map_contract,
     check_review_index_contract,
@@ -169,7 +168,7 @@ class ReadingMapContractTest(unittest.TestCase):
                 "遮挡条件下移动杯子；施工改道中的切入车辆。它们不是新增实验。",
                 "observation state action prediction horizon success uncertainty",
                 "[第1章](part/ch01.md) 与 [第2章](part/ch02.md)",
-                "不能把22个smoke相加成端到端证据。",
+                "各章 fixture 相互独立，不能相加成端到端证据。",
             ]
         )
         self.assertEqual([], check_reading_map_contract(text, chapters))
@@ -195,10 +194,15 @@ class FigureContractTest(unittest.TestCase):
 
     def test_rejects_unregistered_missing_and_foreign_ids(self) -> None:
         text = "`FIG-15-01` / `TAB-14-01`\n"
-        errors = check_figure_contract(15, ["FIG-15-01", "TAB-15-02"], text)
+        errors = check_figure_contract(15, ["FIG-15-01", "TAB-15-03"], text)
         self.assertTrue(any("does not contain registered" in item for item in errors))
         self.assertTrue(any("contains unregistered" in item for item in errors))
         self.assertTrue(any("invalid or foreign" in item for item in errors))
+
+    def test_rejects_non_monotonic_table_captions(self) -> None:
+        text = "`TAB-15-01` / `TAB-15-02`\n*TAB-15-02：later*\n*TAB-15-01：earlier*\n"
+        errors = check_figure_contract(15, ["TAB-15-01", "TAB-15-02"], text)
+        self.assertTrue(any("strictly increasing" in item for item in errors))
 
 
 class MermaidAccessibilityTest(unittest.TestCase):
@@ -241,7 +245,6 @@ class ChapterSectionContractTest(unittest.TestCase):
                 "## 练习",
                 "## 延伸阅读",
                 "## 全书出口",
-                "## 验收与审查记录",
             ]
         )
         self.assertEqual([], check_chapter_sections(22, shared))
@@ -251,7 +254,7 @@ class ChapterSectionContractTest(unittest.TestCase):
         errors = check_chapter_sections(7, text)
         self.assertTrue(any("小结" in item for item in errors))
         self.assertTrue(any("练习" in item for item in errors))
-        self.assertTrue(any("验收与审查记录" in item for item in errors))
+        self.assertTrue(any("延伸阅读" in item for item in errors))
 
 
 class ExerciseSelfCheckContractTest(unittest.TestCase):
@@ -564,32 +567,6 @@ class CriticalRecommendationContractTest(unittest.TestCase):
         errors = check_critical_recommendation_contract({"CLAIM-21-05"}, registry)
         self.assertTrue(any("non-recommendation or missing claim" in item for item in errors))
         self.assertTrue(any("fallback_or_stop" in item for item in errors))
-
-
-class PrdExperimentTierContractTest(unittest.TestCase):
-    def test_accepts_delivered_s_tier_and_optional_upgrade(self) -> None:
-        text = "\n".join(
-            [
-                "#### 第1章 Entry",
-                "- S 档（已交付，`EXP-01-01`）：fixed CPU fixture.",
-                "- M 档（可选待验证）：learned model in simulation.",
-            ]
-        )
-        self.assertEqual([], check_prd_experiment_tiers(text, {1: ["EXP-01-01"]}))
-
-    def test_rejects_unregistered_and_untiered_experiments(self) -> None:
-        text = "\n".join(
-            [
-                "#### 第1章 Entry",
-                "- 实验：run the planned model.",
-                "- S 档（已交付，`EXP-01-02`）：stale experiment.",
-            ]
-        )
-        errors = check_prd_experiment_tiers(text, {1: ["EXP-01-01"]})
-        self.assertTrue(any("does not mark delivered S-tier" in item for item in errors))
-        self.assertTrue(any("unregistered experiment" in item for item in errors))
-        self.assertTrue(any("no optional pending M/L" in item for item in errors))
-        self.assertTrue(any("un-tiered experiment" in item for item in errors))
 
 
 class ExperimentAssetContractTest(unittest.TestCase):

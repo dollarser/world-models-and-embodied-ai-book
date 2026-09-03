@@ -14,12 +14,12 @@
 | 表征与生成接口扩展 | [V-JEPA 2.1](https://arxiv.org/abs/2603.14482)、[Cosmos 3 快照 `9aa98e5`](https://github.com/NVIDIA/cosmos/tree/9aa98e5a0773a5558f07d2699e640858f7ca8827) | dense representation 和统一 action 接口怎样服务状态估计、预测与控制 | feature 可读不等于动作转移正确；接口含 action 不等于 simulator fidelity |
 | 世界模型进入策略训练与评测 | [GE-Sim 2.0](https://arxiv.org/abs/2605.27491)、[A2World](https://arxiv.org/abs/2606.29501)、[Riemann-1.0](https://arxiv.org/abs/2608.27033) | learned rollout、state decoder、reward/judge、policy head 和共享预训练怎样组成闭环 | 共用权重或接口不等于policy与simulator两种能力都已独立校准；上游真实结果不是本书复现 |
 | 跨本体从表示假设进入受控反例 | [OSCAR](https://arxiv.org/abs/2606.04463)、[XEWorld](https://arxiv.org/abs/2608.05799) | skeleton、pixel action或向量动作是在迁移动力学，还是只在匹配外观 | 受控失败只约束被测模型；视觉对齐不替代可执行动作、接触与动力学证据 |
-| “评测器也会错”成为显式研究对象 | [WorldArena 2.0](https://arxiv.org/abs/2605.17912)、[KineBench](https://arxiv.org/abs/2607.19876) | 模态、用途、平台与动作落地层怎样分别归因 | 更完整的 benchmark 仍有作用域；去掉 IDM 不会消除 pose extractor 和 simulator 误差 |
+| “评测器也会错”成为显式研究对象 | [WorldArena 2.0](https://arxiv.org/abs/2605.17912)、[RoboArena](https://robo-arena.github.io/)、[KineBench](https://arxiv.org/abs/2607.19876) | 模态、用途、平台、评测者与动作落地层怎样分别归因 | 更完整或更分布式的 benchmark 仍有作用域；去掉 IDM 不会消除 pose extractor 和 simulator 误差 |
 | 部分可观测性从单一 mask 转向 memory-improvable 诊断 | [POBAX](https://arxiv.org/abs/2508.00046) | 更多 state 信息或 memory 是否在其他条件近似不变时关闭清晰 performance gap | 一个任务有 gap 不代表模型学会正确记忆，也不覆盖所有 state aliasing 类型 |
 
 这六行共同强化了全书主线：模型输出必须经过“表征—动作条件转移—用途—独立 outcome”逐级取证。它们没有推翻第2章的定义、第9章的评测阶梯或第17章的用途边界。
 
-## 十二张活页卡
+## 十三张活页卡
 
 ### Dreamer 4：规模化想象训练
 
@@ -54,6 +54,12 @@ Action cookbook 还暴露一个容易被安装说明掩盖的实验变量：Gene
 论文把评测沿 modality、functionality、platform 三轴扩展，包含视觉—触觉、policy optimization 以及模拟和真实机器人设置。它支持第9章的教学判断：感知质量、策略评估、规划和交互式训练不是同一个完成标准。
 
 但“覆盖面更广”仍不等于一个总分可以跨用途解释。实际采用前必须冻结任务、模型版本、输入模态、聚合规则、无效运行与真实平台协议；本书目前只核对论文和项目页，保持 `R0–R1`。
+
+### RoboArena：分布式真实评测也会改变估计目标
+
+RoboArena 在 DROID 平台上组织社区参与的真实机器人策略评测：评测者为同一对策略选择相同任务和环境，按双盲方式依次执行并给出成对偏好、部分成功和文字反馈。相较于让不同策略各跑一组不可比任务，这种 pairwise 设计更接近第20章强调的受控比较；跨机构评测又能扩大场景和任务覆盖。[官方代码快照 `a07f93d`](https://github.com/robo-arena/roboarena/tree/a07f93db004e2357aee931069a7011d7e52774ed)还把 observation、相机需求和 action space 显式放入 policy-server 配置 `[P/O,R1]`。
+
+但“成对”不会自动消除评测者、机构、机器人状态、任务选择和时间漂移。评测者可以改变任务与场景，策略池也会更新，因此全局排序对应一个随参与者和时间演化的分布；无效 session、pair 分配、重复评测、cluster 和偏好聚合都必须进入 estimand。该服务的持续运营、当前榜单和数据可用性是动态事实，本书没有提交策略或运行真实机器人，所以这张卡只用于说明社区评测协议，不把其排名写成书中结论。
 
 ### KineBench：闭环评测的归因链
 

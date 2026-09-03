@@ -16,7 +16,7 @@
 
 ### 非目标
 
-- 不把 `EXP-19-01` 称为物理仿真、域随机化性能或 Sim2Real 成果；
+- 不把 实验 19-1<!-- INTERNAL_ASSET_ID: EXP-19-01 --> 称为物理仿真、域随机化性能或 Sim2Real 成果；
 - 不声称本书已经安装或运行 MuJoCo、MJX、MetaDrive、CARLA、Isaac Lab、RoboCasa 或 RialTo；
 - 不用视觉相似度代替动力学、传感器和闭环任务验证；
 - 不要求购置硬件，也不把高保真 GPU 仿真设为完成本章的必需条件。
@@ -39,7 +39,9 @@ episode：初始化、reset、终止、截断和随机种子
 软件：引擎、后端、资产、场景、驱动和配置版本
 ```
 
-[NIST 的仿真验证、确认与不确定性指南](https://www.nist.gov/publications/summary-industrial-verification-validation-and-uncertainty-quantification-procedures)区分“实现是否正确求解所声明模型”与“模型在预期用途上多大程度代表真实世界”。`CLAIM-19-01`（fact）：锁定随机种子只能改善同一实现的可重复性；它不能证明引擎、参数、传感器或行为模型与目标世界一致。仿真“可复现”和“有效”是两道不同的门。
+[NIST 的仿真验证、确认与不确定性指南](https://www.nist.gov/publications/summary-industrial-verification-validation-and-uncertainty-quantification-procedures)区分“实现是否正确求解所声明模型”与“模型在预期用途上多大程度代表真实世界”。
+<!-- CLAIM_META: CLAIM-19-01 fact -->
+锁定随机种子只能改善同一实现的可重复性；它不能证明引擎、参数、传感器或行为模型与目标世界一致。仿真“可复现”和“有效”是两道不同的门。
 
 例如，策略输出 `0.2` 可能表示关节弧度、归一化位置、速度、力矩或方向盘角度。即使 shape 相同，只要控制器、频率或动作延迟不同，闭环轨迹就会改变。第15章的动作 packet 因而应延伸到仿真：坐标、单位、频率、horizon 和时间戳不能丢。
 
@@ -55,7 +57,7 @@ Verification 问软件是否正确实现了所声明的方程与算法，例如�
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-19-01 Real2Sim2Real 的证据闭环
+    accTitle: FIG-19-01 图 19-1 Real2Sim2Real 的证据闭环
     accDescr: 真实日志或受控观测用于校准仿真，仿真支持训练和压力测试，策略再由独立真实证据回查；回查失败会反向更新参数与实验边界。
     R[目标世界/日志] --> C[校准集]
     C --> I[系统辨识与 Real2Sim]
@@ -71,7 +73,7 @@ flowchart TB
     V --> C
 ```
 
-*FIG-19-01：Real2Sim2Real 的证据闭环。来源：本书原创，CC BY-NC 4.0，2026-09-01。真实回查可使用已有日志、影子模式或受控平台，不表示必须购买硬件。*
+*图 19-1：Real2Sim2Real 的证据闭环。来源：本书原创，CC BY-NC 4.0，2026-09-01。真实回查可使用已有日志、影子模式或受控平台，不表示必须购买硬件。*<!-- INTERNAL_ASSET_ID: FIG-19-01 -->
 
 常见 gap 至少分六类：
 
@@ -103,7 +105,7 @@ flowchart TB
 | Isaac Lab | GPU 并行机器人训练与复杂资产工作流 | L1/L2 | 框架 BSD-3-Clause；Isaac Sim 组件另有许可和版本矩阵 |
 | RoboCasa | 厨房操作任务、资产和演示数据 | M/L1 | 代码 MIT；资产/数据 CC BY 4.0，完整资产约 10 GB 不是 S 档依赖 |
 
-*TAB-19-01：本书的仿真环境角色。许可和资源来自核查日官方仓库/文档，执行前仍需按具体版本复核。*
+*表 19-1：本书的仿真环境角色。许可和资源来自核查日官方仓库/文档，执行前仍需按具体版本复核。*<!-- INTERNAL_ASSET_ID: TAB-19-01 -->
 
 [MuJoCo](https://github.com/google-deepmind/mujoco) 适合把控制、接触和系统辨识讲清楚；官方 [sysid toolbox 快照 `005b351`](https://github.com/google-deepmind/mujoco/blob/005b35170d16cf20d1eb5afcecf67328e6ec0875/python/mujoco/sysid/README.md)使用带 box constraint 的 nonlinear least squares、finite-difference Jacobian 和批量 rollout 拟合物理或测量参数，并可组合多个 `ModelSequences`、自定义 residual、time delay 与 confidence interval `[O,R1]`。工具能优化不等于参数必然可辨识；residual 对两个参数只依赖其乘积时，优化器仍会面对等价解。
 
@@ -145,14 +147,14 @@ Real2Sim 不一定从手机扫描重建完整 3D。最小路径可以从已有�
 
 经典“纹理、光照全随机”只覆盖视觉域的一部分。对控制任务，延迟、执行器、摩擦、负载和行为参与者往往同样关键。应先由系统辨识和测量建立中心与范围，再逐项扩展；不确定的参数可以更宽，但必须记录假设。fixture 的 `covers` 只检查独立区间与离散 delay：即使目标每一维都在边界内，若真实随机化使用相关分布、约束流形或零概率组合，也不能据此声称 joint support 已覆盖。
 
-`EXP-19-01` v4 把该边界变成两套有限 support。aligned 与 crossed 都恰好包含 gain `{0.8,1.0}`、delay `{1}`、observation scale `{1.0,1.25}`；差别只在 gain—scale 如何配对。目标 `(0.8,1,1.25)` 属于 aligned，却不属于 crossed。
+实验 19-1 v4<!-- INTERNAL_ASSET_ID: EXP-19-01 v4 --> 把该边界变成两套有限 support。aligned 与 crossed 都恰好包含 gain `{0.8,1.0}`、delay `{1}`、observation scale `{1.0,1.25}`；差别只在 gain—scale 如何配对。目标 `(0.8,1,1.25)` 属于 aligned，却不属于 crossed。
 
 | 有限 support | 边际范围检查 | 目标联合点检查 | 目标参数组合 |
 | --- | --- | --- | --- |
 | aligned | 通过 | 通过 | `(0.8,1,1.25)` 存在 |
 | crossed | 通过 | 拒绝 | 只有 `(0.8,1,1.0)` 与 `(1.0,1,1.25)` |
 
-*TAB-19-04：`EXP-19-01` v4 的相同边际—不同联合支持负对照。support 是两个手工离散点，不是连续相关分布。*
+*表 19-2：实验 19-1 v4 的相同边际—不同联合支持负对照。support 是两个手工离散点，不是连续相关分布。*<!-- INTERNAL_ASSET_ID: TAB-19-02 -->
 
 <!-- CLAIM_META: CLAIM-19-09 result -->
 两套各2点的手工 support 具有完全相同的逐参数边际值，逐维范围检查都接受目标，但 crossed support 不包含目标三元组。该结果只证明边际范围不能识别这两个有限联合 support，不估计真实概率质量、相关性、随机化覆盖率、策略鲁棒性或 Sim2Real 性能。
@@ -165,7 +167,7 @@ Domain randomization 不只是给参数加噪声，而是在训练目标中规�
 
 随机化范围应来自测量、不确定性或明确压力测试，而不是看到迁移失败后无限扩张。训练随机化、选择模型所用的 validation 分布和最终目标分布应分开；反复根据目标测试调范围，会把目标环境变成隐式训练集。
 
-## 19.6 零校准误差与“更多数据”都可能不可辨识（EXP-19-01）
+## 19.6 零校准误差与“更多数据”都可能不可辨识（实验 19-1<!-- INTERNAL_ASSET_ID: EXP-19-01 -->）
 
 S 档 fixture 用一个标量状态演示执行器增益、动作延迟和观测尺度。目标系统固定为 `gain=0.8`、`delay=1`、`scale=1.25`；12 个候选组合在校准动作上网格搜索。关键是 observation 只依赖 `gain×scale`：目标的 `0.8×1.25` 与候选 `1.0×1.0` 相同，因此 observation-only 本来就无法分离二者。
 
@@ -187,7 +189,7 @@ make ch19-smoke
 | 只校准动力学/延迟，观测尺度仍错 | 0.0000 | 0.1625 | 0.0000 |
 | 加入 state anchor 后的唯一网格解 | 0.0000 | 0.0000 | 0.0000 |
 
-*TAB-19-02：`EXP-19-01` 的留出动作结果。observation 一致不保证隐藏 state 或参数一致。*
+*表 19-3：实验 19-1 的留出动作结果。observation 一致不保证隐藏 state 或参数一致。*<!-- INTERNAL_ASSET_ID: TAB-19-03 -->
 
 <!-- CLAIM_META: CLAIM-19-02 result -->
 名义参数在留出动作上的 state MAE 为 `0.6625`、observation MAE 为 `0.625`、终态误差为 `1.0`；这些数值只描述固定标量动力学与留出动作，不是物理引擎或 Sim2Real 误差估计。
@@ -209,7 +211,7 @@ fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量
 | 零载荷重复 | 2 | 1 | 3 | 样本数增加，参数信息方向未增加 |
 | 已知载荷 `0.0` 与 `1.0` | 2 | 2 | 1 | 当前无噪离散网格中恢复目标点 |
 
-*TAB-19-03：多工况校准反例。独立载荷数按 fixture 中不同的已知 payload 值计数，不代表统计独立性或真实实验的有效样本量。*
+*表 19-4：多工况校准反例。独立载荷数按 fixture 中不同的已知 payload 值计数，不代表统计独立性或真实实验的有效样本量。*<!-- INTERNAL_ASSET_ID: TAB-19-04 -->
 
 <!-- CLAIM_META: CLAIM-19-08 result -->
 零载荷校准存在 3 个等价解，重复同一载荷后仍为 3 个；加入第二个不同的已知载荷后，当前 9 点网格只剩目标 `(force_gain=1.0, base_load=1.0)`，而单载荷替代解 `(0.5,0.5)` 在载荷 `1.0` 上的 MAE 为 `0.197916666667`。这是解析标量 fixture 的实验设计反例，不证明两个工况足以辨识一般连续、带噪、接触或时变系统。
@@ -250,9 +252,9 @@ Sim2Real 还可能暴露策略对仿真伪特征的依赖，例如利用固定 r
 
 ## 19.9 资源边界与停止条件
 
-全书资源档位见[术语表](../glossary.md)。本章的升级顺序由真实性问题决定：标量反例用于理解不可辨识性；MuJoCo或MetaDrive适合检查动力学与闭环协议；CARLA、Isaac Lab和MJX只在高保真传感器、复杂资产或大规模并行确实改变研究问题时使用。更昂贵的仿真器不自动更接近目标现实。
+全书资源档位见[术语表](../glossary.md)。本章的升级顺序由真实性问题决定：标量反例用于理解不可辨识性；MuJoCo 或 MetaDrive适合检查动力学与闭环协议；CARLA、Isaac Lab和MJX只在高保真传感器、复杂资产或大规模并行确实改变研究问题时使用。更昂贵的仿真器不自动更接近目标现实。
 
-运行前应核验镜像、资产、数据、缓存和许可。若坐标/动作合同不清、reset不稳定、目标参数不在随机化范围、留出gap恶化、跨后端终止不一致或许可不明，应停止性能比较并先修复证据链。
+运行前应核验镜像、资产、数据、缓存和许可。若坐标/动作合同不清、reset 不稳定、目标参数不在随机化范围、留出 gap 恶化、跨后端终止不一致或许可不明，应停止性能比较并先修复证据链。
 
 ## 19.10 结果与证据边界
 
@@ -263,6 +265,10 @@ Sim2Real 还可能暴露策略对仿真伪特征的依赖，例如利用固定 r
 | 计划验证 | MuJoCo/MetaDrive 的 M 档闭环 | 在没有运行记录时写成已完成 |
 | 高阶扩展 | CARLA/Isaac/MJX 的 GPU 工作流 | 把硬件与大型下载变成读者必需品 |
 
+### 贯穿案例：仿真应围绕待裁决的问题变化
+
+杯子任务若要判断抓取策略是否依赖错误接触模型，应改变摩擦、质量、杯壁几何、视觉遮挡和夹爪顺应性，并分别观察接触前定位与接触后稳定性；只换渲染纹理回答不了这个问题。施工改道若要判断规划器是否依赖过度礼让的他车模型，则应改变切入时机、相对速度、可见距离和交互策略，而不是只增加天气外观。两个案例都说明：domain randomization 的轴应来自预期 reality gap 和目标用途，覆盖更多随机量本身不是 validation。
+
 ## 小结
 
 有效仿真从合同和用途开始，而不是从渲染质量开始。Verification 检查实现与数值求解，calibration 在固定结构内估计参数，validation 判断模型是否足以支撑指定用途；三者不能互相替代。Reality gap 包含结构、参数、数值、观测和行为误差，这些误差可能耦合，必须通过分层干预定位。
@@ -272,7 +278,7 @@ Real2Sim 的参数唯一性与预测可用性是两个问题，零 residual 也�
 ## 练习
 
 1. **合同审计**：为一个差速底盘或自动驾驶转向接口写出状态、动作、频率、延迟、reset 和终止合同。
-2. **噪声推演**：在 `EXP-19-01` 的观测中引入有限噪声，分析为何精确参数恢复不再是合理完成标准，并区分参数区间与预测区间。
+2. **噪声推演**：在 实验 19-1<!-- INTERNAL_ASSET_ID: EXP-19-01 --> 的观测中引入有限噪声，分析为何精确参数恢复不再是合理完成标准，并区分参数区间与预测区间。
 3. **辨识设计**：分别说明“激励不足导致 gain/delay 难分”与“gain×scale 结构混淆”的区别；前者设计新动作，后者设计新测量。
 4. **驾驶迁移**：列出 MetaDrive 到 CARLA 迁移时必须重新验证的五类语义，不比较无法对齐的成功率。
 5. **多工况设计**：解释为什么重复十次同一载荷不等于十个独立辨识条件，并为车辆质量—驱动力或机械臂负载—电机增益设计一个安全的第二工况。
@@ -283,42 +289,42 @@ Real2Sim 的参数唯一性与预测可用性是两个问题，零 residual 也�
 仿真题先写单位、frame、时间和终止语义。参数拟合误差小只表示所选数据与观测模型可拟合，不自动表示隐藏状态或真实世界已被辨识。
 
 <details markdown="1">
-<summary>SELF-CHECK-19-01：一个可执行的转向合同</summary>
+<summary>自检 19-1：一个可执行的转向合同</summary>
 
 示例合同可定义状态为 ego frame 的 `(x[m],y[m],yaw[rad],v[m/s],steer[rad])`，动作为目标前轮角 `δ_cmd[rad]∈[-0.5,0.5]` 与纵向加速度 `a_cmd[m/s²]∈[-4,2]`，固定 20 Hz、零阶保持，并显式加入 1 个 control step 的执行延迟。`reset(seed, route_id)` 必须同时重置车辆、控制队列、传感器时间戳和随机源；成功终止、碰撞/越界 terminal、时间上限 timeout 分开编码。还应登记坐标手性、yaw 正方向、转向速率/饱和、观测延迟和缺帧策略。这个合同只消除接口歧义，不证明 bicycle dynamics、高速轮胎或真实执行器正确。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-19-02：观测噪声破坏精确网格恢复</summary>
+<summary>自检 19-2：观测噪声破坏精确网格恢复</summary>
 
-可在 `EXP-19-01` 生成 observation 后加入固定 seed、零均值且幅度已登记的噪声，并保持校准/留出噪声独立。有限样本下，真实参数通常不再产生恰好零 residual，网格最优点会随 seed、噪声模型和分辨率变化；应报告多 seed 参数分布、置信/后验范围和 held-out 误差，而不是要求恢复唯一精确值。噪声减少信息，却不会解除原 fixture 的结构性 `gain×observation_scale` 等价：多个参数仍可产生同一无噪声 observation。加入更多算力或更细网格不能替代新测量。
+可在 实验 19-1<!-- INTERNAL_ASSET_ID: EXP-19-01 --> 生成 observation 后加入固定 seed、零均值且幅度已登记的噪声，并保持校准/留出噪声独立。有限样本下，真实参数通常不再产生恰好零 residual，网格最优点会随 seed、噪声模型和分辨率变化；应报告多 seed 参数分布、置信/后验范围和 held-out 误差，而不是要求恢复唯一精确值。噪声减少信息，却不会解除原 fixture 的结构性 `gain×observation_scale` 等价：多个参数仍可产生同一无噪声 observation。加入更多算力或更细网格不能替代新测量。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-19-03：激励不足与结构混淆需要不同干预</summary>
+<summary>自检 19-3：激励不足与结构混淆需要不同干预</summary>
 
 gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限轨迹上两组参数近似相同，但阶跃、脉冲、PRBS 或不同频率/幅度动作可让响应起点和幅值分离，这是 practical identifiability 问题。`gain×scale` 则是观测方程只看到乘积的结构对称性；无论重复多少同类动作，都不能唯一拆开两者。前者应设计满足安全约束的新动作并留出验证，后者需增加独立 state/标尺测量或固定其中一个已校准参数。若新传感器仍只测同一乘积，结构歧义仍在。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-19-04：MetaDrive 到 CARLA 的五类语义</summary>
+<summary>自检 19-4：MetaDrive 到 CARLA 的五类语义</summary>
 
 至少重新验证：① observation 的相机内外参、坐标系、同步与传感器噪声；② action 的转向/油门/制动含义、单位、范围、控制器与延迟；③车辆和接触动力学，包括轴距、轮胎、碰撞体与执行饱和；④ route/map/traffic 规则、道路边界、参与者行为和随机 seed；⑤ reset、成功、碰撞、越界、timeout、干预与无效运行的 episode 语义。还应锁定步频、天气和资产版本。只有把目标总体与分母映射清楚后才可比较共同指标；否则分别报告各环境结果和 gap，不把两个“success rate”相减。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-19-05：重复样本与独立参数方向</summary>
+<summary>自检 19-5：重复样本与独立参数方向</summary>
 
 重复十次同一载荷可以在噪声独立且模型正确时降低该工况 residual 的方差，却仍只约束 `force_gain/base_load` 这个组合；它没有新增一条能把分子和分母分开的方程。本章 fixture 把 payload 作为已知量从 `0.0` 改为 `1.0`，于是两个响应分别约束 `g/m` 与 `g/(m+1)`，当前离散网格中才剩唯一候选。真实设计还要确认附加载荷准确、结构模型仍适用、动作足够激励且不越过安全范围，并把载荷测量误差纳入不确定性；不能先把“工况独立”等同于“样本统计独立”，也不能由两工况 fixture 推导一般系统必然可辨识。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-19-06：相同边际不等于相同联合支持</summary>
+<summary>自检 19-6：相同边际不等于相同联合支持</summary>
 
 可令两套 support 的 gain 都取 `{0.8,1.0}`、scale 都取 `{1.0,1.25}`、delay 都固定为1。aligned 配对为 `{(0.8,1,1.25),(1.0,1,1.0)}`，包含目标；crossed 配对为 `{(0.8,1,1.0),(1.0,1,1.25)}`，不包含目标。逐维 min/max 与离散 delay 检查无法区分二者。真实 domain randomization 还应登记 joint sampler、参数相关性、约束、拒绝采样和目标附近概率质量；本题两点集合只验证结构差异，不代表连续分布或策略鲁棒性。
 

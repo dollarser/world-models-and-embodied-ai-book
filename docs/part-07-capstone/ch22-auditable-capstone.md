@@ -52,7 +52,7 @@
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-22-01 综合项目的可审计闭环
+    accTitle: FIG-22-01 图 22-1 综合项目的可审计闭环
     accDescr: 可证伪问题连接冻结协议、实现、数据与结果资产，四类审查和安全资源门禁决定发布、修订或停止，失败门禁也保留为有效负结果。
     Q[问题与作用域] --> C[声明/证据合同]
     C --> D[数据/许可/分组切分]
@@ -66,7 +66,7 @@ flowchart TB
     P --> Q
 ```
 
-*FIG-22-01：综合项目的可审计闭环。来源：本书原创，CC BY-NC 4.0，2026-08-31。门禁失败可以产生有效负结果，不要求继续扩大实验。*
+*图 22-1：综合项目的可审计闭环。来源：本书原创，CC BY-NC 4.0，2026-08-31。门禁失败可以产生有效负结果，不要求继续扩大实验。*<!-- INTERNAL_ASSET_ID: FIG-22-01 -->
 
 ## 22.2 五个综合论证轨道
 
@@ -78,11 +78,11 @@ flowchart TB
 | occupancy/affordance 用于动作 | representation/state | 2D/无 unknown 简单基线 | 几何/碰撞/任务 outcome | unknown 假安全、frame 错 |
 | 驾驶世界模型 | 反事实/规划/代理评测 | 规则模型或无 world model | MetaDrive 默认、CARLA 可选 | 碰撞漏检、路线/时延错配 |
 
-*TAB-22-01：综合项目轨道。每个项目只需选择一行；自动驾驶是正文轨道，不是附录。*
+*表 22-1：综合项目轨道。每个项目只需选择一行；自动驾驶是正文轨道，不是附录。*<!-- INTERNAL_ASSET_ID: TAB-22-01 -->
 
 五条轨道首先是组织知识的方式，不是五种必须运行的实验。读者可以使用本书已有反例、论文中的作者结果、官方接口和明确标注的假设完成论证，但必须区分这些证据分别支持什么。只有当现有证据无法判别核心问题时，才需要设计新的数据或实验。
 
-### 22.2.1 默认成品：一页研究论证卡
+### 22.2.1 默认成品：研究论证卡
 
 | 字段 | 必须回答的问题 | 常见不合格写法 |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ flowchart TB
 | 修订结论 | 证据不足时应改成哪一句更弱的话？ | 保留原结论只加免责声明 |
 | 下一证据 | 哪个最低成本的新观察最能减少不确定性？ | 默认训练更大模型 |
 
-*TAB-22-07：研究论证卡。来源：本书原创，CC BY-NC 4.0，2026-09-03。它既可作为课程作业，也可作为论文阅读、项目立项或失败复盘的最终成品。*
+*表 22-2：研究论证卡。来源：本书原创，CC BY-NC 4.0，2026-09-03。它既可作为课程作业，也可作为论文阅读、项目立项或失败复盘的最终成品。*<!-- INTERNAL_ASSET_ID: TAB-22-02 -->
 
 一份合格论证卡通常只需2–4页：先给出主张和证据图，再选一个最强反例检验推理桥，最后写出原结论、受反例影响后的修订结论，以及仍需外部验证的部分。它不要求产生新性能数字，但要求每个引用可追溯、每个推断有边界、每个“不知道”都指向具体缺失证据。
 
@@ -145,7 +145,7 @@ flowchart TB
 | model/system card | 输入输出、训练范围、用途和非用途 | 把 checkpoint 当完整系统 |
 | 局限与许可 | 未验证项、第三方资产、隐私 | 必做资产不可合法再分发 |
 
-*TAB-22-02：综合项目必交物。项目规模可以小，追溯字段不能省。*
+*表 22-3：综合项目必交物。项目规模可以小，追溯字段不能省。*<!-- INTERNAL_ASSET_ID: TAB-22-03 -->
 
 <!-- CLAIM_META: CLAIM-22-04 fact -->
 一个结果只有在代码/配置、数据版本与切分、环境、结构化输出和声明作用域共同可追溯时，才进入本书证据链；存在 checkpoint 或视频不满足这个条件。
@@ -164,7 +164,7 @@ flowchart TB
 
 本书采用一个轻量 manifest：每项资产至少有 `uri`、内容 `sha256`、`producer_stage`、`claim_ids`，trace stage 再记录 `artifact`、`chapter`、`revision`、`decision` 和冻结依赖。这借鉴 [SLSA provenance](https://slsa.dev/spec/v1.2/provenance)用 digest 绑定产物身份、记录产物怎样生成的原则，也与 [RO-Crate](https://www.researchobject.org/ro-crate/specification/1.2/introduction.html)把数据、代码、工作流和 provenance 聚合为 research object 的方向一致。SHA-256 能发现本次包内内容漂移，但不能证明内容真实、许可有效、程序无恶意或实验结论正确；这些仍需执行、复核和独立评测。
 
-## 22.5 先审项目包，再审模型（EXP-22-01）
+## 22.5 先审项目包，再审模型（实验 22-1<!-- INTERNAL_ASSET_ID: EXP-22-01 -->）
 
 S 档审计器检查两个手工 driving project package fixture。完整包包含问题、claim、许可、三分区 × 四身份维度的数据隔离、五类带摘要的 artifact binding、绑定 command/result digest 的执行回执、可对照预期与实际问题的失败注入、局限、S 档资源、冻结且独立的评测、驾驶指标、可追溯 safety gateway，以及五段跨章证据 trace；故意不完整包违反这些合同。v5 还实际启动三个不经过 shell 的固定 `python3` 子进程，分离成功且输出摘要匹配、输出漂移和非零退出。
 
@@ -184,13 +184,13 @@ make ch22-smoke
 | 完整固定包 | 0 | 是 | 12 个 split identity set、5 个 artifact digest binding、2 个失败注入和 5 段 trace 通过 |
 | 故意无效包 | 24 | 否 | 问题/claim/许可、4 类 train–eval 重叠、artifact/回执/失败/资源/trace/评测冻结/驾驶安全均有具名 issue |
 
-*TAB-22-03：`EXP-22-01` v5 固定审计结果。fixture 在内存中重算文本 payload 的 SHA-256，并运行受限标准库子进程；没有遍历真实项目目录、重建环境或运行模型，也不证明研究正确、许可有效或系统安全。*
+*表 22-4：实验 22-1 v5 固定审计结果。fixture 在内存中重算文本 payload 的 SHA-256，并运行受限标准库子进程；没有遍历真实项目目录、重建环境或运行模型，也不证明研究正确、许可有效或系统安全。*<!-- INTERNAL_ASSET_ID: TAB-22-04 -->
 
 <!-- CLAIM_META: CLAIM-22-02 result -->
 完整固定包得到 0 issue；无效包得到 24 个具名 issue，包括四种 train–eval 身份重叠、artifact 缺失或 claim binding 非法、执行回执缺失、3×80 GB 与 L2 不匹配、GPU 结果未验证、trace 缺失、评测不独立且未冻结、驾驶指标与 safety gateway 缺失。该结果只验证标准库 fixture 的项目包审计路径。
 
 <!-- CLAIM_META: CLAIM-22-08 result -->
-`EXP-22-01` v5 的完整包校验 5 个 `uri + sha256 + producer_stage + claim_ids` binding；篡改 `results.json` 的 payload 会触发 `artifact_digest_mismatch:result`，错误 producer 或非规范 claim 会触发 `invalid_artifact_binding`。这只证明固定 payload 与登记摘要一致，不是科学复现徽章。
+实验 22-1 v5<!-- INTERNAL_ASSET_ID: EXP-22-01 v5 --> 的完整包校验 5 个 `uri + sha256 + producer_stage + claim_ids` binding；篡改 `results.json` 的 payload 会触发 `artifact_digest_mismatch:result`，错误 producer 或非规范 claim 会触发 `invalid_artifact_binding`。这只证明固定 payload 与登记摘要一致，不是科学复现徽章。
 
 | probe | exit code | stdout digest | 状态 |
 | --- | ---: | --- | --- |
@@ -198,10 +198,10 @@ make ch22-smoke
 | 命令相同、预期 digest 改为全零 | 0 | 不匹配 | `stdout_digest_mismatch` |
 | 固定命令显式退出 3 | 3 | 空输出摘要 | `nonzero_exit` |
 
-*TAB-22-04：本地 reproduction probe 的三条执行路径。只允许 JSON argv 形式的 `python3`，不经过 shell；stdout 是固定字符串，不是模型结果。*
+*表 22-5：本地 reproduction probe 的三条执行路径。只允许 JSON argv 形式的 `python3`，不经过 shell；stdout 是固定字符串，不是模型结果。*<!-- INTERNAL_ASSET_ID: TAB-22-05 -->
 
 <!-- CLAIM_META: CLAIM-22-11 result -->
-`EXP-22-01` v5 实际启动三个固定本地子进程；只有 exit 0 且 stdout SHA-256 与结果 artifact 一致的路径记为 `reproduced`，同一输出面对错误预期摘要得到 `stdout_digest_mismatch`，显式 exit 3 得到 `nonzero_exit`。项目包另要求手工 receipt 同时绑定 command/result URI、两端 digest、exit code 与 stderr 字节数。这只验证受限 CPU fixture 的执行和字段一致性，不证明命令安全、环境可重建、依赖完整、receipt 可信、模型运行、科学结论复现或独立 replication。
+实验 22-1 v5<!-- INTERNAL_ASSET_ID: EXP-22-01 v5 --> 实际启动三个固定本地子进程；只有 exit 0 且 stdout SHA-256 与结果 artifact 一致的路径记为 `reproduced`，同一输出面对错误预期摘要得到 `stdout_digest_mismatch`，显式 exit 3 得到 `nonzero_exit`。项目包另要求手工 receipt 同时绑定 command/result URI、两端 digest、exit code 与 stderr 字节数。这只验证受限 CPU fixture 的执行和字段一致性，不证明命令安全、环境可重建、依赖完整、receipt 可信、模型运行、科学结论复现或独立 replication。
 
 | 分区 | 只允许承担的角色 | 必填且与另外两区互斥的集合 |
 | --- | --- | --- |
@@ -209,10 +209,10 @@ make ch22-smoke
 | selection | 选择 checkpoint、阈值、prompt 或配置 | 同上四项；不能因“不反向传播”而与 eval 共用 |
 | eval | 一次冻结的最终报告 | 同上四项；查看结果后不得回流前两区 |
 
-*TAB-22-05：项目包的三分区 × 四身份维度合同。集合互斥只证明已登记身份没有交集，不证明上游相似度方法完备、数据统计独立或场景真正分布外。来源：本书原创，CC BY-NC 4.0，2026-09-02。*
+*表 22-6：项目包的三分区 × 四身份维度合同。集合互斥只证明已登记身份没有交集，不证明上游相似度方法完备、数据统计独立或场景真正分布外。来源：本书原创，CC BY-NC 4.0，2026-09-02。*<!-- INTERNAL_ASSET_ID: TAB-22-06 -->
 
 <!-- CLAIM_META: CLAIM-22-10 result -->
-`EXP-22-01` v5 要求 train/selection/eval 各登记四类非空且内部无重复的身份集合；三个保持 group 不同的回归反例分别以 source asset、精确内容和近重复簇重叠触发拒绝，selection 与另外两区的来源重叠也会被拒绝。该结果只验证项目包内已登记集合与失败代码，不读取媒体、不发现未知近重复，也不证明统计独立。
+实验 22-1 v5<!-- INTERNAL_ASSET_ID: EXP-22-01 v5 --> 要求 train/selection/eval 各登记四类非空且内部无重复的身份集合；三个保持 group 不同的回归反例分别以 source asset、精确内容和近重复簇重叠触发拒绝，selection 与另外两区的来源重叠也会被拒绝。该结果只验证项目包内已登记集合与失败代码，不读取媒体、不发现未知近重复，也不证明统计独立。
 
 资源检查按档位而不是全局阈值解释：S/M 不声明 GPU，L1 最多 1×24 GB，L2 最多 2×80 GB；因此 1×80 GB 或 2×80 GB 可属于 L2，而 1×25 GB 不能冒充 L1，3×80 GB 也不能冒充 L2。这不是说方法在其他环境不可运行，只表示它不能被包装成本书对应档位。
 
@@ -234,16 +234,16 @@ make ch22-smoke
 
 | 证据阶段 | 本书入口 | 本例要回答的决策 | 机器证据 | 失败时怎样处理 |
 | --- | --- | --- | --- | --- |
-| input contract | 第4章 `EXP-04-01` | group/source/content/near-duplicate 身份、时间戳、mask 与 episode end 是否可用于 target/评测 | 数据审计结果与失败代码 | 泄漏、缺帧或结束语义不清时不训练 |
-| method contract | 第8章 `EXP-08-01` | timeout 是否保留 bootstrap，terminal 是否阻止 reward 泄漏 | λ-return、continuation 与截断反例 | target 不可构造时修数据，不把缺失猜成 terminal |
-| independent evaluation | 第20章 `BENCH-20-01` | 先按 selection split 冻结 checkpoint，再固定 route/seed、成功定义、timeout 与有效分母，replanning 是否改善 outcome | split-role audit、route/collision/intervention、Wilson 区间、零事件上界与 episode accounting | final 参与选择、protocol 不同或技术无效运行时不排行；零事件不写成零风险 |
-| deployment/safety gate | 第21章 `EXP-21-01` | action 是否新鲜、按时、有限、在界内且 uncertainty 可接受 | allow/fallback、原因计数、P95/deadline miss | 触发 profile-specific fallback，不执行旧 action suffix |
-| evidence package | 本章 `EXP-22-01` | 上述问题、artifact、依赖、失败和限制能否由第三方追踪 | 五段 trace、digest binding、0/24 issue 对照 | 缺一段即缩小声明或停止交付 |
+| input contract | 第4章 实验 4-1<!-- INTERNAL_ASSET_ID: EXP-04-01 --> | group/source/content/near-duplicate 身份、时间戳、mask 与 episode end 是否可用于 target/评测 | 数据审计结果与失败代码 | 泄漏、缺帧或结束语义不清时不训练 |
+| method contract | 第8章 实验 8-1<!-- INTERNAL_ASSET_ID: EXP-08-01 --> | timeout 是否保留 bootstrap，terminal 是否阻止 reward 泄漏 | λ-return、continuation 与截断反例 | target 不可构造时修数据，不把缺失猜成 terminal |
+| independent evaluation | 第20章 基准测试 20-1<!-- INTERNAL_ASSET_ID: BENCH-20-01 --> | 先按 selection split 冻结 checkpoint，再固定 route/seed、成功定义、timeout 与有效分母，replanning 是否改善 outcome | split-role audit、route/collision/intervention、Wilson 区间、零事件上界与 episode accounting | final 参与选择、protocol 不同或技术无效运行时不排行；零事件不写成零风险 |
+| deployment/safety gate | 第21章 实验 21-1<!-- INTERNAL_ASSET_ID: EXP-21-01 --> | action 是否新鲜、按时、有限、在界内且 uncertainty 可接受 | allow/fallback、原因计数、P95/deadline miss | 触发 profile-specific fallback，不执行旧 action suffix |
+| evidence package | 本章 实验 22-1<!-- INTERNAL_ASSET_ID: EXP-22-01 --> | 上述问题、artifact、依赖、失败和限制能否由第三方追踪 | 五段 trace、digest binding、0/24 issue 对照 | 缺一段即缩小声明或停止交付 |
 
-*TAB-22-06：自动驾驶 capstone 的五段证据 trace。表中入口均是本书 S 档接口 fixture；它证明依赖可追踪，不证明模型、仿真或车辆已经端到端运行。*
+*表 22-7：自动驾驶 capstone 的五段证据 trace。表中入口均是本书 S 档接口 fixture；它证明依赖可追踪，不证明模型、仿真或车辆已经端到端运行。*<!-- INTERNAL_ASSET_ID: TAB-22-07 -->
 
 <!-- CLAIM_META: CLAIM-22-07 result -->
-`EXP-22-01` v5 的完整包包含五个具名 trace stage 并通过 0 issue 审计；删除独立评测阶段会触发 `traceability_incomplete`，章节号与 `EXP/BENCH` ID 不一致、revision 为空、method stage 错连到第20章或依赖错误都会触发对应 `invalid_trace_stage`。这是证据图合同测试，不是闭环性能结果。
+实验 22-1 v5<!-- INTERNAL_ASSET_ID: EXP-22-01 v5 --> 的完整包包含五个具名 trace stage 并通过 0 issue 审计；删除独立评测阶段会触发 `traceability_incomplete`，章节号与 `EXP/BENCH` ID 不一致、revision 为空、method stage 错连到第20章或依赖错误都会触发对应 `invalid_trace_stage`。这是证据图合同测试，不是闭环性能结果。
 
 训练、model selection 和最终闭环 evaluation 必须按 route/scene 分组隔离，并继续检查 raw source、精确内容和已知近重复簇；相邻帧随机切分无效，重命名的同源 test log 也不能用于选 checkpoint、阈值或 prompt。[NeurIPS reproducibility checklist](https://blog.neurips.cc/2021/03/26/introducing-the-neurips-2021-paper-checklist/)强调提交训练与评测细节、代码/数据/指令和限制；在本书项目合同中，评测协议还必须在看最终结果前冻结，并绑定独立 evaluator artifact。碰撞、道路边界、动作范围、时效和最小风险停车由带 trace、失败记录和 fallback modes 的独立 gate 检查，不能被路线 reward 抵消。
 
@@ -331,7 +331,7 @@ make ch22-smoke
 
 ## 练习
 
-1. **研究问题**：从 `TAB-22-01` 选一轨，写一个只含一个主变量的研究问题。
+1. **研究问题**：从 表 22-1<!-- INTERNAL_ASSET_ID: TAB-22-01 --> 选一轨，写一个只含一个主变量的研究问题。
 2. **审计推演**：从有效项目包中删除一个关键字段，预测它会破坏结构完整性、执行完整性还是认识完整性，并说明自动审计能否发现。
 3. **三类对照**：为目标方法设计 oracle、负对照和独立真实性锚点。
 4. **停止规则**：写一个“应停止而不是继续加算力”的失败场景。
@@ -343,42 +343,42 @@ make ch22-smoke
 综合项目允许多种选题，但必须让第三方从问题一路追到失败与停止条件。先写自己的项目卡，再用以下示例检查是否误把代理分数、字段布尔值或更多算力当作证据。
 
 <details markdown="1">
-<summary>SELF-CHECK-22-01：一个主变量的驾驶研究问题</summary>
+<summary>自检 22-1：一个主变量的驾驶研究问题</summary>
 
-选择 `TAB-22-01` 的“驾驶世界模型”轨道，可写：在固定 policy、MetaDrive 版本、route/seed、候选数、动作 schema 和 50 ms deadline 下，仅把 MPC horizon 从 5 步改为 10 步，是否降低独立 simulator 的 route failure，且不增加碰撞、干预和 deadline miss？主变量只有 horizon；terminal value、模型、数据和 planner budget 不能同时改变。主要 estimand、置信区间、安全 gate 与停止条件须在看结果前冻结。该问题若只改善 model return、没有改善独立闭环 outcome，结论只能是代理指标改善。
-
-</details>
-
-<details markdown="1">
-<summary>SELF-CHECK-22-02：删除一个字段并预测唯一 issue</summary>
-
-深拷贝 `EXP-22-01` 的有效 package，只删除 `evaluation.protocol_frozen_before_evaluation`，其余字段与 digest 不变；预期 audit 包含 `evaluation_protocol_not_frozen`。运行 `make ch22-smoke` 或对应单测，断言该 issue 出现且有效包仍为 0 issue；若测试要求精确集合，则断言没有额外 issue。也可删除某个 split 的 `similarity_cluster_ids`，但应预期相应 `missing_split_identity`。这个测试证明 schema/auditor 捕捉缺字段，不证明填写为 `true` 的协议确实在现实中提前冻结。
+选择 表 22-1<!-- INTERNAL_ASSET_ID: TAB-22-01 --> 的“驾驶世界模型”轨道，可写：在固定 policy、MetaDrive 版本、route/seed、候选数、动作 schema 和 50 ms deadline 下，仅把 MPC horizon 从 5 步改为 10 步，是否降低独立 simulator 的 route failure，且不增加碰撞、干预和 deadline miss？主变量只有 horizon；terminal value、模型、数据和 planner budget 不能同时改变。主要 estimand、置信区间、安全 gate 与停止条件须在看结果前冻结。该问题若只改善 model return、没有改善独立闭环 outcome，结论只能是代理指标改善。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-22-03：oracle、负对照与真实性锚点职责不同</summary>
+<summary>自检 22-2：删除一个字段并预测唯一 issue</summary>
+
+深拷贝 实验 22-1<!-- INTERNAL_ASSET_ID: EXP-22-01 --> 的有效 package，只删除 `evaluation.protocol_frozen_before_evaluation`，其余字段与 digest 不变；预期 audit 包含 `evaluation_protocol_not_frozen`。运行 `make ch22-smoke` 或对应单测，断言该 issue 出现且有效包仍为 0 issue；若测试要求精确集合，则断言没有额外 issue。也可删除某个 split 的 `similarity_cluster_ids`，但应预期相应 `missing_split_identity`。这个测试证明 schema/auditor 捕捉缺字段，不证明填写为 `true` 的协议确实在现实中提前冻结。
+
+</details>
+
+<details markdown="1">
+<summary>自检 22-3：oracle、负对照与真实性锚点职责不同</summary>
 
 以 world-model MPC 为例：oracle 用目标 simulator 的真实 transition/termination 在相同候选预算内规划，用于估计模型误差上界；负对照可打乱 action 条件或使用 action-blind dynamics，检查 planner 是否其实未消费动作后果；独立真实性锚点是在未参与 world model、planner、阈值或 checkpoint 选择的固定物理 simulator route/seed 上执行最终 policy。三者共享观察、动作、候选和评测协议，差异进入 confounder 表。oracle 不可部署、负对照失败不等于目标方法正确、一个 simulator 锚点也不能代表真实世界。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-22-04：安全或证据 gate 失败时停止</summary>
+<summary>自检 22-4：安全或证据 gate 失败时停止</summary>
 
 例如扩大 world model 与训练时长后，model-only return 持续上升，但独立 MetaDrive 中所选 policy 的碰撞率升高、策略排序反转，且失败集中在模型乐观预测的施工区。此时更多同类算力可能强化 exploitation；应冻结资产、保存失败轨迹，停止该决策用途，检查数据/support/reward，或把主张缩小到表征/候选筛选。类似地，数据许可不明、最终 split 泄漏、evaluator digest 无法追溯或资源超过 2×80 GB 上限也应停止。停止是符合预注册合同的结果，不是缺少实验勇气。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-22-05：驾驶 route 隔离与三类 gate</summary>
+<summary>自检 22-5：驾驶 route 隔离与三类 gate</summary>
 
 按 route group 划分 train/selection/final evaluation，三者在 `group_id、source_asset_id、content_fingerprint、similarity_cluster_id` 四层互斥；同一路段相邻帧、重命名 log 或近重复场景不得跨 split。最终 route/seed 在评测前冻结，报告 route completion、碰撞和 intervention 的逐 route 值、分母与区间。碰撞 gate 可规定任何责任碰撞或碰撞率上界超阈值即拒绝；干预 gate 规定每公里/每任务干预率不得劣于基线阈值；MRM gate 要求触发时动作新鲜、受控停车完成且无碰撞/越界，任何失败单列。三类 gate 都不能被总 route reward 抵消，通过也只支持该 simulator、ODD 和协议内结论。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-22-06：命令存在、执行成功与结果一致是三层证据</summary>
+<summary>自检 22-6：命令存在、执行成功与结果一致是三层证据</summary>
 
 `reproduction_command` 的 URI 和 digest 只证明命令文本已绑定；exit code 0 只证明该进程按操作系统约定成功退出；只有 stdout digest 再与登记结果 artifact 一致，才能说这个固定输出被重现。若命令 exit 0 但摘要漂移，应报告 `stdout_digest_mismatch`，不能用“命令跑通”覆盖结果差异；若 exit 非零，应报告 `nonzero_exit`，也不能比较一个不完整输出后声称复现。当前 probe 只执行作者允许的 `python3` argv 和固定字符串，receipt 也是作者填写的字段，因此不支持真实环境重建、模型复现或独立 replication。
 

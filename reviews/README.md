@@ -2,6 +2,9 @@
 
 本目录保存章节和批次的人工审查证据。`book-manifest.json` 是章节状态的机器可读来源；审查记录解释为什么某次状态升级成立，以及哪些限制仍未解除。
 
+- [全书出版级审查（2026-09-02）](book-level-audit-2026-09-02.md)
+- [第二轮全局审查（2026-09-03）](second-pass-audit-2026-09-03.md)
+
 - [第6章 posterior leakage 与 rollout horizon 审查（2026-09-02）](ch06-posterior-leakage-review-2026-09-02.md)
 - [第21章命令 epoch 与幂等边界审查（2026-09-02）](ch21-command-epoch-idempotency-review-2026-09-02.md)
 - [第21章恢复 ledger 完整性审查（2026-09-02）](ch21-restored-ledger-integrity-review-2026-09-02.md)

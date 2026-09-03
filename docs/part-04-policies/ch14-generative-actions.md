@@ -38,7 +38,7 @@
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-14-01 生成式动作策略的滚动时域接口
+    accTitle: FIG-14-01 图 14-1 生成式动作策略的滚动时域接口
     accDescr: 生成模型从观测采样多个动作块，候选经任务代价、动力学和独立安全筛选后选择执行前缀，再用新观测重新生成。
     O[观测/状态/目标] --> C[条件编码]
     N[噪声或 base action] --> G[生成式动作模型]
@@ -50,7 +50,7 @@ flowchart TB
     E --> C
 ```
 
-*FIG-14-01：生成式动作策略的 receding-horizon 接口。采样器产生候选，安全与执行协议仍在模型之外。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
+*图 14-1：生成式动作策略的 receding-horizon 接口。采样器产生候选，安全与执行协议仍在模型之外。来源：本书原创，CC BY-NC 4.0，2026-08-31。*<!-- INTERNAL_ASSET_ID: FIG-14-01 -->
 
 <!-- CLAIM_META: CLAIM-14-01 fact -->
 确定性 MSE 回归学习条件均值；只有当条件动作分布、损失和可行域满足相应条件时，均值才是有效动作。多峰存在不意味着每个任务都必须使用生成式策略。
@@ -151,7 +151,7 @@ receding horizon 缩短了盲执行时间，却引入新的决策问题：相邻
 
 因此系统应分别描述 proposal distribution、acceptance rule 与 selection rule。前者回答模型提出什么，第二项回答什么被允许，第三项回答允许集合中执行什么。所谓 best-of-N 收益是整个生成与选择系统的性质，不能只归功于生成模型。
 
-## 14.5 双峰动作与采样接口（EXP-14-01）
+## 14.5 双峰动作与采样接口（实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 -->）
 
 S 档 fixture 设同一观测下有两个等权有效标量动作 `-1` 和 `+1`，容差为 `0.25`。它比较：
 
@@ -177,10 +177,10 @@ make ch14-smoke
 | mode refinement，4 步 | 0.034375 | 0% | 2 | 4 |
 | oracle straight flow，1 步 | 0.000000 | 0% | 2 | 1 |
 
-*TAB-14-01：`EXP-14-01` 固定解析结果。后两类知道或使用手工模式方向，不是 learned diffusion/flow 性能。*
+*表 14-1：实验 14-1 固定解析结果。后两类知道或使用手工模式方向，不是 learned diffusion/flow 性能。*<!-- INTERNAL_ASSET_ID: TAB-14-01 -->
 
 <!-- CLAIM_META: CLAIM-14-02 result -->
-`EXP-14-01` 中，MSE 均值为 0，样本均值也为 0，但相对 `±1` 两个有效模式的无效率为 100%。样本均值“平衡”没有证明动作有效。
+实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> 中，MSE 均值为 0，样本均值也为 0，但相对 `±1` 两个有效模式的无效率为 100%。样本均值“平衡”没有证明动作有效。
 
 <!-- CLAIM_META: CLAIM-14-03 result -->
 手工 refinement 从 1 步增加到 4 步时，平均最近模式距离从 `0.275` 降到 `0.034375`，每样本模型求值从 1 增到 4。它只展示求值—精度接口，不代表 DDPM 的收敛率。
@@ -196,10 +196,10 @@ oracle straight flow 在一步后到达两个指定模式，因为目标配对�
 | 4 步、10 候选、单 batch | 40 | 4 | true |
 | 16 步、10 候选、单 batch | 160 | 16 | false |
 
-*TAB-14-03：候选数、solver 步数与 batching 的抽象预算。它不测 batch 相关 P95、显存或并行效率，不能写成实时性能。*
+*表 14-2：候选数、solver 步数与 batching 的抽象预算。它不测 batch 相关 P95、显存或并行效率，不能写成实时性能。*<!-- INTERNAL_ASSET_ID: TAB-14-02 -->
 
 <!-- CLAIM_META: CLAIM-14-07 result -->
-`EXP-14-01` 的 10 候选、4 步 refinement 共有 40 次 sample-model evaluation；逐候选串行需要 40 个 forward，而一次容纳 10 个候选时为 4 个 forward。旧的“只比较步数与预算”规则会漏算候选数。
+实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> 的 10 候选、4 步 refinement 共有 40 次 sample-model evaluation；逐候选串行需要 40 个 forward，而一次容纳 10 个候选时为 4 个 forward。旧的“只比较步数与预算”规则会漏算候选数。
 
 ### 14.5.1 best-of-N 的可靠性增益取决于候选相关性
 
@@ -209,7 +209,7 @@ oracle straight flow 在一步后到达两个指定模式，因为目标配对�
 P(\text{any accepted})=1-(1-q)^N.
 \]
 
-但边际概率不决定联合分布：若所有候选完全相关——例如 sampler 的条件忽略让它们总是一起成功或一起失败——无论 N 多大，至少一个通过的概率仍是 `q`。`EXP-14-01` v4 把 iid 与完全相关作为两个解析端点，同时按 `K=4`、batch capacity=10 记录抽象计算量：
+但边际概率不决定联合分布：若所有候选完全相关——例如 sampler 的条件忽略让它们总是一起成功或一起失败——无论 N 多大，至少一个通过的概率仍是 `q`。实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 把 iid 与完全相关作为两个解析端点，同时按 `K=4`、batch capacity=10 记录抽象计算量：
 
 | 候选 N | iid 至少一个通过 | 完全相关至少一个通过 | iid fallback | 完全相关 fallback | sample-model eval / 顺序 forward |
 | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -217,10 +217,10 @@ P(\text{any accepted})=1-(1-q)^N.
 | 4 | 59.04% | 20.00% | 40.96% | 80.00% | 16 / 4 |
 | 16 | 97.1852502329% | 20.00% | 2.8147497671% | 80.00% | 64 / 8 |
 
-*TAB-14-06：固定边际 `q=0.2` 下的候选依赖结构负对照。q、iid 和完全相关结构均为手写解析端点；forward 只是抽象 batch 计数，不是实测时延。*
+*表 14-3：固定边际 `q=0.2` 下的候选依赖结构负对照。q、iid 和完全相关结构均为手写解析端点；forward 只是抽象 batch 计数，不是实测时延。*<!-- INTERNAL_ASSET_ID: TAB-14-03 -->
 
 <!-- CLAIM_META: CLAIM-14-10 result -->
-`EXP-14-01` v4 中，单候选接受概率固定为0.2时，16个 iid 候选的至少一个接受概率为0.971852502329、fallback 概率为0.028147497671；16个完全相关候选对应数值仍为0.2和0.8。该反例只证明 best-of-N 可靠性计算需要候选联合依赖假设，不估计生成器多样性、真实接受率、在线 selector、碰撞风险或闭环成功率。
+实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 中，单候选接受概率固定为0.2时，16个 iid 候选的至少一个接受概率为0.971852502329、fallback 概率为0.028147497671；16个完全相关候选对应数值仍为0.2和0.8。该反例只证明 best-of-N 可靠性计算需要候选联合依赖假设，不估计生成器多样性、真实接受率、在线 selector、碰撞风险或闭环成功率。
 
 fixture 还把“接近演示模式”和“当前场景允许执行”分开。手工安全门把左模式 `[-1.25,-0.75]` 设为当前场景阻塞区：
 
@@ -229,7 +229,7 @@ fixture 还把“接近演示模式”和“当前场景允许执行”分开。
 | 正负模式各 5 个 | 10 / 10 | 5 / 5 | 选择首个安全候选 `+1` |
 | 两个左模式 | 2 / 2 | 2 / 0 | 执行确定性 fallback `0` |
 
-*TAB-14-04：生成有效性与独立安全筛选的分母。阻塞区和 fallback 是手工教学合同，不是碰撞器或安全策略。*
+*表 14-4：生成有效性与独立安全筛选的分母。阻塞区和 fallback 是手工教学合同，不是碰撞器或安全策略。*<!-- INTERNAL_ASSET_ID: TAB-14-04 -->
 
 <!-- CLAIM_META: CLAIM-14-08 result -->
 fixture 中 10 个候选全部靠近数据模式，但独立门禁只接受 5 个；当两个模式有效候选都落入阻塞区时，系统不继续随机重采样，而是使用确定性 fallback。模式有效率不能替代场景安全接受率。
@@ -245,10 +245,10 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 | 5:5 | 100% | 2 | 0.5:0.5 | 0.0 |
 | 9:1 | 100% | 2 | 0.9:0.1 | 0.4 |
 
-*TAB-14-05：`EXP-14-01` 的模式覆盖—频率负对照。两组样本都覆盖全部模式且每个动作都有效，但对已知等权目标的经验频率距离不同；10个手工样本不估计总体校准。*
+*表 14-5：实验 14-1 的模式覆盖—频率负对照。两组样本都覆盖全部模式且每个动作都有效，但对已知等权目标的经验频率距离不同；10个手工样本不估计总体校准。*<!-- INTERNAL_ASSET_ID: TAB-14-05 -->
 
 <!-- CLAIM_META: CLAIM-14-09 result -->
-`EXP-14-01` v4 中，`5:5` 与 `9:1` 两组样本的动作有效率均为100%、模式覆盖均为2，但相对已知等权目标的经验 total variation 为 `0/0.4`。该反例只证明 support coverage 丢失模式频率信息，不证明真实策略失配程度、训练 mode collapse、总体 calibration 或统计显著性。
+实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 中，`5:5` 与 `9:1` 两组样本的动作有效率均为100%、模式覆盖均为2，但相对已知等权目标的经验 total variation 为 `0/0.4`。该反例只证明 support coverage 丢失模式频率信息，不证明真实策略失配程度、训练 mode collapse、总体 calibration 或统计显著性。
 
 ## 14.6 怎么评测多峰动作
 
@@ -263,7 +263,7 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 | 效率 | 调用数、P50/P95、deadline miss | 平均 FPS 不代表控制时延 |
 | 稳定性 | seed/solver/步数敏感性 | 只挑最佳随机样本 |
 
-*TAB-14-02：生成式动作策略的评测矩阵。*
+*表 14-6：生成式动作策略的评测矩阵。*<!-- INTERNAL_ASSET_ID: TAB-14-06 -->
 
 评估单个观测时应保存多个随机样本；评估策略时，每个 seed 必须进入独立闭环 episode，不能从多个候选中用真实未来“事后挑最好”。若用 critic、规划器或碰撞器选样本，要把选择器算进系统并单独消融，同时报告 `generated / model-valid / safety-accepted / executed` 四个分母和无候选时的 fallback 次数。
 
@@ -300,7 +300,7 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 
 ## 14.9 开源实现与证据边界
 
-理解本章不依赖下载数据、权重或配置大型环境。`EXP-14-01` 只是用于隔离多峰、候选预算和安全筛选概念的解析反例，不是 Diffusion Policy 或 Flow Matching 的缩小复现。
+理解本章不依赖下载数据、权重或配置大型环境。实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> 只是用于隔离多峰、候选预算和安全筛选概念的解析反例，不是 Diffusion Policy 或 Flow Matching 的缩小复现。
 
 [LeRobot Diffusion Policy 配置快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/diffusion/configuration_diffusion.py)提供了一个有用的配置实例：`n_obs_steps`、`horizon`、`n_action_steps`、训练噪声步数和推理步数是不同对象 `[O,R1]`。它说明本节为何要分开输入历史、动作时域和生成计算轴，但其中的默认值不是跨任务推荐。
 
@@ -316,16 +316,20 @@ fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 条件均值落在双峰无效区 | `EXP-14-01` | CPU smoke | 一维对称解析 fixture |
-| 本书结果 | refinement 求值—模式距离权衡 | `EXP-14-01` | CPU smoke | 不是 DDPM/learned denoiser |
-| 本书结果 | oracle straight flow 一步到目标 | `EXP-14-01` | CPU smoke | 已知配对，不能比较方法 |
-| 本书结果 | 相同有效率/模式覆盖可隐藏频率失真 | `EXP-14-01` | CPU smoke | 已知等权目标与10个手工样本 |
-| 本书结果 | 相同边际接受率下，候选相关性改变 best-of-N 可用性 | `EXP-14-01` | CPU smoke | 手写概率与 iid/完全相关端点 |
-| 本书结果 | 候选—batch forward 预算与安全筛选 | `EXP-14-01` | CPU smoke | 抽象计数与手工阻塞区 |
+| 本书结果 | 条件均值落在双峰无效区 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 一维对称解析 fixture |
+| 本书结果 | refinement 求值—模式距离权衡 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 不是 DDPM/learned denoiser |
+| 本书结果 | oracle straight flow 一步到目标 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 已知配对，不能比较方法 |
+| 本书结果 | 相同有效率/模式覆盖可隐藏频率失真 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 已知等权目标与10个手工样本 |
+| 本书结果 | 相同边际接受率下，候选相关性改变 best-of-N 可用性 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 手写概率与 iid/完全相关端点 |
+| 本书结果 | 候选—batch forward 预算与安全筛选 | 实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> | CPU smoke | 抽象计数与手工阻塞区 |
 | 论文/开源 | Diffusion Policy 方法与官方资产 | 论文/官方仓库 | `[P/O,R1]` | 本书未运行 |
 | 论文 | Flow Matching 通用训练框架 | 原论文 | `[P,R0]` | 非机器人 benchmark 复现 |
 | 开源案例 | openpi flow action head | 官方仓库 | `[O,R1]` | 大型 VLA，本书未下载 |
 | 未验证 | 24 GB 内 Push-T diffusion/flow 对照 | 可选 M/L1 | planned | GPU、数据、时延待测 |
+
+### 贯穿案例：多峰不是多生成几个答案
+
+对杯子任务，绕杯左侧或右侧、先换视角或直接接近都可能是有效模式，但夹爪闭合后才分叉的轨迹可能已经物理不可达。对施工改道，提前并线与减速等待也可能同时合理，却仍须分别满足车道边界、制动距离和交互风险。生成式策略的价值是保留条件动作分布中的可行分支；世界状态、动力学和安全约束负责判断哪些分支仍然成立，不能用样本多样性代替可行性。
 
 ## 小结
 
@@ -348,49 +352,49 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 生成动作题要把分布表达、候选有效性、选择器、安全门和端到端预算拆开。多样性或采样数量本身不是闭环收益。
 
 <details markdown="1">
-<summary>SELF-CHECK-14-01：不对称双峰的均值</summary>
+<summary>自检 14-1：不对称双峰的均值</summary>
 
 若 `-2` 的权重为 p、`+1` 的权重为 `1-p`，条件均值为 `μ=1-3p`；等权时 μ=-0.5，距两个 mode 都是1.5，因此不是任一有效模式。若同时把 fixture 的 `VALID_MODES` 改为 `(-2,1)` 并保留 tolerance 0.25，均值有效当且仅当 `3 min(p,1-p)≤0.25`，即 `p≤1/12` 或 `p≥11/12`；严格只承认 mode 本身时则只有 p=0或1。必须同步更新 mode oracle，不能只改 demonstrations、仍用旧 `(-1,1)` 计算有效性。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-14-02：50 ms 内的抽象采样预算</summary>
+<summary>自检 14-2：50 ms 内的抽象采样预算</summary>
 
 扣除18 ms 后只剩32 ms；若把每一步都保守按单次调用 P95 7 ms 串行估算，算术上限是 `floor(32/7)=4` 步，预算28 ms，5步需35 ms而超限。它不是可部署的 P95 保证：多个调用的尾延迟不能简单由单次 P95 相加，预处理可能相关，batch size 也改变 latency。应在目标 runtime 上测完整4步链路的 P50/P95/P99、deadline miss rate 和安全余量；候选若批处理，还要分别记录 forward 次数与 sample-model evaluations。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-14-03：Push-T 三策略公平对照</summary>
+<summary>自检 14-3：Push-T 三策略公平对照</summary>
 
 至少冻结十项：①原始 demonstrations/许可与 train-selection-test seed；②观察模态、历史长度、图像预处理；③动作 frame、单位、频率、归一化；④预测时域 `K_pred`、执行时域 `K_exec` 与重规划规则；⑤backbone、conditioning 与参数预算；⑥训练更新数、batch、optimizer/schedule；⑦数据增广与采样权重；⑧候选数、solver steps、随机 seed 和选择规则；⑨硬件、precision、batching/runtime 与端到端时延测法；⑩闭环初态、任务 horizon、成功/失败分母和统计区间。MSE 头无需生成32候选也应在相同执行协议下比较，不能靠给某一方法额外 oracle 或计算预算取胜。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-14-04：真实终点选择造成泄漏</summary>
+<summary>自检 14-4：真实终点选择造成泄漏</summary>
 
 真实终点只有执行候选后才能知道；用它从32个样本挑最优等于把 test outcome 当在线 selector 输入，会得到随样本数增大的 best-of-N 乐观偏差。这可单独标成 oracle upper bound，用于诊断生成器 support，但不能称可执行策略。合法在线选择只能使用当时可得的状态、冻结 world model/critic、任务代价与安全门，并要独立验证 selector error；最终评测仍按所有 attempted episodes 统计真实 outcome。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-14-05：驾驶三模式与无候选降级</summary>
+<summary>自检 14-5：驾驶三模式与无候选降级</summary>
 
 固定同一历史和地图，生成保持车道、变道、减速三类带时间戳轨迹；每类分别报告 mode coverage、轨迹/动力学可行率、道路边界、碰撞/最小 TTC、舒适度、进度、模型不确定性和端到端 deadline。先用硬约束拒绝候选，再在可行集排序，不能让路线进度抵消碰撞。若零候选通过，输出结构化 `no_valid_candidate`，执行独立验证的保持车道受限减速或最小风险停车，并触发重新感知/规划；不得选择“最不坏”的已拒绝轨迹冒充 fallback。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-14-06：覆盖相同，频率不同</summary>
+<summary>自检 14-6：覆盖相同，频率不同</summary>
 
 两组都包含两个模式，因此覆盖模式数都是2；若每个样本都落在有效模式内，有效率也都是100%。`7:3` 的经验分布与目标 `0.7/0.3` 相同，TV为0；`5:5` 的 TV 为 `0.5(|0.5-0.7|+|0.5-0.3|)=0.2`。这只是已知目标和固定10样本上的描述性诊断：真实任务的目标条件分布通常要从独立数据估计，还受有限样本、条件混合、标注歧义、模式发现误差和闭环选择器影响。应报告置信区间或重复采样，并配合 log score/Brier 等 proper score；不能把一次经验频率相等称为总体校准。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-14-07：best-of-N 与候选相关性</summary>
+<summary>自检 14-7：best-of-N 与候选相关性</summary>
 
 若8个候选在给定场景下条件独立，至少一个通过概率为 `1-(1-0.1)^8=0.56953279`，fallback 概率为0.43046721；若候选完全相关，至少一个通过仍为0.1、fallback 仍为0.9。真实 sampler 通常位于两端之间，不能只由单候选边际率恢复联合可用性。至少应保存同一重规划内的候选、mode/intent cluster、约束失败原因和 accept bitmap，按场景/seed 估计 any-accepted、候选内相关或有效多样性，并把 selector、batch/solver 成本及所有 attempted replans 的 fallback 纳入分母；这些观测仍不等于安全保证。
 

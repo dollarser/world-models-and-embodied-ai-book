@@ -143,7 +143,7 @@
 | WAM | World-Action Model | 世界-动作模型；尚无统一能力定义 |
 | ESS | Effective Sample Size | 有效样本量 |
 | RTC | Real-Time Chunking | 实时动作分块 |
-| MRM | Minimal Risk Maneuver | 最小风险动作或最小风险机动 |
+| MRM | Minimum Risk Maneuver | 最小风险动作或最小风险机动 |
 
 ## 查词时的三个检查
 

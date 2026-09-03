@@ -14,7 +14,7 @@
 
 ### 非目标
 
-- 不把 `EXP-18-01` 称为 offline RL、RIPT-VLA 或 VLA-RFT 复现；
+- 不把 实验 18-1<!-- INTERNAL_ASSET_ID: EXP-18-01 --> 称为 offline RL、RIPT-VLA 或 VLA-RFT 复现；
 - 不把成功轨迹权重提高等同闭环成功率提高；
 - 不把 VLM reward、world-model reward 或 simulator reward 默认当真值；
 - 不把长 context、长 action chunk 或长视频自动称为 long-horizon competence；
@@ -63,7 +63,7 @@ VLA 后训练的完成定义至少应包含 interaction source、reward/verifier
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-18-01 VLA 后训练的审计闭环
+    accTitle: FIG-18-01 图 18-1 VLA 后训练的审计闭环
     accDescr: 数据、策略、世界模型和奖励模型分别登记并参与后训练，更新后的策略必须在未参与训练的独立环境和冻结协议中评测。
     B[SFT policy + versioned action schema] --> R[rollout source]
     R --> P[physical simulator]
@@ -79,7 +79,7 @@ flowchart TB
     G[independent safety gate] --> E
 ```
 
-*FIG-18-01：VLA 后训练的审计闭环。来源：本书原创，CC BY-NC 4.0，2026-09-01。learned world model、reward model 与独立评测环境必须分别登记。*
+*图 18-1：VLA 后训练的审计闭环。来源：本书原创，CC BY-NC 4.0，2026-09-01。learned world model、reward model 与独立评测环境必须分别登记。*<!-- INTERNAL_ASSET_ID: FIG-18-01 -->
 
 ## 18.2 五条后训练路线
 
@@ -91,7 +91,7 @@ flowchart TB
 | learned-world-model RL | predicted future/reward | 从真实视频动作数据扩展想象 | hallucination、reward hacking、策略利用模型 |
 | 人类纠正/真实交互 | intervention、preference、outcome | 接近部署分布 | 昂贵、有风险、标注/操作者偏差 |
 
-*TAB-18-01：后训练路线按数据和错误源分类。可组合路线，但每种信号要单独做 ablation。*
+*表 18-1：后训练路线按数据和错误源分类。可组合路线，但每种信号要单独做 ablation。*<!-- INTERNAL_ASSET_ID: TAB-18-01 -->
 
 离线 reward-weighted behavior cloning 可写成：
 
@@ -111,7 +111,7 @@ Credit assignment 有时间与结构两个维度。时间维度问早期动作�
 
 Policy support 或 KL 约束的作用是限制更新策略偏离有证据的行为分布，而不是证明分布内动作正确。约束过弱会让 critic 或 world model 在 OOD 动作上过度乐观，约束过强则只能复现 SFT 行为，难以超过示范。合适强度取决于数据质量、环境真实性和回退能力，不能把一个固定 KL 系数当成跨任务安全常数。
 
-## 18.3 target 改善与 coverage 损失同时发生（EXP-18-01）
+## 18.3 target 改善与 coverage 损失同时发生（实验 18-1<!-- INTERNAL_ASSET_ID: EXP-18-01 -->）
 
 S 档 fixture 有四条两阶段标量轨迹：两条成功、两条最终失败但包含 `recover` 事件。成功轨迹动作均值 `(0.25,0.75)` 被手工设为参考；这只是教学 oracle，不是真实任务最优策略。
 
@@ -132,7 +132,7 @@ make ch18-smoke
 | 成功 3、失败 1 | `(0.40,0.60)` | 0.15 | 3.2 | 0.25 |
 | 只保留成功 | `(0.25,0.75)` | 0.00 | 2.0 | 0.00 |
 
-*TAB-18-02：`EXP-18-01` 固定 reward reweighting 结果。ESS 为 \((\sum_i w_i)^2/\sum_i w_i^2\)，recovery mass 是归一化权重，不是恢复成功率。*
+*表 18-2：实验 18-1 固定 reward reweighting 结果。ESS 为 \((\sum_i w_i)^2/\sum_i w_i^2\)，recovery mass 是归一化权重，不是恢复成功率。*<!-- INTERNAL_ASSET_ID: TAB-18-02 -->
 
 <!-- CLAIM_META: CLAIM-18-02 result -->
 固定成功权重从 1 增至 3 后，两阶段 target 从 `(0.55,0.45)` 移到 `(0.40,0.60)`，相对手工成功参考的 MAE 从 0.30 降到 0.15。代码没有训练或评测 policy，因此不能声称成功率改善。
@@ -150,10 +150,10 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 | 全成功/全失败组 LOO advantage | 全 0 / 全 0 | 无组内相对学习信号 |
 | 混合组 `(1,0,0)` LOO advantage | `(1,-0.5,-0.5)` | 未归一化教学公式 |
 
-*TAB-18-03：联合支持与 leave-one-out advantage 退化。最近邻阈值和 reward group 都是手工 fixture。*
+*表 18-3：联合支持与 leave-one-out advantage 退化。最近邻阈值和 reward group 都是手工 fixture。*<!-- INTERNAL_ASSET_ID: TAB-18-03 -->
 
 <!-- CLAIM_META: CLAIM-18-07 result -->
-`EXP-18-01` 的未见组合 `(0.9,0.8)` 通过逐阶段 min/max，却被最大 MAE `0.1` 的最近完整轨迹门禁拒绝，最近距离为 `0.35`。该结果只说明 marginal range 不能代表联合轨迹支持；最近邻同样不证明状态条件可达、安全或真实行为密度。
+实验 18-1<!-- INTERNAL_ASSET_ID: EXP-18-01 --> 的未见组合 `(0.9,0.8)` 通过逐阶段 min/max，却被最大 MAE `0.1` 的最近完整轨迹门禁拒绝，最近距离为 `0.35`。该结果只说明 marginal range 不能代表联合轨迹支持；最近邻同样不证明状态条件可达、安全或真实行为密度。
 
 <!-- CLAIM_META: CLAIM-18-08 result -->
 三样本组中，全成功与全失败 reward 的未归一化 leave-one-out advantage 都为 `(0,0,0)`，混合 `(1,0,0)` 为 `(1,-0.5,-0.5)`。这验证相对信号退化，不是 RIPT-VLA 梯度、PPO clipping 或训练稳定性复现。
@@ -164,7 +164,7 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 
 二元 success 避免手工 dense reward 的部分偏置，却没有消除 credit assignment：需要同任务/初态下足够多的成功与失败 rollout 才能形成可用组内相对信号。若一组全失败或全成功，fixture 所示的 REINFORCE Leave-One-Out（RLOO）相对优势退化。dynamic sampling 丢弃并重采这类组可以恢复梯度信号，却会改变实际 task/难度分布、增加 rollout 成本，并可能长期饿死过难或过易任务；必须报告 attempted、discarded、resampled 和 used group 数。若 policy 更新太快，旧 rollout 与新 policy 不匹配；若 simulator success 使用 privileged state，真实部署未必拥有同一 verifier。
 
-`EXP-18-01` v4 把该警告变成一个固定负对照：4个手工 context group 各含3条二元 reward。easy 组全成功、hard 组全失败，两个 medium 组均混合成败；按“零 LOO signal 即拒绝”的规则，只留下两个 medium 组。
+实验 18-1 v4<!-- INTERNAL_ASSET_ID: EXP-18-01 v4 --> 把该警告变成一个固定负对照：4个手工 context group 各含3条二元 reward。easy 组全成功、hard 组全失败，两个 medium 组均混合成败；按“零 LOO signal 即拒绝”的规则，只留下两个 medium 组。
 
 | 分母/分层 | attempted | rejected | used |
 | --- | ---: | ---: | ---: |
@@ -174,26 +174,26 @@ fixture 还比较两层 behavior-support 门禁：逐阶段 min/max 与“到最
 | medium context 占比 | 50% | — | 100% |
 | hard context 占比 | 25% | — | 0% |
 
-*TAB-18-05：`EXP-18-01` v4 的 dynamic rejection 分母。难度标签、reward 和组构成都由本书手工指定；“rejected rollout 数”只是被拒组所含样本数，不含为了补满 batch 后续可能新增的重采样成本。*
+*表 18-4：实验 18-1 v4 的 dynamic rejection 分母。难度标签、reward 和组构成都由本书手工指定；“rejected rollout 数”只是被拒组所含样本数，不含为了补满 batch 后续可能新增的重采样成本。*<!-- INTERNAL_ASSET_ID: TAB-18-04 -->
 
 <!-- CLAIM_META: CLAIM-18-10 result -->
 在该四组 fixture 中，零优势拒绝使 group acceptance rate 为 `2/4=0.5`，训练使用分布中的 medium context 从 attempted 的50%变为100%，easy/hard 从各25%变为0%。这只证明选择规则能改变本 fixture 的 used 分布，不估计 RIPT-VLA 的真实 context 发生率、重采样成本、梯度偏差、收敛或策略性能。
 
-只保存最终 used batch 仍不足以恢复成本与选择历史。`EXP-18-01` v4 固定两个最终都使用“两组 medium、共6条 rollout”的流：clean 流直接尝试这两组；rejection-heavy 流先尝试并拒绝 easy/hard，再得到同样两组 medium。
+只保存最终 used batch 仍不足以恢复成本与选择历史。实验 18-1 v4<!-- INTERNAL_ASSET_ID: EXP-18-01 v4 --> 固定两个最终都使用“两组 medium、共6条 rollout”的流：clean 流直接尝试这两组；rejection-heavy 流先尝试并拒绝 easy/hard，再得到同样两组 medium。
 
 | 尝试历史 | attempted groups | rejected groups | attempted rollouts | used rollouts | used 非零难度分布 |
 | --- | ---: | ---: | ---: | ---: | --- |
 | clean | 2 | 0 | 6 | 6 | medium 100% |
 | rejection-heavy | 4 | 2 | 12 | 6 | medium 100% |
 
-*TAB-18-06：`EXP-18-01` v4 的同 used batch—异尝试历史负对照。两条确定性流不是从未知接受概率推导的期望成本。rejection-heavy 的完整 used 字典还保留 easy/hard 的零占比，以便追溯被拒来源。*
+*表 18-5：实验 18-1 v4 的同 used batch—异尝试历史负对照。两条确定性流不是从未知接受概率推导的期望成本。rejection-heavy 的完整 used 字典还保留 easy/hard 的零占比，以便追溯被拒来源。*<!-- INTERNAL_ASSET_ID: TAB-18-05 -->
 
 <!-- CLAIM_META: CLAIM-18-11 result -->
-`EXP-18-01` v4 的 clean 与 rejection-heavy 流具有相同 used group/rollout 数和相同非零 used 难度分布，但后者 attempted rollout 为12、是前者6的两倍，并隐藏6条被拒 rollout。该结果只证明 used-batch 摘要不能识别这两条手工尝试历史，不估计真实接受概率、期望重采样成本、并行效率、梯度偏差、收敛或策略性能。
+实验 18-1 v4<!-- INTERNAL_ASSET_ID: EXP-18-01 v4 --> 的 clean 与 rejection-heavy 流具有相同 used group/rollout 数和相同非零 used 难度分布，但后者 attempted rollout 为12、是前者6的两倍，并隐藏6条被拒 rollout。该结果只证明 used-batch 摘要不能识别这两条手工尝试历史，不估计真实接受概率、期望重采样成本、并行效率、梯度偏差、收敛或策略性能。
 
 人类纠正可记录 intervention 前观察、模型原动作、纠正动作、触发原因和恢复结果。只保存纠正动作会丢失“为何接管”和 policy-induced state，无法区分动作学习与数据选择效应。高风险机器人/车辆必须先用保守 controller 和安全员协议限定探索范围。
 
-[HIL-SERL](https://hil-serl.github.io/)提供了一个具体的人在环 RL 案例：作者先用正负样本训练二元奖励分类器，把少量示范放入 replay buffer，并在在线训练时由操作者按需接管；接管动作进入 demonstration 与 RL 数据，而接管前后的 policy transition 仍保留在 RL buffer `[A/O,R1]`。这个设计说明“人在环”同时改变探索分布、实际执行动作、训练数据来源和安全责任，不能只在方法表中写成一种 feedback 类型。
+[HIL-SERL](https://hil-serl.github.io/)提供了一个具体的人在环 RL 案例：作者先用正负样本训练二元奖励分类器，把少量示范放入 replay buffer，训练阶段由操作者按需在线接管；接管动作进入 demonstration 与 RL 数据，而接管前后的 policy transition 仍保留在 RL buffer `[A/O,R1]`。这个设计说明“人在环”同时改变探索分布、实际执行动作、训练数据来源和安全责任，不能只在方法表中写成一种 feedback 类型。
 
 本书没有复现其机器人结果，也不把论文中的任务成功外推到 VLA。借用该案例时至少应分别记录 autonomous steps、intervention steps、接管次数、操作者时长、奖励分类器版本、接管触发和独立评测；若只报告 optimizer 使用了多少条 transition，会隐藏人类承担的风险控制与数据成本。接管减少也可能来自策略改善、任务分布变易或操作者阈值变化，需要冻结协议后解释。
 
@@ -254,7 +254,7 @@ Reward model 与 world model 的错误也可能相关。例如两者都来自相
 | joint video-action modeling | 同一模型联合生成未来与动作 | 不一定可交互递归 | 因果 mask、动作条件性、时间对齐 |
 | auxiliary future prediction | future loss 只在训练期塑造 policy | 通常不提供 | 去掉 future head 后的因果 ablation |
 
-*TAB-18-04：World-Action Model 的四类实现路径。联合预测不自动得到 planner、critic 或 simulator。*
+*表 18-6：World-Action Model 的四类实现路径。联合预测不自动得到 planner、critic 或 simulator。*<!-- INTERNAL_ASSET_ID: TAB-18-06 -->
 
 [SimWAM README 快照 `68b426c`](https://github.com/H-EmbodVis/SimWAM/blob/68b426c162827cb7701396895dbb3572d29f3420/README.md)把它描述为自动驾驶中的第四类案例；其[固定源码](https://github.com/H-EmbodVis/SimWAM/blob/68b426c162827cb7701396895dbb3572d29f3420/src/simwam/models/wan22/simwam.py)构造 isolated attention mask，使 action token 可读取 action token 和当前首帧 video token、不能读取其余 future-video token。README 还说明两类 expert 不共享权重，推理时省略显式未来帧生成并走 action-only 路径 `[O,R1]`。这恰好说明 WAM 可以在部署时不生成或读取预测未来；其视频分支是训练信号，不能仅凭名称声称在线 planner 在 imagined future 上比较候选。
 
@@ -276,7 +276,7 @@ Reward model 与 world model 的错误也可能相关。例如两者都来自相
 
 自动驾驶 SFT 数据常偏向正常行驶；后训练可以提高稀有 cut-in、施工改道、急刹、遮挡行人和传感器故障的覆盖。交互来源可选第19章默认 MetaDrive、需要多相机高保真时的 CARLA、冻结日志的 counterfactual，或 learned video/latent model；四者的真实性等级不能混写。
 
-reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预和最小风险状态。碰撞/越界属于硬 gate，不应仅作为可被路线进度抵消的负 reward。episode-level “到达终点”会像 `EXP-18-01` 一样压低失败轨迹中的正确避险和恢复动作，需要 phase/progress 与事件级标注。
+reward 应拆出路线完成、碰撞、道路边界、规则、舒适、干预和最小风险状态。碰撞/越界属于硬 gate，不应仅作为可被路线进度抵消的负 reward。episode-level “到达终点”会像 实验 18-1<!-- INTERNAL_ASSET_ID: EXP-18-01 --> 一样压低失败轨迹中的正确避险和恢复动作，需要 phase/progress 与事件级标注。
 
 驾驶后训练若只保存最终进入 optimizer 的 cut-in 或避障 batch，也会漏掉为了得到这些样本而尝试、拒绝或超时的路线。easy/hard 场景可能在 used 数据中都为0，却分别代表“全成功无相对信号”和“全失败无相对信号”，两者对 coverage、安全缺口和仿真成本的含义相反。应按 route/scenario/severity 同时保存 attempt index、拒绝原因、rollout 时长、simulator seed 与 used identity。
 
@@ -310,7 +310,7 @@ World-model rollout 降低真实交互成本，同时给 policy 和 reward model
 1. **阶段权重**：给 fixture 增加一条“最终失败但第一阶段最优”的轨迹，比较 episode 与 step-level 权重。
 2. **优势退化**：为全成功/全失败 rollout group 写 leave-one-out advantage 的退化测试。
 3. **长时状态机**：给一个五阶段操作任务定义 subgoal completion、stuck 和 recovery 状态机。
-4. **WAM 分类**：任选 WAM 项目，判断它属于 `TAB-18-04` 哪一行，并找出因果 ablation。
+4. **WAM 分类**：任选 WAM 项目，判断它属于 表 18-6<!-- INTERNAL_ASSET_ID: TAB-18-06 --> 哪一行，并找出因果 ablation。
 5. **自动驾驶对照**：为驾驶 cut-in 后训练写出 SFT、MetaDrive RL、learned simulator RL 和 held-out CARLA 四列对照。
 6. **动态拒绝分母**：给出 easy、medium、hard 三类 context 的 attempted/used 表；说明为什么只报告训练 batch 中的 task 占比会隐藏选择过程。
 7. **重采样历史**：构造两个 used batch 相同但 rejected 数不同的采样流，列出仅凭 optimizer 输入无法恢复的成本和 coverage 信息。
@@ -320,49 +320,49 @@ World-model rollout 降低真实交互成本，同时给 policy 和 reward model
 先标出 episode、stage、rollout group 和独立评测环境四种分母。以下是满足题意的一组最小方案；开放设计可以不同，但必须保持对照变量和证据边界。
 
 <details markdown="1">
-<summary>SELF-CHECK-18-01：episode 失败会丢掉正确阶段</summary>
+<summary>自检 18-1：episode 失败会丢掉正确阶段</summary>
 
 可增加动作 `(0.5,0.1)`、阶段结果 `[1,0]` 的轨迹，并预先定义第一阶段 oracle action 为 0.5。episode-level success-only 权重因最终失败而把两个动作都置零；step-level 权重 `[1,0]` 则保留第一阶段动作、丢弃第二阶段动作。按现有 fixture 的两个成功轨迹，episode-only 第一阶段 target 仍为 `(0.2+0.3)/2=0.25`；若阶段内等权加入新样本，则 phase-1 target 为 `(0.2+0.3+0.5)/3≈0.3333`。这只演示 credit assignment 差异；阶段标签本身若错误，也会把偏差更精细地传播。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-18-02：全同 reward 的 LOO 优势退化</summary>
+<summary>自检 18-2：全同 reward 的 LOO 优势退化</summary>
 
 对大小为 `n>1` 的组，可写 `A_i=r_i-(Σ_{j≠i}r_j)/(n-1)`。若全成功 `r_i=1`，每个 `A_i=1-1=0`；若全失败 `r_i=0`，也全部为 0，因此这两组没有组内相对更新信号。测试应分别断言全成功、全失败为全零，并用混合组如 `[1,0,0]` 断言优势为 `[1,-0.5,-0.5]`。丢弃并重采全同组会改变任务分布，必须另报 attempted、discarded、resampled 和 used groups。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-18-03：五阶段任务的进度与恢复状态机</summary>
+<summary>自检 18-3：五阶段任务的进度与恢复状态机</summary>
 
 例如“定位杯子→抓取→抬起→移动→放置”，每阶段都要有由当前观察判定的完成谓词，而不是只靠已发出的命令：杯子可见且定位置信足够、夹爪闭合且杯子随动、离桌高度达阈值、进入目标上方容差、释放且稳定。若连续 `K` 个检查周期进度量不改善或谓词互相矛盾，进入 `stuck`；先停止当前 chunk，再按阶段执行重观测、退回安全姿态、重抓或重新规划，并限制重试次数。恢复成功要重新满足阶段入口条件，失败/超时转受控停止。阈值、窗口、最大重试与转移日志均应冻结，不能用一次最终成功掩盖循环恢复。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-18-04：SimWAM 是辅助未来预测案例</summary>
+<summary>自检 18-4：SimWAM 是辅助未来预测案例</summary>
 
-根据本章引用的公开实现，SimWAM 属于 `TAB-18-04` 的 auxiliary future prediction：action token 与 future-video token 隔离、两类 expert 不共享权重，部署时丢弃视频分支并走 action-only 路径。因果 ablation 应固定数据、action path、参数/训练预算和评测协议，只移除或置零 future-video loss/branch，比较 held-out 闭环 action outcome、碰撞和资源；若参数量变化，应再做容量匹配对照。仅比较视频 loss、或同时改变 action backbone，不能识别辅助未来预测的贡献。该分类不表示本书已复现其上游结果。
+根据本章引用的公开实现，SimWAM 属于 表 18-6<!-- INTERNAL_ASSET_ID: TAB-18-06 --> 的 auxiliary future prediction：action token 与 future-video token 隔离、两类 expert 不共享权重，部署时丢弃视频分支并走 action-only 路径。因果 ablation 应固定数据、action path、参数/训练预算和评测协议，只移除或置零 future-video loss/branch，比较 held-out 闭环 action outcome、碰撞和资源；若参数量变化，应再做容量匹配对照。仅比较视频 loss、或同时改变 action backbone，不能识别辅助未来预测的贡献。该分类不表示本书已复现其上游结果。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-18-05：cut-in 后训练的四列对照</summary>
+<summary>自检 18-5：cut-in 后训练的四列对照</summary>
 
 四列必须共享 policy 初始化/容量、动作 schema、观测、训练 cut-in 总暴露量或明确分成 data-added 与 compute-matched 两套协议：SFT 只用冻结示范；MetaDrive RL 用物理 simulator reward；learned-simulator RL 用版本锁定的 learned rollout/reward；第四列不训练，只把三个最终 checkpoint 放到未参与训练、调参或选择的 held-out CARLA route/seed。每列报告训练数据/rollout、成功、碰撞、干预、规则、舒适、尾部风险和资源；learned 列还报 model-vs-CARLA return gap 与排序。CARLA 语义若无法与训练环境对齐，应缩小可比指标而非直接排行成功率；任何碰撞 gate 恶化都不能被路线进度抵消。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-18-06：used batch 不是 attempted 分布</summary>
+<summary>自检 18-6：used batch 不是 attempted 分布</summary>
 
 至少登记 `context_id/task_id`、每组 rollout 数、reward 向量、拒绝原因、attempt index，以及 attempted、rejected、resampled、used 四套计数。若 easy 组全成功、hard 组全失败而 medium 组混合成败，零优势拒绝会让 used batch 只剩 medium；此时“used 中 medium=100%”不能解释为环境只产生 medium，也不能用 used 分母估算部署成功率。应同时报告各 task/difficulty 的尝试率、接受率、rollout 成本和随训练迭代的变化；难度若由同一 reward 事后定义，还要避免把标签当成独立解释变量。保留零信号组用于评测/覆盖审计与是否用于梯度更新是两个不同决定。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-18-07：相同 used batch 不能恢复尝试历史</summary>
+<summary>自检 18-7：相同 used batch 不能恢复尝试历史</summary>
 
 clean 流直接尝试两个 mixed medium 组，得到 `attempted=2 groups/6 rollouts`、`rejected=0`、`used=2/6`；rejection-heavy 流先遇到全成功 easy 与全失败 hard，再遇到相同两个 medium，得到 `attempted=4/12`、`rejected=2/6`、`used=2/6`。若只保存 optimizer 看到的6条 medium rollout，两条历史不可区分，因而无法恢复 rollout 成本、easy/hard coverage、拒绝原因或接受率。完整日志还需保存 attempt 顺序、context/task/seed、reward vector、终止原因、重采样策略、并行 worker 与 policy version。这里的2倍只是两条手工流之比，不是长期期望成本。
 

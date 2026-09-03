@@ -34,7 +34,7 @@ JEPA 不要求从 latent 解码原始像素。它让上下文编码器读取可�
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-10-01 JEPA 的最小训练数据流
+    accTitle: FIG-10-01 图 10-1 JEPA 的最小训练数据流
     accDescr: 输入被拆成上下文和目标区域；上下文编码器与预测器估计目标 latent，目标编码器提供停止梯度的训练目标，两者在 latent loss 中比较。
     X[图像/视频 x] --> MC[上下文 mask]
     X --> MT[目标区域]
@@ -47,7 +47,7 @@ flowchart TB
     Z --> L
 ```
 
-*FIG-10-01：JEPA 的最小训练数据流。目标编码器分支不由预测误差直接反向更新，具体更新与 masking 方案取决于实现。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
+*图 10-1：JEPA 的最小训练数据流。目标编码器分支不由预测误差直接反向更新，具体更新与 masking 方案取决于实现。来源：本书原创，CC BY-NC 4.0，2026-08-31。*<!-- INTERNAL_ASSET_ID: FIG-10-01 -->
 
 一个抽象目标是：
 
@@ -151,7 +151,7 @@ probe 固定或部分固定 encoder，只训练受限读出器。线性 probe �
 | 接触/可达性 | 局部时空 token | 对象与初态 | 类别正确不等于物理状态 |
 | 未来动作 | context + predicted token | 提前量与事件 | 标签或未来帧泄漏 |
 
-*TAB-10-01：表征 probe 的最低协议。每个目标都需要负对照、分布偏移和逐组结果。*
+*表 10-1：表征 probe 的最低协议。每个目标都需要负对照、分布偏移和逐组结果。*<!-- INTERNAL_ASSET_ID: TAB-10-01 -->
 
 对零 3D 经验读者，一个重要边界是：名为 `depth probe` 不代表输出已经能直接进入机器人。必须说明标签是 optical-axis z-depth、ray range、disparity 还是相对/仿射不定深度，并登记相机内参、尺度、有效 mask、输出 frame 和误差单位。仅在某个数据集上取得较低 depth error，既不证明跨相机尺度正确，也不证明 dense token 已保留可碰撞的 free/occupied/unknown 空间；第3章给出这些量的最小区分，第12章再建立行动合同。
 
@@ -169,7 +169,7 @@ probe 结果至少有三层解释：
 
 同样，高 probe 分数不证明因果可用。若天气与制动标签在训练集中相关，表示可以轻易读出天气并预测制动，却无法回答保持场景不变、改变动作后的后果。要进入规划用途，probe 之外仍需时间、动作和闭环层面的干预证据。
 
-## 10.6 重建、任务与时间 probe 的非等价性（EXP-10-01）
+## 10.6 重建、任务与时间 probe 的非等价性（实验 10-1<!-- INTERNAL_ASSET_ID: EXP-10-01 -->）
 
 本章 S0 smoke 构造两个信号分量：低幅度的任务变量和高幅度纹理。probe 仅用四个训练样本拟合，再在未参与拟合的四个 ID 样本和四个纹理相关性反转样本上评测。三个手工表征分别保留纹理、任务变量或全部坍塌。这个双测试集设计特意让外观捷径先“看起来有效”，再暴露其失效。
 
@@ -190,10 +190,10 @@ make ch10-smoke
 | task-predictive | 125.00 | **100%** | **100%** | **0.00000** |
 | collapsed | 126.25 | 50% | 50% | 1.58114 |
 
-*TAB-10-02：`EXP-10-01` 的固定排名反转。表征为手工标量函数，不是 JEPA checkpoint。*
+*表 10-2：实验 10-1 的固定排名反转。表征为手工标量函数，不是 JEPA checkpoint。*<!-- INTERNAL_ASSET_ID: TAB-10-02 -->
 
 <!-- CLAIM_META: CLAIM-10-02 result -->
-在 `EXP-10-01` 中，appearance 表征以 1.25 对 125.00 赢得重建 MSE，却在纹理相关性反转后取得 0% probe accuracy；task-predictive 表征取得 100%。这只证明两个指标可以给出相反排序。
+在 实验 10-1<!-- INTERNAL_ASSET_ID: EXP-10-01 --> 中，appearance 表征以 1.25 对 125.00 赢得重建 MSE，却在纹理相关性反转后取得 0% probe accuracy；task-predictive 表征取得 100%。这只证明两个指标可以给出相反排序。
 
 <!-- CLAIM_META: CLAIM-10-03 result -->
 同一实验的 collapsed 表征在平衡测试集上取得 50% accuracy，作为 probe 管线的负对照；若它异常高，应先查标签泄漏、样本重复或度量实现。该数值只来自二分类平衡 fixture，不是通用 chance baseline。
@@ -210,7 +210,7 @@ appearance 与 task-predictive 在未参与拟合的 ID 集上都取得 100%，�
 | action-blind | **0.0** | 1.0 | 0.0 |
 | action-conditioned | **0.0** | **0.0** | 2.0 |
 
-*TAB-10-03：`EXP-10-01` 的动作接口诊断。数值来自八条手工确定性转移，不是学习模型、因果发现或规划实验。*
+*表 10-3：实验 10-1 的动作接口诊断。数值来自八条手工确定性转移，不是学习模型、因果发现或规划实验。*<!-- INTERNAL_ASSET_ID: TAB-10-03 -->
 
 <!-- CLAIM_META: CLAIM-10-07 result -->
 两个手工接口的当前状态 probe RMSE 都为 0，但 action-blind 接口的反事实转移 RMSE 为 1、动作敏感度为 0；action-conditioned 接口对应为 0 和 2。这只证明状态可读性不足以验证 predictor 是否使用动作，不证明动作条件模型会规划。
@@ -224,18 +224,18 @@ appearance 与 task-predictive 在未参与拟合的 ID 集上都取得 100%，�
 | middle-frame | **0.0** | 50% | 0.0 |
 | ordered-delta | **0.0** | **100%** | 4.0 |
 
-*TAB-10-04：`EXP-10-01` 的时间顺序诊断。反转敏感度是原序与反序的手写 delta 特征绝对差；八条三标量序列不是视频、learned representation 或物理理解 benchmark。*
+*表 10-4：实验 10-1 的时间顺序诊断。反转敏感度是原序与反序的手写 delta 特征绝对差；八条三标量序列不是视频、learned representation 或物理理解 benchmark。*<!-- INTERNAL_ASSET_ID: TAB-10-04 -->
 
 <!-- CLAIM_META: CLAIM-10-08 result -->
-在 `EXP-10-01` 的平衡方向 fixture 中，middle-frame 与 ordered-delta 都以 RMSE 0 读出中间状态，但前者的方向 accuracy 为 50% 且反转敏感度为 0，后者分别为 100% 和 4。这只证明当前状态可读、时间方向可辨和反转敏感是不同验收项；数值不能外推到 V-JEPA 或真实视频。
+在 实验 10-1<!-- INTERNAL_ASSET_ID: EXP-10-01 --> 的平衡方向 fixture 中，middle-frame 与 ordered-delta 都以 RMSE 0 读出中间状态，但前者的方向 accuracy 为 50% 且反转敏感度为 0，后者分别为 100% 和 4。这只证明当前状态可读、时间方向可辨和反转敏感是不同验收项；数值不能外推到 V-JEPA 或真实视频。
 
 该实验没有图像、视频、模型参数或训练，不估计 V-JEPA 的能力。其价值是建立官方特征到来前就能测试的评测合同，并把“静态表示信息”“时间顺序”“动作接口”和“规划用途”拆成不同验收项。
 
-## 10.7 官方特征：可选的 S1/M 档证据
+## 10.7 官方特征：可选的 S/M 档证据
 
-本书的核心路径不下载 checkpoint。截至 2026-09-02，官方仓库列出的最小 V-JEPA 2.1 checkpoint 是 80M 参数、384 分辨率的 ViT-B/16，并提供 `vjepa2_1_vit_base_384` PyTorch Hub 符号；若扩展到官方特征，可先把它作为 S1 **预检候选**，而不是从 1B/2B 模型开始。这是型号存在性与资源排序，不是可运行结论。
+本书的核心路径不下载 checkpoint。截至 2026-09-02，官方仓库列出的最小 V-JEPA 2.1 checkpoint 是 80M 参数、384 分辨率的 ViT-B/16，并提供 `vjepa2_1_vit_base_384` PyTorch Hub 符号；若扩展到官方特征，可先把它作为 S 档**预检候选**，而不是从 1B/2B 模型开始。这是型号存在性与资源排序，不是可运行结论。
 
-对锁定源码的检查还发现一个必须先处理的上游阻塞：[锁定快照的 `src/hub/backbones.py`](https://github.com/facebookresearch/vjepa2/blob/204698b45b3712590f06245fbfba32d3be539812/src/hub/backbones.py)把 `VJEPA_BASE_URL` 设为测试用 `http://localhost:8300`，而公开下载地址被注释。因此在普通新环境中调用 `torch.hub.load(..., pretrained=True)` 会尝试访问不存在的本地服务；README 中存在直接 checkpoint 链接不能证明 Hub 路径正常。S1 必须保持 `blocked-by-upstream-loader`，直到锁定一个经核验的修复 commit，或显式下载带校验和的 checkpoint 并使用与该权重兼容的本地 loader；本书不采用未经核验的绕过下载。执行前还需要：
+对锁定源码的检查还发现一个必须先处理的上游阻塞：[锁定快照的 `src/hub/backbones.py`](https://github.com/facebookresearch/vjepa2/blob/204698b45b3712590f06245fbfba32d3be539812/src/hub/backbones.py)把 `VJEPA_BASE_URL` 设为测试用 `http://localhost:8300`，而公开下载地址被注释。因此在普通新环境中调用 `torch.hub.load(..., pretrained=True)` 会尝试访问不存在的本地服务；README 中存在直接 checkpoint 链接不能证明 Hub 路径正常。该 S 档路径必须保持 `blocked-by-upstream-loader`，直到锁定一个经核验的修复 commit，或显式下载带校验和的 checkpoint 并使用与该权重兼容的本地 loader；本书不采用未经核验的绕过下载。执行前还需要：
 
 1. 锁定 `facebookresearch/vjepa2` commit、实际 loader 路径、checkpoint URL 与校验和；
 2. 核验模型权重、代码和输入视频的各自许可；
@@ -244,11 +244,11 @@ appearance 与 task-predictive 在未参与拟合的 ID 集上都取得 100%，�
 5. 冻结 backbone，比对常数、随机、单帧和时间打乱基线；
 6. 只有实测后才能填写 24 GB 单卡可行性。
 
-官方预训练配置面向多节点多 GPU，不能由 80M 参数量反推本书单卡可训练。官方 README 还指出其默认 `decord` 在 macOS 上不受支持，替代实现由使用者自行选择；本书因此优先在锁版本的 Linux Docker 环境做 S1 预检，并把宿主机直接安装保留为可选路径。容器化能固定依赖，不能修复错误下载地址，也不能消除 checkpoint 显存、数据许可或权重—配置兼容性风险。
+官方预训练配置面向多节点多 GPU，不能由 80M 参数量反推本书单卡可训练。官方 README 还指出其默认 `decord` 在 macOS 上不受支持，替代实现由使用者自行选择；本书因此优先在锁版本的 Linux Docker 环境做 S 档预检，并把宿主机直接安装保留为可选路径。容器化能固定依赖，不能修复错误下载地址，也不能消除 checkpoint 显存、数据许可或权重—配置兼容性风险。
 
 官方仓库当前说明大部分代码为 MIT，少量数据增强文件为 Apache-2.0；这不意味着所有 checkpoint、训练数据和下游数据自动继承 MIT。当前实验卡因此只覆盖本书 MIT fixture。
 
-M 档可在经许可的少量第一人称视频上训练轻量 masked predictor 或 probe，不训练大型 backbone。Ego4D 需要先接受其许可协议并获得访问凭据；EPIC-KITCHENS-100 官方资料标注 CC BY-NC 4.0。两者都不能被当作本书可直接再分发素材，也不应下载完整数据作为必读前置。
+M 档可在经许可的少量第一人称视频上，用冻结特征训练轻量 probe；若进一步训练 masked predictor，即使不训练大型 backbone，也归入 L1 档。Ego4D 需要先接受其许可协议并获得访问凭据；EPIC-KITCHENS-100 官方资料标注 CC BY-NC 4.0。两者都不能被当作本书可直接再分发素材，也不应下载完整数据作为必读前置。
 
 **杯子任务。** 冻结表征的 probe 可以分别查询杯子相对夹爪的位置、杯柄是否可见、夹爪开合状态和接触阶段；这些标签应按 object 或 episode 分组切分，并加入标签置乱和背景捷径负对照。若 probe 只能在同一桌面纹理上读出状态，它证明的是数据相关性，不是可迁移的行动表征；即使真实状态可读，也仍未证明预测器会按候选动作产生方向正确的未来。表征证据因此停在“信息是否存在”，动作干预和闭环效用继续交给第11章和第9章检验。
 
@@ -287,12 +287,12 @@ M 档可在经许可的少量第一人称视频上训练轻量 masked predictor 
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | ID/shift probe 捷径与重建排名反转 | `EXP-10-01` | CPU smoke | 手工标量表征、样本极少 |
-| 本书结果 | 状态可读与动作条件转移分离 | `EXP-10-01` | CPU smoke | 手工接口与确定性规则 |
-| 本书结果 | 中间状态可读与时间方向/反转敏感分离 | `EXP-10-01` | CPU smoke | 八条手写三标量序列，不是视频 |
+| 本书结果 | ID/shift probe 捷径与重建排名反转 | 实验 10-1<!-- INTERNAL_ASSET_ID: EXP-10-01 --> | CPU smoke | 手工标量表征、样本极少 |
+| 本书结果 | 状态可读与动作条件转移分离 | 实验 10-1<!-- INTERNAL_ASSET_ID: EXP-10-01 --> | CPU smoke | 手工接口与确定性规则 |
+| 本书结果 | 中间状态可读与时间方向/反转敏感分离 | 实验 10-1<!-- INTERNAL_ASSET_ID: EXP-10-01 --> | CPU smoke | 八条手写三标量序列，不是视频 |
 | 方法事实 | I-JEPA/V-JEPA 预测 latent 目标 | 原论文/官方代码 | `[A/O,R1]` | 本书未运行 |
 | 方法更新 | V-JEPA 2.1 加入 dense loss 与深层监督 | 2026 预印本/官方代码 | `[A/O,R1]` | 论文结果未复现 |
-| 未验证 | 官方 ViT-B 特征的微型 probing | 可选 S1 | blocked-by-upstream-loader | 默认 Hub URL 指向 localhost；checkpoint 未下载 |
+| 未验证 | 官方 ViT-B 特征的微型 probing | 可选 S 档 | blocked-by-upstream-loader | 默认 Hub URL 指向 localhost；checkpoint 未下载 |
 
 全书资源档位见[术语表](../glossary.md)。本章的手工表征反例用于区分可读性、不变性、时间方向和动作条件性；官方特征或小型 probe 只有在输入处理、checkpoint 与数据许可可追溯时才构成更高层证据。上游 loader 不可用时应保留“无法验证”，而不是用硬件预算替代缺失的特征结果。
 
@@ -309,7 +309,7 @@ global 与 dense 表征服务不同查询：前者强调场景级压缩，后者
 ## 练习
 
 1. **概念判断**：某 encoder 的动作分类 probe 更高，能否声称它更适合机器人规划？列出缺失证据。
-2. **代码实验**：改变 `EXP-10-01` 中纹理幅度和 train/ID/shift 相关性，绘制三个 split 的指标翻转区域。
+2. **代码实验**：改变 实验 10-1<!-- INTERNAL_ASSET_ID: EXP-10-01 --> 中纹理幅度和 train/ID/shift 相关性，绘制三个 split 的指标翻转区域。
 3. **负对照**：添加随机高维特征，说明小样本 probe 如何过拟合。
 4. **视频协议**：设计时间反转和帧打乱 probe，分别测试静态捷径与时间方向。
 5. **自动驾驶迁移**：为相对速度、车道偏移和 TTC 定义 route-disjoint split 与单位。
@@ -320,42 +320,42 @@ global 与 dense 表征服务不同查询：前者强调场景级压缩，后者
 Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复某信息”。以下答案把表示可读性、动作反事实、规划效用和闭环证据分开，避免逐级越权。
 
 <details markdown="1">
-<summary>SELF-CHECK-10-01：动作 probe 与规划证据</summary>
+<summary>自检 10-1：动作 probe 与规划证据</summary>
 
 不能。更高的动作分类 probe 可能只读出行为数据中的相机、场景或操作者捷径，也没有说明表示保留候选动作导致的未来差异。至少还缺：按 episode/route/object 分组的 shift split 与标签置乱负对照；当前状态和动作条件 transition 的分离测试；E2 配对反事实方向/幅度；E3 策略回报排序或 regret；E4 外部闭环成功、安全和干预指标；以及时延、动作覆盖与不确定性。Probe 可以筛查信息是否容易读出，不能单独授权 planner 或执行器。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-10-02：纹理相关性的翻转区域</summary>
+<summary>自检 10-2：纹理相关性的翻转区域</summary>
 
 可把平衡二分类任务写成 `y∈{-1,1}`，纹理符号以概率 `(1+ρ_s)/2` 与 y 一致，幅度为 `A_s>0`，分别冻结 `ρ_train,ρ_ID,ρ_shift`。无噪声 centroid probe 在 `ρ_train≠0` 时学习其符号，split s 的期望准确率为 `(1+sign(ρ_train)ρ_s)/2`：ID 与训练同号时高于 0.5，shift 反号时低于 0.5，`ρ_s=0` 为 chance；`A=0` 时表示坍塌。当前确定 fixture 相当于训练/ID 同号、shift 反号，因此 appearance 为 `1/1/0`，task-predictive 保持 `1/1/1`，collapsed 为 `0.5/0.5/0.5`。无噪声下正幅度只缩放距离，不改变分类；要研究幅度边界需显式加入噪声或正则化，不能凭图假造翻转。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-10-03：随机高维特征负对照</summary>
+<summary>自检 10-3：随机高维特征负对照</summary>
 
 生成与标签独立的 `d` 维高斯特征，并在 `d≥n`、训练样本很少时拟合低正则线性 probe；它可能插值训练标签而得到接近 100% train accuracy，但独立 group test 应回到约 50%。应同时画 train/validation/test 随 n、d 和正则变化的曲线，并加入 label permutation、多 seed 区间、嵌套选择集和固定 probe 容量。若用 test split 选维度或正则，负对照本身也会发生选择泄漏。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-10-04：静态捷径与时间方向</summary>
+<summary>自检 10-4：静态捷径与时间方向</summary>
 
 固定同一批视频及帧集合，做三路输入：原顺序、序列内随机打乱、完全反转。若动作/事件 probe 在打乱后几乎不降，说明它可能依赖单帧对象或背景，不能据此声称时序建模；原序与反序的方向标签或未来预测差异才检查时间箭头。还需有静态单帧 baseline、保持首尾帧/长度一致、按视频分组切分，并避免压缩伪影或 padding 暴露变换类型。反转性能下降也可能来自训练分布外观，不能自动解释成物理理解。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-10-05：驾驶量、单位与 route split</summary>
+<summary>自检 10-5：驾驶量、单位与 route split</summary>
 
 先以物理 route/scenario group 切 train、selection 和 test，同一路线的天气、相机版本、裁剪片段和派生 replay 不得跨组。相对纵向速度用 ego/body frame 的 `m/s`，明确正号表示目标远离还是接近；车道偏移用 map/lane frame 的有符号米，注明参考点和左/右正方向；TTC 用秒，只对 closing speed 为正且路径有冲突时定义，其他情况记为 censored/`+∞` 而非 0。按速度、遮挡、道路和 horizon 分桶报告 MAE/区间，单位和 frame 必须与标签时间戳一起冻结。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-10-06：反转敏感不等于物理时间理解</summary>
+<summary>自检 10-6：反转敏感不等于物理时间理解</summary>
 
 非零反转敏感度只说明表示随输入顺序改变；模型可能响应位置编码、剪辑边界、压缩伪影或 padding，而不是运动因果。应构造共享帧集合、长度、首尾处理与编码质量的原序/反序配对，另加保持局部运动但打乱事件因果的 hard negative，并在同一冻结 head 下报告方向分类、未来状态误差和逐组失败。若变换类型可由伪影直接识别，方向 probe 即使 100% 也不构成物理证据；还需在未见轨迹、速度和场景上验证预测方向与状态变化一致。
 
@@ -372,4 +372,4 @@ Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复�
 
 ## 下一章接口
 
-第11章将给 predictor 加入动作条件并要求 counterfactual 未来；第12章会检查 dense token 是否保留深度、occupancy 和可行动空间。`EXP-10-01` 的 ID/shift 对照、collapsed 负对照、temporal reversal 与 action sensitivity 继续作为两章准入门禁。
+第11章将给 predictor 加入动作条件并要求 counterfactual 未来；第12章会检查 dense token 是否保留深度、occupancy 和可行动空间。实验 10-1<!-- INTERNAL_ASSET_ID: EXP-10-01 --> 的 ID/shift 对照、collapsed 负对照、temporal reversal 与 action sensitivity 继续作为两章准入门禁。

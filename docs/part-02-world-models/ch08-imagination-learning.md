@@ -14,7 +14,7 @@
 
 ### 非目标
 
-- 不把解析 `EXP-08-01` 称为 Dreamer-lite 或 Dreamer 复现；
+- 不把解析 实验 8-1<!-- INTERNAL_ASSET_ID: EXP-08-01 --> 称为 Dreamer-lite 或 Dreamer 复现；
 - 不把 imagined return 当作真实闭环 return；
 - 不从公开论文的 GPU 型号反推本书 24 GB 单卡可复现；
 - 不把 Dreamer 4 的单 GPU 交互推理外推成单卡完整训练结论；
@@ -36,7 +36,7 @@ Dreamer 式方法把 world model 的监督锚定在 replay transition 上，把�
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-08-01 Dreamer 的真实数据与想象双循环
+    accTitle: FIG-08-01 图 8-1 Dreamer 的真实数据与想象双循环
     accDescr: 真实交互数据训练世界模型，世界模型产生 latent imagination 轨迹供 actor 和 critic 学习；更新后的策略仍需回到真实或独立环境接受闭环检验。
     E[真实环境/独立仿真器] -->|o, r, done| R[replay]
     P[actor] -->|a| E
@@ -51,7 +51,7 @@ flowchart TB
     E -.独立评测.-> G[real/simulator return and safety gates]
 ```
 
-*FIG-08-01：Dreamer 式 real-data 与 imagination 双循环。来源：本书原创，CC BY-NC 4.0，2026-08-31。箭头表示训练数据依赖，不表示所有版本采用相同梯度路径。*
+*图 8-1：Dreamer 式 real-data 与 imagination 双循环。来源：本书原创，CC BY-NC 4.0，2026-08-31。箭头表示训练数据依赖，不表示所有版本采用相同梯度路径。*<!-- INTERNAL_ASSET_ID: FIG-08-01 -->
 
 这里有四类不能混写的量：
 
@@ -127,7 +127,7 @@ actor 学的是如何改变动作分布，使 imagined objective 提高。其梯
 
 因此，“critic 更准”和“actor 更好”也不能互相代替。critic 可能准确预测一个已经很差的策略；actor 可能在有偏 critic 下提升 imagined value，却降低真实回报。应当把 value calibration、policy improvement 和外部闭环结果作为三层不同问题。
 
-## 8.4 先把 target 算对（EXP-08-01）
+## 8.4 先把 target 算对（实验 8-1<!-- INTERNAL_ASSET_ID: EXP-08-01 -->）
 
 S 档 fixture 使用三步手工序列：reward 为 `[0, 0, 1]`，discount/continuation 为 `[1, 1, 0]`，下一状态 value 为 `[0.4, 0.8, 0]`。为隔离递推语义，这里的 discount 取 1；它不是训练超参数建议。
 
@@ -148,7 +148,7 @@ make ch08-smoke
 | λ=0.5 | `[0.65, 0.9, 1.0]` | 0.65 |
 | λ=1 | `[1.0, 1.0, 1.0]` | 1.00 |
 
-*TAB-08-01：`EXP-08-01` 的解析 λ-return。所有数字来自仓库内固定输入和标准库代码。*
+*表 8-1：实验 8-1 的解析 λ-return。所有数字来自仓库内固定输入和标准库代码。*<!-- INTERNAL_ASSET_ID: TAB-08-01 -->
 
 <!-- CLAIM_META: CLAIM-08-02 result -->
 在这个 value 不精确的固定序列中，λ 从 0、0.5 到 1 时 start target 分别为 0.40、0.65、1.00。这只验证 target 接口，不是策略效果比较。
@@ -167,7 +167,7 @@ make ch08-smoke
 | 正确 mask `[1,0,0]` | 1 | 终止后的 10 不回传 |
 | 漏掉 mask `[1,1,0]` | 11 | episode 后 reward 泄漏 |
 
-*TAB-08-02：continuation mask 的固定反例。最后一格仍可有局部 target，但终止 mask 阻止它影响更早状态。*
+*表 8-2：continuation mask 的固定反例。最后一格仍可有局部 target，但终止 mask 阻止它影响更早状态。*<!-- INTERNAL_ASSET_ID: TAB-08-02 -->
 
 <!-- CLAIM_META: CLAIM-08-04 result -->
 漏掉固定终止 mask 会把 start target 从 1 变成 11，产生 10 的泄漏 gap。这个反例验证数据语义，不估计真实 Dreamer 的误差率。
@@ -181,21 +181,21 @@ make ch08-smoke
 | 把两者折叠为 `done` | 0 | 1 | 错误丢失 4 的 bootstrap |
 
 <!-- CLAIM_META: CLAIM-08-07 result -->
-`EXP-08-01` 的固定单步反例中，把有效截断误当自然终止会让 target 从 5 降为 1，bootstrap loss 为 4。若 `terminated/truncated` 同时为真，代码按自然终止关闭 bootstrap；若需要 bootstrap 但下一观测无效，则拒绝该 transition。这验证接口语义，不估计 learned continuation head 的误差。
+实验 8-1<!-- INTERNAL_ASSET_ID: EXP-08-01 --> 的固定单步反例中，把有效截断误当自然终止会让 target 从 5 降为 1，bootstrap loss 为 4。若 `terminated/truncated` 同时为真，代码按自然终止关闭 bootstrap；若需要 bootstrap 但下一观测无效，则拒绝该 transition。这验证接口语义，不估计 learned continuation head 的误差。
 
 这里没有矛盾：外部截断之后不能把下一 episode 的 reward 接到当前序列上，但若截断时保存了有效最终观测，仍可用该观测估计截断点的 value。[Gymnasium 的官方 time-limit 指南](https://gymnasium.farama.org/main/tutorials/handling_time_limits/)明确区分 termination 与 truncation 的 bootstrap 语义 `[O,R1]`；Pardo et al. 的[Time Limits in Reinforcement Learning](https://proceedings.mlr.press/v80/pardo18a.html)把训练用外部 time limit 下的末状态 bootstrap 形式化为 partial-episode bootstrapping `[P,R1]`。若最终观测丢失，正确做法是把 target 标为不可构造并暴露数据问题，而不是猜成 terminal。
 
-但 bootstrap 正确还不够。`EXP-08-01` v4 故意把两个不同 episode 的行相邻放置：第一行 reward 为1，因外部截断而结束，保存的下一状态 value 为4；第二行是新 episode 的终止 transition，reward 为100。
+但 bootstrap 正确还不够。实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 故意把两个不同 episode 的行相邻放置：第一行 reward 为1，因外部截断而结束，保存的下一状态 value 为4；第二行是新 episode 的终止 transition，reward 为100。
 
 | 第一行处理 | bootstrap discount `d₀` | λ-trace `m₀` | λ=1 的第一行 target |
 | --- | ---: | ---: | ---: |
 | 正确：截断并关闭跨行 trace | 1 | 0 | 5 |
 | 错误：只保留 bootstrap、默认 trace 连续 | 1 | 1 | 101 |
 
-*TAB-08-04：截断 bootstrap 与 λ-trace 边界的双信号反例。来源：`EXP-08-01` v4，本书原创，CC BY-NC 4.0，2026-09-02。第二行的100是手工放大的新 episode reward。*
+*表 8-3：截断 bootstrap 与 λ-trace 边界的双信号反例。来源：实验 8-1 v4，本书原创，CC BY-NC 4.0，2026-09-02。第二行的100是手工放大的新 episode reward。*<!-- INTERNAL_ASSET_ID: TAB-08-03 -->
 
 <!-- CLAIM_META: CLAIM-08-09 result -->
-`EXP-08-01` v4 的两行跨 episode 反例中，正确的 `d₀=1,m₀=0` 得到第一行 target 5；若保留 bootstrap discount 却遗漏 trace 边界，target 变为101，产生96的跨 episode 泄漏。该结果只验证数组边界与递推接口，不估计真实 replay 污染率、critic bias、训练稳定性或策略性能。
+实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 的两行跨 episode 反例中，正确的 `d₀=1,m₀=0` 得到第一行 target 5；若保留 bootstrap discount 却遗漏 trace 边界，target 变为101，产生96的跨 episode 泄漏。该结果只验证数组边界与递推接口，不估计真实 replay 污染率、critic bias、训练稳定性或策略性能。
 
 ### 8.5.1 Target 正确不等于 loss 权重正确
 
@@ -212,10 +212,10 @@ w_0=1,\qquad w_t=\prod_{i=0}^{t-1}d_i\quad(t>0).
 | 正确 mask | `[1,1,100]` | `[1,1,0]` | `[1,1,0]` | 2 |
 | 漏掉 mask | `[1,1,100]` | `[1,1,1]` | `[1,1,100]` | 102 |
 
-*TAB-08-03：`EXP-08-01` 的固定 loss-weighting 反例。100 是手工伪 loss，用于让错误可见；总和不是 Dreamer 训练曲线或性能指标。*
+*表 8-4：实验 8-1 的固定 loss-weighting 反例。100 是手工伪 loss，用于让错误可见；总和不是 Dreamer 训练曲线或性能指标。*<!-- INTERNAL_ASSET_ID: TAB-08-04 -->
 
 <!-- CLAIM_META: CLAIM-08-08 result -->
-`EXP-08-01` v4 的三步手工序列中，正确累计权重把终止后 raw loss 100 的贡献降为 0，加权总和为 2；漏掉 continuation mask 时总和为 102，post-terminal leakage 为 100。这只验证非负标量 loss 与手工 discount 的累计加权合同，没有 actor/critic、梯度、learned continuation 或策略改进。
+实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 的三步手工序列中，正确累计权重把终止后 raw loss 100 的贡献降为 0，加权总和为 2；漏掉 continuation mask 时总和为 102，post-terminal leakage 为 100。这只验证非负标量 loss 与手工 discount 的累计加权合同，没有 actor/critic、梯度、learned continuation 或策略改进。
 
 运行产物为 `results/ch08/EXP-08-01-smoke.json`；实验卡明确记录了零下载、CPU、未用 GPU 和非训练边界。
 
@@ -327,42 +327,42 @@ critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的
 这里的计算严格采用 8.3 节递推和当前 fixture 的索引约定。不同 Dreamer 实现若把 reward、continuation 或 bootstrap 对齐到不同位置，必须先转换接口再比较。
 
 <details markdown="1">
-<summary>SELF-CHECK-08-01：gamma 0.99 的三个 start target</summary>
+<summary>自检 8-1：gamma 0.99 的三个 start target</summary>
 
 把原 discounts 从 `[1,1,0]` 改为 `[0.99,0.99,0]`，rewards 与 next values 保持 `[0,0,1]`、`[0.4,0.8,0]`。按当前递推，λ=0 的 targets 为 `[0.396,0.792,1]`，start target 0.396；λ=0.5 为 `[0.639045,0.891,1]`，start 0.639045；λ=1 为 `[0.9801,0.99,1]`，start 0.9801。测试应调用同一 `lambda_returns` 并用明确容差比较，不能把手算值直接写成新的训练结果声明。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-08-02：两种污染是否相加</summary>
+<summary>自检 8-2：两种污染是否相加</summary>
 
 在本章 λ=1、固定 dynamics、固定 reward 向量和二值 mask 的线性递推里，二者可相加：相对正确 start target 1，终点 reward +1 贡献 gap 1，漏掉终止 mask 让 episode 后的 10 贡献 gap 10，同时注入得到 start target 12，总 gap 11。这个加法只对冻结接口成立；若 reward bias 改变 policy visitation，continuation 是 learned probability，含归一化/clipping，或 λ、value 也联动，交互项可能非零，必须用四格 factorial control 检查。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-08-03：episode 结束 truth table</summary>
+<summary>自检 8-3：episode 结束 truth table</summary>
 
 最小表为：任务自然完成/碰撞终态 `terminated=1,truncated=0,bootstrap=0,target valid=1`；时间上限且 final observation 有效 `0,1,bootstrap=γ,valid=1`；外部 timeout 也通常是 truncation，若 final observation 有效则 bootstrap，否则 target invalid；sensor-drop 不是自动 terminal，若下一观测无效且需要 bootstrap，应标记 transition/target invalid 并单独统计。若自然终止与时间上限同时发生，当前 fixture 以 terminated 为准关闭 bootstrap。环境 API 的实际语义必须核对，不能按字段名猜。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-08-04：cut-in 的互斥 split 与指标</summary>
+<summary>自检 8-4：cut-in 的互斥 split 与指标</summary>
 
 先以 `scenario_group_id`（同一路线、交通参与者初始化和派生天气共享一组）做稳定 hash，再划 `0–5=train,6–7=validation,8–9=closed-loop test`；每组内部的 simulator seed 从冻结清单产生，任何派生 replay 不得跨组。五项最低指标可取碰撞率、最小 TTC/低于阈值占比、任务/路线完成率、最大 jerk 或超舒适阈值时长、独立安全网关干预率；另报有效 episode 分母和 simulator failure。validation 只选模型，closed-loop test 不回流调参。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-08-05：累计 loss weight</summary>
+<summary>自检 8-5：累计 loss weight</summary>
 
 按 `w0=1,w_t=∏_{i<t}d_i`，discount `[0.9,0.9,0]` 对三个 step 的权重是 `[1,0.9,0.81]`；最后一个 0 只会关闭下一步，不能反向把终止 transition 自身权重清零。只检查 λ-return target 会漏掉另一条路径：即使 target 已正确 mask，终止后的伪 latent 仍可能以错误的非零 survival weight进入 actor/critic loss。应分别测试 target recursion 和 loss contribution，含一个终止后超大伪 loss 的负对照。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-08-06：bootstrap 与 λ-trace 是两个问题</summary>
+<summary>自检 8-6：bootstrap 与 λ-trace 是两个问题</summary>
 
 例如三行 reward 为 `[0,1,100]`，第二行是外部截断且其有效 final observation 的 value 为4，第三行来自新 episode。可令 bootstrap discounts 为 `[1,1,0]`，因为第二行需要 `1+V(final)=5`；trace masks 应为 `[1,0,0]`，因为第二行之后不得读取第三行 return。λ=1 时正确 targets 的前两项为 `[5,5]`；若错误使用全1 trace，第二行会变成101，第一行也变成101，两个当前 episode target 都被新 episode 的100污染。若第二行是自然终止，则其 discount 应为0；若 final observation 无效，则不能用“设成0”伪造合法 target。生产实现还必须确认 replay sampler 是否已经在边界切片；切片保证与 mask 仍应至少有一个可测试合同。
 

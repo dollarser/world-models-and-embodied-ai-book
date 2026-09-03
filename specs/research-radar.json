@@ -332,6 +332,43 @@
         "A measured small configuration establishes cold-start disk, memory, wall-clock and policy-ranking evidence."
       ],
       "last_verified": "2026-09-02"
+    },
+    {
+      "id": "RADAR-2026-13",
+      "title": "RoboArena Distributed Real-World Policy Evaluation",
+      "chapters": [15, 20],
+      "book_action": "case_card",
+      "problem": "Scale real-world evaluation of generalist robot policies through distributed, double-blind pairwise comparisons on a shared robot platform.",
+      "why_it_matters": "It gives Chapter 20 a concrete case where paired comparison improves local attribution while evaluator, institution, task-selection and time effects still define the global estimand.",
+      "sources": [
+        {
+          "url": "https://openreview.net/pdf?id=cpmwi3Xwcr",
+          "kind": "paper",
+          "maturity": "P",
+          "revision": "CoRL 2025 paper checked 2026-09-03"
+        },
+        {
+          "url": "https://robo-arena.github.io/",
+          "kind": "project_page",
+          "maturity": "O",
+          "revision": "project page checked 2026-09-03"
+        },
+        {
+          "url": "https://github.com/robo-arena/roboarena/tree/a07f93db004e2357aee931069a7011d7e52774ed",
+          "kind": "official_repository",
+          "maturity": "O",
+          "revision": "commit a07f93db004e2357aee931069a7011d7e52774ed"
+        }
+      ],
+      "assets": {"code": "open", "weights": "unknown", "data": "partial"},
+      "reproduction": "R1",
+      "resource_path": "S tier audits the published protocol, project page and pinned policy-server interface. Policy submission, distributed service access and real-robot evaluation are optional and unverified by this book.",
+      "scope_boundary": "Pairwise double-blind evaluation improves within-pair comparability but does not remove evaluator, institution, task-selection, robot-state, aggregation or temporal drift; this book has not submitted a policy or reproduced the leaderboard.",
+      "review_triggers": [
+        "The service changes its robot platform, pairing, evaluator, invalid-session or ranking protocol.",
+        "The public data dump or leaderboard changes the available unit-level evidence and aggregation auditability."
+      ],
+      "last_verified": "2026-09-03"
     }
   ]
 }

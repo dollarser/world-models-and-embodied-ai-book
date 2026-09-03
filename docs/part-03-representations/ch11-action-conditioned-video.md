@@ -37,7 +37,7 @@ p_\theta(o_{t+1:t+H}\mid o_{\le t},a_{t:t+H-1},c),
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-11-01 动作条件视频模型的规划接口
+    accTitle: FIG-11-01 图 11-1 动作条件视频模型的规划接口
     accDescr: 历史观测与候选动作生成未来视频或 latent，状态与效用读出把未来交给规划器比较，选中动作仍需真实环境和独立安全层验证。
     O[历史观测 o_≤t] --> E[编码器/视频 tokenizer]
     A[候选动作 a_t:t+H] --> D[动作编码器]
@@ -50,7 +50,7 @@ flowchart TB
     Q -.选择动作.-> A
 ```
 
-*FIG-11-01：动作条件视频模型进入规划环路的最小接口。生成未来只是中间环节；规划器还需要状态/效用读出与真实环境验证。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
+*图 11-1：动作条件视频模型进入规划环路的最小接口。生成未来只是中间环节；规划器还需要状态/效用读出与真实环境验证。来源：本书原创，CC BY-NC 4.0，2026-08-31。*<!-- INTERNAL_ASSET_ID: FIG-11-01 -->
 
 <!-- CLAIM_META: CLAIM-11-01 recommendation -->
 动作作为条件输入只是必要接口；若同一状态下改变动作不能产生方向正确且可测的未来差异，就不应支持动作反事实声明。
@@ -75,7 +75,7 @@ flowchart TB
 | 文本事件 | “开始下雨”“车辆切入” | 场景编辑灵活 | 不一定是智能体动作 |
 | latent action | 从视频变化推断的离散/连续变量 | 无控制日志也可训练 | 语义不确定、不可直接执行 |
 
-*TAB-11-01：动作条件的来源。文本世界事件、他车行为和 ego 动作必须分开，不应共同称为 `action`。*
+*表 11-1：动作条件的来源。文本世界事件、他车行为和 ego 动作必须分开，不应共同称为 `action`。*<!-- INTERNAL_ASSET_ID: TAB-11-01 -->
 
 连续动作应记录 frame、单位、采样频率、保持方式、归一化、时间偏移和上下限。视频是 10 Hz、控制是 50 Hz 时，要明确一个视频间隔内如何聚合五个控制量。若动作在曝光之后才生效，却被对齐到当前帧，模型会学到错误因果顺序。
 
@@ -154,7 +154,7 @@ E(h)=\frac{1}{N}\sum_i d\bigl(g(\hat{o}^{(i)}_{t+h}),s^{(i)}_{t+h}\bigr),
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-11-02 同一世界中的动作反事实分支
+    accTitle: FIG-11-02 图 11-2 同一世界中的动作反事实分支
     accDescr: 同一个历史状态复制为多个分支，所有分支共享地图、对象身份和干预前随机状态，只改变候选动作；比较时先看动作方向和状态差，再看生成画面，最后由真实或独立仿真锚点核对。
     H[同一历史与当前状态<br/>共享地图/对象/干预前随机量] --> C{只改变候选动作}
     C --> L[left<br/>预测状态与视频]
@@ -168,7 +168,7 @@ flowchart TB
     D --> A[真实日志、物理仿真<br/>或规则 oracle 锚点]
 ```
 
-*FIG-11-02：动作条件反事实的配对结构。来源：本书原创，CC BY-NC 4.0，2026-09-02。分支共享的是干预前世界；动作产生的真实交互差异不应被强行抹平。*
+*图 11-2：动作条件反事实的配对结构。来源：本书原创，CC BY-NC 4.0，2026-09-02。分支共享的是干预前世界；动作产生的真实交互差异不应被强行抹平。*<!-- INTERNAL_ASSET_ID: FIG-11-02 -->
 
 这张图把“生成四段不同视频”和“识别动作效果”分开。若 left 与 right 分支画面不同，只能通过敏感性检查；只有带符号位移、碰撞或停止等状态差与独立锚点方向一致，才支持动作语义正确。反之，所有分支共用完全相同的未来他车轨迹，也可能错误消除动作本应引起的交互响应。
 
@@ -196,7 +196,7 @@ E_{cf}=\sqrt{\frac{1}{d|P|}\sum_{(i,j)\in P}\left\|[(\hat{s}_j-\hat{s}_i)-(s_j-s
 
 多模态模型还要避免用单个“正确视频”惩罚所有其他合理未来。同一动作下可能同时存在多个合法他车反应。评测可比较状态分布、事件概率、coverage 和配对效果方向，而不只计算生成样本与唯一记录视频的逐像素距离。
 
-## 11.6 学习动作表，再组合未见序列（EXP-11-01）
+## 11.6 学习动作表，再组合未见序列（实验 11-1<!-- INTERNAL_ASSET_ID: EXP-11-01 -->）
 
 S 档 fixture 是 `7×7` 网格。训练数据覆盖 forward、left、right、brake 的单步转移，但不含评测中的三步组合。模型从样本拟合位移：
 
@@ -222,10 +222,10 @@ make ch11-smoke
 | left-right-swapped | 1.00000 | 50% | **2.0** | **-2.0（反向）** | 1.63299 |
 | action-conditioned | **0.00000** | **100%** | **2.0** | **+2.0（正确）** | **0.00000** |
 
-*TAB-11-02：`EXP-11-01` 的单步与同状态反事实结果。敏感度和无符号分离都无法单独检出左右语义交换。*
+*表 11-2：实验 11-1 的单步与同状态反事实结果。敏感度和无符号分离都无法单独检出左右语义交换。*<!-- INTERNAL_ASSET_ID: TAB-11-02 -->
 
 <!-- CLAIM_META: CLAIM-11-02 result -->
-按预测未来最大两两距离计算，`EXP-11-01` 的 action-blind 动作敏感度为 0，action-conditioned 为 2；前者对四个动作产生同一未来。该量有网格单位，不是归一化性能分数。
+按预测未来最大两两距离计算，实验 11-1<!-- INTERNAL_ASSET_ID: EXP-11-01 --> 的 action-blind 动作敏感度为 0，action-conditioned 为 2；前者对四个动作产生同一未来。该量有网格单位，不是归一化性能分数。
 
 <!-- CLAIM_META: CLAIM-11-03 result -->
 在只保留动作组合的三条序列上，conditioned 模型平均终点误差为 0，blind 模型为 1.33852。该结果来自确定性可组合动力学，不能外推复杂视频的组合泛化。
@@ -241,7 +241,7 @@ left-right-swapped 与正确模型的动作敏感度、无符号左右分离都�
 | left-right-swapped | 3 | 9 | 1.33333 | 2.00000 |
 | action-conditioned | 3 | 9 | **0.00000** | **0.00000** |
 
-*TAB-11-03：`EXP-11-01` 的多步结果。全轨迹 RMSE 以 9 个转移、每步两个状态坐标为分母；终点误差以 3 条序列为分母。*
+*表 11-3：实验 11-1 的多步结果。全轨迹 RMSE 以 9 个转移、每步两个状态坐标为分母；终点误差以 3 条序列为分母。*<!-- INTERNAL_ASSET_ID: TAB-11-03 -->
 
 <!-- CLAIM_META: CLAIM-11-08 result -->
 在固定的 3 条未见序列、9 个转移上，blind、swapped、conditioned 的全轨迹 RMSE 分别为 0.76830、1.33333、0。显式报告轨迹与终点能阻止中间错误被终点抵消，但仍不是随机环境的统计泛化证据。
@@ -257,10 +257,10 @@ left-right-swapped 与正确模型的动作敏感度、无符号左右分离都�
 | 2 | forward | (3, 2) | (3, 4) | 2 |
 | 3 | right | (4, 3) | (4, 3) | **0** |
 
-*TAB-11-04：`EXP-11-01` 的 endpoint-cancellation 负对照。状态和动作均为手写确定性网格规则；单条序列的终点正确不能替代逐步轨迹检查。*
+*表 11-4：实验 11-1 的 endpoint-cancellation 负对照。状态和动作均为手写确定性网格规则；单条序列的终点正确不能替代逐步轨迹检查。*<!-- INTERNAL_ASSET_ID: TAB-11-04 -->
 
 <!-- CLAIM_META: CLAIM-11-11 result -->
-`EXP-11-01` 的三条未见序列中，left-right-swapped 有 1 条终点误差为 0、但中间最大误差为 2；正确模型没有这种抵消。`1/3` 不是现实错误发生率，2 也不是视频或物理单位，只证明 endpoint-only 指标可以产生假阴性。
+实验 11-1<!-- INTERNAL_ASSET_ID: EXP-11-01 --> 的三条未见序列中，left-right-swapped 有 1 条终点误差为 0、但中间最大误差为 2；正确模型没有这种抵消。`1/3` 不是现实错误发生率，2 也不是视频或物理单位，只证明 endpoint-only 指标可以产生假阴性。
 
 ## 11.7 renderer、simulator、planner：同一视频，不同合同
 
@@ -299,7 +299,7 @@ left-right-swapped 与正确模型的动作敏感度、无符号左右分离都�
 | Cosmos 3 Generator | vision/sound/action 等统一序列 | 多模态生成、未来预测与 action 输出 | OpenMDW-1.1 仓库/模型材料、推理/后训练配方 | 默认路径需要 gated Guardrail；关闭它会改变安全处理；资源未测 |
 | Cosmos-Drive-Dreams | 多视角 RGB/LiDAR 合成数据 | HD map、3D box、LiDAR 等空间条件 | pipeline、权重、toolkit、合成数据 | 场景条件生成不自动等于 ego-action 闭环 simulator |
 
-*TAB-11-05：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*
+*表 11-5：动作/条件视频开源锚点的接口分类。资产存在不代表本机可运行、许可相同或闭环有效。*<!-- INTERNAL_ASSET_ID: TAB-11-05 -->
 
 <!-- CLAIM_META: CLAIM-11-09 fact -->
 [Cosmos-Predict2.5 官方仓库快照 `a2c298b`](https://github.com/nvidia-cosmos/cosmos-predict2.5/tree/a2c298b0a3df3778b973fe65e9e58877b292d8a7)列有 2B robot/action-cond 模型及推理、后训练路径，并声明只做有限维护、建议迁移 Cosmos 3；因此实验卡必须锁定具体代际、模型和许可，不能只写“Cosmos”。
@@ -363,7 +363,7 @@ OpenDV 等视频数据可用于外观/运动预训练，但若缺少同步控制
 
 ## 11.11 资源、许可与进一步验证
 
-全书资源档位采用[术语表](../glossary.md)中的统一定义，本节只说明本章升级时新增什么证据。`EXP-11-01` 的 S 档解析网格只验证动作、状态、帧与反事实接口；若升级到学习模型，应先用短时低维或低分辨率预测检验动作是否被使用，再逐步增加自由 rollout、生成建模和闭环仿真。扩展顺序由问题决定，不以模型规模或档位越高越好。
+全书资源档位采用[术语表](../glossary.md)中的统一定义，本节只说明本章升级时新增什么证据。实验 11-1<!-- INTERNAL_ASSET_ID: EXP-11-01 --> 的 S 档解析网格只验证动作、状态、帧与反事实接口；若升级到学习模型，应先用短时低维或低分辨率预测检验动作是否被使用，再逐步增加自由 rollout、生成建模和闭环仿真。扩展顺序由问题决定，不以模型规模或档位越高越好。
 
 第三方代码、checkpoint、游戏资产、驾驶视频和仿真资产分别核验许可。对 Cosmos 3 还要分别登记 OpenMDW-1.1 模型材料、gated Guardrail 和下游依赖；禁用可选安全组件必须进入结果配置和限制，不能默认为等价运行。闭源产品/API 还需记录模型快照、日期、费用、请求与数据治理，不能上传未经许可的真实驾驶视频。
 
@@ -377,13 +377,13 @@ OpenDV 等视频数据可用于外观/运动预训练，但若缺少同步控制
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 动作盲、左右交换、endpoint cancellation 与正确查表的反事实/组合诊断 | `EXP-11-01` | CPU smoke | 确定性网格/ASCII |
+| 本书结果 | 动作盲、左右交换、endpoint cancellation 与正确查表的反事实/组合诊断 | 实验 11-1<!-- INTERNAL_ASSET_ID: EXP-11-01 --> | CPU smoke | 确定性网格/ASCII |
 | 开源案例 | DIAMOND 提供动作条件可玩扩散模型资产 | 官方项目 | `[O,R1]` | 本书未运行 |
 | 开源案例 | Cosmos 2.5 action-cond 与 Drive-Dreams 条件生成资产 | 官方项目 | `[O,R1]` | 代际、许可、用途和资源不同 |
 | 开源案例 | Cosmos 3 forward/inverse/policy action modes | 官方快照/cookbook | `[O,R1]` | OpenMDW-1.1；Guardrail 授权/开关、资源与有效性未验证 |
 | 论文案例 | GameNGen 用帧与动作生成交互未来 | 论文/项目页 | `[A,R1]` | 本书未运行 |
 | 闭源案例 | Genie 3、Waymo WM、GAIA-4 的交互/驾驶声明 | 官方页面 | `[V,R0/R1]` | 无独立复现 |
-| 未验证 | 小型视频/latent predictor | 可选 M 档 | planned | GPU、数据与资源待测 |
+| 未验证 | 小型视频/latent predictor | 可选 L1 档 | planned | GPU、数据与资源待测 |
 
 ## 小结
 
@@ -398,7 +398,7 @@ OpenDV 等视频数据可用于外观/运动预训练，但若缺少同步控制
 ## 练习
 
 1. **概念判断**：模型对左右转生成不同视频，是否已证明动作正确？还缺哪些 oracle？
-2. **代码实验**：在 `EXP-11-01` 加入边界碰撞和随机滑移，报告均值、失败率与不确定性。
+2. **代码实验**：在 实验 11-1<!-- INTERNAL_ASSET_ID: EXP-11-01 --> 加入边界碰撞和随机滑移，报告均值、失败率与不确定性。
 3. **时序实验**：将动作整体错位一帧，观察 one-step 与 rollout 指标怎样变化。
 4. **系统分类**：为一个交互视频产品填写 renderer/simulator/planner 证据表。
 5. **自动驾驶迁移**：设计保持、急刹与切入三分支，并写明其他车辆的响应协议。
@@ -409,42 +409,42 @@ OpenDV 等视频数据可用于外观/运动预训练，但若缺少同步控制
 动作条件模型的最低证据不是“不同动作生成不同画面”，而是同一历史下的配对干预、正确方向、时间对齐、多步后果和明确失败分母。
 
 <details markdown="1">
-<summary>SELF-CHECK-11-01：左右不同仍不等于正确</summary>
+<summary>自检 11-1：左右不同仍不等于正确</summary>
 
 没有。`left_right_swapped` 在当前 fixture 中 action sensitivity 和左右 separation 都是 2，与正确模型一样大，但 signed separation 为 -2、counterfactual vector RMSE 约 1.633。还需同一历史下由已知 simulator/动力学、同步真实 rollout 或可靠状态标注给出的 counterfactual oracle，核对方向、幅度、碰撞/终止和多步轨迹；视觉任务还需 flow、ego pose、3D/occupancy 或对象状态 oracle。仅用文本提示一致性或两段视频彼此不同，最多证明模型读取了条件。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-11-02：边界、滑移与不确定性</summary>
+<summary>自检 11-2：边界、滑移与不确定性</summary>
 
 可把 transition 改为：越过 `[0,6]²` 时记录 `collision/out_of_bounds` 而不是只静默 clip；每一步再以冻结概率和 seed 施加纵横滑移。对每个起点—动作序列运行相同 seed 集，按所有 attempted rollout 报 endpoint/trajectory error 均值、碰撞或越界失败率、有效 coverage，以及预测分布的 interval coverage/NLL 或 Brier；样本标准差只能称 stochastic spread，不能自动称 epistemic uncertainty。若失败 rollout 被删掉，低均值会产生幸存者偏差。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-11-03：动作错位一帧</summary>
+<summary>自检 11-3：动作错位一帧</summary>
 
 把本应作用于 `o_t→o_{t+1}` 的 `a_t` 整体配成 `a_{t-1}`，先在含转向/制动切换的序列上比较；连续重复同一动作的片段可能掩盖错位。One-step 指标会在动作切换边界显著恶化，但若常见动作占比很高，micro average 仍可能好看；free rollout 会把第一次错误状态继续作为下一步输入，endpoint 和轨迹误差通常累积。应按 action transition 类型和 horizon 报错，并用固定一帧正/负 shift 作负对照；结果依序列构成，不能声称必然单调。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-11-04：renderer、simulator 与 planner 证据表</summary>
+<summary>自检 11-4：renderer、simulator 与 planner 证据表</summary>
 
 表中至少列 `输入条件、可控 ego action、他体响应、状态/碰撞 oracle、时间推进、分支重置、E1/E2/E3/E4、允许声明`。若产品只按文本改变视频且无可验证状态，可登记 renderer；若给定动作后按一致规则推进多主体状态、可重置并由 oracle 验证，可在限定作用域称 simulator；只有再证明候选动作覆盖、策略排序/代价有效并接入滚动重规划，才可登记 planner role。一个系统可同时有多个角色，但每列证据分别通过，不能由“交互式”一词推导。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-11-05：保持、急刹与切入分支</summary>
+<summary>自检 11-5：保持、急刹与切入分支</summary>
 
 固定同一历史、地图、ego 初态与随机种子，三支 ego action 分别为保持速度、带 jerk 上限的急刹、带横向轨迹和转向率的切入；每支写清控制 frame、单位、频率、起效时刻和 horizon。他车响应应选一种预注册协议：open-loop replay 只适合短时反事实且不得称交互；规则/仿真 driver 根据相对距离和 TTC 反馈；learned response 则需独立校准与 OOD gate。分别报告 ego/他车轨迹、最小 TTC、碰撞、舒适度、道路约束与不确定性，并保留“冻结他车”负对照以区分 ego action effect 和响应模型 effect。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-11-06：终点正确但轨迹错误</summary>
+<summary>自检 11-6：终点正确但轨迹错误</summary>
 
 可选一对会互相抵消的动作，例如先把真实 `left/right` 语义交换，再执行包含左右各一次的序列；当前 fixture 的 `left→forward→right` 在 swapped 模型中得到 oracle/swapped 的 y 轨迹 `3→2→2→3` 与 `3→4→4→3`，终点误差为0但中间最大误差为2。最低报告应包含序列身份、attempted/available 数、每个 horizon 的状态误差、最大中间误差、终点误差、碰撞/终止与失败保留规则；不能只给跨序列平均终点。还需把这类序列在 protocol 中预登记，不能观察结果后才挑出最戏剧性的抵消案例。
 

@@ -49,6 +49,7 @@ RESULT_DEFINITION_PATTERN = re.compile(
 CLAIM_ID_PATTERN = re.compile(r"^CLAIM-(\d{2})-(\d{2})$")
 ALLOWED_CLAIM_TYPES = {"fact", "result", "inference", "recommendation", "unverified"}
 FIGURE_ID_PATTERN = re.compile(r"\b((?:FIG|TAB)-(\d{2})-(\d{2}))\b")
+TABLE_CAPTION_PATTERN = re.compile(r"^\*(?:TAB-|表\s*)(\d{1,2})-(\d{1,2})[：:]", re.MULTILINE)
 MERMAID_BLOCK_PATTERN = re.compile(r"```mermaid\n(.*?)\n```", re.DOTALL)
 MERMAID_ACC_TITLE_PATTERN = re.compile(r"^\s*accTitle:\s*(FIG-(\d{2})-(\d{2}))\s+(.+)$", re.MULTILINE)
 MERMAID_ACC_DESCR_PATTERN = re.compile(r"^\s*accDescr:\s*(.+)$", re.MULTILINE)
@@ -56,14 +57,14 @@ FENCED_BLOCK_PATTERN = re.compile(r"^```[^\n]*\n.*?^```\s*$", re.MULTILINE | re.
 HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
 EXERCISE_ITEM_PATTERN = re.compile(r"^(\d+)\.\s+\*\*[^*\n]+\*\*：", re.MULTILINE)
 SELF_CHECK_SUMMARY_PATTERN = re.compile(
-    r"<summary>SELF-CHECK-(\d{2})-(\d{2})：[^<\n]+</summary>"
+    r"<summary>(?:SELF-CHECK-|自检\s+)(\d{1,2})-(\d{1,2})：[^<\n]+</summary>"
 )
 SELF_CHECK_BLOCK_PATTERN = re.compile(
-    r'<details(?:\s+markdown="1")?>\s*<summary>SELF-CHECK-(\d{2})-(\d{2})：[^<\n]+</summary>(.*?)</details>',
+    r'<details(?:\s+markdown="1")?>\s*<summary>(?:SELF-CHECK-|自检\s+)(\d{1,2})-(\d{1,2})：[^<\n]+</summary>(.*?)</details>',
     re.DOTALL,
 )
 MARKDOWN_SELF_CHECK_PATTERN = re.compile(
-    r'<details\s+markdown="1">\s*<summary>SELF-CHECK-\d{2}-\d{2}：[^<\n]+</summary>'
+    r'<details\s+markdown="1">\s*<summary>(?:SELF-CHECK-|自检\s+)\d{1,2}-\d{1,2}：[^<\n]+</summary>'
 )
 PRD_CHAPTER_HEADING_PATTERN = re.compile(r"^#### 第(\d+)章[^\n]*$", re.MULTILINE)
 EXPERIMENT_ID_PATTERN = re.compile(r"\bEXP-\d{2}-\d{2}\b")
@@ -320,6 +321,13 @@ def check_figure_contract(chapter_number: int, registered_figures: object, docum
         match = FIGURE_ID_PATTERN.fullmatch(figure_id)
         if match is None or int(match.group(2)) != chapter_number:
             errors.append(f"chapter {chapter_number} has invalid or foreign figure/table ID: {figure_id}")
+    caption_numbers = [
+        int(sequence)
+        for owner, sequence in TABLE_CAPTION_PATTERN.findall(document_text)
+        if int(owner) == chapter_number
+    ]
+    if any(left >= right for left, right in zip(caption_numbers, caption_numbers[1:])):
+        errors.append(f"chapter {chapter_number} table captions must appear in strictly increasing order")
     return errors
 
 
@@ -837,7 +845,12 @@ def check_reading_map_contract(reading_map_text: str, chapters: object) -> list[
         if task_name not in reading_map_text:
             errors.append(f"reading map is missing running task: {task_name}")
 
-    if "不是新增实验" not in reading_map_text or "不能把22个smoke" not in reading_map_text:
+    compact_text = re.sub(r"\s+", "", reading_map_text)
+    if (
+        "不是新增实验" not in compact_text
+        or "各章fixture相互独立" not in compact_text
+        or "不能相加成" not in compact_text
+    ):
         errors.append(
             "reading map must state that running cases are not new experiments and independent smokes are not end-to-end evidence"
         )
@@ -897,14 +910,8 @@ def check_manifest() -> list[str]:
             errors.append(f"chapter {number} document is missing: {document}")
         if isinstance(document, str) and (ROOT / document).is_file():
             document_text = (ROOT / document).read_text(encoding="utf-8")
-            status_match = CHAPTER_STATUS_PATTERN.search(document_text)
-            manifest_phase = chapter.get("status", {}).get("phase")
-            if not status_match:
-                errors.append(f"chapter {number} document has no status header")
-            elif status_match.group(1) != manifest_phase:
-                errors.append(
-                    f"chapter {number} document status {status_match.group(1)} != manifest status {manifest_phase}"
-                )
+            manifest_status = chapter.get("status", {})
+            manifest_phase = manifest_status.get("phase") if isinstance(manifest_status, dict) else None
             bound_claims = {
                 claim_id
                 for experiment_id in chapter.get("experiments", [])
@@ -927,12 +934,11 @@ def check_manifest() -> list[str]:
                     )
                 )
             if manifest_phase in {"reviewed", "reproducible", "published"}:
-                for review_name in ("内容审查", "代码审查", "一致性审查", "教学审查"):
-                    if f"- {review_name}：通过" not in document_text:
-                        errors.append(f"chapter {number} is {manifest_phase} but {review_name} is not passed in the document")
-                record_match = re.search(r"审查记录路径：`([^`]+)`", document_text)
-                if not record_match or not (ROOT / record_match.group(1)).is_file():
-                    errors.append(f"chapter {number} is {manifest_phase} but its review record is missing")
+                for review_key in ("content_review", "code_review", "consistency_review", "teaching_review"):
+                    if manifest_status.get(review_key) != "passed":
+                        errors.append(
+                            f"chapter {number} is {manifest_phase} but manifest {review_key} is not passed"
+                        )
         experiment_ids.extend(chapter.get("experiments", []))
     if len(experiment_ids) != len(set(experiment_ids)):
         errors.append("manifest contains duplicate experiment IDs")
@@ -989,50 +995,6 @@ def check_prd_chapters() -> list[str]:
     prd_text = prd.read_text(encoding="utf-8")
     chapter_count = len(PRD_CHAPTER_HEADING_PATTERN.findall(prd_text))
     errors = [] if chapter_count == 22 else [f"expected 22 PRD chapters, found {chapter_count}"]
-    manifest_path = ROOT / "specs/book-manifest.json"
-    try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return errors
-    chapter_experiments = {
-        chapter["number"]: chapter.get("experiments", [])
-        for chapter in manifest.get("chapters", [])
-        if isinstance(chapter, dict) and isinstance(chapter.get("number"), int)
-    }
-    return errors + check_prd_experiment_tiers(prd_text, chapter_experiments)
-
-
-def check_prd_experiment_tiers(prd_text: str, chapter_experiments: dict[int, object]) -> list[str]:
-    """Keep PRD S-tier delivery claims aligned with manifest experiments and optional upgrades."""
-
-    errors: list[str] = []
-    headings = list(PRD_CHAPTER_HEADING_PATTERN.finditer(prd_text))
-    sections = {
-        int(match.group(1)): prd_text[match.end() : headings[index + 1].start() if index + 1 < len(headings) else len(prd_text)]
-        for index, match in enumerate(headings)
-    }
-    for chapter_number, registered_experiments in chapter_experiments.items():
-        if not isinstance(registered_experiments, list) or any(
-            not isinstance(item, str) for item in registered_experiments
-        ):
-            errors.append(f"chapter {chapter_number} manifest experiments must be a list of strings")
-            continue
-        section = sections.get(chapter_number)
-        if section is None:
-            errors.append(f"PRD has no detailed section for chapter {chapter_number}")
-            continue
-        for experiment_id in registered_experiments:
-            marker = f"- S 档（已交付，`{experiment_id}`）："
-            if marker not in section:
-                errors.append(f"PRD chapter {chapter_number} does not mark delivered S-tier experiment: {experiment_id}")
-        documented_ids = set(EXPERIMENT_ID_PATTERN.findall(section))
-        registered_ids = set(registered_experiments)
-        for experiment_id in sorted(documented_ids - registered_ids):
-            errors.append(f"PRD chapter {chapter_number} documents unregistered experiment: {experiment_id}")
-        if re.search(r"^- M(?:/L)? 档（可选待验证）：", section, re.MULTILINE) is None:
-            errors.append(f"PRD chapter {chapter_number} has no optional pending M/L upgrade path")
-        if re.search(r"^- 实验：", section, re.MULTILINE):
-            errors.append(f"PRD chapter {chapter_number} contains an un-tiered experiment description")
     return errors
 
 

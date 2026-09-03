@@ -14,7 +14,7 @@
 
 ### 非目标
 
-- 不把 `EXP-07-01` 称为 CEM、MCTS、PlaNet、MuZero 或 TD-MPC2 复现；
+- 不把 实验 7-1<!-- INTERNAL_ASSET_ID: EXP-07-01 --> 称为 CEM、MCTS、PlaNet、MuZero 或 TD-MPC2 复现；
 - 不声称一个 Bellman backup 相同就普遍价值等价；
 - 不用模型预测回报代替真实/独立环境回查；
 - 不让 learned planner 绕过第21章执行网关。
@@ -44,7 +44,7 @@
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-07-01 滚动时域模型规划闭环
+    accTitle: FIG-07-01 图 7-1 滚动时域模型规划闭环
     accDescr: 新观测更新信念状态，候选动作经模型 rollout 和代价风险评价后被搜索器选择，只执行通过独立安全网关的首步，再根据新观测重规划。
     O[新观测] --> B[belief/state 更新]
     B --> C[候选动作序列]
@@ -58,7 +58,7 @@ flowchart TB
     G[独立安全网关] --> A
 ```
 
-*FIG-07-01：receding-horizon 规划闭环。来源：本书原创，CC BY-NC 4.0，2026-08-31。首步执行仍须经过独立安全网关。*
+*图 7-1：receding-horizon 规划闭环。来源：本书原创，CC BY-NC 4.0，2026-08-31。首步执行仍须经过独立安全网关。*<!-- INTERNAL_ASSET_ID: FIG-07-01 -->
 
 ### 7.1.1 规划不是“让模型自由生成未来”
 
@@ -86,7 +86,7 @@ Horizon 太短会错过延迟收益；太长则扩大候选空间、模型复合
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-07-02 滚动时域中的计划、执行与重规划
+    accTitle: FIG-07-02 图 7-2 滚动时域中的计划、执行与重规划
     accDescr: 时刻 t 根据新观测规划 H 步，只执行首步或短前缀；环境返回新观测后，未执行的旧后缀被废弃或仅作热启动，并从新状态重新规划 H 步。
     O0[时刻 t 的新观测与 belief] --> P0[规划 H 步: a_t 到 a_t+H-1]
     P0 --> X0[执行前缀: 通常只执行 a_t]
@@ -97,7 +97,7 @@ flowchart TB
     S0 -.废弃或仅作 warm start.-> P1
 ```
 
-*FIG-07-02：MPC 的滚动时域时间关系。`H` 是 prediction/planning horizon，实际连续执行的步数是 execution horizon；旧后缀不能绕过新观测自动取得执行权。来源：本书原创，CC BY-NC 4.0，2026-09-02。*
+*图 7-2：MPC 的滚动时域时间关系。`H` 是 prediction/planning horizon，实际连续执行的步数是 execution horizon；旧后缀不能绕过新观测自动取得执行权。来源：本书原创，CC BY-NC 4.0，2026-09-02。*<!-- INTERNAL_ASSET_ID: FIG-07-02 -->
 
 图中的两种长度回答不同问题：planning horizon 决定一次比较多远的候选后果，execution horizon 决定两次反馈之间连续承诺多少动作。后者大于 1 时，即使每轮都重新规划，系统仍存在多步开环窗口；旧后缀最多作为下一轮优化的 warm start，必须重新经过状态更新、约束和安全网关。
 
@@ -155,7 +155,7 @@ MuZero 一类方法进一步说明：模型可以围绕规划所查询的 reward
 
 这揭示了“任务相关压缩”的精确含义：模型可以丢弃对指定决策族无影响的信息，但不能预先假定什么信息永远无关。改变任务、约束、控制频率或动作空间，都可能重新定义需要保留的状态。价值等价是一种带量词的关系，不是模型脱离使用场景后的永久属性。
 
-## 7.6 短视、terminal value 与重规划（EXP-07-01）
+## 7.6 短视、terminal value 与重规划（实验 7-1<!-- INTERNAL_ASSET_ID: EXP-07-01 -->）
 
 手工 MDP 有状态 `0→1→2`。`advance` 前进并付出 `-0.1`，`harvest` 终止；只有状态 2 harvest 才得 `1.0`。
 
@@ -176,7 +176,7 @@ make ch07-smoke
 | H=3，穷举 8 个序列 | advance, advance, harvest | 0.8 |
 | H=1，精确 terminal value | advance | 0.8 predicted |
 
-*TAB-07-01：`EXP-07-01` 的 horizon 结果。回报无量纲，规则和 value 均为手工设定。*
+*表 7-1：实验 7-1 的 horizon 结果。回报无量纲，规则和 value 均为手工设定。*<!-- INTERNAL_ASSET_ID: TAB-07-01 -->
 
 <!-- CLAIM_META: CLAIM-07-02 result -->
 H=1 选择立即 harvest 得 0；H=3 找到延迟收益序列得 0.8。它证明这个 fixture 对 horizon 敏感，不表示更长永远更好。
@@ -184,7 +184,7 @@ H=1 选择立即 harvest 得 0；H=3 找到延迟收益序列得 0.8。它证明
 <!-- CLAIM_META: CLAIM-07-03 result -->
 加入手工精确 terminal value 后，H=1 首步变为 advance，预测 return 为 0.8；这验证 bootstrap 接口，不证明 learned value 无偏。
 
-原 fixture 还曾把“执行两步旧 suffix 得 -0.2”与“重新规划三步并完成 harvest 得 0.7”并列。这个比较同时改变了反馈方式与扰动后的动作预算，**不能**把 0.9 的差归因于重规划。`EXP-07-01` v4 保留该结果作为 protocol negative control，并增加两个固定为 2 个动作槽的受控比较：
+原 fixture 还曾把“执行两步旧 suffix 得 -0.2”与“重新规划三步并完成 harvest 得 0.7”并列。这个比较同时改变了反馈方式与扰动后的动作预算，**不能**把 0.9 的差归因于重规划。实验 7-1 v4<!-- INTERNAL_ASSET_ID: EXP-07-01 v4 --> 保留该结果作为 protocol negative control，并增加两个固定为 2 个动作槽的受控比较：
 
 | 协议与策略 | 扰动后动作预算 | 实际执行 | 环境 reward sum | terminal value | 规划目标 |
 | --- | ---: | --- | ---: | ---: | ---: |
@@ -195,7 +195,7 @@ H=1 选择立即 harvest 得 0；H=3 找到延迟收益序列得 0.8。它证明
 | 固定预算、冻结 terminal value：stale suffix | 2 | advance, harvest | -0.2 | 0.0 | -0.2 |
 | 固定预算、冻结 terminal value：重新规划 | 2 | advance, advance | -0.3 | 1.0 | 0.7 |
 
-*TAB-07-02：扰动重规划的 protocol audit。环境 reward 包含扰动前已经执行的 `advance=-0.1`；冻结 terminal value 只在预算耗尽且未终止时加入目标。旧协议两行预算不同，只是不可归因的负对照。*
+*表 7-2：扰动重规划的 protocol audit。环境 reward 包含扰动前已经执行的 `advance=-0.1`；冻结 terminal value 只在预算耗尽且未终止时加入目标。旧协议两行预算不同，只是不可归因的负对照。*<!-- INTERNAL_ASSET_ID: TAB-07-02 -->
 
 <!-- CLAIM_META: CLAIM-07-04 result -->
 固定两个扰动后动作槽且只累计观测到的环境 reward 时，stale suffix 得 -0.2，重新规划得 -0.1；该受控 fixture 只证明反馈可改变动作并在此目标下提高 0.1，不证明到达目标、普遍优于 open loop 或抵消模型误差。
@@ -212,7 +212,7 @@ fixture 另给同一三个状态两套完全不同的观测标签，因此观测
 | observation label match | 0% | 三个字符串 |
 | max Bellman backup gap | 0 | 一个 transition/reward 与一个 value function |
 
-*TAB-07-03：受限 value-equivalence fixture。不是视觉压缩或表示学习结果。*
+*表 7-3：受限 value-equivalence fixture。不是视觉压缩或表示学习结果。*<!-- INTERNAL_ASSET_ID: TAB-07-03 -->
 
 这不能证明 surrogate 对新 reward、风险函数、policy、state aliasing 或 OOD 动作等价。
 
@@ -241,14 +241,14 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 
 常见近似“取最差 `ceil(αN)` 个样本再平均”在 `αN` 为整数时与上式一致；否则它实际使用 `ceil(αN)/N` 的更大尾部，而且方向和偏差取决于边界样本。它可作为明确命名的粗略对照，不能悄悄冒充指定 `α` 的正式指标。即使按概率质量正确离散化，风险度量也不是安全证明：[Troop et al.](https://proceedings.mlr.press/v161/troop21a.html)讨论了有限样本 CVaR 估计 `[P,R1]`；有限粒子仍会漏掉稀有事件，模型共同偏差会让所有粒子一起乐观，事后挑 `α` 或阈值还会产生评测泄漏。
 
-`EXP-07-01` 增加两个固定动作、每个五个等权 return 的解析反例：
+实验 7-1<!-- INTERNAL_ASSET_ID: EXP-07-01 --> 增加两个固定动作、每个五个等权 return 的解析反例：
 
 | 动作 | 五场景 return | 均值 | 最差 20% 均值 | `P(return < 0)` | 在 `P(failure)≤0.1` 下 |
 | --- | --- | ---: | ---: | ---: | --- |
 | steady | 0.6, 0.6, 0.6, 0.6, 0.6 | 0.6 | 0.6 | 0.0 | 可行 |
 | risky | 1.5, 1.5, 1.5, 1.5, -2.0 | 0.8 | -2.0 | 0.2 | 不可行 |
 
-*TAB-07-04：固定五场景风险目标反例。来源：本书原创，CC BY-NC 4.0，2026-09-01。场景概率是手工设定，不代表真实机器人或驾驶事件频率。*
+*表 7-4：固定五场景风险目标反例。来源：本书原创，CC BY-NC 4.0，2026-09-01。场景概率是手工设定，不代表真实机器人或驾驶事件频率。*<!-- INTERNAL_ASSET_ID: TAB-07-04 -->
 
 <!-- CLAIM_META: CLAIM-07-07 result -->
 在五个等权手工场景中，期望回报选择 risky（0.8 > 0.6），经验最差 20% 均值和失败概率上限 0.1 都选择 steady；该固定排序反例只证明聚合目标会改变动作选择，不估计真实尾部概率、不证明 CVaR 校准或系统安全。
@@ -260,10 +260,10 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 | 分位点边界按比例计权 | 0.3 | 1.5 | 0.3 | -0.833333 |
 | 最差 `ceil(αN)` 个样本 | 0.3 | 2 | 0.4 | -0.25 |
 
-*TAB-07-05：非整数经验尾部质量审计。来源：`EXP-07-01` v4，本书原创，CC BY-NC 4.0，2026-09-02。两个数都只是同一五点经验分布的描述量。*
+*表 7-5：非整数经验尾部质量审计。来源：实验 7-1 v4，本书原创，CC BY-NC 4.0，2026-09-02。两个数都只是同一五点经验分布的描述量。*<!-- INTERNAL_ASSET_ID: TAB-07-05 -->
 
 <!-- CLAIM_META: CLAIM-07-09 result -->
-`EXP-07-01` v4 在五个等权固定 return、`α=0.3` 下得到按边界质量计权的经验下尾均值 `-0.833333`；`ceil` 粗略对照把尾部扩大为 40%，得到 `-0.25`，两者相差 `0.583333`。该解析对照只暴露离散化口径，不估计总体 CVaR、置信区间、真实稀有风险或系统安全。
+实验 7-1 v4<!-- INTERNAL_ASSET_ID: EXP-07-01 v4 --> 在五个等权固定 return、`α=0.3` 下得到按边界质量计权的经验下尾均值 `-0.833333`；`ceil` 粗略对照把尾部扩大为 40%，得到 `-0.25`，两者相差 `0.583333`。该解析对照只暴露离散化口径，不估计总体 CVaR、置信区间、真实稀有风险或系统安全。
 
 这个表还揭示三个容易漏报的实验字段：场景/粒子如何生成，风险阈值在什么 split 上冻结，以及“没有采到失败”时分母是多少。驾驶中的碰撞、越界和不可恢复状态通常应作为独立约束或网关事件，不能只乘一个小权重后被路线进度抵消。
 
@@ -325,7 +325,7 @@ CEM/shooting 与 tree search 以不同方式分配模型查询；搜索更强既
 2. **搜索实验**：将穷举替换为固定 seed random shooting，画预算—最优值曲线。
 3. **失败归因**：注入 reward model 偏差，区分优化失败和模型失败。
 4. **驾驶约束**：为车辆急刹与绕行写一个含舒适/碰撞硬约束的候选表。
-5. **风险阈值**：把 `TAB-07-04` 的 risky 失败值从 -2 改为不同数值，分别找出均值、最差 20% 均值和 chance constraint 改变选择的临界点；说明哪类改变属于偏好，哪类属于概率模型。
+5. **风险阈值**：把 表 7-4<!-- INTERNAL_ASSET_ID: TAB-07-04 --> 的 risky 失败值从 -2 改为不同数值，分别找出均值、最差 20% 均值和 chance constraint 改变选择的临界点；说明哪类改变属于偏好，哪类属于概率模型。
 6. **尾部质量**：保持 risky 的五个 return 不变，分别计算 `α=0.1/0.3/0.5/1.0` 的按边界质量计权下尾均值与 `ceil` 粗略均值，标出两者何时相等，并解释 `N=5` 对 1% 风险提问为何几乎没有统计信息。
 
 ## 自检要点
@@ -333,42 +333,42 @@ CEM/shooting 与 tree search 以不同方式分配模型查询；搜索更强既
 规划题必须冻结 horizon、动作预算、discount 作用位置、tie-breaking 和约束语义。以下阈值只对应本章手工环境与五个等权场景。
 
 <details markdown="1">
-<summary>SELF-CHECK-07-01：discount 与首步</summary>
+<summary>自检 7-1：discount 与首步</summary>
 
 若 return 定义为 `r0+γr1+γ²r2`，H=3 的延迟路径 `advance,advance,harvest` 值为 `-0.1-0.1γ+γ²`，立即 `harvest` 为 0。令两者相等得正根 `γ*=(0.1+√0.41)/2≈0.3702`：`γ<γ*` 时首步 harvest，`γ>γ*` 时首步 advance；在当前偏向较早 action 的 tie-break 下，等号也选 advance。若 discount 还作用于 terminal value 或候选提前终止规则不同，阈值必须重算。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-07-02：random shooting 预算曲线</summary>
+<summary>自检 7-2：random shooting 预算曲线</summary>
 
 固定 RNG seed 和同一候选生成顺序，对预算 `B=1,2,4,8…` 取前 B 个样本，记录 `best_so_far(B)=max_{i≤B} score_i`，则曲线应单调不降；若每个预算重新抽样，单次曲线可能下降，不能解释为更多预算更差。还应跨多个预注册 seed 报中位数/区间、找到穷举最优的比例和计算时延。当前离散 H=3 仅有 8 个候选，适合验证搜索合同，不足以证明 random shooting 在连续控制中有效。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-07-03：reward 偏差与优化失败</summary>
+<summary>自检 7-3：reward 偏差与优化失败</summary>
 
 先保存每个候选的模型预测分数与真实环境回报。若搜索器没有找到模型分数最高的候选，是 optimization failure；若它准确找到模型最优候选，但该候选真实回报差或违反约束，是 reward/model failure（也可能含 dynamics/termination error）。只看最终低回报无法区分两者。一个有效注入实验应冻结候选集，分别比较 `optimizer regret under model` 与 `model-selected real regret`，而不是同时换模型和搜索预算。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-07-04：急刹、绕行与硬约束</summary>
+<summary>自检 7-4：急刹、绕行与硬约束</summary>
 
 候选表可含 `min_TTC, collision_prob, lane_boundary, max_decel, max_jerk, progress, model_uncertainty`。例如急刹：TTC 1.5 s、碰撞概率 0.01、最大减速度 7、jerk 8、进度低；绕行：TTC 0.8 s、碰撞概率 0.08、边界余量 0.1 m、减速度 3、jerk 4、进度高。先用冻结的碰撞/TTC/边界硬门筛除绕行，再在可行集内按舒适与进度选急刹；若两者都不可行则进入最小风险 fallback。硬约束不能被高 progress 加权抵消，示例数值也不是道路安全阈值建议。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-07-05：风险目标的临界点</summary>
+<summary>自检 7-5：风险目标的临界点</summary>
 
 令 risky 五个 return 为 `(1.5,1.5,1.5,1.5,x)`。其均值为 `(6+x)/5`，与 steady 的 0.6 在 `x=-3` 打平，故 `x>-3` 时均值偏好 risky。对 `x≤1.5`，最差 20% 均值就是 `x`，在 `x=0.6` 打平，`x>0.6` 才偏好 risky。chance constraint 使用 `P(return<0)≤0.1`：`x<0` 时失败率 0.2、不可行，`x≥0` 时为 0、可行。改变 `x` 是改变 outcome/reward 或失败定义，属于偏好/后果模型；改变五个场景的概率权重才是概率模型变化。可行不等于被选中，还需声明可行集内的排序规则。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-07-06：非整数尾部质量与小样本边界</summary>
+<summary>自检 7-6：非整数尾部质量与小样本边界</summary>
 
 对排序后 `(-2,1.5,1.5,1.5,1.5)`：`α=0.1` 对应 0.5 个样本质量，正式下尾均值仍为 -2，`ceil` 对照也取一个样本而相等；`α=0.3` 对应 1.5，正式值为 `(-2+0.5×1.5)/1.5=-0.833333`，`ceil` 值为 `(-2+1.5)/2=-0.25`；`α=0.5` 对应 2.5，正式值为 `(-2+1.5+0.5×1.5)/2.5=0.1`，`ceil` 值为 `(-2+1.5+1.5)/3=0.333333`；`α=1` 两者都等于全样本均值 0.8。相等不表示估计充分：五个等权点的原始分辨率是 20%，`α=1%` 的计算只反复使用单个最差观测，既没有见到真实 1% 事件的能力，也没有总体外推、相关性或模型偏差保证。要回答总体尾部问题，需预先定义抽样单位、独立性/分层、样本量、估计量和不确定区间。
 

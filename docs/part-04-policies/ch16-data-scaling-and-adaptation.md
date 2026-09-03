@@ -73,7 +73,7 @@
 | DROID | 同类硬件在多地点多任务采集 | 场景与操作者多样性、真实操作 | 跨任意本体迁移 |
 | LeRobot Dataset v3 | Parquet/MP4、metadata、Hub/streaming | 统一加载、版本化、教学管线 | episode 切分和动作语义天然正确 |
 
-*TAB-16-01：三类数据入口的角色。格式、采集平台与训练 mixture 是三个层次。*
+*表 16-1：三类数据入口的角色。格式、采集平台与训练 mixture 是三个层次。*<!-- INTERNAL_ASSET_ID: TAB-16-01 -->
 
 [Open X-Embodiment 官方仓库快照 `9eeb68b`](https://github.com/google-deepmind/open_x_embodiment/tree/9eeb68b989efbcf474e8fb9019e01d02b962a604)将各贡献数据转换为 RLDS episode，并为每个子数据集保留 metadata 与引用 `[P/O,R1]`。其论文报告多机器人联合训练的正迁移案例，但该 README 同时说明动作七维可能分别表示绝对值、delta 或速度。统一成七维并没有消除控制语义差异；每个贡献数据的引用与许可仍需单独检查。
 
@@ -83,7 +83,7 @@
 
 ### 16.2.1 中国具身数据生态：规模数字之后还要问什么
 
-中国团队近年的开放数据补充了三种不同的异质性。[AGIBOT WORLD 2026](https://agibot-world.com/)按研究主题分阶段发布真实交互数据，首阶段强调任务、动作、原子技能、对象标注与恢复轨迹；[RoboMIND 2.0](https://log2r.github.io/RoboMIND2.0/)由作者报告超过31万条双臂移动操作轨迹、6种本体和739项任务；[RoboCOIN](https://FlagOpen.github.io/RoboCOIN/)由作者报告超过18万条示范、15种双臂平台、421项任务和16类场景 `[A/O,R0-R1]`。这些规模均来自项目或论文说明，本书没有下载、清点或验证。
+中国团队近年的开放数据补充了三种不同的异质性。[AGIBOT WORLD 2026](https://agibot-world.com/)按研究主题分阶段发布真实交互数据，首阶段强调任务、动作、原子技能、对象标注与恢复轨迹；[RoboMIND 2.0](https://log2r.github.io/RoboMIND2.0/)由作者报告超过31万条双臂移动操作轨迹、6种本体和739项任务；[RoboCOIN](https://FlagOpen.github.io/RoboCOIN/)由作者报告超过18万条示范、15种双臂平台、421项任务和16类场景 `[A/O,R0/R1]`。这些规模均来自项目或论文说明，本书没有下载、清点或验证。
 
 | 案例 | 主要增加的覆盖轴 | 对本章最有价值的问题 | 不能由规模数字推出 |
 | --- | --- | --- | --- |
@@ -91,7 +91,7 @@
 | RoboMIND 2.0 | 多模态、双臂移动操作、六种本体 | 移动底盘、双臂和多传感器怎样对齐时间与动作 | 31万轨迹等于31万个独立任务条件 |
 | RoboCOIN | 十五种平台与多类双臂场景 | 跨平台 canonical action 在哪里需要 adapter | 平台数自动带来零样本迁移 |
 
-*TAB-16-07：中国具身数据案例的异质性轴。来源：项目页与论文作者报告，核查于2026-09-03；表中数字不是本书审计结果。*
+*表 16-2：中国具身数据案例的异质性轴。来源：项目页与论文作者报告，核查于2026-09-03；表中数字不是本书审计结果。*<!-- INTERNAL_ASSET_ID: TAB-16-02 -->
 
 这些案例的价值不在于建立地区排行榜，而在于迫使 mixture 同时回答来源、平台、任务、操作者、成功/失败、控制频率和许可。旧版 AGIBOT World 论文材料曾说明其数据采用 CC BY-NC-SA 4.0，但这不能自动覆盖2026年每个阶段、模型和工具；RoboMIND、RoboCOIN也必须按实际下载页分别核验数据、代码、权重与衍生资产。所谓“开放”不能替代逐资产授权。
 
@@ -110,7 +110,7 @@
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-16-01 跨本体数据与策略接口
+    accTitle: FIG-16-01 图 16-1 跨本体数据与策略接口
     accDescr: 不同本体的数据先由版本化适配器映射到 canonical action 合同，策略在共同接口上学习，部署时再由目标本体适配器转换为可执行动作。
     A[数据集 A raw action] --> AA[adapter A]
     B[数据集 B raw action] --> AB[adapter B]
@@ -124,7 +124,7 @@ flowchart TB
     P --> DC[decoder/controller C]
 ```
 
-*FIG-16-01：跨本体数据与策略接口。canonical action 是版本化中间合同，不是自动可执行的万能动作。来源：本书原创，CC BY-NC 4.0，2026-08-31。*
+*图 16-1：跨本体数据与策略接口。canonical action 是版本化中间合同，不是自动可执行的万能动作。来源：本书原创，CC BY-NC 4.0，2026-08-31。*<!-- INTERNAL_ASSET_ID: FIG-16-01 -->
 
 canonical schema 至少包含字段名称/顺序、frame、单位、时间定义、absolute/delta、控制频率、范围、夹爪语义、缺失掩码和版本。转换应通过已知样本做 raw→canonical→raw round-trip，并在真实/仿真 controller 上验证可执行性。
 
@@ -147,7 +147,7 @@ canonical schema 至少包含字段名称/顺序、frame、单位、时间定义
 | embodiment-conditioned head | 共享视觉/语言主干 | tag、processor、head/decoder | 未见本体的 zero-shot grounding |
 | learned tokenizer/latent | 离散 token 或连续 latent | tokenizer 条件与本体 decoder | 重建误差、codebook 覆盖和闭环可执行性 |
 
-*TAB-16-02：四种“统一动作”路径。它们可以组合，但不能互相替代。*
+*表 16-3：四种“统一动作”路径。它们可以组合，但不能互相替代。*<!-- INTERNAL_ASSET_ID: TAB-16-03 -->
 
 [Octo 数据管线快照 `241fb35`](https://github.com/octo-models/octo/blob/241fb3514b7c40957a86d869fecb7c7fc353f540/octo/data/dataset.py)会标准化各数据集、把动作/本体状态 pad 到最大维度，并保留 normalization mask 与 dataset name；这说明固定 tensor 只是装载接口，mask 和来源身份仍是模型输入合同 `[O,R1]`。[Isaac-GR00T 统计量快照 `51d4c89`](https://github.com/NVIDIA/Isaac-GR00T/blob/51d4c89f72fda44cbf77285c6a8114b52676b8a1/gr00t/data/stats.py)对 relative-action 统计缓存把 embodiment tag、representation/type、format、action/state delta indices 和关联 state key 纳入 fingerprint，避免这些配置变化后静默复用旧缓存 `[O,R1]`；这不表示同一机制自动覆盖所有 absolute-action 统计路径。learned action tokenizer 可以进一步共享表示，但其 decoder 仍要还原到具体本体动作，token reconstruction 或 perplexity 不能替代闭环成功率。
 
@@ -169,7 +169,7 @@ canonical schema 至少包含字段名称/顺序、frame、单位、时间定义
 
 逐本体归一化会把不同物理范围映射到相似数值分布，有利于共享主干，却可能隐藏绝对能力差异。例如相同归一化值在小型机械臂和长臂上对应不同位移，在不同车辆上对应不同减速度。模型若需要依据能力边界决策，就必须同时获得本体参数或可执行范围，而不能只看到归一化动作。
 
-## 16.5 shape 相同，语义相反（EXP-16-01）
+## 16.5 shape 相同，语义相反（实验 16-1<!-- INTERNAL_ASSET_ID: EXP-16-01 -->）
 
 S 档 fixture 有两个二维动作 schema，任务语义相同：
 
@@ -200,10 +200,10 @@ make ch16-smoke
 | 合同错误拒绝率 | 3/3 | 缺失本体、缺失/陈旧 fingerprint 均拒绝 |
 | 语义变化是否改变 fingerprint | true | scale 或字段合同改变后不再命中旧身份 |
 
-*TAB-16-03：`EXP-16-01` 结果。没有训练模型，因此 `0.28375` 是接口反例，不是负迁移性能。*
+*表 16-4：实验 16-1 结果。没有训练模型，因此 `0.28375` 是接口反例，不是负迁移性能。*<!-- INTERNAL_ASSET_ID: TAB-16-04 -->
 
 <!-- CLAIM_META: CLAIM-16-02 result -->
-`EXP-16-01` 中两个 raw action 都是二维，但位移单位和夹爪极性不同；相同 tensor shape 未提供语义兼容证据。
+实验 16-1<!-- INTERNAL_ASSET_ID: EXP-16-01 --> 中两个 raw action 都是二维，但位移单位和夹爪极性不同；相同 tensor shape 未提供语义兼容证据。
 
 <!-- CLAIM_META: CLAIM-16-03 result -->
 直接 raw pooling 的 canonical MAE 为 `0.28375`，schema-aware pooling 为 `0`，adapter 最大 round-trip 误差为 `0`。这个确定性结果不能外推 learned adapter 或真实策略效果。
@@ -216,7 +216,7 @@ fixture 中缩放或字段合同改变会产生不同 schema fingerprint；该�
 
 ### 16.5.1 同一来源清单，三种实际暴露
 
-`EXP-16-01` v4 固定两个来源：`short_dataset` 有1条、长度2的 episode；`long_dataset` 有3条、每条长度4的 episode。来源身份、episode 与 transition 总数分别是2、4和14，不引入真实数据。
+实验 16-1 v4<!-- INTERNAL_ASSET_ID: EXP-16-01 v4 --> 固定两个来源：`short_dataset` 有1条、长度2的 episode；`long_dataset` 有3条、每条长度4的 episode。来源身份、episode 与 transition 总数分别是2、4和14，不引入真实数据。
 
 | 均匀抽样单位 | short 暴露 | long 暴露 | long:short |
 | --- | ---: | ---: | ---: |
@@ -224,7 +224,7 @@ fixture 中缩放或字段合同改变会产生不同 schema fingerprint；该�
 | episode | 25% | 75% | 3:1 |
 | transition | 14.2857% | 85.7143% | 6:1 |
 
-*TAB-16-05：`EXP-16-01` v4 的采样单位负对照。比例是对固定计数的解析期望，不含有限 batch 随机波动、窗口重叠、过滤、token mask 或质量权重。*
+*表 16-5：实验 16-1 v4 的采样单位负对照。比例是对固定计数的解析期望，不含有限 batch 随机波动、窗口重叠、过滤、token mask 或质量权重。*<!-- INTERNAL_ASSET_ID: TAB-16-05 -->
 
 <!-- CLAIM_META: CLAIM-16-09 result -->
 在该 fixture 中，仅把“均匀”的单位从 dataset 改为 episode 或 transition，就会把 long 来源的期望暴露从50%改为75%或约85.71%。该结果只证明采样单位会改变这两个手工来源的 mixture，不判断哪一种权重更优，也不估计真实训练 batch、梯度贡献、数据质量或迁移性能。
@@ -239,14 +239,14 @@ N_{\text{window}}=\max(L-H+1,0)
 
 个候选窗口。这个变换不是按 transition 占比做等比例缩放：短于 horizon 的 episode 会整体消失，刚刚超过 horizon 的 episode 也会有较高的边界损耗。
 
-`EXP-16-01` v4 在同一组 episode 长度上固定 `action_horizon=3`，不改变任何来源身份：
+实验 16-1 v4<!-- INTERNAL_ASSET_ID: EXP-16-01 v4 --> 在同一组 episode 长度上固定 `action_horizon=3`，不改变任何来源身份：
 
 | 来源 | episode 长度 | raw transitions | 合格三步窗口 | transition-uniform 暴露 | window-uniform 暴露 |
 | --- | --- | ---: | ---: | ---: | ---: |
 | short | `(2,)` | 2 | 0 | 14.2857% | 0% |
 | long | `(4,4,4)` | 12 | 6 | 85.7143% | 100% |
 
-*TAB-16-06：`EXP-16-01` v4 的 raw-transition—合格 action-window 负对照。这里固定 stride one、drop-tail、无 padding；比例是解析计数，不是随机采样或梯度实测。*
+*表 16-6：实验 16-1 v4 的 raw-transition—合格 action-window 负对照。这里固定 stride one、drop-tail、无 padding；比例是解析计数，不是随机采样或梯度实测。*<!-- INTERNAL_ASSET_ID: TAB-16-06 -->
 
 <!-- CLAIM_META: CLAIM-16-10 result -->
 在该固定 fixture 中，long 来源占12/14个 raw transition，但三步 drop-tail 窗口的6个合格样本全部来自 long，short 来源从14.2857%降为0。该结果只证明 horizon 与尾部策略会改变可训练窗口分母，不估计 padding/mask、过滤、重复采样、分布式 shard、有效 token、梯度贡献、数据质量或模型迁移性能。
@@ -307,7 +307,7 @@ XEWorld v1 在五种双臂机器人和 25 个操作任务上定义了 held-out-e
 | full fine-tune | 全模型 | 大数据且域差异大 | 成本、遗忘、版本耦合 |
 | 蒸馏/小策略 | teacher→student | 部署延迟/显存受限 | teacher 错误与行为覆盖丢失 |
 
-*TAB-16-04：适配权限阶梯。先用最小可证实的修改，不代表永远不能 full fine-tune。*
+*表 16-7：适配权限阶梯。先用最小可证实的修改，不代表永远不能 full fine-tune。*<!-- INTERNAL_ASSET_ID: TAB-16-07 -->
 
 [OpenVLA-OFT README 快照 `e4287e9`](https://github.com/moojink/openvla-oft/blob/e4287e94541f459edc4feabc4e181f537cd569a8/README.md)研究动作解码、连续 action chunk、proprioception 和 fine-tuning 目标的组合 `[A/O,R1]`。其上游结果说明适配配方会显著影响指定 benchmark，不证明 OFT 对所有 VLA、本体和数据都优。该快照给出约 16–18 GB 推理、27–80 GB 训练范围；这是上游配置说明，本书未实测。
 
@@ -366,13 +366,19 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | raw/schema-aware pooling、adapter 身份与三类 mixture 暴露反例 | `EXP-16-01` | CPU smoke | 两维手工动作与解析来源计数，不训练策略 |
+| 本书结果 | raw/schema-aware pooling、adapter 身份与三类 mixture 暴露反例 | 实验 16-1<!-- INTERNAL_ASSET_ID: EXP-16-01 --> | CPU smoke | 两维手工动作与解析来源计数，不训练策略 |
 | 开放生态 | Open X-Embodiment RLDS mixture | 论文/官方仓库 | `[P/O,R1]` | 本书未下载或运行 |
 | 开放数据 | DROID 分布式操作数据 | 论文/官方项目 | `[P/O,R1]` | 本书未下载或审计 |
 | 数据格式 | LeRobot Dataset v3 | 官方文档 | `[O,R1]` | 版本会漂移 |
 | 诊断基准 | XEWorld held-out-embodiment 协议 | arXiv v1 | `[A,R0]` | 协议已审计；代码、数据、模型和作者结果均未复现 |
 | 适配案例 | OpenVLA-OFT | 论文/官方仓库 | `[A/O,R1]` | 上游结果，本书未运行 |
 | 未验证 | 24 GB 内 adapter/SmolVLA 适配 | 可选 M/L1 | planned | 数据、GPU、迁移待测 |
+
+### 贯穿案例：规模化首先放大接口差异
+
+若多台机器人都执行“把杯子移到托盘”，相同语言任务并不保证相同动作语义：机械臂基座、关节范围、夹爪方向、控制频率和相机布局都可能不同。canonical action 可以共享“末端向杯子靠近”这样的意图，但各本体 adapter 仍须恢复可执行命令；混合数据时还要避免轨迹较长或频率较高的平台仅因 transition 更多而主导训练。施工改道的跨车队数据也一样：方向盘角、曲率、横向加速度和轨迹点不是可直接拼接的同义标签。
+
+因此，案例中的迁移问题不是“数据量够不够”，而是共享层保留了什么任务语义、专用层恢复了什么本体约束，以及目标本体上的闭环证据能否支持迁移主张。
 
 ## 小结
 
@@ -395,49 +401,49 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 跨本体训练必须先解决记录身份与动作语义，再研究 mixture 和迁移。Shape、字段名或文件格式相同都不能替代 adapter 的可逆性与版本绑定。
 
 <details markdown="1">
-<summary>SELF-CHECK-16-01：单位改变必须更新 fingerprint</summary>
+<summary>自检 16-1：单位改变必须更新 fingerprint</summary>
 
 `arm_b` 原来用厘米，scale-to-meter 为0.01；改成毫米后应为0.001。同一个 raw `2.0` 会从0.02 m变成0.002 m，语义已变化十倍。旧 fingerprint 却声称记录仍按厘米 adapter 生成，继续算误差会得到数值正常但身份虚假的结果，且无法判断应重解码还是数据被污染。正确做法是生成新 adapter fingerprint/schema revision，迁移或重新导出有来源记录；不能根据数值范围猜单位。当前 fixture 正是用 stale fingerprint 拒绝阻断这种静默错配。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-16-02：等数据集与温度权重</summary>
+<summary>自检 16-2：等数据集与温度权重</summary>
 
 等数据集权重忽略 episode 数量，三者均为 `1/3`，再在各数据集内部采 episode。温度方案可预注册 `w_i∝n_i^α`；取 `α=0.5`（等价于 size temperature T=2）时，`sqrt(100):sqrt(1000):sqrt(10000)=10:31.62:100`，归一化约为 `0.0706,0.2233,0.7061`。作对照，α=1 的按规模权重约为 `0.0090,0.0901,0.9009`，α=0 回到等数据集。还应报告有效步/任务权重和重复率；episode 数不同不等于质量或多样性不同。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-16-03：三个本体的迁移矩阵</summary>
+<summary>自检 16-3：三个本体的迁移矩阵</summary>
 
 对 A/B/C，最小表包含单独训练 `A→A,B→B,C→C`；两两 mixture `AB→A/B, AC→A/C, BC→B/C`；全量 `ABC→A/B/C`；leave-one-out `AB→C, AC→B, BC→A`。LOO 行还必须拆成 zero-shot 与固定少量目标数据的 few-shot adapter，不能混称泛化。每格冻结总 update/样本或另报 compute-matched 与 data-added 两套协议，使用相同目标 test、seed、成功/安全区间和成本，并含 full mixture without embodiment tag 负对照。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-16-04：适配权限的选择</summary>
+<summary>自检 16-4：适配权限的选择</summary>
 
 新夹爪但相机/任务相近时先用新 schema adapter/action head，证据是共享表征 probe 正常、旧动作头语义不兼容；新相机带来明显视觉统计/视角偏移时优先部分解冻视觉顶部层（或先做输入 adapter），用冻结主干失败且视觉适配改善 shift split 支持；新语言域、视觉与动作不变时可先在语言相关线性层用 LoRA，以 paraphrase/新术语 held-out 任务验证。三者只是起始假设：都应与更小/更大权限消融、遗忘、资源和闭环结果比较，失败时升级而非把方法名当证据。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-16-05：驾驶日志到统一轨迹合同</summary>
+<summary>自检 16-5：驾驶日志到统一轨迹合同</summary>
 
 可统一为 ego frame、固定未来时间戳的 `(x,y,yaw,v)` 轨迹及可选 `(curvature,acceleration)`，并保存车辆参数和原始字段。方向盘角先经符号、零偏、转向比/非线性得到前轮角，再在低侧偏 bicycle 假设下用 `κ=tan(δ)/L`；曲率配合速度和初态积分成轨迹；已有轨迹则重采样到共同时间网格。转换不可逆：方向盘力矩、间隙/顺从、轮胎侧偏、低层 controller 和执行延迟会丢失；曲率不能在未知车型/滑移下唯一恢复方向盘角；轨迹也不能唯一恢复产生它的控制、路面扰动或驾驶意图。故需保存 raw log 与有损标记，无法校准的车队使用专用 head。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-16-06：配置权重不等于实际 loss 暴露</summary>
+<summary>自检 16-6：配置权重不等于实际 loss 暴露</summary>
 
 对短来源1条×2步、长来源3条×4步：dataset-uniform 先等概率选来源，比例为 `1/2,1/2`；episode-uniform 在4条轨迹中等概率选，比例为 `1/4,3/4`；transition-uniform 在14步中等概率选，比例为 `2/14,12/14≈0.1429,0.8571`。实现审计还要记录 action/window horizon、尾部 padding/drop、无语言/缺相机过滤、异常样本 `ignore_errors`、mask 后有效 token、重复采样和分布式 shard，因为这些步骤会让 realized batch/loss 暴露偏离配置期望。哪一种 sampler 合理取决于目标量；不能用“大数据集占比更高”或“来源等权”替代预注册目标和分层评测。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-16-07：transition 多不代表合格 action window 多</summary>
+<summary>自检 16-7：transition 多不代表合格 action window 多</summary>
 
 stride one、drop-tail 时，长度 `L` 的 episode 只有 `max(L-H+1,0)` 个连续窗口。固定 `H=3` 后，短来源 `(2,)` 贡献0个窗口，长来源三条长度4的 episode 各贡献2个、共6个；所以 long 的 raw-transition 暴露是 `12/14≈85.71%`，window-uniform 暴露却是 `6/6=100%`。若 padding 保留短 episode，必须把真实动作与 padding 的 mask、终止/截断原因、有效 horizon 和 loss denominator 一起记录；否则零填充值可能被当作监督动作。实际训练还需审计过滤、窗口 stride/重叠、重复采样、分布式 shard 与每来源有效 token/梯度，不能把这个解析端点当作真实数据质量或迁移结果。
 

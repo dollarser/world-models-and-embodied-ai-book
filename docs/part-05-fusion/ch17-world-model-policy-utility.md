@@ -38,7 +38,7 @@
 
 ```mermaid
 flowchart TB
-    accTitle: FIG-17-01 世界模型帮助策略的五条路径
+    accTitle: FIG-17-01 图 17-1 世界模型帮助策略的五条路径
     accDescr: 世界模型可用于表征预训练、合成数据、交互学习环境、规划与价值估计、以及安全反事实；五条路径共同连接策略但需要不同证据和真实环境锚点。
     D[真实/仿真数据] --> W[世界模型]
     W --> R[1 表征预训练]
@@ -60,7 +60,7 @@ flowchart TB
     T -.-> C
 ```
 
-*FIG-17-01：世界模型帮助策略的五条路径。来源：本书原创，CC BY-NC 4.0，2026-09-01。五类是数据流角色，不是互斥算法标签；一个系统可以同时跨多条路径。*
+*图 17-1：世界模型帮助策略的五条路径。来源：本书原创，CC BY-NC 4.0，2026-09-01。五类是数据流角色，不是互斥算法标签；一个系统可以同时跨多条路径。*<!-- INTERNAL_ASSET_ID: FIG-17-01 -->
 
 这里的“真实环境锚点”是相对于 learned world model 的独立参照：S/M 档可以用锁定规则、未参与训练的物理仿真或既有合法日志，不要求购置硬件；但这些只能支撑对应层级的声明。若声称真实机器人或道路效果，最终锚点仍必须来自相应真实系统，仿真结果不能改名为 real-world result。
 
@@ -177,14 +177,14 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 | state decoder | latent/frame→pose、状态或事件 | 已知 pose/终止的盲测样本 | decoder 版本、误差、失败样本 |
 | outcome scorer | 解码轨迹→成功、风险或 return | 人工/规则 oracle confusion matrix | 原始判定、阈值、盲法和分母 |
 
-*TAB-17-03：代理世界模型评测的四段归因账。来源：本书原创接口；`EXP-17-01` v6 只验证单故障机制。*
+*表 17-1：代理世界模型评测的四段归因账。来源：本书原创接口；实验 17-1 v6 只验证单故障机制。*<!-- INTERNAL_ASSET_ID: TAB-17-01 -->
 
 [KineBench](https://arxiv.org/abs/2607.19876)指出依赖 IDM 从生成视频恢复动作会混淆世界模型误差与动作提取误差，并改用分割、深度估计和 6D pose tracking 组成的显式运动学管线 `[P]`。这减少了一类黑盒归因，却没有让新管线变成真值：论文也明确其可靠性仍依赖 segmentation、depth 与 pose-tracking 模块。因而“IDM-free”应读作更可分解，而不是“action grounding 无误”。[WorldArena 2.0](https://arxiv.org/abs/2605.17912)又把评测从视觉/离线/仿真扩展到视触觉、交互式策略优化和真实平台 `[P]`；平台或模态一变，四段账都应重新校准，不能沿用一个总相关系数。
 
-`EXP-17-01` v6 给四段各注入一个确定性故障。全正确 oracle 保持 `safe_route`、Spearman 为 `1`、regret 为 `0`；action-grounding 故障把安全策略错误注入为 shortcut，代理改选 `idle`，真实 regret 为 `1.05`。更关键的是，transition 把碰撞预测成 goal、decoder 把 collision 解码成 goal、scorer 把 collision 直接打成 `1.0` 时，三者产生完全相同的最终三策略分数、都选择 `phantom_shortcut`，Spearman 都为 `-0.5`、真实 regret 都为 `1.85`。只有检查中间的 predicted terminal 与 decoded terminal 才能定位故障段。
+实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 给四段各注入一个确定性故障。全正确 oracle 保持 `safe_route`、Spearman 为 `1`、regret 为 `0`；action-grounding 故障把安全策略错误注入为 shortcut，代理改选 `idle`，真实 regret 为 `1.05`。更关键的是，transition 把碰撞预测成 goal、decoder 把 collision 解码成 goal、scorer 把 collision 直接打成 `1.0` 时，三者产生完全相同的最终三策略分数、都选择 `phantom_shortcut`，Spearman 都为 `-0.5`、真实 regret 都为 `1.85`。只有检查中间的 predicted terminal 与 decoded terminal 才能定位故障段。
 
 <!-- CLAIM_META: CLAIM-17-10 result -->
-在 `EXP-17-01` v6 的单故障四段管线中，transition、state decoder 和 outcome scorer 三个不同故障产生相同最终代理分数与错误策略选择；因此端到端相关性、成功分或 regret 不能单独归因到某个组件。该结果只证明固定 corridor 中的不可辨识反例，不给出真实组件故障率、误差独立性或可加总的统计预算。
+在 实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 的单故障四段管线中，transition、state decoder 和 outcome scorer 三个不同故障产生相同最终代理分数与错误策略选择；因此端到端相关性、成功分或 regret 不能单独归因到某个组件。该结果只证明固定 corridor 中的不可辨识反例，不给出真实组件故障率、误差独立性或可加总的统计预算。
 
 ### 17.7.2 相关性必须面向模型冻结后的新策略
 
@@ -199,16 +199,16 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 | reality anchor | 在匹配初态与协议上取得真实/物理 simulator outcome | 参与 world model、scorer 或阈值选择 |
 | next round | 本轮 prospective 结果完整发布后可进入下一轮 calibration | 重复使用同一 holdout 并继续称为新策略 |
 
-*TAB-17-04：代理策略排序的时间化三分区合同。来源：本书原创；策略身份应沿第4、22章的训练 lineage 与选择历史记录。*
+*表 17-2：代理策略排序的时间化三分区合同。来源：本书原创；策略身份应沿第4、22章的训练 lineage 与选择历史记录。*<!-- INTERNAL_ASSET_ID: TAB-17-02 -->
 
-`EXP-17-01` v6 先只看 `safe_route/idle` 两个 calibration policy：世界模型对它们的 return 完全正确，Spearman 为 `1.0`、最大 gap 为 `0`。模型冻结后才加入从未进入 calibration 的 `phantom_shortcut`；三策略 Spearman 立刻变为 `-0.5`，代理选中真实碰撞策略，regret 为 `1.85`。两策略上的 `ρ=1` 本身极不稳定，这正是不能把小型回顾性 panel 包装成泛化证书的原因。
+实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 先只看 `safe_route/idle` 两个 calibration policy：世界模型对它们的 return 完全正确，Spearman 为 `1.0`、最大 gap 为 `0`。模型冻结后才加入从未进入 calibration 的 `phantom_shortcut`；三策略 Spearman 立刻变为 `-0.5`，代理选中真实碰撞策略，regret 为 `1.85`。两策略上的 `ρ=1` 本身极不稳定，这正是不能把小型回顾性 panel 包装成泛化证书的原因。
 
 <!-- CLAIM_META: CLAIM-17-11 result -->
-`EXP-17-01` v6 的两策略 calibration panel 具有 Spearman `1.0` 和零 return gap，但加入一个不相交 held-out policy 后，prospective 排序变为 `-0.5` 并选中真实碰撞策略；因此冻结 panel 上的完美回顾性相关不蕴含对新策略的排序有效性。该结果只验证三个手工策略的 split 机制，不估计 learned simulator 对真实新策略的失败概率。
+实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 的两策略 calibration panel 具有 Spearman `1.0` 和零 return gap，但加入一个不相交 held-out policy 后，prospective 排序变为 `-0.5` 并选中真实碰撞策略；因此冻结 panel 上的完美回顾性相关不蕴含对新策略的排序有效性。该结果只验证三个手工策略的 split 机制，不估计 learned simulator 对真实新策略的失败概率。
 
 代理评测要预注册真实性锚点：至少保留一组未用于训练世界模型或 scorer 的独立仿真/硬件 episode，报告 Pearson/Spearman、逐策略偏差、置信区间、错误排序、失败视频、scorer confusion matrix 和新增策略后的校准漂移。策略数量很少或分数并列时，Spearman 必须使用平均秩并报告区间；全体分数相同则相关系数未定义，不能记成零。若只公布相关性最高的子集，就无法判断筛选器何时失效。
 
-## 17.8 8/9 正确仍选中碰撞策略（EXP-17-01）
+## 17.8 8/9 正确仍选中碰撞策略（实验 17-1<!-- INTERNAL_ASSET_ID: EXP-17-01 -->）
 
 S 档 corridor fixture 有三个固定策略：四步前进的 `safe_route`、一步 `phantom_shortcut` 和原地等待的 `idle`。学习世界模型在 9 个测试转移中与真实规则一致 8 个，只把起点 `shortcut` 错误预测为直接到达；真实规则中它会碰撞。训练支持集只包含各位置的 `advance/wait`，所以 `shortcut` 虽然得到高置信回报，仍是显式 support 外查询。
 
@@ -244,26 +244,26 @@ make ch17-smoke
 | 加入 held-out policy 后 Spearman | -0.5 | 模型参数与评分规则不变 |
 | prospective 选择/真实终点/regret | `phantom_shortcut` / collision / 1.85 | 三个手工策略，不是总体失败率 |
 
-*TAB-17-01：`EXP-17-01` 的模型 gap 与策略排序。固定规则用于说明接口，不是 learned simulator benchmark。*
+*表 17-3：实验 17-1 的模型 gap 与策略排序。固定规则用于说明接口，不是 learned simulator benchmark。*<!-- INTERNAL_ASSET_ID: TAB-17-03 -->
 
 <!-- CLAIM_META: CLAIM-17-02 result -->
-`EXP-17-01` 的学习模型单步一致率为 `8/9`，却把真实最优 `safe_route` 排在乐观捷径之后；模型所选策略在真实规则中碰撞，排序 Spearman 为 `-0.5`，exploitation regret 为 `1.85`。该结果只验证手工 corridor 中的模型利用机制，不估计学习式世界模型的真实碰撞率。
+实验 17-1<!-- INTERNAL_ASSET_ID: EXP-17-01 --> 的学习模型单步一致率为 `8/9`，却把真实最优 `safe_route` 排在乐观捷径之后；模型所选策略在真实规则中碰撞，排序 Spearman 为 `-0.5`，exploitation regret 为 `1.85`。该结果只验证手工 corridor 中的模型利用机制，不估计学习式世界模型的真实碰撞率。
 
 这个反例不是说 88.89% 必然不够，而是说明错误权重取决于策略访问频率和后果。安全关键转移应分桶、加权并做压力测试，不能被大量容易的 `wait/advance` 样本稀释。
 
 ### 17.8.1 同为 8/9，错误位置决定当前策略后果
 
-为了避免把上述结果误读成“88.89% 这个数字本身太低”，`EXP-17-01` v6 再构造一个等准确率模型。两个模型都只在同一9格均匀 transition panel 上错1格，但把错误放在不同 query：
+为了避免把上述结果误读成“88.89% 这个数字本身太低”，实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 再构造一个等准确率模型。两个模型都只在同一9格均匀 transition panel 上错1格，但把错误放在不同 query：
 
 | 单故障模型 | 错误 query | 均匀准确率 | 当前候选 panel 访问次数 | 模型选择 | 真实终点 | regret |
 | --- | --- | ---: | ---: | --- | --- | ---: |
 | candidate-reachable | `(0, shortcut)` | 8/9 | 1 | `phantom_shortcut` | collision | 1.85 |
 | current-panel-unvisited | `(3, wait)` | 8/9 | 0 | `safe_route` | goal | 0 |
 
-*TAB-17-05：`EXP-17-01` v6 的等均匀准确率—异决策后果负对照。访问次数只针对三个固定候选策略从固定初态产生的 query；它不是总体 occupancy 或未来 planner 分布。*
+*表 17-4：实验 17-1 v6 的等均匀准确率—异决策后果负对照。访问次数只针对三个固定候选策略从固定初态产生的 query；它不是总体 occupancy 或未来 planner 分布。*<!-- INTERNAL_ASSET_ID: TAB-17-04 -->
 
 <!-- CLAIM_META: CLAIM-17-12 result -->
-`EXP-17-01` v6 的两个单故障模型在同一9格 transition panel 上均为8/9正确，但错误落在当前候选可达 shortcut 时，模型选择碰撞策略且 regret 为1.85；错误落在当前 panel 不访问的 `(3,wait)` 时，仍选择真实最优且 regret 为0。该结果只证明均匀准确率不能识别这个固定候选集下的错误位置与决策后果；不表示 `(3,wait)` 对其他初态、策略、planner 或部署分布安全，也不估计真实 occupancy、严重度或故障率。
+实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 的两个单故障模型在同一9格 transition panel 上均为8/9正确，但错误落在当前候选可达 shortcut 时，模型选择碰撞策略且 regret 为1.85；错误落在当前 panel 不访问的 `(3,wait)` 时，仍选择真实最优且 regret 为0。该结果只证明均匀准确率不能识别这个固定候选集下的错误位置与决策后果；不表示 `(3,wait)` 对其他初态、策略、planner 或部署分布安全，也不估计真实 occupancy、严重度或故障率。
 
 <!-- CLAIM_META: CLAIM-17-07 result -->
 在 fixture 的 support 外设置中，gate 拒绝唯一未覆盖的 `phantom_shortcut`，从剩余两个策略选中 `safe_route`，使真实 exploitation regret 从 `1.85` 降为 `0`。这是手工已知 support 的机制对照，不证明 learned OOD estimator 校准。
@@ -281,7 +281,7 @@ make ch17-smoke
 | planner/critic | 候选 return/energy/value | 无模型策略与 oracle/真实 simulator | 错排、时延、首步风险 |
 | 安全反事实 | 风险事件/不可恢复状态 | 独立规则/几何与故障注入 | 漏检、过度拒绝、OOD |
 
-*TAB-17-02：用途决定证据。一个系统可跨多行，但必须分别报告。*
+*表 17-5：用途决定证据。一个系统可跨多行，但必须分别报告。*<!-- INTERNAL_ASSET_ID: TAB-17-05 -->
 
 coverage gate 的分母也要明确：按单步 state-action、完整 action chunk、整条候选轨迹，还是本体/任务级 coverage。轨迹中任一步超出支持就应记录 first unsupported step；只对起始观测做 OOD 检查，无法约束 planner 后续把 rollout 推出覆盖范围。反过来，整条轨迹都被标为 covered 也只说明满足 coverage 定义，不证明 transition、reward、termination 或风险预测正确；仍要在第9章 E3/E4 的独立真实性锚点上回查。
 
@@ -291,7 +291,7 @@ coverage gate 的分母也要明确：按单步 state-action、完整 action chu
 
 自动驾驶世界模型可承担：生成雨夜/切入场景，按候选转向与制动 rollout，给规划器估计碰撞/舒适代价，以及对稀有事件做反事实压力测试。四者不能共享一个“视频质量很好”的结论。
 
-一个驾驶 planner 若发现世界模型中的“穿过护栏捷径”，会像 `EXP-17-01` 一样主动利用盲区。评测必须按道路使用者、碰撞严重度、车速、遮挡、地图/坐标误差和动作范围分桶；对模型所选轨迹，再由车辆动力学、道路边界、occupancy、控制限幅和最小风险层独立检查。
+一个驾驶 planner 若发现世界模型中的“穿过护栏捷径”，会像 实验 17-1<!-- INTERNAL_ASSET_ID: EXP-17-01 --> 一样主动利用盲区。评测必须按道路使用者、碰撞严重度、车速、遮挡、地图/坐标误差和动作范围分桶；对模型所选轨迹，再由车辆动力学、道路边界、occupancy、控制限幅和最小风险层独立检查。
 
 同样的总体 transition error 可以落在停车场低速等待，也可以落在高速切入、行人横穿或规划器反复查询的候选轨迹上。驾驶评测至少应同时报告固定基准分布、当前策略 occupancy、候选规划器 query 分布和风险严重度分层；其中任何一层的加权指标都依赖已冻结策略与 ODD，策略更新后必须重新估计，不能把一次“低访问错误”永久标成低风险。
 
@@ -319,7 +319,7 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 
 | 类型 | 声明/结果 | 来源 | 状态 | 限制 |
 | --- | --- | --- | --- | --- |
-| 本书结果 | 8/9 转移一致但策略错排；gate 阻断 support 外捷径、却不能阻断同一 support 内错误 | `EXP-17-01` | CPU smoke | 手工 corridor 与两套 authored support 声明 |
+| 本书结果 | 8/9 转移一致但策略错排；gate 阻断 support 外捷径、却不能阻断同一 support 内错误 | 实验 17-1<!-- INTERNAL_ASSET_ID: EXP-17-01 --> | CPU smoke | 手工 corridor 与两套 authored support 声明 |
 | 论文/代码 | 表征预训练后训练 action-conditioned planner | V-JEPA 2/2.1 | `[A/O,R1]` | 本书未运行 |
 | 论文/代码 | imagined actor-critic 与 latent MPC | DreamerV3、TD-MPC2 | `[P/O,R1]` | 本书未运行 |
 | 论文/部分代码 | 同一 action-to-video 先验分化为 simulator 与 policy | A2World | `[P/O,R1]` | 当前仓库聚焦 world-model/A2World-sim；policy 与论文结果未复现 |
@@ -344,45 +344,45 @@ V-JEPA 2 仓库主体为 MIT、部分数据增强文件为 Apache-2.0；DreamerV
 
 ## 自检要点
 
-先独立写清用途、选择准则和真实性锚点，再展开自检。这里的数值只对应 `EXP-17-01` 或题目中明确给出的反事实，不是 learned world model 的实测性能。
+先独立写清用途、选择准则和真实性锚点，再展开自检。这里的数值只对应 实验 17-1<!-- INTERNAL_ASSET_ID: EXP-17-01 --> 或题目中明确给出的反事实，不是 learned world model 的实测性能。
 
 <details markdown="1">
-<summary>SELF-CHECK-17-01：冻结 encoder 不等于在线 simulator</summary>
+<summary>自检 17-1：冻结 encoder 不等于在线 simulator</summary>
 
 这是“表征预训练”用途：世界模型只提供冻结 video encoder，ACT 在真实/记录动作监督上学习，部署时既不生成未来，也不按候选动作递归 rollout。最低对照应固定 ACT、数据切分、训练步数和 action schema，只替换 encoder，至少比较随机初始化、通用视觉预训练和该视频 encoder；再报告 ID/shift 的动作误差、闭环成功与安全，而不是只报 probe。若 encoder 预训练数据与评测 route/episode 同源，还要先做泄漏审计。这个实验不能推出 encoder 具备规划、reward、termination 或反事实能力。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-17-02：随机乐观错误要同时看均值与尾部</summary>
+<summary>自检 17-2：随机乐观错误要同时看均值与尾部</summary>
 
 一种可复核改法是令 `shortcut` 的模型 return 以 0.1 概率为 20、以 0.9 概率为 -1；其模型均值为 `0.1×20+0.9×(-1)=1.1`，高于 `safe_route` 的 0.85，所以按模型均值选 shortcut。若以最差 20% 的条件均值或 20% 分位数做保守选择，shortcut 的值为 -1，因而会选 safe route；真实规则中的 shortcut 仍为碰撞、return -1。运行多 seed 时应保存每个候选的抽样数、均值、分位数和最终选择；best-of-N 还可能放大罕见乐观样本。该构造只说明选择准则会改变模型利用风险，不证明某个尾部阈值已校准。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-17-03：receding horizon 不能撤回错误首步</summary>
+<summary>自检 17-3：receding horizon 不能撤回错误首步</summary>
 
 滚动时域每执行一小段就用新观察重规划，因此能截断远端预测误差的累积，并在环境偏离想象后更新计划。但当前周期选出的第一步仍由当前错误模型排序；若它已越过护栏、碰撞或进入不可恢复状态，下一次重规划没有机会撤销。最低安全设计还需独立检查首步/短前缀的可达性、碰撞、动作范围、support 和 deadline，并允许拒绝或 fallback。缩短 horizon 是误差管理手段，不是模型正确性或安全证明。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-17-04：代理评测的预注册合同</summary>
+<summary>自检 17-4：代理评测的预注册合同</summary>
 
 最低合同应在看最终结果前冻结：真实锚点（例如同一策略在固定版本 MetaDrive 或物理 simulator 的 route return/碰撞）、策略族及其训练来源、固定 route/seed、模型 rollout horizon/候选预算、代理与锚点的排序指标，以及有效/无效运行分母。可预注册拒绝条件为：策略排序相关低于阈值、model-vs-anchor return gap 或风险漏检超过阈值、所选轨迹越出 support、首步风险 gate 失败或 deadline miss。应保留无模型基线、已知 dynamics/oracle 和专门诱导 exploitation 的负对照。通过只授权该策略族与场景范围内的筛选，不能替代最终目标环境评测。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-17-05：施工锥幻觉与最小风险动作</summary>
+<summary>自检 17-5：施工锥幻觉与最小风险动作</summary>
 
 在固定 route/seed 放置有可追踪 ID 的施工锥，使 learned model 将占用区域预测为可通行；候选规划器应因此产生穿越锥桶的诱导轨迹。独立锚点用 simulator collision/occupancy 和道路边界检查同一动作前缀，并记录首次分歧时刻、TTC、速度、制动距离、模型风险、gate 原因和 intervention。合格的最小风险响应是在可用距离和后车风险允许时受控减速并停在障碍前，或切换到经独立验证的安全走廊；不得继续执行旧 chunk。一次成功停车只验证该注入与动力学条件，不证明任意施工区或真实道路安全。
 
 </details>
 
 <details markdown="1">
-<summary>SELF-CHECK-17-06：均匀准确率不包含决策访问与后果</summary>
+<summary>自检 17-6：均匀准确率不包含决策访问与后果</summary>
 
 两个模型都在9个等权 transition 中只错1个，所以均匀准确率同为 `8/9`。但固定候选 panel 会查询 `(0,shortcut)` 一次、不会查询 `(3,wait)`：前一个错误把 shortcut 从真实碰撞错误评为成功，模型因而选择它并产生1.85 regret；后一个错误不改变当前三策略 return，仍选 safe route。这里的“零访问”只相对于固定初态与候选集；换成从 position 3 开始、允许 wait 的策略或新的 planner 后，它可能立即变成关键错误。完整审计要冻结并分别报告 benchmark 分布、真实策略 occupancy、planner proposal/query 分布与风险严重度，保留未加权分桶和样本量，并在策略或 ODD 更新后重算。
 
