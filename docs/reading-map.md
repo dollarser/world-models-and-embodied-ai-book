@@ -86,7 +86,7 @@
 | [5](part-02-world-models/ch05-generative-foundations.md) | 杯柄被遮挡时是否保留多个合理状态？ | 切入/不切入两种未来怎样表示？ | 条件分布、mode coverage与aleatoric/epistemic边界 |
 | [6](part-02-world-models/ch06-rssm.md) | 抓取后遮挡时怎样用历史维持belief？ | 暂时看不到车辆时prior与posterior怎样分工？ | 循环latent、观测修正、prior rollout与KL接口 |
 | [7](part-02-world-models/ch07-model-based-planning.md) | 候选抓取和放置动作怎样比较后果？ | 不同制动/换道轨迹怎样在固定预算内排序？ | MPC/CEM接口、terminal value、风险目标与重规划 |
-| [8](part-02-world-models/ch08-imagination-learning.md) | 是否能用想象轨迹更新操作policy？ | imagined collision/reward错误怎样污染actor？ | λ-return、continuation、survival weight与误差传播 |
+| [8](part-02-world-models/ch08-imagination-learning.md) | 是否能用想象轨迹更新操作policy？ | imagined collision/reward错误怎样污染actor？ | $\lambda$-return、continuation、survival weight与误差传播 |
 | [9](part-02-world-models/ch09-evaluation.md) | 漂亮视频是否真的提高抓取成功？ | 视频指标、动作敏感度和路线outcome是否一致？ | E0–E4证据阶梯、固定分母与risk–coverage |
 | [10](part-03-representations/ch10-jepa-representations.md) | 冻结特征能否读出杯子/夹爪状态？ | 特征能否读出相对速度、车道偏移与TTC？ | ID/shift probe、负对照与动作反事实分离 |
 | [11](part-03-representations/ch11-action-conditioned-video.md) | 左/右移动是否产生方向正确的未来？ | 保持、急刹、切入是否改变正确的ego/他车状态？ | 配对动作干预、方向、自由rollout与状态oracle |

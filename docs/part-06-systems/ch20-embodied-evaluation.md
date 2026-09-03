@@ -270,7 +270,7 @@ micro 差值让每个 episode 权重相同，因此重复 4 次的 `route-b` 对
 如果 candidate 与 baseline 在同一批初态上逐对运行，两个边际成功率会丢掉 joint outcome。令 `b` 为“candidate 成功、baseline 失败”的对数，`c` 为相反方向，$m=b+c$ 为 discordant pairs。exact conditional McNemar 诊断在“两个方向在 discordant pairs 中等概率”的零假设下使用：
 
 \[
-p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\right).
+p_{\text{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\right).
 \]
 
 [Fay 等人](https://pmc.ncbi.nlm.nih.gov/articles/PMC9447366/)说明二元 matched pairs 的 conditional test 只对 discordant pairs 的方向做 exact binomial 计算，并讨论了与 exact test 相容的差值区间 `[P]`。本书只实现上式的 equal-tail two-sided 诊断；离散 exact test 可能保守，不能看过结果后在 exact、mid-p、渐近或单侧版本之间挑更小的值。

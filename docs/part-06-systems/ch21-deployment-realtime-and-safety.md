@@ -186,7 +186,7 @@ fixture 的 mean 为 45 ms，看似通过 50 ms deadline，但 p95/max 为 150 m
 对相同动作 schema 的相邻控制步，最小教学门可以写成：
 
 \[
-|a_{t,j}-a^{\mathrm{applied}}_{t-1,j}| \le \Delta_{max,j},\quad \forall j.
+|a_{t,j}-a^{\text{applied}}_{t-1,j}| \le \Delta_{max,j},\quad \forall j.
 \]
 
 这里的 $a_{\text{applied}}$ 必须来自绑定到紧邻步号的执行确认，而不是策略刚生成但可能被网关拒绝、队列丢弃或执行器未执行的向量。$\Delta_{\max,j}$ 也必须逐字段带单位，不能把 `m/s` 与 `rad/s` 取一个无量纲最大值。实验 21-1 v11<!-- INTERNAL_ASSET_ID: EXP-21-01 v11 --> 与第15章共同导入 `labs/shared/action_schema.py` 中唯一的 `mobile-base-v1`：`base_link`、10 Hz、`control_monotonic_ms`，线速度范围 `[-0.5,0.5] m/s`、角速度范围 `[-1,1] rad/s`，两个字段的教学单步变化上限分别为 `0.25 m/s/step` 与 `0.25 rad/s/step`。

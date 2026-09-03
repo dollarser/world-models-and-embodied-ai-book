@@ -37,8 +37,8 @@
 | EXP-06-01 | `smoke` | 13 个单元测试；四类 RMSE；h1/h4/h8/h16/h31 no-reset 误差；未来观测 `+1` 只改变观测消费分支、open-loop 精确不变；raw KL 在 free-nats 阈值两侧的解析诊断 | 手写一维单 seed 状态更新器与结构偏移，不运行自动微分/神经训练，不估计真实 leakage、规划性能或24GB GPU资源 |
 | 第7章 用模型做规划 | `reviewed` | MPC/CEM/tree search/value equivalence、PETS 粒子传播接口、固定动作预算的扰动重规划、环境 reward/terminal value 分账、风险目标排序反例、非整数经验尾部质量审计与自动驾驶正文；四类审查通过 | learned probabilistic model、总体 CVaR/置信区间、概率校准、CEM/MCTS、仿真、真实回报和 GPU 未运行 |
 | EXP-07-01 | `smoke` | 16 个单元测试；H=1/3、terminal value、扰动协议负对照、固定两动作槽的 reward-only/bootstrapped objective、受限 Bellman gap 与风险排序反转 | 三状态已知规则、一个固定扰动和五个手工等权场景；不是 learned planning、真实概率或安全性能 |
-| 第8章 在想象中学习 | `reviewed` | Dreamer V1–V4 谱系、λ-return、continuation target/累计 loss weight、terminated/truncated bootstrap、截断 bootstrap 与跨 episode λ-trace 分离、误差传播、自动驾驶正文与四类审查 | world model、actor/critic 训练、learned continuation、真实 replay 污染率、上游 checkpoint、仿真和 GPU 未运行 |
-| EXP-08-01 | `smoke` | 18 个单元测试；λ=0/0.5/1 target、reward bias、终止后泄漏、截断误折叠造成4的 bootstrap loss、遗漏 trace 边界造成96的跨 episode leakage，以及 post-terminal loss leakage 100 | 标量解析序列，不是 Dreamer、梯度、策略改进、replay 污染率或样本效率结果 |
+| 第8章 在想象中学习 | `reviewed` | Dreamer V1–V4 谱系、$\lambda$-return、continuation target/累计 loss weight、terminated/truncated bootstrap、截断 bootstrap 与跨 episode $\lambda$-trace 分离、误差传播、自动驾驶正文与四类审查 | world model、actor/critic 训练、learned continuation、真实 replay 污染率、上游 checkpoint、仿真和 GPU 未运行 |
+| EXP-08-01 | `smoke` | 18 个单元测试；$\lambda=0/0.5/1$ target、reward bias、终止后泄漏、截断误折叠造成4的 bootstrap loss、遗漏 trace 边界造成96的跨 episode leakage，以及 post-terminal loss leakage 100 | 标量解析序列，不是 Dreamer、梯度、策略改进、replay 污染率或样本效率结果 |
 | 第10章 非生成式预测表示 | `reviewed` | 四类审查通过；V-JEPA 2.1 一手资料核验、ID/shift probe、时间反转、动作接口边界与第5/11章衔接；锁定快照的默认 Hub URL 指向 localhost 已登记为 S 档预检阻塞而非可运行证据 | 官方 checkpoint、真实视频数据与 GPU 未运行；需先锁定兼容 loader/权重与校验和 |
 | EXP-10-01 | `smoke` | 15 个单元测试；重建排名反转、ID 100%→shift 0% 捷径、状态可读但动作盲、middle-frame 时间方向50%且反转敏感度0、ordered-delta方向100%且敏感度4 | 手工标量表征、八条三标量序列与确定性接口，不是 JEPA、视频理解、因果或规划性能 |
 | 第11章 动作条件视频世界模型 | `reviewed` | 四类审查通过；动作敏感度单位/方向、固定分母 rollout、endpoint cancellation 假阴性、Cosmos 2.5→3 等开源代际与 renderer/simulator/planner 边界 | 视频训练、checkpoint、仿真和 GPU 未运行 |

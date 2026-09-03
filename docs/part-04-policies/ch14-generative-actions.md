@@ -31,7 +31,7 @@
 行为克隆常训练确定性回归器。对平方损失，给定观测 `o` 的最优输出是条件均值：
 
 \[
-\pi^*_{\mathrm{MSE}}(o)=\mathbb{E}[A\mid o].
+\pi^*_{\text{MSE}}(o)=\mathbb{E}[A\mid o].
 \]
 
 若绕过障碍的左、右轨迹都有效，均值却可能正对障碍；若两种抓取姿态分别满足接触约束，逐关节平均可能两者都不可达。这不是 MSE 算错，而是单个点估计无法表达多峰分布。加入历史、目标、语言或地图可能消除部分歧义；仍存在的随机性才需要条件分布。
@@ -110,7 +110,7 @@ Diffusion 与 flow 不应按营销标签做速度结论。公平比较至少固�
 
 两类方法的共同目标是从简单 base 分布得到条件动作样本，差别主要在训练参数化与采样动力学。扩散模型通常学习逐噪声层级的反向去噪关系，flow matching 学习沿所选概率路径的连续速度场；两者都可能采用不同离散求解器、步长与近似。因而不能仅凭“随机过程”或“ODE”判断谁更准确、确定或实时。实际策略是否随机，还取决于初始 base 样本、采样器设置和部署时是否固定 seed。
 
-概率路径也不是物理动作轨迹。Flow 中从 base action 到 data action 的中间 A_t 是生成空间中的插值状态，通常不会被执行，也不必满足机器人动力学；diffusion 中间噪声动作同理。安全检查应作用于最终候选及其物理时间序列，不能把生成过程的中间变量误读为系统将经过的状态。
+概率路径也不是物理动作轨迹。Flow 中从 base action 到 data action 的中间 $A_t$ 是生成空间中的插值状态，通常不会被执行，也不必满足机器人动力学；diffusion 中间噪声动作同理。安全检查应作用于最终候选及其物理时间序列，不能把生成过程的中间变量误读为系统将经过的状态。
 
 ## 14.4 从动作时域到采样预算
 
@@ -121,9 +121,9 @@ Diffusion 与 flow 不应按营销标签做速度结论。公平比较至少固�
 设求解器顺序步数为 `K`，同一观测下生成的候选数为 `N`，一次 forward 可容纳的候选数为 `B`。若每个求解步都按 batch 处理候选，抽象的顺序 forward 数为
 
 \[
-F_{\mathrm{seq}}=K\left\lceil\frac{N}{B}\right\rceil,
+F_{\text{seq}}=K\left\lceil\frac{N}{B}\right\rceil,
 \qquad
-F_{\mathrm{sample}}=KN.
+F_{\text{sample}}=KN.
 \]
 
 前者更接近墙钟关键路径，后者表示总 sample-model evaluations；两者不能互相替代。若候选逐个串行，$B=1$，二者都退化为 `KN`。增大 batch 可能减少顺序调用，却会增加显存，并改变单次 forward 的延迟分布。
@@ -131,8 +131,8 @@ F_{\mathrm{sample}}=KN.
 实时约束还应覆盖完整动作查询，而不只是模型 kernel。把控制周期记为 $T_{\text{control}}$，感知同步、预处理、反归一化、安全检查和传输等非生成开销记为 $T_{\text{nonmodel}}$，目标 batch 下单次 forward 的高分位延迟记为 $t_{\text{fwd}}$，则下面的关系只能作为设计筛查：
 
 \[
-K\left\lceil\frac{N}{B}\right\rceil t_{\mathrm{fwd}}
-\le T_{\mathrm{control}}-T_{\mathrm{nonmodel}}.
+K\left\lceil\frac{N}{B}\right\rceil t_{\text{fwd}}
+\le T_{\text{control}}-T_{\text{nonmodel}}.
 \]
 
 例如控制周期为 50 ms、非模型开销为 18 ms，且全部候选可放入同一 batch；若该 batch 的单次 forward P95 为 7 ms，算术上最多容纳 `floor((50-18)/7)=4` 个顺序求解步。第 5 步需要 35 ms，已超出剩余的 32 ms。这个计算不是实时部署保证，因为多次调用的尾延迟可能相关，P95 也不能简单相加；它的作用是尽早排除明显超预算的设计。最终证据必须来自目标 runtime 上完整查询链路的 P50/P95/P99、deadline miss rate 与安全余量。
@@ -354,7 +354,7 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 <details markdown="1">
 <summary>自检 14-1：不对称双峰的均值</summary>
 
-若 `-2` 的权重为 p、`+1` 的权重为 `1-p`，条件均值为 $\mu=1-3p$；等权时 μ=-0.5，距两个 mode 都是1.5，因此不是任一有效模式。若同时把 fixture 的 `VALID_MODES` 改为 `(-2,1)` 并保留 tolerance 0.25，均值有效当且仅当 $3\min(p,1-p)\le0.25$，即 $p\le1/12$ 或 $p\ge11/12$；严格只承认 mode 本身时则只有 p=0或1。必须同步更新 mode oracle，不能只改 demonstrations、仍用旧 `(-1,1)` 计算有效性。
+若 `-2` 的权重为 p、`+1` 的权重为 `1-p`，条件均值为 $\mu=1-3p$；等权时 $\mu=-0.5$，距两个 mode 都是1.5，因此不是任一有效模式。若同时把 fixture 的 `VALID_MODES` 改为 `(-2,1)` 并保留 tolerance 0.25，均值有效当且仅当 $3\min(p,1-p)\le0.25$，即 $p\le1/12$ 或 $p\ge11/12$；严格只承认 mode 本身时则只有 p=0或1。必须同步更新 mode oracle，不能只改 demonstrations、仍用旧 `(-1,1)` 计算有效性。
 
 </details>
 

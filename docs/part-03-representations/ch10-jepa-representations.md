@@ -203,7 +203,7 @@ appearance 与 task-predictive 在未参与拟合的 ID 集上都取得 100%，�
 
 ### 10.6.1 可读状态不等于动作条件转移
 
-同一 fixture 还提供一个与第11章衔接的解析诊断。`action_blind` 与 `action_conditioned` 接口都原样暴露当前状态，所以受限的当前状态 probe 都是零误差；给定候选动作 \(a\in\{-1,+1\}\) 时，真实规则为 \(s_{t+1}=s_t+a_t\)，只有后者把动作送入 predictor。动作敏感度定义为相同状态下两个候选动作预测之差的绝对值再取均值。
+同一 fixture 还提供一个与第11章衔接的解析诊断。`action_blind` 与 `action_conditioned` 接口都原样暴露当前状态，所以受限的当前状态 probe 都是零误差；给定候选动作 $a\in\{-1,+1\}$ 时，真实规则为 $s_{t+1}=s_t+a_t$，只有后者把动作送入 predictor。动作敏感度定义为相同状态下两个候选动作预测之差的绝对值再取均值。
 
 | predictor 接口 | 当前状态 probe RMSE ↓ | 反事实转移 RMSE ↓ | 动作敏感度 ↑ |
 | --- | ---: | ---: | ---: |
@@ -329,7 +329,7 @@ Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复�
 <details markdown="1">
 <summary>自检 10-2：纹理相关性的翻转区域</summary>
 
-可把平衡二分类任务写成 $y\in\{-1,1\}$，纹理符号以概率 $(1+\rho_s)/2$ 与 y 一致，幅度为 $A_s>0$，分别冻结 $\rho_{\text{train}},\rho_{\text{ID}},\rho_{\text{shift}}$。无噪声 centroid probe 在 $\rho_{\text{train}}\ne0$ 时学习其符号，split s 的期望准确率为 $(1+\mathrm{sign}(\rho_{\text{train}})\rho_s)/2$：ID 与训练同号时高于 0.5，shift 反号时低于 0.5，$\rho_s=0$ 为 chance；$A=0$ 时表示坍塌。当前确定 fixture 相当于训练/ID 同号、shift 反号，因此 appearance 为 `1/1/0`，task-predictive 保持 `1/1/1`，collapsed 为 `0.5/0.5/0.5`。无噪声下正幅度只缩放距离，不改变分类；要研究幅度边界需显式加入噪声或正则化，不能凭图假造翻转。
+可把平衡二分类任务写成 $y\in\{-1,1\}$，纹理符号以概率 $(1+\rho_s)/2$ 与 y 一致，幅度为 $A_s>0$，分别冻结 $\rho_{\text{train}},\rho_{\text{ID}},\rho_{\text{shift}}$。无噪声 centroid probe 在 $\rho_{\text{train}}\ne0$ 时学习其符号，split s 的期望准确率为 $(1+\text{sign}(\rho_{\text{train}})\rho_s)/2$：ID 与训练同号时高于 0.5，shift 反号时低于 0.5，$\rho_s=0$ 为 chance；$A=0$ 时表示坍塌。当前确定 fixture 相当于训练/ID 同号、shift 反号，因此 appearance 为 `1/1/0`，task-predictive 保持 `1/1/1`，collapsed 为 `0.5/0.5/0.5`。无噪声下正幅度只缩放距离，不改变分类；要研究幅度边界需显式加入噪声或正则化，不能凭图假造翻转。
 
 </details>
 

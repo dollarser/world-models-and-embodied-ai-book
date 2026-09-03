@@ -225,7 +225,7 @@ fixture 另给同一三个状态两套完全不同的观测标签，因此观测
 期望回报只关心平均数：
 
 \[
-J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
+J_{\text{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 \]
 
 安全或高代价任务还可能关心失败概率、最坏场景、return 的经验下尾均值，或 cost 的 CVaR。这里先冻结本书的方向和参数约定：对 return 取最低的 $\alpha$ 概率质量并最大化其均值；若改写成 cost，则通常考察上尾并最小化，必须重新声明符号与置信水平，不能只沿用“CVaR”名称。
@@ -237,7 +237,7 @@ J_{\mathrm{mean}}(a)=\frac{1}{N}\sum_{i=1}^{N}R^{(i)}(a).
 \frac{\sum_{i=1}^{k}x_{(i)}+\delta x_{(k+1)}}{t},
 \]
 
-其中 $\delta=0$ 时不取边界项；$\alpha=1$ 时就是全样本均值。边界样本的分数权重不是“半个真实场景”，而是离散经验分布在分位点上的概率质量分配。[Rockafellar 与 Uryasev](https://www.sciencedirect.com/science/article/pii/S0378426602002716)对一般（包括离散）损失分布给出 CVaR 定义与优化表述 `[P,R1]`；这也说明简单条件均值 $E[X\mid X\le\mathrm{VaR}]$ 在分位点有原子质量时可能纳入过多概率。文献也直接把 CVaR 优化用于随机动力系统与机器人 MPC，例如 Wang et al. 的[风险敏感随机搜索 MPC](https://proceedings.mlr.press/v144/wang21b.html) `[P,R1]`。
+其中 $\delta=0$ 时不取边界项；$\alpha=1$ 时就是全样本均值。边界样本的分数权重不是“半个真实场景”，而是离散经验分布在分位点上的概率质量分配。[Rockafellar 与 Uryasev](https://www.sciencedirect.com/science/article/pii/S0378426602002716)对一般（包括离散）损失分布给出 CVaR 定义与优化表述 `[P,R1]`；这也说明简单条件均值 $E[X\mid X\le\text{VaR}]$ 在分位点有原子质量时可能纳入过多概率。文献也直接把 CVaR 优化用于随机动力系统与机器人 MPC，例如 Wang et al. 的[风险敏感随机搜索 MPC](https://proceedings.mlr.press/v144/wang21b.html) `[P,R1]`。
 
 常见近似“取最差 $\lceil\alpha N\rceil$ 个样本再平均”在 $\alpha N$ 为整数时与上式一致；否则它实际使用 $\lceil\alpha N\rceil/N$ 的更大尾部，而且方向和偏差取决于边界样本。它可作为明确命名的粗略对照，不能悄悄冒充指定 $\alpha$ 的正式指标。即使按概率质量正确离散化，风险度量也不是安全证明：[Troop et al.](https://proceedings.mlr.press/v161/troop21a.html)讨论了有限样本 CVaR 估计 `[P,R1]`；有限粒子仍会漏掉稀有事件，模型共同偏差会让所有粒子一起乐观，事后挑 $\alpha$ 或阈值还会产生评测泄漏。
 
@@ -342,7 +342,7 @@ CEM/shooting 与 tree search 以不同方式分配模型查询；搜索更强既
 <details markdown="1">
 <summary>自检 7-2：random shooting 预算曲线</summary>
 
-固定 RNG seed 和同一候选生成顺序，对预算 $B=1,2,4,8,\ldots$ 取前 B 个样本，记录 $\mathrm{best_so_far}(B)=\max_{i\le B}\ \mathrm{score}_i$，则曲线应单调不降；若每个预算重新抽样，单次曲线可能下降，不能解释为更多预算更差。还应跨多个预注册 seed 报中位数/区间、找到穷举最优的比例和计算时延。当前离散 H=3 仅有 8 个候选，适合验证搜索合同，不足以证明 random shooting 在连续控制中有效。
+固定 RNG seed 和同一候选生成顺序，对预算 $B=1,2,4,8,\ldots$ 取前 B 个样本，记录 $\text{best_so_far}(B)=\max_{i\le B}\ \text{score}_i$，则曲线应单调不降；若每个预算重新抽样，单次曲线可能下降，不能解释为更多预算更差。还应跨多个预注册 seed 报中位数/区间、找到穷举最优的比例和计算时延。当前离散 H=3 仅有 8 个候选，适合验证搜索合同，不足以证明 random shooting 在连续控制中有效。
 
 </details>
 

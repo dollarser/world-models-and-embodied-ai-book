@@ -124,7 +124,7 @@ w_t\,d\!\left(y_t,\hat y_t(\phi,a_{0:t})\right).
 
 $\phi$ 可以包含尺寸、质量、摩擦、执行器增益、动作延迟和传感器标定。权重 $w_t$ 应反映任务与安全，而不是只让大量静止帧压低平均误差。校准集用于求参数；留出动作、初态和场景用于检验是否泛化。若在同一轨迹上同时拟合和报告，零误差没有说服力。
 
-还要区分两种问题：**结构可辨识性**问无限无噪数据下不同参数是否会产生相同输出；**实用可辨识性**问有限、带噪、激励不足的数据能否把它们稳定分开。换一条 held-out action 只能检验泛化，不能必然修复结构混淆。若观测始终只依赖 $\mathrm{scale}\times\mathrm{gain}$，再丰富的动作也无法从该观测单独分离二者；需要独立 state/传感器标定、固定其中一个参数或改变测量方程。
+还要区分两种问题：**结构可辨识性**问无限无噪数据下不同参数是否会产生相同输出；**实用可辨识性**问有限、带噪、激励不足的数据能否把它们稳定分开。换一条 held-out action 只能检验泛化，不能必然修复结构混淆。若观测始终只依赖 $\text{scale}\times\text{gain}$，再丰富的动作也无法从该观测单独分离二者；需要独立 state/传感器标定、固定其中一个参数或改变测量方程。
 
 因此校准报告至少包含最优值之外的：等价/近等价解数量、Jacobian/rank 或 profile、参数相关性/置信区间、不同初值结果、residual 分桶，以及新增传感器或激励后的变化。窄置信区间也依赖模型和噪声假设，不能自动证明真实参数唯一。
 
@@ -169,7 +169,7 @@ Domain randomization 不只是给参数加噪声，而是在训练目标中规�
 
 ## 19.6 零校准误差与“更多数据”都可能不可辨识（实验 19-1<!-- INTERNAL_ASSET_ID: EXP-19-01 -->）
 
-S 档 fixture 用一个标量状态演示执行器增益、动作延迟和观测尺度。目标系统固定为 $\mathrm{gain}=0.8$、$\mathrm{delay}=1$、$\mathrm{scale}=1.25$；12 个候选组合在校准动作上网格搜索。关键是 observation 只依赖 $\mathrm{gain}\times\mathrm{scale}$：目标的 `0.8×1.25` 与候选 `1.0×1.0` 相同，因此 observation-only 本来就无法分离二者。
+S 档 fixture 用一个标量状态演示执行器增益、动作延迟和观测尺度。目标系统固定为 $\text{gain}=0.8$、$\text{delay}=1$、$\text{scale}=1.25$；12 个候选组合在校准动作上网格搜索。关键是 observation 只依赖 $\text{gain}\times\text{scale}$：目标的 `0.8×1.25` 与候选 `1.0×1.0` 相同，因此 observation-only 本来就无法分离二者。
 
 <details markdown="1">
 <summary>可选：验证本章证据</summary>
@@ -203,7 +203,7 @@ observation-only 网格搜索在 12 个候选中发现两个零误差 minimizer�
 <!-- CLAIM_META: CLAIM-19-04 result -->
 手工窄随机化范围没有覆盖目标参数，手工宽范围覆盖了目标。它说明 support 应被显式检查，不比较随机化策略性能。
 
-fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量响应只由 $\mathrm{force_gain}/(\mathrm{base_load}+\mathrm{known_payload})$ 决定。在 9 个候选点中，零载荷只能识别这个比值；把同一条零载荷序列重复两次不会增加参数方向。第二条序列将已知载荷改为 `1.0`，才为当前离散网格提供另一条独立约束。
+fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量响应只由 $\text{force_gain}/(\text{base_load}+\text{known_payload})$ 决定。在 9 个候选点中，零载荷只能识别这个比值；把同一条零载荷序列重复两次不会增加参数方向。第二条序列将已知载荷改为 `1.0`，才为当前离散网格提供另一条独立约束。
 
 | 校准数据 | 序列数 | 独立载荷数 | 零误差解数 | 结论 |
 | --- | ---: | ---: | ---: | --- |
@@ -298,14 +298,14 @@ Real2Sim 的参数唯一性与预测可用性是两个问题，零 residual 也�
 <details markdown="1">
 <summary>自检 19-2：观测噪声破坏精确网格恢复</summary>
 
-可在 实验 19-1<!-- INTERNAL_ASSET_ID: EXP-19-01 --> 生成 observation 后加入固定 seed、零均值且幅度已登记的噪声，并保持校准/留出噪声独立。有限样本下，真实参数通常不再产生恰好零 residual，网格最优点会随 seed、噪声模型和分辨率变化；应报告多 seed 参数分布、置信/后验范围和 held-out 误差，而不是要求恢复唯一精确值。噪声减少信息，却不会解除原 fixture 的结构性 $\mathrm{gain}\times\mathrm{observation_scale}$ 等价：多个参数仍可产生同一无噪声 observation。加入更多算力或更细网格不能替代新测量。
+可在 实验 19-1<!-- INTERNAL_ASSET_ID: EXP-19-01 --> 生成 observation 后加入固定 seed、零均值且幅度已登记的噪声，并保持校准/留出噪声独立。有限样本下，真实参数通常不再产生恰好零 residual，网格最优点会随 seed、噪声模型和分辨率变化；应报告多 seed 参数分布、置信/后验范围和 held-out 误差，而不是要求恢复唯一精确值。噪声减少信息，却不会解除原 fixture 的结构性 $\text{gain}\times\text{observation_scale}$ 等价：多个参数仍可产生同一无噪声 observation。加入更多算力或更细网格不能替代新测量。
 
 </details>
 
 <details markdown="1">
 <summary>自检 19-3：激励不足与结构混淆需要不同干预</summary>
 
-gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限轨迹上两组参数近似相同，但阶跃、脉冲、PRBS 或不同频率/幅度动作可让响应起点和幅值分离，这是 practical identifiability 问题。$\mathrm{gain}\times\mathrm{scale}$ 则是观测方程只看到乘积的结构对称性；无论重复多少同类动作，都不能唯一拆开两者。前者应设计满足安全约束的新动作并留出验证，后者需增加独立 state/标尺测量或固定其中一个已校准参数。若新传感器仍只测同一乘积，结构歧义仍在。
+gain 与 delay 难分可能是实验动作太平缓或变化太少：在有限轨迹上两组参数近似相同，但阶跃、脉冲、PRBS 或不同频率/幅度动作可让响应起点和幅值分离，这是 practical identifiability 问题。$\text{gain}\times\text{scale}$ 则是观测方程只看到乘积的结构对称性；无论重复多少同类动作，都不能唯一拆开两者。前者应设计满足安全约束的新动作并留出验证，后者需增加独立 state/标尺测量或固定其中一个已校准参数。若新传感器仍只测同一乘积，结构歧义仍在。
 
 </details>
 

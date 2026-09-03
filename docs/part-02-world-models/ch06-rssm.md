@@ -276,7 +276,7 @@ make ch06-smoke
 
 原始结果记录在 `results/ch06/EXP-06-01-smoke.json`。这些数字只属于 实验 6-1<!-- INTERNAL_ASSET_ID: EXP-06-01 --> 的固定教学 fixture，不与论文分数比较，也不用于声称学习方法优于其他模型。
 
-同一协议已冻结为 `benchmarks/BENCH-06-01.json` v3：它除登记31个有效转移、seed 7、四种预测视图、五个 open-loop horizon 与未来观测可见性负对照，还登记两组 categorical posterior/prior、$\mathrm{KL}(q\,\|\,p)$ 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、状态是否从 posterior 重置、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
+同一协议已冻结为 `benchmarks/BENCH-06-01.json` v3：它除登记31个有效转移、seed 7、四种预测视图、五个 open-loop horizon 与未来观测可见性负对照，还登记两组 categorical posterior/prior、$\text{KL}(q\,\|\,p)$ 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、状态是否从 posterior 重置、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
 
 <!-- CLAIM_META: CLAIM-06-03 result -->
 在 实验 6-1<!-- INTERNAL_ASSET_ID: EXP-06-01 --> 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
@@ -406,7 +406,7 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 <details markdown="1">
 <summary>自检 6-3：KL 的梯度路由</summary>
 
-`KL(sg(q)‖p)` 中 posterior `q` 被 stop-gradient，梯度只流向 dynamics prior `p`；`KL(q‖sg(p))` 中 prior 被截断，梯度只流向 representation/posterior `q`。两式前向都代入同一组概率值计算 $\mathrm{KL}(q\,\|\,p)$，所以日志标量可以完全相同；stop-gradient 改的是反向图，不是前向数值。检查实现时应同时看 loss 数值、scale 与参数梯度目标。
+`KL(sg(q)‖p)` 中 posterior `q` 被 stop-gradient，梯度只流向 dynamics prior `p`；`KL(q‖sg(p))` 中 prior 被截断，梯度只流向 representation/posterior `q`。两式前向都代入同一组概率值计算 $\text{KL}(q\,\|\,p)$，所以日志标量可以完全相同；stop-gradient 改的是反向图，不是前向数值。检查实现时应同时看 loss 数值、scale 与参数梯度目标。
 
 </details>
 

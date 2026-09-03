@@ -132,7 +132,7 @@ make ch18-smoke
 | 成功 3、失败 1 | `(0.40,0.60)` | 0.15 | 3.2 | 0.25 |
 | 只保留成功 | `(0.25,0.75)` | 0.00 | 2.0 | 0.00 |
 
-*表 18-2：实验 18-1 固定 reward reweighting 结果。ESS 为 \((\sum_i w_i)^2/\sum_i w_i^2\)，recovery mass 是归一化权重，不是恢复成功率。*<!-- INTERNAL_ASSET_ID: TAB-18-02 -->
+*表 18-2：实验 18-1 固定 reward reweighting 结果。ESS 为 $(\sum_i w_i)^2/\sum_i w_i^2$，recovery mass 是归一化权重，不是恢复成功率。*<!-- INTERNAL_ASSET_ID: TAB-18-02 -->
 
 <!-- CLAIM_META: CLAIM-18-02 result -->
 固定成功权重从 1 增至 3 后，两阶段 target 从 `(0.55,0.45)` 移到 `(0.40,0.60)`，相对手工成功参考的 MAE 从 0.30 降到 0.15。代码没有训练或评测 policy，因此不能声称成功率改善。

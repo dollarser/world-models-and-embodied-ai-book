@@ -9,7 +9,7 @@
 ### 先修知识
 
 - 已具备：第3章 MDP/POMDP，第6章 RSSM 与 prior rollout，第7章规划和 model error；
-- 本章补齐：replay 与 imagination 的双循环、actor-critic 最小接口、λ-return、Dreamer V1–V4 谱系和 imagined learning 审计；
+- 本章补齐：replay 与 imagination 的双循环、actor-critic 最小接口、$\lambda$-return、Dreamer V1–V4 谱系和 imagined learning 审计；
 - 不要求：强化学习优化推导、3D 视觉、Dreamer 使用经验、GPU、仿真器或硬件。
 
 ### 非目标
@@ -22,7 +22,7 @@
 
 ### 学完后的可验证产出
 
-读者应能画出 real replay 与 latent imagination 的数据流，解释 imagination 如何把在线规划摊销进策略，手算 λ-return，说明 actor 与 critic 各自学习什么，解释 continuation mask 对 target 与 loss weight 的两种作用，区分 world-model loss、imagined objective 和真实环境评测，并判断 replay 起点与 actor 诱导分布之间的覆盖缺口。
+读者应能画出 real replay 与 latent imagination 的数据流，解释 imagination 如何把在线规划摊销进策略，手算 $\lambda$-return，说明 actor 与 critic 各自学习什么，解释 continuation mask 对 target 与 loss weight 的两种作用，区分 world-model loss、imagined objective 和真实环境评测，并判断 replay 起点与 actor 诱导分布之间的覆盖缺口。
 
 ## 8.1 两个循环：真实数据学模型，模型内部学行为
 
@@ -85,7 +85,7 @@ reward head 给出 \hat r_\tau，continuation head 估计轨迹是否仍应继�
 d_\tau=\gamma\hat c_\tau,
 \]
 
-其中 \hat c_\tau 可表示 predicted continuation。真实 replay transition 还需要把两个职责分开：$d_t$ 决定是否从当前行的下一状态 value bootstrap，$m_t$ 决定 λ 递推是否可以读取数组中的下一行。自然终止通常令 $d_t=0,\,m_t=0$；外部截断且最终观测有效时令 $d_t=\gamma,\,m_t=0$；同一 episode 内的普通 transition 才是 $d_t=\gamma,\,m_t=1$。将 timeout 错当 terminal 会截断有效 bootstrap；只保留 discount 却忘记 trace 边界，又会把下一 episode 的 reward 接回来。
+其中 \hat c_\tau 可表示 predicted continuation。真实 replay transition 还需要把两个职责分开：$d_t$ 决定是否从当前行的下一状态 value bootstrap，$m_t$ 决定 $\lambda$ 递推是否可以读取数组中的下一行。自然终止通常令 $d_t=0,\,m_t=0$；外部截断且最终观测有效时令 $d_t=\gamma,\,m_t=0$；同一 episode 内的普通 transition 才是 $d_t=\gamma,\,m_t=1$。将 timeout 错当 terminal 会截断有效 bootstrap；只保留 discount 却忘记 trace 边界，又会把下一 episode 的 reward 接回来。
 
 Imagined horizon 不是越长越好。它越长，越能看见延迟回报，也越会累积 dynamics、reward、continuation 与 actor-induced OOD 误差。第7章的 planning horizon 与这里的 imagination horizon 面临相同误差—远见权衡，但用途不同：前者在线选择动作，后者生成学习 target。
 
@@ -103,7 +103,7 @@ imagination 通常不是从任意潜状态开始，而是从 replay 序列经过
 
 三者重合不是默认事实。replay 可能来自旧策略，actor 会不断改变 imagined visitation，而独立环境还会揭示模型遗漏的后果。若只在 replay 上测模型误差，就可能看不到 actor 正在访问的区域；若只在 imagined 分布上测，又会让模型同时充当出题者和裁判。
 
-## 8.3 λ-return：在 bootstrap 与长回报之间
+## 8.3 $\lambda$-return：在 bootstrap 与长回报之间
 
 本章采用带显式序列边界的有限递推定义：
 
@@ -111,13 +111,13 @@ imagination 通常不是从任意潜状态开始，而是从 replay 序列经过
 G_t^\lambda=\hat r_t+d_t\left[(1-\lambda m_t)V(s_{t+1})+\lambda m_t G_{t+1}^\lambda\right].
 \]
 
-在未中断的 imagined rollout 内 $m_t=1$，即退化为常见 λ-return；在截断边界 $m_t=0$，仍可由非零 $d_t$ 保留 $V(s_{t+1})$，但不会读取下一行的 $G_{t+1}$。若实现保证每个 batch slice 恰好止于边界，末端 bootstrap 与显式 $m_t=0$ 数值等价；一旦数组可能拼接多个 episode，独立 trace mask 就是防止跨段污染的机器合同。
+在未中断的 imagined rollout 内 $m_t=1$，即退化为常见 $\lambda$-return；在截断边界 $m_t=0$，仍可由非零 $d_t$ 保留 $V(s_{t+1})$，但不会读取下一行的 $G_{t+1}$。若实现保证每个 batch slice 恰好止于边界，末端 bootstrap 与显式 $m_t=0$ 数值等价；一旦数组可能拼接多个 episode，独立 trace mask 就是防止跨段污染的机器合同。
 
-- λ=0 时每步只看一步 reward 加 critic bootstrap，通常方差较低但更依赖 critic；
-- λ=1 时把后续 imagined reward 全部向前传播，更少依赖中间 value，却更暴露于长 rollout 的 model error；
+- $\lambda=0$ 时每步只看一步 reward 加 critic bootstrap，通常方差较低但更依赖 critic；
+- $\lambda=1$ 时把后续 imagined reward 全部向前传播，更少依赖中间 value，却更暴露于长 rollout 的 model error；
 - 中间值混合两者。它不是自动最优参数，必须与 horizon、discount、critic、model quality 和任务一起报告。
 
-“bias/variance”在这里是诊断框架，不是说某个 λ 对所有问题都有固定排序。Dreamer 各版本的 actor loss、gradient estimator、target critic 和归一化细节也不同，不能只凭这一条式子复刻算法。
+“bias/variance”在这里是诊断框架，不是说某个 $\lambda$ 对所有问题都有固定排序。Dreamer 各版本的 actor loss、gradient estimator、target critic 和归一化细节也不同，不能只凭这一条式子复刻算法。
 
 ### 8.3.1 Actor 与 critic 解决不同问题
 
@@ -144,18 +144,18 @@ make ch08-smoke
 
 | 设置 | 三步 target | start target |
 | --- | --- | ---: |
-| λ=0 | `[0.4, 0.8, 1.0]` | 0.40 |
-| λ=0.5 | `[0.65, 0.9, 1.0]` | 0.65 |
-| λ=1 | `[1.0, 1.0, 1.0]` | 1.00 |
+| $\lambda=0$ | `[0.4, 0.8, 1.0]` | 0.40 |
+| $\lambda=0.5$ | `[0.65, 0.9, 1.0]` | 0.65 |
+| $\lambda=1$ | `[1.0, 1.0, 1.0]` | 1.00 |
 
-*表 8-1：实验 8-1 的解析 λ-return。所有数字来自仓库内固定输入和标准库代码。*<!-- INTERNAL_ASSET_ID: TAB-08-01 -->
+*表 8-1：实验 8-1 的解析 $\lambda$-return。所有数字来自仓库内固定输入和标准库代码。*<!-- INTERNAL_ASSET_ID: TAB-08-01 -->
 
 <!-- CLAIM_META: CLAIM-08-02 result -->
-在这个 value 不精确的固定序列中，λ 从 0、0.5 到 1 时 start target 分别为 0.40、0.65、1.00。这只验证 target 接口，不是策略效果比较。
+在这个 value 不精确的固定序列中，$\lambda$ 从 0、0.5 到 1 时 start target 分别为 0.40、0.65、1.00。这只验证 target 接口，不是策略效果比较。
 
 ## 8.5 两条污染路径：reward bias 与终止泄漏
 
-第一条反例把 imagined 最终 reward 从 1 改成 2。在 λ=1 时 target 从 `[1,1,1]` 变成 `[2,2,2]`，start target gap 为 1。
+第一条反例把 imagined 最终 reward 从 1 改成 2。在 $\lambda=1$ 时 target 从 `[1,1,1]` 变成 `[2,2,2]`，start target gap 为 1。
 
 <!-- CLAIM_META: CLAIM-08-03 result -->
 固定的终点 reward-model +1 偏差传播到三个 full-return target。它表明 actor/critic 会接收模型生成的偏置信号，但没有执行梯度更新，也没有证明实际 policy 会怎样改变。
@@ -187,12 +187,12 @@ make ch08-smoke
 
 但 bootstrap 正确还不够。实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 故意把两个不同 episode 的行相邻放置：第一行 reward 为1，因外部截断而结束，保存的下一状态 value 为4；第二行是新 episode 的终止 transition，reward 为100。
 
-| 第一行处理 | bootstrap discount `d₀` | λ-trace `m₀` | λ=1 的第一行 target |
+| 第一行处理 | bootstrap discount `d₀` | $\lambda$-trace `m₀` | $\lambda=1$ 的第一行 target |
 | --- | ---: | ---: | ---: |
 | 正确：截断并关闭跨行 trace | 1 | 0 | 5 |
 | 错误：只保留 bootstrap、默认 trace 连续 | 1 | 1 | 101 |
 
-*表 8-3：截断 bootstrap 与 λ-trace 边界的双信号反例。来源：实验 8-1 v4，本书原创，CC BY-NC 4.0，2026-09-02。第二行的100是手工放大的新 episode reward。*<!-- INTERNAL_ASSET_ID: TAB-08-03 -->
+*表 8-3：截断 bootstrap 与 $\lambda$-trace 边界的双信号反例。来源：实验 8-1 v4，本书原创，CC BY-NC 4.0，2026-09-02。第二行的100是手工放大的新 episode reward。*<!-- INTERNAL_ASSET_ID: TAB-08-03 -->
 
 <!-- CLAIM_META: CLAIM-08-09 result -->
 实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 的两行跨 episode 反例中，正确的 $d_0=1,\,m_0=0$ 得到第一行 target 5；若保留 bootstrap discount 却遗漏 trace 边界，target 变为101，产生96的跨 episode 泄漏。该结果只验证数组边界与递推接口，不估计真实 replay 污染率、critic bias、训练稳定性或策略性能。
@@ -299,7 +299,7 @@ reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和�
 
 ## 8.10 资源、许可与进一步验证
 
-全书资源档位见[术语表](../glossary.md)。本章的 λ-return 反例只验证 target、continuation、bootstrap 和截断语义；Dreamer debug 配置最多用于检查接口，不能因为程序跑通就声称策略学会任务。若进入学习环境，应报告外部 return、model return gap、失败类型、随机种子与资源实测，并把作者配方和本书缩小设置分开。
+全书资源档位见[术语表](../glossary.md)。本章的 $\lambda$-return 反例只验证 target、continuation、bootstrap 和截断语义；Dreamer debug 配置最多用于检查接口，不能因为程序跑通就声称策略学会任务。若进入学习环境，应报告外部 return、model return gap、失败类型、随机种子与资源实测，并把作者配方和本书缩小设置分开。
 
 本书原创代码和 fixture 使用 MIT，原创图表使用 CC BY-NC 4.0；论文文本、上游仓库、环境、数据、模型权重和录屏仍按各自许可。引用仓库不等于把其代码并入本书。
 
@@ -307,7 +307,7 @@ reward/cost 至少拆成路线进度、碰撞、道路边界、交通规则和�
 
 Dreamer 将真实 replay 上的 world-model learning 与 latent imagination 中的 behavior learning 连接起来，并把决策时搜索的一部分成本摊销进 actor 参数。imagination 提高的是既有数据的计算利用率，不会创造新的环境证据；posterior 起点、actor rollout 与外部评测分别属于不同分布。
 
-critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的延迟价值，actor 再优化这个代理目标。λ-return 控制中间 value 与长回报的混合，continuation 同时约束 target 递推和终止后 loss 权重。target 数值正确只是必要条件，不能让 critic 独立于模型偏差，也不能保证 actor 的真实改进。
+critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的延迟价值，actor 再优化这个代理目标。$\lambda$-return 控制中间 value 与长回报的混合，continuation 同时约束 target 递推和终止后 loss 权重。target 数值正确只是必要条件，不能让 critic 独立于模型偏差，也不能保证 actor 的真实改进。
 
 模型误差会通过策略优化变成反馈问题：错误目标改变策略，策略访问新区域，新区域又放大模型外推。短 horizon、数据支持约束、不确定性估计、持续真实校正和独立安全门分别处理不同风险，没有任何单项能够替代外部闭环评测。
 
@@ -319,8 +319,8 @@ critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的
 2. **交互效应**：同时注入 reward +1 和 continuation 泄漏，判断两种 gap 是否线性相加。
 3. **结束语义**：为一个移动机器人写 terminated、truncated、timeout、sensor-drop 的 truth table。
 4. **驾驶协议**：为自动驾驶 cut-in 场景设计 train/validation/closed-loop 三组互斥 seed 和五项指标。
-5. **权重审计**：给定 discount `[0.9,0.9,0]`，手算三个 step 的累计 loss weight；再解释为什么不能只检查 λ-return target。
-6. **截断边界**：构造三个相邻 transition，令第二个 transition 为外部截断；分别写出 bootstrap discount 与 λ-trace mask，并计算遗漏 trace mask 时第一个 episode 的 target 会吸收哪些新 episode reward。
+5. **权重审计**：给定 discount `[0.9,0.9,0]`，手算三个 step 的累计 loss weight；再解释为什么不能只检查 $\lambda$-return target。
+6. **截断边界**：构造三个相邻 transition，令第二个 transition 为外部截断；分别写出 bootstrap discount 与 $\lambda$-trace mask，并计算遗漏 trace mask 时第一个 episode 的 target 会吸收哪些新 episode reward。
 
 ## 自检要点
 
@@ -329,14 +329,14 @@ critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的
 <details markdown="1">
 <summary>自检 8-1：gamma 0.99 的三个 start target</summary>
 
-把原 discounts 从 `[1,1,0]` 改为 `[0.99,0.99,0]`，rewards 与 next values 保持 `[0,0,1]`、`[0.4,0.8,0]`。按当前递推，λ=0 的 targets 为 `[0.396,0.792,1]`，start target 0.396；λ=0.5 为 `[0.639045,0.891,1]`，start 0.639045；λ=1 为 `[0.9801,0.99,1]`，start 0.9801。测试应调用同一 `lambda_returns` 并用明确容差比较，不能把手算值直接写成新的训练结果声明。
+把原 discounts 从 `[1,1,0]` 改为 `[0.99,0.99,0]`，rewards 与 next values 保持 `[0,0,1]`、`[0.4,0.8,0]`。按当前递推，$\lambda=0$ 的 targets 为 `[0.396,0.792,1]`，start target 0.396；$\lambda=0.5$ 为 `[0.639045,0.891,1]`，start 0.639045；$\lambda=1$ 为 `[0.9801,0.99,1]`，start 0.9801。测试应调用同一 `lambda_returns` 并用明确容差比较，不能把手算值直接写成新的训练结果声明。
 
 </details>
 
 <details markdown="1">
 <summary>自检 8-2：两种污染是否相加</summary>
 
-在本章 λ=1、固定 dynamics、固定 reward 向量和二值 mask 的线性递推里，二者可相加：相对正确 start target 1，终点 reward +1 贡献 gap 1，漏掉终止 mask 让 episode 后的 10 贡献 gap 10，同时注入得到 start target 12，总 gap 11。这个加法只对冻结接口成立；若 reward bias 改变 policy visitation，continuation 是 learned probability，含归一化/clipping，或 λ、value 也联动，交互项可能非零，必须用四格 factorial control 检查。
+在本章 $\lambda=1$、固定 dynamics、固定 reward 向量和二值 mask 的线性递推里，二者可相加：相对正确 start target 1，终点 reward +1 贡献 gap 1，漏掉终止 mask 让 episode 后的 10 贡献 gap 10，同时注入得到 start target 12，总 gap 11。这个加法只对冻结接口成立；若 reward bias 改变 policy visitation，continuation 是 learned probability，含归一化/clipping，或 $\lambda$、value 也联动，交互项可能非零，必须用四格 factorial control 检查。
 
 </details>
 
@@ -357,14 +357,14 @@ critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的
 <details markdown="1">
 <summary>自检 8-5：累计 loss weight</summary>
 
-按 $w_0=1,\,w_t=\prod_{i<t}d_i$，discount `[0.9,0.9,0]` 对三个 step 的权重是 `[1,0.9,0.81]`；最后一个 0 只会关闭下一步，不能反向把终止 transition 自身权重清零。只检查 λ-return target 会漏掉另一条路径：即使 target 已正确 mask，终止后的伪 latent 仍可能以错误的非零 survival weight进入 actor/critic loss。应分别测试 target recursion 和 loss contribution，含一个终止后超大伪 loss 的负对照。
+按 $w_0=1,\,w_t=\prod_{i<t}d_i$，discount `[0.9,0.9,0]` 对三个 step 的权重是 `[1,0.9,0.81]`；最后一个 0 只会关闭下一步，不能反向把终止 transition 自身权重清零。只检查 $\lambda$-return target 会漏掉另一条路径：即使 target 已正确 mask，终止后的伪 latent 仍可能以错误的非零 survival weight进入 actor/critic loss。应分别测试 target recursion 和 loss contribution，含一个终止后超大伪 loss 的负对照。
 
 </details>
 
 <details markdown="1">
-<summary>自检 8-6：bootstrap 与 λ-trace 是两个问题</summary>
+<summary>自检 8-6：bootstrap 与 $\lambda$-trace 是两个问题</summary>
 
-例如三行 reward 为 `[0,1,100]`，第二行是外部截断且其有效 final observation 的 value 为4，第三行来自新 episode。可令 bootstrap discounts 为 `[1,1,0]`，因为第二行需要 $1+V(\text{final})=5$；trace masks 应为 `[1,0,0]`，因为第二行之后不得读取第三行 return。λ=1 时正确 targets 的前两项为 `[5,5]`；若错误使用全1 trace，第二行会变成101，第一行也变成101，两个当前 episode target 都被新 episode 的100污染。若第二行是自然终止，则其 discount 应为0；若 final observation 无效，则不能用“设成0”伪造合法 target。生产实现还必须确认 replay sampler 是否已经在边界切片；切片保证与 mask 仍应至少有一个可测试合同。
+例如三行 reward 为 `[0,1,100]`，第二行是外部截断且其有效 final observation 的 value 为4，第三行来自新 episode。可令 bootstrap discounts 为 `[1,1,0]`，因为第二行需要 $1+V(\text{final})=5$；trace masks 应为 `[1,0,0]`，因为第二行之后不得读取第三行 return。$\lambda=1$ 时正确 targets 的前两项为 `[5,5]`；若错误使用全1 trace，第二行会变成101，第一行也变成101，两个当前 episode target 都被新 episode 的100污染。若第二行是自然终止，则其 discount 应为0；若 final observation 无效，则不能用“设成0”伪造合法 target。生产实现还必须确认 replay sampler 是否已经在边界切片；切片保证与 mask 仍应至少有一个可测试合同。
 
 </details>
 
