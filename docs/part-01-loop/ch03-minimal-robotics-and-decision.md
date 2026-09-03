@@ -121,9 +121,7 @@ OpenCV 官方标定接口区分针孔与 fisheye 等相机模型。实验 3-1<!-
 
 变换方向是最常见错误。$T_{\text{body_camera}}$ 应解释为“把 camera 表达的点变到 body”，不能仅靠变量名中的两个 frame 猜乘法方向。链式变换要让相邻 frame 抵消，例如：
 
-```text
-p_world = T_world_body @ T_body_camera @ p_camera
-```
+$$p_{\text{world}}=T_{\text{world_body}}@T_{\text{body_camera}}@p_{\text{camera}}$$
 
 因此 $T_{world\leftarrow camera}=T_{world\leftarrow body}T_{body\leftarrow camera}$。组合后的平移不是把两个三维向量直接相加，而是先把中间变换的平移旋转到 target frame，再相加。相机安装外参通常相对 body 固定，$T_{\text{world_body}}(t)$ 却随机器人运动而变化；二者还必须对应同一时间基准。
 

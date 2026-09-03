@@ -227,7 +227,7 @@ fixture 的 mean 为 45 ms，看似通过 50 ms deadline，但 p95/max 为 150 m
 单调 `command_id` 只在其命名空间内有意义。生产者或执行器重启后，计数器可能从零开始；若只比较整数，旧命令8和新命令8无法区分。本书把执行身份写成三元组：
 
 \[
-K=(\text{command\_session\_id},\ \text{executor\_boot\_id},\ \text{command\_id}).
+K=(\text{command_session_id},\ \text{executor_boot_id},\ \text{command_id}).
 \]
 
 `command_session_id` 标识一次明确建立的命令生产会话，`executor_boot_id` 标识执行器启动 epoch，二者都不能由接收方根据“最近看到的包”静默猜测。实验 21-1 v11<!-- INTERNAL_ASSET_ID: EXP-21-01 v11 --> 的不可变内存 ledger 在 gate 之后执行以下状态转移：首次见到有效 `K` 时生成一条回执；完全相同的 `K+payload+step` 重试只返回缓存回执，不新增执行记录；相同 `K` 携带不同 payload 以 `command_identity_conflict` 拒绝；同 epoch 中未登记却不大于最高序号的命令以 `stale_or_out_of_order_command` 拒绝。只有显式建立新的 session 与 boot epoch 后，命令号0才可重新开始。

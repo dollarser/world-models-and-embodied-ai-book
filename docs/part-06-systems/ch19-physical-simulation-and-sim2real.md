@@ -203,7 +203,7 @@ observation-only 网格搜索在 12 个候选中发现两个零误差 minimizer�
 <!-- CLAIM_META: CLAIM-19-04 result -->
 手工窄随机化范围没有覆盖目标参数，手工宽范围覆盖了目标。它说明 support 应被显式检查，不比较随机化策略性能。
 
-fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量响应只由 $\mathrm{force\_gain}/(\mathrm{base\_load}+\mathrm{known\_payload})$ 决定。在 9 个候选点中，零载荷只能识别这个比值；把同一条零载荷序列重复两次不会增加参数方向。第二条序列将已知载荷改为 `1.0`，才为当前离散网格提供另一条独立约束。
+fixture 还加入一个与前述观测尺度反例独立的载荷工况：标量响应只由 $\mathrm{force_gain}/(\mathrm{base_load}+\mathrm{known_payload})$ 决定。在 9 个候选点中，零载荷只能识别这个比值；把同一条零载荷序列重复两次不会增加参数方向。第二条序列将已知载荷改为 `1.0`，才为当前离散网格提供另一条独立约束。
 
 | 校准数据 | 序列数 | 独立载荷数 | 零误差解数 | 结论 |
 | --- | ---: | ---: | ---: | --- |
@@ -298,7 +298,7 @@ Real2Sim 的参数唯一性与预测可用性是两个问题，零 residual 也�
 <details markdown="1">
 <summary>自检 19-2：观测噪声破坏精确网格恢复</summary>
 
-可在 实验 19-1<!-- INTERNAL_ASSET_ID: EXP-19-01 --> 生成 observation 后加入固定 seed、零均值且幅度已登记的噪声，并保持校准/留出噪声独立。有限样本下，真实参数通常不再产生恰好零 residual，网格最优点会随 seed、噪声模型和分辨率变化；应报告多 seed 参数分布、置信/后验范围和 held-out 误差，而不是要求恢复唯一精确值。噪声减少信息，却不会解除原 fixture 的结构性 $\mathrm{gain}\times\mathrm{observation\_scale}$ 等价：多个参数仍可产生同一无噪声 observation。加入更多算力或更细网格不能替代新测量。
+可在 实验 19-1<!-- INTERNAL_ASSET_ID: EXP-19-01 --> 生成 observation 后加入固定 seed、零均值且幅度已登记的噪声，并保持校准/留出噪声独立。有限样本下，真实参数通常不再产生恰好零 residual，网格最优点会随 seed、噪声模型和分辨率变化；应报告多 seed 参数分布、置信/后验范围和 held-out 误差，而不是要求恢复唯一精确值。噪声减少信息，却不会解除原 fixture 的结构性 $\mathrm{gain}\times\mathrm{observation_scale}$ 等价：多个参数仍可产生同一无噪声 observation。加入更多算力或更细网格不能替代新测量。
 
 </details>
 

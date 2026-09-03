@@ -48,7 +48,7 @@ flowchart TB
 
 ## 13.2 行为克隆：简单基线，严格协议
 
-给定专家数据集 `D={(o_t,a_t*)}`，最基本的行为克隆最小化：
+给定专家数据集 $D=\{(o_t,a_t^*)\}$，最基本的行为克隆最小化：
 
 \[
 \mathcal{L}_{BC}(\theta)=\mathbb{E}_{(o,a^*)\sim D}\left[\ell(\pi_\theta(o),a^*)\right].
@@ -147,7 +147,7 @@ ACT 的核心建模收益是把局部时间相关动作作为一个联合预测�
 | 同一观测存在多种合理动作 | CVAE、diffusion、flow | 多峰动作分布 | 样本选择、可执行性与安全筛选 |
 | 长任务阶段与记忆 | 层级策略、显式子目标、记忆 | 长时任务分解 | 子目标错误、恢复和终止判断 |
 
-工程上，action chunk 也不应只是一个形状为 $[K,\ \text{action\_dim}]$ 的匿名张量。最小合同还应携带 `frame_id`、动作单位、控制周期 `dt`、生成时间、prediction horizon、execution horizon、有效步掩码、终止标记和归一化版本。部署端还需要明确何时丢弃剩余动作并重新推理。第21章继续讨论异步推理、实时 chunking 与 watchdog。
+工程上，action chunk 也不应只是一个形状为 $[K,\ \text{action_dim}]$ 的匿名张量。最小合同还应携带 `frame_id`、动作单位、控制周期 `dt`、生成时间、prediction horizon、execution horizon、有效步掩码、终止标记和归一化版本。部署端还需要明确何时丢弃剩余动作并重新推理。第21章继续讨论异步推理、实时 chunking 与 watchdog。
 
 ACT 的 temporal ensemble 会把不同查询对当前动作的重叠预测做指数加权。记这些预测按“最旧到最新”为 $a_t^{(0)},\ldots,a_t^{(n-1)}$，当前官方实现使用：
 

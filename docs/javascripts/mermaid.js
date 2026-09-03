@@ -1,6 +1,6 @@
 // 渲染书中全部 mermaid 图（`mermaid-src` 围栏）并居中。
-// 主题自带加载器从 unpkg 动态拉取 mermaid，部分网络不可达；
-// 这里固定从 jsDelivr 加载同版本构建，保证渲染可用。
+// mermaid 构建自托管在 /javascripts/mermaid.min.js（与本页同源，
+// 不依赖任何第三方 CDN，保证在受限网络下也能渲染）。
 (function () {
   function boot() {
     var nodes = Array.prototype.slice.call(document.querySelectorAll("pre.mermaid-src"));
@@ -27,8 +27,10 @@
     boot();
     return;
   }
-  var s = document.createElement("script");
-  s.src = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
-  s.onload = boot;
-  document.head.appendChild(s);
+  // 兼容 mermaid.min.js 尚未加载的加载顺序
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    setTimeout(boot, 0);
+  }
 })();

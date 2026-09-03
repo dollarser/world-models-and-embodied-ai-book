@@ -91,7 +91,7 @@ $z_t$ 不是“世界本身”，而是模型基于历史形成的任务相关�
 
 ### 2.2.2 有历史不等于 belief 已充分
 
-完美 history oracle 是上界，不应被误读成“只要把历史送进模型，regret 就会归零”。v4 为同一 `clear/blocked` context 增加两个 noisy cue：在真实 clear 时出现 `clear_signal/blocked_signal` 的概率为 `0.8/0.2`，在 blocked 时反过来。等权 prior 下，两个 cue 的 posterior 分别为 $P(\text{clear}\mid\text{clear\_signal})=0.8$ 和 $P(\text{blocked}\mid\text{blocked\_signal})=0.8$。按 posterior 对原一步 return 求期望，Bayes policy 在 clear signal 选择 `advance`，在 blocked signal 选择 `hold`。
+完美 history oracle 是上界，不应被误读成“只要把历史送进模型，regret 就会归零”。v4 为同一 `clear/blocked` context 增加两个 noisy cue：在真实 clear 时出现 `clear_signal/blocked_signal` 的概率为 `0.8/0.2`，在 blocked 时反过来。等权 prior 下，两个 cue 的 posterior 分别为 $P(\text{clear}\mid\text{clear_signal})=0.8$ 和 $P(\text{blocked}\mid\text{blocked_signal})=0.8$。按 posterior 对原一步 return 求期望，Bayes policy 在 clear signal 选择 `advance`，在 blocked signal 选择 `hold`。
 
 | 表示/决策 | mean return | 相对 perfect-history oracle 的 regret |
 | --- | ---: | ---: |

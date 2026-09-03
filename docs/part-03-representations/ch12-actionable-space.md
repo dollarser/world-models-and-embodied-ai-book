@@ -411,7 +411,7 @@ Affordance 是状态、本体、动作和任务阶段之间的关系，还要检
 <details markdown="1">
 <summary>自检 12-3：新鲜度、速度与制动距离</summary>
 
-当前 fixture 的 cell 在 step 0 观测、step 3 查询，规则是 $\text{age}>\text{max\_age}$ 才过期：阈值 0、1、2 时路径因该 cell 变 unknown 而不安全，阈值≥3 时仍保留 free。工程阈值应换算为秒，并约束未观测期间可能位移 $v_{\text{rel}}\tau$，同时考虑感知/规划/制动延迟和停止距离 `v²/(2a)`；速度越高、相对目标越快或定位误差越大，可接受 τ 通常越小。路径从 safe 变 unknown 的时刻只是触发重新观测、减速或 fallback，不证明此处已有障碍。
+当前 fixture 的 cell 在 step 0 观测、step 3 查询，规则是 $\text{age}>\text{max_age}$ 才过期：阈值 0、1、2 时路径因该 cell 变 unknown 而不安全，阈值≥3 时仍保留 free。工程阈值应换算为秒，并约束未观测期间可能位移 $v_{\text{rel}}\tau$，同时考虑感知/规划/制动延迟和停止距离 `v²/(2a)`；速度越高、相对目标越快或定位误差越大，可接受 τ 通常越小。路径从 safe 变 unknown 的时刻只是触发重新观测、减速或 fallback，不证明此处已有障碍。
 
 </details>
 

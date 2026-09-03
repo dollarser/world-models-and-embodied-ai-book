@@ -342,7 +342,7 @@ CEM/shooting 与 tree search 以不同方式分配模型查询；搜索更强既
 <details markdown="1">
 <summary>自检 7-2：random shooting 预算曲线</summary>
 
-固定 RNG seed 和同一候选生成顺序，对预算 $B=1,2,4,8,\ldots$ 取前 B 个样本，记录 $\mathrm{best\_so\_far}(B)=\max_{i\le B}\ \mathrm{score}_i$，则曲线应单调不降；若每个预算重新抽样，单次曲线可能下降，不能解释为更多预算更差。还应跨多个预注册 seed 报中位数/区间、找到穷举最优的比例和计算时延。当前离散 H=3 仅有 8 个候选，适合验证搜索合同，不足以证明 random shooting 在连续控制中有效。
+固定 RNG seed 和同一候选生成顺序，对预算 $B=1,2,4,8,\ldots$ 取前 B 个样本，记录 $\mathrm{best_so_far}(B)=\max_{i\le B}\ \mathrm{score}_i$，则曲线应单调不降；若每个预算重新抽样，单次曲线可能下降，不能解释为更多预算更差。还应跨多个预注册 seed 报中位数/区间、找到穷举最优的比例和计算时延。当前离散 H=3 仅有 8 个候选，适合验证搜索合同，不足以证明 random shooting 在连续控制中有效。
 
 </details>
 
@@ -363,7 +363,7 @@ CEM/shooting 与 tree search 以不同方式分配模型查询；搜索更强既
 <details markdown="1">
 <summary>自检 7-5：风险目标的临界点</summary>
 
-令 risky 五个 return 为 `(1.5,1.5,1.5,1.5,x)`。其均值为 `(6+x)/5`，与 steady 的 0.6 在 `x=-3` 打平，故 `x>-3` 时均值偏好 risky。对 $x\le1.5$，最差 20% 均值就是 `x`，在 $x=0.6$ 打平，$x>0.6$ 才偏好 risky。chance constraint 使用 $P(\text{return}<0)\le0.1$：$x<0$ 时失败率 0.2、不可行，$x\ge0$ 时为 0、可行。改变 `x` 是改变 outcome/reward 或失败定义，属于偏好/后果模型；改变五个场景的概率权重才是概率模型变化。可行不等于被选中，还需声明可行集内的排序规则。
+令 risky 五个 return 为 $(1.5,1.5,1.5,1.5,x)$。其均值为 `(6+x)/5`，与 steady 的 0.6 在 `x=-3` 打平，故 `x>-3` 时均值偏好 risky。对 $x\le1.5$，最差 20% 均值就是 `x`，在 $x=0.6$ 打平，$x>0.6$ 才偏好 risky。chance constraint 使用 $P(\text{return}<0)\le0.1$：$x<0$ 时失败率 0.2、不可行，$x\ge0$ 时为 0、可行。改变 `x` 是改变 outcome/reward 或失败定义，属于偏好/后果模型；改变五个场景的概率权重才是概率模型变化。可行不等于被选中，还需声明可行集内的排序规则。
 
 </details>
 

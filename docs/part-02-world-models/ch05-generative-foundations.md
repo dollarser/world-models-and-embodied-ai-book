@@ -75,7 +75,7 @@ flowchart TB
 
 ## 5.2 压缩观测：AE、VAE 与离散 latent
 
-普通 autoencoder 学 `x→z→x̂`，但任意 latent 不一定可从简单 prior 采样。VAE 引入近似 posterior `q(z|x)` 与 prior $p(z)$，优化重建项和 KL 正则；重参数化让随机连续 latent 可反向传播。[VAE 原论文](https://arxiv.org/abs/1312.6114)是这一接口的一手来源 `[A,R1]`。
+普通 autoencoder 学 `x→z→x̂`，但任意 latent 不一定可从简单 prior 采样。VAE 引入近似 posterior $q(z\mid x)$ 与 prior $p(z)$，优化重建项和 KL 正则；重参数化让随机连续 latent 可反向传播。[VAE 原论文](https://arxiv.org/abs/1312.6114)是这一接口的一手来源 `[A,R1]`。
 
 VAE 中有三个角色不应混写：encoder 给出近似 posterior，用于“看到样本后推断 latent”；prior 描述生成前可用的 latent 分布；decoder 定义 latent 如何产生观测。训练时从 posterior 取样，生成时却通常从 prior 取样，二者之间的差距正是 KL 项试图约束、但不保证完全消除的部分。把 encoder 输出直接称为“世界状态”，会跳过可预测性、动作条件和任务充分性三项检查。
 
@@ -336,14 +336,14 @@ latent、token、自回归、masked、diffusion 和 flow 可以组合，不能�
 <details markdown="1">
 <summary>自检 5-2：posterior 与 dynamics prior</summary>
 
-VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并通过 prior regularization 使其可采样。RSSM posterior 是序列过滤分布，如 $q(s_t\mid h_t,o_t)$，会用当前观测修正由历史和动作形成的 belief。learned dynamics prior 如 $p(s_t\mid h_t)$ 或 $p(s_t\mid s_{t-1},a_{t-1})$ 不看当前 $o_t$，用于想象与 open-loop rollout。三者都叫“分布”不等于条件集合或训练职责相同；RSSM 还要让 posterior state 与可预测的 prior 对齐。
+VAE posterior 通常写成 $q(z\mid x)$，用当前样本推断生成 latent，并通过 prior regularization 使其可采样。RSSM posterior 是序列过滤分布，如 $q(s_t\mid h_t,o_t)$，会用当前观测修正由历史和动作形成的 belief。learned dynamics prior 如 $p(s_t\mid h_t)$ 或 $p(s_t\mid s_{t-1},a_{t-1})$ 不看当前 $o_t$，用于想象与 open-loop rollout。三者都叫“分布”不等于条件集合或训练职责相同；RSSM 还要让 posterior state 与可预测的 prior 对齐。
 
 </details>
 
 <details markdown="1">
 <summary>自检 5-3：采样步数与控制时限</summary>
 
-先把 deadline 写成预算：$N\times t_{\text{step}}+t_{\text{condition}}+t_{\text{decode}}+t_{\text{io}}+\text{safety\_margin}\le T_{\text{control}}$。增加 diffusion step 可能改善样本，却线性或近线性增加延迟；若 action chunk 每 100 ms 必须刷新，而 20 步去噪每步 6 ms，仅去噪已需 120 ms，方案即使离线指标更好也不可部署。应比较少步蒸馏、并行化、较长 action chunk 和 fallback，并同时报告端到端 P50/P95/P99、deadline miss rate 与闭环质量，而不是只报单步 GPU latency。
+先把 deadline 写成预算：$N\times t_{\text{step}}+t_{\text{condition}}+t_{\text{decode}}+t_{\text{io}}+\text{safety_margin}\le T_{\text{control}}$。增加 diffusion step 可能改善样本，却线性或近线性增加延迟；若 action chunk 每 100 ms 必须刷新，而 20 步去噪每步 6 ms，仅去噪已需 120 ms，方案即使离线指标更好也不可部署。应比较少步蒸馏、并行化、较长 action chunk 和 fallback，并同时报告端到端 P50/P95/P99、deadline miss rate 与闭环质量，而不是只报单步 GPU latency。
 
 </details>
 

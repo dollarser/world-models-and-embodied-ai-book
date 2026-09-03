@@ -182,7 +182,7 @@ D_{KL}\!\left(q\,\|\,\operatorname{sg}(p)\right)\right)
 
 其中 `sg` 是 stop-gradient，$\tau$ 是 `free_nats`。两项的前向数值相同，但 $L_{\text{dyn}}$ 让 prior/dynamics 追随冻结的 posterior，$L_{\text{rep}}$ 让 posterior/encoder 追随冻结的 prior。该[同一 commit 的配置](https://github.com/danijar/dreamerv3/blob/e3f02248693a79dc8b0ebd62c93683888ddaccfe/dreamerv3/configs.yaml)把 `free_nats` 设为 1.0，并在总损失中给 dynamics 与 representation 项分别乘 1.0 和 0.1；这是特定源码快照的实现事实，不是 RSSM 定义，也不应外推到 PlaNet、DreamerV1/V2、未来 DreamerV3 commit 或其他复现。
 
-`free_nats` 还容易被日志误读：$\max(\text{raw\_KL},\tau)$ 会让阈值以下的报告值停在 $\tau$，但该常数区的 KL 梯度为零（边界点除外）。因此“KL loss 显示为 1”不能单独证明 prior 与 posterior 仍在被该项拉近，必须同时查看 raw KL、阈值、权重和梯度路由。
+`free_nats` 还容易被日志误读：$\max(\text{raw_KL},\tau)$ 会让阈值以下的报告值停在 $\tau$，但该常数区的 KL 梯度为零（边界点除外）。因此“KL loss 显示为 1”不能单独证明 prior 与 posterior 仍在被该项拉近，必须同时查看 raw KL、阈值、权重和梯度路由。
 
 <!-- CLAIM_META: CLAIM-06-05 fact -->
 DreamerV3 官方快照 `e3f0224` 的 dynamics/representation KL 在前向计算中数值相同，但 stop-gradient 使二者更新不同参数；`free_nats` 又使阈值以下的 KL 成为常数区。该结论只描述所锁实现，而不是所有 RSSM 或未来 commit 的必备形式。
@@ -413,7 +413,7 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 <details markdown="1">
 <summary>自检 6-4：free nats 分段函数</summary>
 
-当前 fixture 定义为 $L_c(k)=\max(k,c)$，其中 raw KL $k\ge0$、$c=\text{free\_nats}$。当 $c=0$ 时 $L=k$；$c=0.5$ 时，$0\le k\le0.5$ 为常数 0.5，之后为 `k`；$c=2$ 时，$0\le k\le2$ 为常数 2，之后为 `k`。这不是 `max(k-c,0)`：两种写法的数值、日志和 scale 不同。严格说拐点处两支相等；“常数区”可写为 `k<c`，并注明实现采用哪一侧的次梯度。
+当前 fixture 定义为 $L_c(k)=\max(k,c)$，其中 raw KL $k\ge0$、$c=\text{free_nats}$。当 $c=0$ 时 $L=k$；$c=0.5$ 时，$0\le k\le0.5$ 为常数 0.5，之后为 `k`；$c=2$ 时，$0\le k\le2$ 为常数 2，之后为 `k`。这不是 `max(k-c,0)`：两种写法的数值、日志和 scale 不同。严格说拐点处两支相等；“常数区”可写为 `k<c`，并注明实现采用哪一侧的次梯度。
 
 </details>
 
