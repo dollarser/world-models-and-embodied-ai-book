@@ -52,20 +52,20 @@
 
 ## 2.2 环境、状态与观测不是同一个东西
 
-设环境真实状态为 `e_t`，观测为 `o_t`，动作为 `a_t`。环境推进可以抽象为：
+设环境真实状态为 $e_t$，观测为 $o_t$，动作为 $a_t$。环境推进可以抽象为：
 
 \[
 e_{t+1}\sim P(e_{t+1}\mid e_t,a_t), \qquad
 o_t\sim P(o_t\mid e_t)
 \]
 
-真实状态通常不能被完全看到。相机不知道遮挡物后面有什么，单帧图像不能唯一确定速度，机器人编码器也可能没有直接测量接触力。模型因而维护内部状态 `z_t`：
+真实状态通常不能被完全看到。相机不知道遮挡物后面有什么，单帧图像不能唯一确定速度，机器人编码器也可能没有直接测量接触力。模型因而维护内部状态 $z_t$：
 
 \[
 z_t=f_\theta(z_{t-1},o_t,a_{t-1})
 \]
 
-`z_t` 不是“世界本身”，而是模型基于历史形成的任务相关估计。若同一个 `z_t` 无法区分两个需要不同动作的环境条件，它对该任务就不是充分状态。
+$z_t$ 不是“世界本身”，而是模型基于历史形成的任务相关估计。若同一个 $z_t$ 无法区分两个需要不同动作的环境条件，它对该任务就不是充分状态。
 
 可以用一个简单问题检查状态是否遗漏信息：
 
@@ -91,7 +91,7 @@ z_t=f_\theta(z_{t-1},o_t,a_{t-1})
 
 ### 2.2.2 有历史不等于 belief 已充分
 
-完美 history oracle 是上界，不应被误读成“只要把历史送进模型，regret 就会归零”。v4 为同一 `clear/blocked` context 增加两个 noisy cue：在真实 clear 时出现 `clear_signal/blocked_signal` 的概率为 `0.8/0.2`，在 blocked 时反过来。等权 prior 下，两个 cue 的 posterior 分别为 `P(clear|clear_signal)=0.8` 和 `P(blocked|blocked_signal)=0.8`。按 posterior 对原一步 return 求期望，Bayes policy 在 clear signal 选择 `advance`，在 blocked signal 选择 `hold`。
+完美 history oracle 是上界，不应被误读成“只要把历史送进模型，regret 就会归零”。v4 为同一 `clear/blocked` context 增加两个 noisy cue：在真实 clear 时出现 `clear_signal/blocked_signal` 的概率为 `0.8/0.2`，在 blocked 时反过来。等权 prior 下，两个 cue 的 posterior 分别为 $P(\text{clear}\mid\text{clear\_signal})=0.8$ 和 $P(\text{blocked}\mid\text{blocked\_signal})=0.8$。按 posterior 对原一步 return 求期望，Bayes policy 在 clear signal 选择 `advance`，在 blocked signal 选择 `hold`。
 
 | 表示/决策 | mean return | 相对 perfect-history oracle 的 regret |
 | --- | ---: | ---: |
@@ -120,7 +120,7 @@ z_t=f_\theta(z_{t-1},o_t,a_{t-1})
 | 预测头 | 状态能预测哪些量 | 图像、特征、奖励、终止、价值、occupancy | 能力仅限已训练与评测的输出 |
 | 不确定性/continuation | 哪些未来可能发生、何时终止 | 分布、ensemble、终止概率 | 平均未来可能掩盖多模态和失败 |
 
-奖励不是环境状态的同义词。奖励 `r_t` 是任务偏好的标量表达；价值是未来累计回报的估计。模型可以很好地预测图像却错误预测奖励，也可以不重建图像但保留足够的奖励和转移信息。
+奖励不是环境状态的同义词。奖励 $r_t$ 是任务偏好的标量表达；价值是未来累计回报的估计。模型可以很好地预测图像却错误预测奖励，也可以不重建图像但保留足够的奖励和转移信息。
 
 ## 2.4 四轴模型卡
 
@@ -332,7 +332,7 @@ flowchart TB
 
 ### 策略与 VLA
 
-策略 `π(a_t\mid o_{\le t})` 直接选择动作；世界模型预测动作之后的状态或决策相关量。一个 VLA 可能在内部形成预测表示，也可能只是从输入到动作的条件生成器。除非有独立动力学接口、预测目标或干预证据，否则不能从动作能力推断它包含可调用的世界模型。
+策略 $\pi(a_t\mid o_{\le t})$ 直接选择动作；世界模型预测动作之后的状态或决策相关量。一个 VLA 可能在内部形成预测表示，也可能只是从输入到动作的条件生成器。除非有独立动力学接口、预测目标或干预证据，否则不能从动作能力推断它包含可调用的世界模型。
 
 <!-- CLAIM_META: CLAIM-02-02 fact -->
 在本书术语中，VLA 是策略架构族，不自动等同于世界模型；二者可以组合。
@@ -507,7 +507,7 @@ V-JEPA 2 encoder 提供观测/视频表征，可支持当前或历史特征，�
 <details markdown="1">
 <summary>自检 2-7：noisy history 只部分消除决策混叠</summary>
 
-等权 prior 与对称 `0.8/0.2` likelihood 使 `clear_signal` 后的 `P(clear)=0.8`，`blocked_signal` 后的 `P(blocked)=0.8`。前者的 `advance/hold` posterior expected return 为0.6/0.04，因此选 advance；后者为-0.6/0.16，因此选 hold。两个 cue 的边际概率都为0.5，所以 mean return 是 `0.5×0.6+0.5×0.16=0.38`；相对 perfect-history 0.6 仍有0.22 regret。合格答案必须保留 posterior 不确定性，并说明 likelihood 是已知手工数值，不是模型学到或校准得到的 belief。
+等权 prior 与对称 `0.8/0.2` likelihood 使 `clear_signal` 后的 $P(\text{clear})=0.8$，`blocked_signal` 后的 $P(\text{blocked})=0.8$。前者的 `advance/hold` posterior expected return 为0.6/0.04，因此选 advance；后者为-0.6/0.16，因此选 hold。两个 cue 的边际概率都为0.5，所以 mean return 是 `0.5×0.6+0.5×0.16=0.38`；相对 perfect-history 0.6 仍有0.22 regret。合格答案必须保留 posterior 不确定性，并说明 likelihood 是已知手工数值，不是模型学到或校准得到的 belief。
 
 </details>
 

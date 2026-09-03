@@ -75,7 +75,7 @@ flowchart TB
 
 ## 5.2 压缩观测：AE、VAE 与离散 latent
 
-普通 autoencoder 学 `x→z→x̂`，但任意 latent 不一定可从简单 prior 采样。VAE 引入近似 posterior `q(z|x)` 与 prior `p(z)`，优化重建项和 KL 正则；重参数化让随机连续 latent 可反向传播。[VAE 原论文](https://arxiv.org/abs/1312.6114)是这一接口的一手来源 `[A,R1]`。
+普通 autoencoder 学 `x→z→x̂`，但任意 latent 不一定可从简单 prior 采样。VAE 引入近似 posterior `q(z|x)` 与 prior $p(z)$，优化重建项和 KL 正则；重参数化让随机连续 latent 可反向传播。[VAE 原论文](https://arxiv.org/abs/1312.6114)是这一接口的一手来源 `[A,R1]`。
 
 VAE 中有三个角色不应混写：encoder 给出近似 posterior，用于“看到样本后推断 latent”；prior 描述生成前可用的 latent 分布；decoder 定义 latent 如何产生观测。训练时从 posterior 取样，生成时却通常从 prior 取样，二者之间的差距正是 KL 项试图约束、但不保证完全消除的部分。把 encoder 输出直接称为“世界状态”，会跳过可预测性、动作条件和任务充分性三项检查。
 
@@ -186,7 +186,7 @@ make ch05-smoke
 显式条件分布保留两个 mode；在完整 fixture 上，条件 NLL 为 0.346574，低于忽略 context 的 0.562335。数字只适用于八个手工样本。
 
 <!-- CLAIM_META: CLAIM-05-04 result -->
-解析 diffusion forward process 在 `alpha_bar=1/0` 返回 data/noise；直线 flow 在 `t=0/1` 返回 noise/data 且速度恒定。这验证公式端点，不比较训练或采样性能。
+解析 diffusion forward process 在 $\bar{\alpha}=1/0$ 返回 data/noise；直线 flow 在 $t=0/1$ 返回 noise/data 且速度恒定。这验证公式端点，不比较训练或采样性能。
 
 ## 5.8 条件、latent 与动力学不能混为一谈
 
@@ -197,7 +197,7 @@ make ch05-smoke
 
 ### 5.8.1 条件相关不等于动作干预
 
-写出 `p(x_{t+1}|x_{le t},a_t)` 只说明模型把动作作为输入，不保证它学到“执行该动作会怎样”。离线数据中的动作由行为策略选择，动作与场景难度、操作者意图和历史状态可能强相关。模型可以依赖这些相关线索预测未来，即使它没有识别动作的环境效应。
+写出 $p(x_{t+1}\mid x_{\le t},a_t)$ 只说明模型把动作作为输入，不保证它学到“执行该动作会怎样”。离线数据中的动作由行为策略选择，动作与场景难度、操作者意图和历史状态可能强相关。模型可以依赖这些相关线索预测未来，即使它没有识别动作的环境效应。
 
 可以把三个问题依次分开：
 
@@ -205,7 +205,7 @@ make ch05-smoke
 - **方向正确**：在有配对证据的状态上，变化是否符合真实转移方向；
 - **干预可迁移**：换到行为策略较少执行、但仍在有效支持内的动作时，预测是否成立。
 
-action shuffle 主要检查第一层；有真实配对或 simulator counterfactual 才能加强第二层；第三层还需要动作覆盖、overlap 和分布外边界。对于纯观察数据，`p(next|history,action)` 与因果量 `p(next|history,do(action))` 不能仅凭符号相似就等同。后续章节使用“action-conditioned”时，默认只描述接口，除非实验另有干预证据。
+action shuffle 主要检查第一层；有真实配对或 simulator counterfactual 才能加强第二层；第三层还需要动作覆盖、overlap 和分布外边界。对于纯观察数据，$p(\text{next}\mid\text{history},\text{action})$ 与因果量 $p(\text{next}\mid\text{history},\text{do}(\text{action}))$ 不能仅凭符号相似就等同。后续章节使用“action-conditioned”时，默认只描述接口，除非实验另有干预证据。
 
 ### 5.8.2 从症状出发的错误诊断树
 
@@ -259,7 +259,7 @@ D_{TV}(p,q)=\frac{1}{2}\sum_x |p(x)-q(x)|.
 u(x)=\max_m \hat y_m(x)-\min_m \hat y_m(x),
 \]
 
-并固定 `u>0.25` 才 defer。这里的 range 不是方差、置信区间或校准概率；阈值也不是从数据估计的。
+并固定 $u>0.25$ 才 defer。这里的 range 不是方差、置信区间或校准概率；阈值也不是从数据估计的。
 
 | case | 三个成员预测 | target | ensemble mean 的 absolute error | range | 是否 defer |
 | --- | --- | ---: | ---: | ---: | --- |
@@ -336,14 +336,14 @@ latent、token、自回归、masked、diffusion 和 flow 可以组合，不能�
 <details markdown="1">
 <summary>自检 5-2：posterior 与 dynamics prior</summary>
 
-VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并通过 prior regularization 使其可采样。RSSM posterior 是序列过滤分布，如 `q(s_t|h_t,o_t)`，会用当前观测修正由历史和动作形成的 belief。learned dynamics prior 如 `p(s_t|h_t)` 或 `p(s_t|s_{t-1},a_{t-1})` 不看当前 `o_t`，用于想象与 open-loop rollout。三者都叫“分布”不等于条件集合或训练职责相同；RSSM 还要让 posterior state 与可预测的 prior 对齐。
+VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并通过 prior regularization 使其可采样。RSSM posterior 是序列过滤分布，如 $q(s_t\mid h_t,o_t)$，会用当前观测修正由历史和动作形成的 belief。learned dynamics prior 如 $p(s_t\mid h_t)$ 或 $p(s_t\mid s_{t-1},a_{t-1})$ 不看当前 $o_t$，用于想象与 open-loop rollout。三者都叫“分布”不等于条件集合或训练职责相同；RSSM 还要让 posterior state 与可预测的 prior 对齐。
 
 </details>
 
 <details markdown="1">
 <summary>自检 5-3：采样步数与控制时限</summary>
 
-先把 deadline 写成预算：`N × t_step + t_condition + t_decode + t_io + safety_margin ≤ T_control`。增加 diffusion step 可能改善样本，却线性或近线性增加延迟；若 action chunk 每 100 ms 必须刷新，而 20 步去噪每步 6 ms，仅去噪已需 120 ms，方案即使离线指标更好也不可部署。应比较少步蒸馏、并行化、较长 action chunk 和 fallback，并同时报告端到端 P50/P95/P99、deadline miss rate 与闭环质量，而不是只报单步 GPU latency。
+先把 deadline 写成预算：$N\times t_{\text{step}}+t_{\text{condition}}+t_{\text{decode}}+t_{\text{io}}+\text{safety\_margin}\le T_{\text{control}}$。增加 diffusion step 可能改善样本，却线性或近线性增加延迟；若 action chunk 每 100 ms 必须刷新，而 20 步去噪每步 6 ms，仅去噪已需 120 ms，方案即使离线指标更好也不可部署。应比较少步蒸馏、并行化、较长 action chunk 和 fallback，并同时报告端到端 P50/P95/P99、deadline miss rate 与闭环质量，而不是只报单步 GPU latency。
 
 </details>
 
@@ -357,7 +357,7 @@ VAE posterior 通常写成 `q(z|x)`，用当前样本推断生成 latent，并�
 <details markdown="1">
 <summary>自检 5-5：高 TV 但方向错误</summary>
 
-令真实条件规律为 `x=0 → y=0`、`x=1 → y=1`，错误模型却给出 `x=0 → y=1`、`x=1 → y=0`，且两者都是确定分布。模型两个条件输出之间的 TV 为 1，说明它强烈响应了 `x`；但每个条件都与真值反向，条件准确率为 0。故 context sensitivity 只能排查“完全忽略条件”，正确性还需有配对反事实、方向一致性或条件真值误差。
+令真实条件规律为 $x=0\rightarrow y=0$、$x=1\rightarrow y=1$，错误模型却给出 $x=0\rightarrow y=1$、$x=1\rightarrow y=0$，且两者都是确定分布。模型两个条件输出之间的 TV 为 1，说明它强烈响应了 `x`；但每个条件都与真值反向，条件准确率为 0。故 context sensitivity 只能排查“完全忽略条件”，正确性还需有配对反事实、方向一致性或条件真值误差。
 
 </details>
 

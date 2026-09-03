@@ -27,7 +27,7 @@
 
 ## 11.1 从“接着画”到“如果这样做”
 
-无动作视频预测器学习 `p(o_{t+1}|o_{≤t})`，通常延续数据中常见行为。动作条件模型显式接收 `a_t`：
+无动作视频预测器学习 $p(o_{t+1}\mid o_{\le t})$，通常延续数据中常见行为。动作条件模型显式接收 $a_t$：
 
 \[
 p_\theta(o_{t+1:t+H}\mid o_{\le t},a_{t:t+H-1},c),
@@ -39,9 +39,9 @@ p_\theta(o_{t+1:t+H}\mid o_{\le t},a_{t:t+H-1},c),
 flowchart TB
     accTitle: FIG-11-01 图 11-1 动作条件视频模型的规划接口
     accDescr: 历史观测与候选动作生成未来视频或 latent，状态与效用读出把未来交给规划器比较，选中动作仍需真实环境和独立安全层验证。
-    O[历史观测 o_≤t] --> E[编码器/视频 tokenizer]
-    A[候选动作 a_t:t+H] --> D[动作编码器]
-    C[文本/地图/目标 c] --> P[预测器/生成模型]
+    O["历史观测 $$o_{\le t}$$"] --> E[编码器/视频 tokenizer]
+    A["候选动作 $$a_{t:t+H}$$"] --> D[动作编码器]
+    C["文本/地图/目标 $$c$$"] --> P[预测器/生成模型]
     E --> P
     D --> P
     P --> Z[未来 latent/帧]
@@ -180,7 +180,7 @@ S(a_i,a_j)=d\bigl(\hat{s}_{t+h}(a_i),\hat{s}_{t+h}(a_j)\bigr).
 
 本书对有限动作集报告预测未来的直径 \(S_{max}=\max_{i,j}S(a_i,a_j)\)。它保留状态距离单位：全部候选未来相同时为 0，但数值不能跨坐标尺度直接比较。用“唯一未来数量 / 动作数”冒充敏感度会让完全动作盲模型得到 \(1/|A|>0\)，因此本章 fixture 已弃用该定义。
 
-`S_{max}>0` 仍只说明输出发生变化，不说明方向或幅度正确。还要比较带符号的效果（例如右转横向位移减左转横向位移），并对所有动作对报告 counterfactual vector error：
+$S_{\max}>0$ 仍只说明输出发生变化，不说明方向或幅度正确。还要比较带符号的效果（例如右转横向位移减左转横向位移），并对所有动作对报告 counterfactual vector error：
 
 \[
 E_{cf}=\sqrt{\frac{1}{d|P|}\sum_{(i,j)\in P}\left\|[(\hat{s}_j-\hat{s}_i)-(s_j-s_i)]\right\|_2^2},
@@ -418,14 +418,14 @@ OpenDV 等视频数据可用于外观/运动预训练，但若缺少同步控制
 <details markdown="1">
 <summary>自检 11-2：边界、滑移与不确定性</summary>
 
-可把 transition 改为：越过 `[0,6]²` 时记录 `collision/out_of_bounds` 而不是只静默 clip；每一步再以冻结概率和 seed 施加纵横滑移。对每个起点—动作序列运行相同 seed 集，按所有 attempted rollout 报 endpoint/trajectory error 均值、碰撞或越界失败率、有效 coverage，以及预测分布的 interval coverage/NLL 或 Brier；样本标准差只能称 stochastic spread，不能自动称 epistemic uncertainty。若失败 rollout 被删掉，低均值会产生幸存者偏差。
+可把 transition 改为：越过 $[0,6]^2$ 时记录 `collision/out_of_bounds` 而不是只静默 clip；每一步再以冻结概率和 seed 施加纵横滑移。对每个起点—动作序列运行相同 seed 集，按所有 attempted rollout 报 endpoint/trajectory error 均值、碰撞或越界失败率、有效 coverage，以及预测分布的 interval coverage/NLL 或 Brier；样本标准差只能称 stochastic spread，不能自动称 epistemic uncertainty。若失败 rollout 被删掉，低均值会产生幸存者偏差。
 
 </details>
 
 <details markdown="1">
 <summary>自检 11-3：动作错位一帧</summary>
 
-把本应作用于 `o_t→o_{t+1}` 的 `a_t` 整体配成 `a_{t-1}`，先在含转向/制动切换的序列上比较；连续重复同一动作的片段可能掩盖错位。One-step 指标会在动作切换边界显著恶化，但若常见动作占比很高，micro average 仍可能好看；free rollout 会把第一次错误状态继续作为下一步输入，endpoint 和轨迹误差通常累积。应按 action transition 类型和 horizon 报错，并用固定一帧正/负 shift 作负对照；结果依序列构成，不能声称必然单调。
+把本应作用于 $o_t\rightarrow o_{t+1}$ 的 $a_t$ 整体配成 $a_{t-1}$，先在含转向/制动切换的序列上比较；连续重复同一动作的片段可能掩盖错位。One-step 指标会在动作切换边界显著恶化，但若常见动作占比很高，micro average 仍可能好看；free rollout 会把第一次错误状态继续作为下一步输入，endpoint 和轨迹误差通常累积。应按 action transition 类型和 horizon 报错，并用固定一帧正/负 shift 作负对照；结果依序列构成，不能声称必然单调。
 
 </details>
 

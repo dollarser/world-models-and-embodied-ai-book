@@ -108,8 +108,8 @@ $$
 
 [PlaNet](https://arxiv.org/abs/1811.04551) 使用同时包含确定性与随机转移成分的潜在动力学模型，并在潜在空间执行在线规划。RSSM（Recurrent State-Space Model）通常把内部状态拆成：
 
-- `h_t`：确定性循环状态，负责累积可预测的历史和长时记忆；
-- `s_t`：随机潜变量，表达当前状态的不确定性和多种可能未来。
+- $h_t$：确定性循环状态，负责累积可预测的历史和长时记忆；
+- $s_t$：随机潜变量，表达当前状态的不确定性和多种可能未来。
 
 一个简化的数据流是：
 
@@ -117,13 +117,13 @@ $$
 flowchart TB
     accTitle: FIG-06-01 图 6-1 RSSM 的 prior 与 posterior 数据流
     accDescr: 上一循环状态、随机状态和动作产生当前循环状态及 prior；训练时观测编码器形成 posterior，未来想象时只能沿 prior 推进。
-    H0[上一循环状态 h_t-1] --> T[确定性转移]
-    S0[上一随机状态 s_t-1] --> T
-    A[动作 a_t-1] --> T
-    T --> H1[循环状态 h_t]
-    H1 --> P[prior p s_t given h_t]
-    O[观测 o_t] --> E[观测编码器]
-    E --> Q[posterior q s_t given h_t o_t]
+    H0["上一循环状态 $$h_{t-1}$$"] --> T[确定性转移]
+    S0["上一随机状态 $$s_{t-1}$$"] --> T
+    A["动作 $$a_{t-1}$$"] --> T
+    T --> H1["循环状态 $$h_t$$"]
+    H1 --> P["prior $$p(s_t\mid h_t)$$"]
+    O["观测 $$o_t$$"] --> E[观测编码器]
+    E --> Q["posterior $$q(s_t\mid h_t,o_t)$$"]
     H1 --> Q
     P --> KL[一致性约束]
     Q --> KL
@@ -153,7 +153,7 @@ flowchart TB
 + \beta D_{KL}\left(q_\phi(s_t \mid h_t,o_t)\;\|\;p_\theta(s_t \mid h_t)\right)
 \]
 
-这个式子不是说所有实现都必须重建像素。`L_obs` 也可以是特征预测或其他表征目标。真正要问的是：状态丢掉的信息是否会改变后续动作选择？如果模型生成的杯子纹理不够逼真但仍能正确预测可抓取区域，它可能对控制足够有用；反过来，画面很漂亮却漏掉速度或接触状态，规划就会失败。
+这个式子不是说所有实现都必须重建像素。$L_{\text{obs}}$ 也可以是特征预测或其他表征目标。真正要问的是：状态丢掉的信息是否会改变后续动作选择？如果模型生成的杯子纹理不够逼真但仍能正确预测可抓取区域，它可能对控制足够有用；反过来，画面很漂亮却漏掉速度或接触状态，规划就会失败。
 
 不同损失约束的是潜状态的不同侧面，不能互相替代：
 
@@ -180,9 +180,9 @@ D_{KL}\!\left(\operatorname{sg}(q)\,\|\,p\right)\right)
 D_{KL}\!\left(q\,\|\,\operatorname{sg}(p)\right)\right)
 \]
 
-其中 `sg` 是 stop-gradient，`τ` 是 `free_nats`。两项的前向数值相同，但 `L_dyn` 让 prior/dynamics 追随冻结的 posterior，`L_rep` 让 posterior/encoder 追随冻结的 prior。该[同一 commit 的配置](https://github.com/danijar/dreamerv3/blob/e3f02248693a79dc8b0ebd62c93683888ddaccfe/dreamerv3/configs.yaml)把 `free_nats` 设为 1.0，并在总损失中给 dynamics 与 representation 项分别乘 1.0 和 0.1；这是特定源码快照的实现事实，不是 RSSM 定义，也不应外推到 PlaNet、DreamerV1/V2、未来 DreamerV3 commit 或其他复现。
+其中 `sg` 是 stop-gradient，$\tau$ 是 `free_nats`。两项的前向数值相同，但 $L_{\text{dyn}}$ 让 prior/dynamics 追随冻结的 posterior，$L_{\text{rep}}$ 让 posterior/encoder 追随冻结的 prior。该[同一 commit 的配置](https://github.com/danijar/dreamerv3/blob/e3f02248693a79dc8b0ebd62c93683888ddaccfe/dreamerv3/configs.yaml)把 `free_nats` 设为 1.0，并在总损失中给 dynamics 与 representation 项分别乘 1.0 和 0.1；这是特定源码快照的实现事实，不是 RSSM 定义，也不应外推到 PlaNet、DreamerV1/V2、未来 DreamerV3 commit 或其他复现。
 
-`free_nats` 还容易被日志误读：`max(raw_KL, τ)` 会让阈值以下的报告值停在 `τ`，但该常数区的 KL 梯度为零（边界点除外）。因此“KL loss 显示为 1”不能单独证明 prior 与 posterior 仍在被该项拉近，必须同时查看 raw KL、阈值、权重和梯度路由。
+`free_nats` 还容易被日志误读：$\max(\text{raw\_KL},\tau)$ 会让阈值以下的报告值停在 $\tau$，但该常数区的 KL 梯度为零（边界点除外）。因此“KL loss 显示为 1”不能单独证明 prior 与 posterior 仍在被该项拉近，必须同时查看 raw KL、阈值、权重和梯度路由。
 
 <!-- CLAIM_META: CLAIM-06-05 fact -->
 DreamerV3 官方快照 `e3f0224` 的 dynamics/representation KL 在前向计算中数值相同，但 stop-gradient 使二者更新不同参数；`free_nats` 又使阈值以下的 KL 成为常数区。该结论只描述所锁实现，而不是所有 RSSM 或未来 commit 的必备形式。
@@ -276,7 +276,7 @@ make ch06-smoke
 
 原始结果记录在 `results/ch06/EXP-06-01-smoke.json`。这些数字只属于 实验 6-1<!-- INTERNAL_ASSET_ID: EXP-06-01 --> 的固定教学 fixture，不与论文分数比较，也不用于声称学习方法优于其他模型。
 
-同一协议已冻结为 `benchmarks/BENCH-06-01.json` v3：它除登记31个有效转移、seed 7、四种预测视图、五个 open-loop horizon 与未来观测可见性负对照，还登记两组 categorical posterior/prior、`KL(q‖p)` 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、状态是否从 posterior 重置、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
+同一协议已冻结为 `benchmarks/BENCH-06-01.json` v3：它除登记31个有效转移、seed 7、四种预测视图、五个 open-loop horizon 与未来观测可见性负对照，还登记两组 categorical posterior/prior、$\mathrm{KL}(q\,\|\,p)$ 方向、`free_nats=1`、dyn/rep scale=`1.0/0.1`、raw/clamped/weighted 三类 KL 指标及“梯度目标只是标签”的禁止声明。`experiment-card.json` 记录本次运行的代码、资源和命令，结果 JSON 保存测量值。三类文件分开后，改变 seed、horizon、状态是否从 posterior 重置、未来观测可见性、概率对、KL 方向、阈值或 scale 都属于协议变更，不能仍以同一 benchmark 版本横向比较。
 
 <!-- CLAIM_META: CLAIM-06-03 result -->
 在 实验 6-1<!-- INTERNAL_ASSET_ID: EXP-06-01 --> 的固定 32 步 fixture 上，open-loop RMSE 为 0.33317，高于持续观测修正的 filtering RMSE 0.06084。该结果不外推到神经 RSSM、PlaNet 或 Dreamer。
@@ -392,7 +392,7 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 <details markdown="1">
 <summary>自检 6-1：无动作视频预测器</summary>
 
-按本书用于控制与决策的工作定义，它通常不满足：它学习的是 `p(o_{t+1:t+H}|o_{≤t})`，无法回答候选动作 `a` 改变后未来如何变化。若任务只是被动环境预测，或动作由观测历史唯一决定且不需要反事实规划，可以把它称为特定用途的预测模型，但必须禁止“支持动作规划”的声明。要升级为本书主线世界模型，至少需显式动作条件、时间对齐和 E2 action-intervention 检查。
+按本书用于控制与决策的工作定义，它通常不满足：它学习的是 $p(o_{t+1:t+H}\mid o_{\le t})$，无法回答候选动作 `a` 改变后未来如何变化。若任务只是被动环境预测，或动作由观测历史唯一决定且不需要反事实规划，可以把它称为特定用途的预测模型，但必须禁止“支持动作规划”的声明。要升级为本书主线世界模型，至少需显式动作条件、时间对齐和 E2 action-intervention 检查。
 
 </details>
 
@@ -406,14 +406,14 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 <details markdown="1">
 <summary>自检 6-3：KL 的梯度路由</summary>
 
-`KL(sg(q)‖p)` 中 posterior `q` 被 stop-gradient，梯度只流向 dynamics prior `p`；`KL(q‖sg(p))` 中 prior 被截断，梯度只流向 representation/posterior `q`。两式前向都代入同一组概率值计算 `KL(q‖p)`，所以日志标量可以完全相同；stop-gradient 改的是反向图，不是前向数值。检查实现时应同时看 loss 数值、scale 与参数梯度目标。
+`KL(sg(q)‖p)` 中 posterior `q` 被 stop-gradient，梯度只流向 dynamics prior `p`；`KL(q‖sg(p))` 中 prior 被截断，梯度只流向 representation/posterior `q`。两式前向都代入同一组概率值计算 $\mathrm{KL}(q\,\|\,p)$，所以日志标量可以完全相同；stop-gradient 改的是反向图，不是前向数值。检查实现时应同时看 loss 数值、scale 与参数梯度目标。
 
 </details>
 
 <details markdown="1">
 <summary>自检 6-4：free nats 分段函数</summary>
 
-当前 fixture 定义为 `L_c(k)=max(k,c)`，其中 raw KL `k≥0`、`c=free_nats`。当 `c=0` 时 `L=k`；`c=0.5` 时，`0≤k≤0.5` 为常数 0.5，之后为 `k`；`c=2` 时，`0≤k≤2` 为常数 2，之后为 `k`。这不是 `max(k-c,0)`：两种写法的数值、日志和 scale 不同。严格说拐点处两支相等；“常数区”可写为 `k<c`，并注明实现采用哪一侧的次梯度。
+当前 fixture 定义为 $L_c(k)=\max(k,c)$，其中 raw KL $k\ge0$、$c=\text{free\_nats}$。当 $c=0$ 时 $L=k$；$c=0.5$ 时，$0\le k\le0.5$ 为常数 0.5，之后为 `k`；$c=2$ 时，$0\le k\le2$ 为常数 2，之后为 `k`。这不是 `max(k-c,0)`：两种写法的数值、日志和 scale 不同。严格说拐点处两支相等；“常数区”可写为 `k<c`，并注明实现采用哪一侧的次梯度。
 
 </details>
 
@@ -434,7 +434,7 @@ RSSM 的关键不是“在 RNN 后面再加一个随机变量”，而是明确�
 <details markdown="1">
 <summary>自检 6-7：一步 prior 不能冒充多步 open-loop</summary>
 
-filtering 在预测后读取当前观测；posterior-anchored one-step prior 的当前预测不读 `o_t`，但每一步起点都来自已经吸收 `o_{≤t-1}` 的 posterior；no-reset open-loop 只在 horizon 0 用初始 belief，之后连续调用 prior。因此只改 `o_1...o_H` 时，前两条观测消费路径应改变，真正 open-loop 必须完全不变。若 open-loop 变化，说明实现发生 posterior reset、共享可变状态或其他泄漏。当前 `+1` 负对照只证明 fixture 的数据流隔离，不能估计神经模型真实误差、部署噪声或规划成功率。
+filtering 在预测后读取当前观测；posterior-anchored one-step prior 的当前预测不读 $o_t$，但每一步起点都来自已经吸收 $o_{\le t-1}$ 的 posterior；no-reset open-loop 只在 horizon 0 用初始 belief，之后连续调用 prior。因此只改 $o_1,\ldots,o_H$ 时，前两条观测消费路径应改变，真正 open-loop 必须完全不变。若 open-loop 变化，说明实现发生 posterior reset、共享可变状态或其他泄漏。当前 `+1` 负对照只证明 fixture 的数据流隔离，不能估计神经模型真实误差、部署噪声或规划成功率。
 
 </details>
 

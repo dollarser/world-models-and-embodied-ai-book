@@ -329,7 +329,7 @@ World-model rollout 降低真实交互成本，同时给 policy 和 reward model
 <details markdown="1">
 <summary>自检 18-2：全同 reward 的 LOO 优势退化</summary>
 
-对大小为 `n>1` 的组，可写 `A_i=r_i-(Σ_{j≠i}r_j)/(n-1)`。若全成功 `r_i=1`，每个 `A_i=1-1=0`；若全失败 `r_i=0`，也全部为 0，因此这两组没有组内相对更新信号。测试应分别断言全成功、全失败为全零，并用混合组如 `[1,0,0]` 断言优势为 `[1,-0.5,-0.5]`。丢弃并重采全同组会改变任务分布，必须另报 attempted、discarded、resampled 和 used groups。
+对大小为 $n>1$ 的组，可写 $A_i=r_i-(\sum_{j\ne i}r_j)/(n-1)$。若全成功 $r_i=1$，每个 $A_i=1-1=0$；若全失败 $r_i=0$，也全部为 0，因此这两组没有组内相对更新信号。测试应分别断言全成功、全失败为全零，并用混合组如 `[1,0,0]` 断言优势为 `[1,-0.5,-0.5]`。丢弃并重采全同组会改变任务分布，必须另报 attempted、discarded、resampled 和 used groups。
 
 </details>
 

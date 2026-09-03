@@ -27,16 +27,16 @@
 
 ## 13.1 放回闭环地图
 
-策略从观测 `o_t` 映射到动作 `a_t`；若系统显式提供状态或信念，策略也可以读取相应变量，但不应再把它们记作 `o_t`。环境执行动作后产生下一状态与观测。监督学习只看专家轨迹上的条件分布；部署时，策略自己的动作改变下一次输入。
+策略从观测 $o_t$ 映射到动作 $a_t$；若系统显式提供状态或信念，策略也可以读取相应变量，但不应再把它们记作 $o_t$。环境执行动作后产生下一状态与观测。监督学习只看专家轨迹上的条件分布；部署时，策略自己的动作改变下一次输入。
 
 ```mermaid
 flowchart TB
     accTitle: FIG-13-01 图 13-1 模仿策略的闭环接口
     accDescr: 策略把观测映射为动作并改变下一观测，专家数据只覆盖专家访问过的部分状态；独立安全层在动作执行前提供额外约束。
-    O[观测 o_t] --> P[策略 pi]
-    P --> A[动作 a_t]
+    O["观测 $$o_t$$"] --> P["策略 $$\pi$$"]
+    P --> A["动作 $$a_t$$"]
     A --> E[环境转移]
-    E --> O2[新观测 o_t+1]
+    E --> O2["新观测 $$o_{t+1}$$"]
     O2 --> P
     D[专家数据] -.只覆盖部分状态.-> P
     F[独立安全层] --> A
@@ -56,7 +56,7 @@ flowchart TB
 
 连续动作常用 L1、L2 或带概率分布的负对数似然；离散动作可以使用交叉熵。损失的数值只有在动作单位、归一化、采样频率和掩码一致时才可比较。关节角、末端位姿、速度与车辆曲率并不是可互换的标签空间。
 
-行为克隆应该作为第一条可复现基线：实现简单、调试信号清楚，也能暴露数据接口错误。但它隐含训练状态分布 `d_expert` 与部署分布 `d_pi` 足够接近。[DAgger 论文](https://proceedings.mlr.press/v15/ross11a.html)把这种学习器诱导的状态分布纳入训练分析。闭环中的小误差会把策略带到专家数据较少覆盖的状态，后续预测可能更差。
+行为克隆应该作为第一条可复现基线：实现简单、调试信号清楚，也能暴露数据接口错误。但它隐含训练状态分布 $d_{\text{expert}}$ 与部署分布 $d_{\pi}$ 足够接近。[DAgger 论文](https://proceedings.mlr.press/v15/ross11a.html)把这种学习器诱导的状态分布纳入训练分析。闭环中的小误差会把策略带到专家数据较少覆盖的状态，后续预测可能更差。
 
 <!-- CLAIM_META: CLAIM-13-01 fact -->
 监督动作损失只约束专家数据分布上的条件预测，不能单独保证策略自身诱导分布上的闭环性能。
@@ -81,7 +81,7 @@ R_{\mathrm{BC}}(\pi)=\mathbb{E}_{s\sim d_E,\,a^*\sim\pi_E(\cdot\mid s)}[\ell(\pi
 
 ## 13.3 DAgger 的核心不是一个缩写
 
-DAgger 的直觉是：让当前策略运行，收集它真正会访问的状态，再请专家为这些状态标注正确动作并聚合回训练集。它把训练数据向 `d_pi` 移动，但代价是需要在线专家、可靠回滚与安全采集。真实机器人和自动驾驶中，这些条件往往比训练本身昂贵。
+DAgger 的直觉是：让当前策略运行，收集它真正会访问的状态，再请专家为这些状态标注正确动作并聚合回训练集。它把训练数据向 $d_{\pi}$ 移动，但代价是需要在线专家、可靠回滚与安全采集。真实机器人和自动驾驶中，这些条件往往比训练本身昂贵。
 
 没有在线专家时，可以使用扰动恢复数据、离线重标注、仿真纠错或保守拒绝机制，但不能把它们自动称作 DAgger。评测必须单独报告未扰动任务、恢复任务和分布外状态。
 
@@ -107,8 +107,8 @@ ACT（Action Chunking with Transformers）把动作块建模为条件生成问�
 
 动作块讨论必须固定四个不同对象：
 
-- **prediction horizon `K_pred`**：一次查询联合预测多少个未来动作，决定模型显式表达的时间范围；
-- **execution horizon `K_exec`**：下一次常规查询前最多连续执行多少步，满足 `1 <= K_exec <= K_pred`；
+- **prediction horizon $K_{\text{pred}}$**：一次查询联合预测多少个未来动作，决定模型显式表达的时间范围；
+- **execution horizon $K_{\text{exec}}$**：下一次常规查询前最多连续执行多少步，满足 $1\le K_{\text{exec}}\le K_{\text{pred}}$；
 - **replanning interval**：两次查询之间实际经过的时间，除固定周期外还可能被接触、碰撞或观测失效提前中断；
 - **temporal ensemble**：多个历史查询对同一当前动作的重叠预测怎样聚合，它依赖缓存与逐步对齐，不等于延长执行时域。
 
@@ -116,12 +116,12 @@ ACT（Action Chunking with Transformers）把动作块建模为条件生成问�
 flowchart TB
     accTitle: FIG-13-02 图 13-2 动作块执行与时间集成的两种时域协议
     accDescr: 一次预测 K_pred 步后，可以连续执行 K_exec 步再查询并丢弃旧后缀；也可以令 K_exec 等于 1，每步查询，让多个历史动作块对当前动作形成重叠预测并做时间集成。
-    Q[当前观测触发一次 K_pred 步预测] --> M{选择执行协议}
-    M --> C[块执行: K_exec 大于 1]
-    C --> E[连续执行前 K_exec 步]
+    Q["当前观测触发一次 $$K_{\mathrm{pred}}$$ 步预测"] --> M{选择执行协议}
+    M --> C["块执行: $$K_{\mathrm{exec}}$$ 大于 1"]
+    C --> E["连续执行前 $$K_{\mathrm{exec}}$$ 步"]
     E --> N[吸收新观测并重新查询]
     N --> D[旧块剩余后缀失效]
-    M --> T[时间集成: K_exec 等于 1]
+    M --> T["时间集成: $$K_{\mathrm{exec}}$$ 等于 1"]
     T --> R[每个控制步重新查询]
     R --> O[历史动作块对当前时刻产生重叠预测]
     O --> W[按年龄和有效 mask 聚合当前动作]
@@ -129,37 +129,37 @@ flowchart TB
 
 *图 13-2：动作块的两种执行协议。一路用较少查询换取更长开环承诺，另一路用逐步查询形成可集成的重叠预测；两者都必须响应事件触发的失效条件。来源：本书原创，CC BY-NC 4.0，2026-09-02。*<!-- INTERNAL_ASSET_ID: FIG-13-02 -->
 
-从控制视角看，动作块是一种有限时域承诺：预测得更远不等于必须盲执行得更久。`K_pred` 主要决定模型学习的时间关联与可供选择的未来范围，`K_exec` 则决定固定周期下多久重新吸收反馈；二者相等只是一个实现选择。若每一步仍表示同频率的底层关节或车辆控制，长块也不自动成为具有持续条件和终止语义的高层技能。
+从控制视角看，动作块是一种有限时域承诺：预测得更远不等于必须盲执行得更久。$K_{\text{pred}}$ 主要决定模型学习的时间关联与可供选择的未来范围，$K_{\text{exec}}$ 则决定固定周期下多久重新吸收反馈；二者相等只是一个实现选择。若每一步仍表示同频率的底层关节或车辆控制，长块也不自动成为具有持续条件和终止语义的高层技能。
 
-本书核查的 [LeRobot ACT 配置快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)分别把 `K_pred` 与 `K_exec` 称为 `chunk_size` 和 `n_action_steps`；例如预测 100 步、执行 50 步后会丢弃剩余 50 步。训练与部署还必须记录控制频率、两种时域对应的真实秒数、重叠方式、推理延迟、丢帧和终止处理；只写 `chunk_size=100` 没有跨系统意义。
+本书核查的 [LeRobot ACT 配置快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)分别把 $K_{\text{pred}}$ 与 $K_{\text{exec}}$ 称为 `chunk_size` 和 `n_action_steps`；例如预测 100 步、执行 50 步后会丢弃剩余 50 步。训练与部署还必须记录控制频率、两种时域对应的真实秒数、重叠方式、推理延迟、丢帧和终止处理；只写 `chunk_size=100` 没有跨系统意义。
 
 <!-- CLAIM_META: CLAIM-13-05 fact -->
 ACT 的预测 horizon、执行 horizon 和 temporal ensembling 是三个不同协议旋钮。LeRobot 快照 `128d332` 要求 temporal ensembling 时 `n_action_steps=1`，因为只有每步重新查询才会为同一时刻形成重叠预测；因此“时间集成更平滑”不能同时被解释成“减少推理调用”。
 
 ### 13.4.1 动作分块解决什么，又没有解决什么
 
-ACT 的核心建模收益是把局部时间相关动作作为一个联合预测对象。只有采用 `K_exec>1` 的块执行政策时，动作块才减少 policy query；ACT temporal ensembling 则刻意令 `K_exec=1`、每步查询，以形成针对同一动作时刻的重叠预测。两种执行模式都可能提高动作连贯性，但不能把“动作块输出”“减少查询”和“时间集成”写成同一个必然收益，更不等于消除了模仿学习的分布偏移。动作块可能在第一次预测时合理，却在环境变化后变成陈旧计划；时间集成缓和重叠预测间的抖动，也不会自动检测碰撞、接管或观测失效。
+ACT 的核心建模收益是把局部时间相关动作作为一个联合预测对象。只有采用 $K_{\text{exec}}>1$ 的块执行政策时，动作块才减少 policy query；ACT temporal ensembling 则刻意令 $K_{\text{exec}}=1$、每步查询，以形成针对同一动作时刻的重叠预测。两种执行模式都可能提高动作连贯性，但不能把“动作块输出”“减少查询”和“时间集成”写成同一个必然收益，更不等于消除了模仿学习的分布偏移。动作块可能在第一次预测时合理，却在环境变化后变成陈旧计划；时间集成缓和重叠预测间的抖动，也不会自动检测碰撞、接管或观测失效。
 
 | 问题 | 常用机制 | 它能改善什么 | 仍需单独验证 |
 | --- | --- | --- | --- |
-| 单步动作抖动 | 动作分块、时间集成 | 局部连贯性；`K_exec>1` 时减少调用 | 陈旧动作、逐步集成的查询成本、额外缓存与尾延迟 |
+| 单步动作抖动 | 动作分块、时间集成 | 局部连贯性；$K_{\text{exec}}>1$ 时减少调用 | 陈旧动作、逐步集成的查询成本、额外缓存与尾延迟 |
 | 部署状态偏离专家分布 | DAgger、扰动恢复数据、人工纠错 | 策略访问状态的覆盖 | 采集安全、专家成本、OOD 拒绝 |
 | 同一观测存在多种合理动作 | CVAE、diffusion、flow | 多峰动作分布 | 样本选择、可执行性与安全筛选 |
 | 长任务阶段与记忆 | 层级策略、显式子目标、记忆 | 长时任务分解 | 子目标错误、恢复和终止判断 |
 
-工程上，action chunk 也不应只是一个形状为 `[K, action_dim]` 的匿名张量。最小合同还应携带 `frame_id`、动作单位、控制周期 `dt`、生成时间、prediction horizon、execution horizon、有效步掩码、终止标记和归一化版本。部署端还需要明确何时丢弃剩余动作并重新推理。第21章继续讨论异步推理、实时 chunking 与 watchdog。
+工程上，action chunk 也不应只是一个形状为 $[K,\ \text{action\_dim}]$ 的匿名张量。最小合同还应携带 `frame_id`、动作单位、控制周期 `dt`、生成时间、prediction horizon、execution horizon、有效步掩码、终止标记和归一化版本。部署端还需要明确何时丢弃剩余动作并重新推理。第21章继续讨论异步推理、实时 chunking 与 watchdog。
 
-ACT 的 temporal ensemble 会把不同查询对当前动作的重叠预测做指数加权。记这些预测按“最旧到最新”为 `a_t^(0),...,a_t^(n-1)`，当前官方实现使用：
+ACT 的 temporal ensemble 会把不同查询对当前动作的重叠预测做指数加权。记这些预测按“最旧到最新”为 $a_t^{(0)},\ldots,a_t^{(n-1)}$，当前官方实现使用：
 
 \[
 \bar a_t=\frac{\sum_{i=0}^{n-1}\exp(-m i)\hat a_t^{(i)}}{\sum_{i=0}^{n-1}\exp(-m i)}.
 \]
 
-[ACT 原仓库评测脚本快照 `742c753`](https://github.com/tonyzhaozh/act/blob/742c753c0d4a5d87076c8f69e5628c79a8cc5488/imitate_episodes.py)把 `m` 固定为 `0.01`；LeRobot 快照 `128d332` 的[配置默认说明](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)也是 `0.01`，其 [`ACTTemporalEnsembler`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/modeling_act.py)明确让 `i=0` 对应最旧预测。正的 `m` 因而给旧预测更大权重：它能抑制逐次查询抖动，也会在目标真的变化时产生惯性。权重方向、系数、reset 时机和有效 mask 都是协议字段，不能只写“使用 temporal aggregation”。
+[ACT 原仓库评测脚本快照 `742c753`](https://github.com/tonyzhaozh/act/blob/742c753c0d4a5d87076c8f69e5628c79a8cc5488/imitate_episodes.py)把 `m` 固定为 `0.01`；LeRobot 快照 `128d332` 的[配置默认说明](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/configuration_act.py)也是 `0.01`，其 [`ACTTemporalEnsembler`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/policies/act/modeling_act.py)明确让 $i=0$ 对应最旧预测。正的 `m` 因而给旧预测更大权重：它能抑制逐次查询抖动，也会在目标真的变化时产生惯性。权重方向、系数、reset 时机和有效 mask 都是协议字段，不能只写“使用 temporal aggregation”。
 
 ## 13.5 四个协议反例（实验 13-1<!-- INTERNAL_ASSET_ID: EXP-13-01 -->）
 
-S 档实验使用 Python 标准库，不训练模型。第一部分令专家动作始终为零，在单位增益标量积分器中比较两列 20 步动作误差：持续 `+0.02` 与 `+0.02/-0.02` 交替。两者 teacher-forced RMSE 和 MAE 都是 `0.02`，最终积分状态误差却分别是 `0.40` 与 `0`。这个系统没有观测依赖反馈，只是误差传播负对照，不能称为闭环策略评测。第二部分用一个专家支持点和两个手写反馈规则，显式连接离线拟合与扰动后的 rollout。第三部分固定 `K_pred=8`，只改变 `K_exec=1/4/8`，并枚举 16 步任务中初始查询之后的 15 个动作边界；这样 policy query—陈旧权衡来自固定周期执行政策，而不是同时更换模型输出长度。第四部分对四个重叠标量预测应用 `m=0.01` 的 temporal ensemble。
+S 档实验使用 Python 标准库，不训练模型。第一部分令专家动作始终为零，在单位增益标量积分器中比较两列 20 步动作误差：持续 `+0.02` 与 `+0.02/-0.02` 交替。两者 teacher-forced RMSE 和 MAE 都是 `0.02`，最终积分状态误差却分别是 `0.40` 与 `0`。这个系统没有观测依赖反馈，只是误差传播负对照，不能称为闭环策略评测。第二部分用一个专家支持点和两个手写反馈规则，显式连接离线拟合与扰动后的 rollout。第三部分固定 $K_{\text{pred}}=8$，只改变 $K_{\text{exec}}=1/4/8$，并枚举 16 步任务中初始查询之后的 15 个动作边界；这样 policy query—陈旧权衡来自固定周期执行政策，而不是同时更换模型输出长度。第四部分对四个重叠标量预测应用 $m=0.01$ 的 temporal ensemble。
 
 <details markdown="1">
 <summary>可选：验证本章证据</summary>
@@ -174,19 +174,19 @@ make ch13-smoke
 
 ### 13.5.1 专家支持集上的零误差不约束离开支持集后的反馈方向
 
-固定标量转移 `x_{t+1}=x_t+a_t`，专家数据只有一行 `(x=0,a*=0)`。手写 negative-feedback policy 为 `a=-0.5x`，positive-feedback policy 为 `a=+0.5x`；二者在唯一专家支持点上的 action MSE 都为0。若从支持点开始且不扰动，它们的轨迹也完全相同。只有把 reset state 改为 `x_0=0.25`，才会看到六步后一个收敛、一个放大：
+固定标量转移 $x_{t+1}=x_t+a_t$，专家数据只有一行 $(x=0,a^*=0)$。手写 negative-feedback policy 为 $a=-0.5x$，positive-feedback policy 为 $a=+0.5x$；二者在唯一专家支持点上的 action MSE 都为0。若从支持点开始且不扰动，它们的轨迹也完全相同。只有把 reset state 改为 $x_0=0.25$，才会看到六步后一个收敛、一个放大：
 
-| 手写策略 | expert-support action MSE | `x_0` | 六步状态序列末值 | 最大绝对状态 |
+| 手写策略 | expert-support action MSE | $x_0$ | 六步状态序列末值 | 最大绝对状态 |
 | --- | ---: | ---: | ---: | ---: |
-| negative feedback `a=-0.5x` | 0 | 0.25 | 0.00390625 | 0.25 |
-| positive feedback `a=+0.5x` | 0 | 0.25 | 2.84765625 | 2.84765625 |
+| negative feedback $a=-0.5x$ | 0 | 0.25 | 0.00390625 | 0.25 |
+| positive feedback $a=+0.5x$ | 0 | 0.25 | 2.84765625 | 2.84765625 |
 
 *表 13-1：实验 13-1 v4 的 support—rollout 负对照。两条规则是为暴露接口而手写的确定性标量函数，不是从单点数据学出的 BC，也不代表真实控制器、机器人或车辆。*<!-- INTERNAL_ASSET_ID: TAB-13-01 -->
 
 <!-- CLAIM_META: CLAIM-13-08 result -->
-实验 13-1 v4<!-- INTERNAL_ASSET_ID: EXP-13-01 v4 --> 的两个手写策略在唯一专家支持点 `(0,0)` 上 action MSE 同为0；同受 `x_0=0.25` 的 reset disturbance 后，六步最终绝对状态分别为0.00390625和2.84765625。该固定反例只证明 expert-support loss 不识别 off-support feedback behavior，不估计 learned policy 的泛化、DAgger 收益、真实扰动概率、稳定域或安全性。
+实验 13-1 v4<!-- INTERNAL_ASSET_ID: EXP-13-01 v4 --> 的两个手写策略在唯一专家支持点 `(0,0)` 上 action MSE 同为0；同受 $x_0=0.25$ 的 reset disturbance 后，六步最终绝对状态分别为0.00390625和2.84765625。该固定反例只证明 expert-support loss 不识别 off-support feedback behavior，不估计 learned policy 的泛化、DAgger 收益、真实扰动概率、稳定域或安全性。
 
-| `K_pred` | `K_exec` | 每次完整查询丢弃后缀/步 | policy query | 平均/最大反应延迟 | 2 步期限通过率 |
+| $K_{\text{pred}}$ | $K_{\text{exec}}$ | 每次完整查询丢弃后缀/步 | policy query | 平均/最大反应延迟 | 2 步期限通过率 |
 | ---: | ---: | ---: | ---: | ---: | ---: |
 | 8 | 1 | 7 | 16 | 0.000 / 0 | 100.0% |
 | 8 | 4 | 4 | 4 | 1.600 / 3 | 73.3% |
@@ -225,8 +225,8 @@ make ch13-smoke
 
 1. 专家状态上的动作误差及单位；
 2. 闭环成功率、失败类别和每任务置信区间；
-3. `K_pred`、`K_exec`、对应的实际秒数、推理 P50/P95 与 policy query 次数；
-4. 固定 `K_pred` 的 `K_exec=1` 对照、时间集成消融和扰动恢复测试；
+3. $K_{\text{pred}}$、$K_{\text{exec}}$、对应的实际秒数、推理 P50/P95 与 policy query 次数；
+4. 固定 $K_{\text{pred}}$ 的 $K_{\text{exec}}=1$ 对照、时间集成消融和扰动恢复测试；
 5. 数据、代码、checkpoint、容器和随机种子。
 
 没有上述数据、闭环和时间证据时，本节只提供比较协议，不构成 BC 或 ACT 的性能结论。资源档位采用[术语表](../glossary.md)的统一定义。
@@ -272,14 +272,14 @@ make ch13-smoke
 
 行为克隆是必要但不充分的基线：它优化专家占用分布上的监督风险，而部署代价由策略动作、环境动力学和策略自身占用分布共同决定。协变量偏移、动作多解和模型表达不足是不同问题；误差可能累积、被反馈抑制，也可能在不可逆事件处突然放大，不能由单一开环指标推断。DAgger 的价值在于查询策略真实访问状态上的专家标签，但其数据仍受执行者、接管规则和安全边界影响。
 
-动作分块联合预测局部动作，本质上把预测范围与重新吸收反馈的频率拆开。只有 `K_exec>1` 才以更少查询换取潜在反应延迟，temporal ensembling 通常依赖逐步查询；动作序列也不自动成为具有终止语义的高层技能。部署协议必须同时定义 K_pred、K_exec、控制频率、端到端时延、缓存失效和独立安全层。
+动作分块联合预测局部动作，本质上把预测范围与重新吸收反馈的频率拆开。只有 $K_{\text{exec}}>1$ 才以更少查询换取潜在反应延迟，temporal ensembling 通常依赖逐步查询；动作序列也不自动成为具有终止语义的高层技能。部署协议必须同时定义 K_pred、K_exec、控制频率、端到端时延、缓存失效和独立安全层。
 
 ## 练习
 
 1. **概念判断**：两个策略动作 MSE 相同，但其中一个只在序列末端犯错，能否据此认为闭环风险相同？
-2. **协议推演**：固定 `K_pred`，分析不同 `K_exec`、deadline 和 temporal coefficient 如何改变调用—延迟与降抖—滞后 Pareto 关系，并写出哪些结论必须依赖闭环证据。
+2. **协议推演**：固定 $K_{\text{pred}}$，分析不同 $K_{\text{exec}}$、deadline 和 temporal coefficient 如何改变调用—延迟与降抖—滞后 Pareto 关系，并写出哪些结论必须依赖闭环证据。
 3. **协议设计**：为 ACT 实验列出避免 episode 泄漏的划分与三类闭环失败。
-4. **迁移分析**：将 `K_exec=8` 分别换算到 20Hz 车辆控制和 5Hz 机械臂控制，讨论安全含义。
+4. **迁移分析**：将 $K_{\text{exec}}=8$ 分别换算到 20Hz 车辆控制和 5Hz 机械臂控制，讨论安全含义。
 5. **指标审计**：构造两列 RMSE 和 MAE 相同、但有符号误差和不同的动作误差；解释还缺哪些闭环证据才能讨论策略安全性。
 6. **支持集审计**：保持两个策略在专家支持点上的 action MSE 都为0，分别改变 reset disturbance、policy gain 和 horizon；解释为什么该扫描仍不是 learned BC 的 OOD 泛化评测。
 
@@ -297,7 +297,7 @@ make ch13-smoke
 <details markdown="1">
 <summary>自检 13-2：调用、反应与时间集成 Pareto</summary>
 
-先固定 `K_pred=8`，单独扫描 `K_exec`。当前16步 fixture 中，`K_exec=1/4/8` 的查询数为 16/4/2，平均反应延迟为 0/1.6/3.733 步，deadline=2 时通过率为 1/0.733/0.333；这只是离散调用—陈旧性，不是实测推理 latency。再固定 `K_exec=1` 扫 deadline 和 temporal coefficient `m`：正 m 按当前“最旧到最新”索引给旧预测更大相对权重，稳态更平滑但真实突变更滞后。分别画 query/最大延迟与 stationary-error/change-error 的非支配点；LeRobot 协议中 temporal ensembling 要求每步查询，不能把它与任意 `K_exec>1` 组合成不存在的实验格。
+先固定 $K_{\text{pred}}=8$，单独扫描 $K_{\text{exec}}$。当前16步 fixture 中，$K_{\text{exec}}=1/4/8$ 的查询数为 16/4/2，平均反应延迟为 0/1.6/3.733 步，deadline=2 时通过率为 1/0.733/0.333；这只是离散调用—陈旧性，不是实测推理 latency。再固定 $K_{\text{exec}}=1$ 扫 deadline 和 temporal coefficient `m`：正 m 按当前“最旧到最新”索引给旧预测更大相对权重，稳态更平滑但真实突变更滞后。分别画 query/最大延迟与 stationary-error/change-error 的非支配点；LeRobot 协议中 temporal ensembling 要求每步查询，不能把它与任意 $K_{\text{exec}}>1$ 组合成不存在的实验格。
 
 </details>
 
@@ -325,7 +325,7 @@ make ch13-smoke
 <details markdown="1">
 <summary>自检 13-6：支持集拟合与扰动 rollout</summary>
 
-在唯一专家点 `(x=0,a*=0)` 上，`a=-0.5x` 与 `a=+0.5x` 都输出0，所以 action MSE 同为0；无扰动地从 `x=0` 出发也无法区分它们。固定 `x_{t+1}=x_t+a_t` 并令 `x_0=0.25` 后，六步末值分别为 `0.25×0.5^6=0.00390625` 与 `0.25×1.5^6=2.84765625`。这只说明单点支持集没有约束其外部函数值。要评测 learned BC，还需真实训练过程、独立 episode/source split、支持距离或扰动分桶、相同初态闭环 rollout、随机种子、限幅/终止/失败分母与安全接管；不能把手写正负反馈差称为算法效果。
+在唯一专家点 $(x=0,a^*=0)$ 上，$a=-0.5x$ 与 $a=+0.5x$ 都输出0，所以 action MSE 同为0；无扰动地从 $x=0$ 出发也无法区分它们。固定 $x_{t+1}=x_t+a_t$ 并令 $x_0=0.25$ 后，六步末值分别为 `0.25×0.5^6=0.00390625` 与 `0.25×1.5^6=2.84765625`。这只说明单点支持集没有约束其外部函数值。要评测 learned BC，还需真实训练过程、独立 episode/source split、支持距离或扰动分桶、相同初态闭环 rollout、随机种子、限幅/终止/失败分母与安全接管；不能把手写正负反馈差称为算法效果。
 
 </details>
 

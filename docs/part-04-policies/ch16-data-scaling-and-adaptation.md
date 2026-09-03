@@ -45,7 +45,7 @@
 \qquad \sum_d w_d=1.
 \]
 
-`w_d` 可以按数据集、任务、本体或温度采样设定。它不是“数据越多权重越大”的同义词，必须记录在配置和实验卡中。
+$w_d$ 可以按数据集、任务、本体或温度采样设定。它不是“数据越多权重越大”的同义词，必须记录在配置和实验卡中。
 
 ### 16.1.1 数据量、独立信息与覆盖是三个量
 
@@ -61,7 +61,7 @@
 
 采样频率也不等于最终影响。某来源即使只占少量 batch，也可能因为损失尺度大、梯度方向一致或样本更难而主导参数更新。完整审计应区分目标采样权重、实际样本暴露、有效 loss 权重和梯度影响。前两项容易统计，后两项更接近模型为何发生迁移，但不能仅凭单次梯度范数判断因果贡献。
 
-还必须登记 sampler 实际在哪一层抽样。dataset-uniform 先选来源、episode-uniform 从全部轨迹等概率选一条、transition-uniform 从全部有效步等概率选一个窗口；当 episode 数与长度不等时，三者实现的是三个不同目标分布。action chunk、padding、过滤、缺失相机和 `ignore_errors` 还可能让“原始 transition 数”不同于真正进入 loss 的有效 token/window 数，因此既要保存目标 `w_d`，也要按训练日志审计 realized exposure。
+还必须登记 sampler 实际在哪一层抽样。dataset-uniform 先选来源、episode-uniform 从全部轨迹等概率选一条、transition-uniform 从全部有效步等概率选一个窗口；当 episode 数与长度不等时，三者实现的是三个不同目标分布。action chunk、padding、过滤、缺失相机和 `ignore_errors` 还可能让“原始 transition 数”不同于真正进入 loss 的有效 token/window 数，因此既要保存目标 $w_d$，也要按训练日志审计 realized exposure。
 
 [Octo 数据管线快照 `241fb35`](https://github.com/octo-models/octo/blob/241fb3514b7c40957a86d869fecb7c7fc353f540/octo/data/dataset.py)的 `make_interleaved_dataset` 接受 per-dataset `sample_weights`；开启 `balance_weights` 时再乘每个数据集的 `num_transitions`，归一化后在 frame level interleave `[O,R1]`。这说明权重语义依赖实现开关和采样层，不表示 Octo 的任一方案对所有训练目标都最优，也不表示本书运行过该管线。
 
@@ -159,7 +159,7 @@ canonical schema 至少包含字段名称/顺序、frame、单位、时间定义
 \tilde a_j=\frac{a_j-\mu_j}{\sigma_j+\epsilon}.
 \]
 
-`μ,σ` 在本书受控评测中必须只由训练 split 计算，并与 dataset revision、split hash、embodiment、字段顺序、absolute/delta 配置和 action horizon 一起保存。某些上游管线会发布全数据统计或随 checkpoint 附带统计量，使用时必须记录其统计范围，不能默认它等于本书的训练切分。全局统计可能让大范围本体支配小范围本体；逐本体统计提高数值可比性，却要求推理时知道正确 embodiment。min/max 对异常值敏感，quantile clipping 会改变可达范围，也必须记录。
+$\mu,\sigma$ 在本书受控评测中必须只由训练 split 计算，并与 dataset revision、split hash、embodiment、字段顺序、absolute/delta 配置和 action horizon 一起保存。某些上游管线会发布全数据统计或随 checkpoint 附带统计量，使用时必须记录其统计范围，不能默认它等于本书的训练切分。全局统计可能让大范围本体支配小范围本体；逐本体统计提高数值可比性，却要求推理时知道正确 embodiment。min/max 对异常值敏感，quantile clipping 会改变可达范围，也必须记录。
 
 [openpi normalization 快照 `215abfb`](https://github.com/Physical-Intelligence/openpi/blob/215abfb217dbac7d5f1273282331b9b1866c0479/docs/norm_stats.md)明确要求目标数据遵守预训练 action-space 定义，并建议在“复用已有本体统计”与“为新数据重算统计”之间做实证比较；[LeRobot processor 快照 `128d332`](https://github.com/huggingface/lerobot/blob/128d3324e3202ce1fca1340fb8d7941edecce9d3/src/lerobot/processor/normalize_processor.py)则允许 checkpoint stats、dataset stats 或显式 override `[O,R1]`。因此 normalization asset 不是可随意替换的数值文件，而是模型—数据—动作 schema 的版本化依赖。
 
@@ -394,7 +394,7 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 4. **适配选择**：分别为“新夹爪”“新相机”“新语言域”选择 action head、LoRA 或部分解冻，并说明证据。
 5. **自动驾驶迁移**：把方向盘角、曲率和轨迹三种日志映射到统一合同，列出不可逆信息。
 6. **mixture 暴露**：给两个 episode 数与长度都不同的数据集，分别计算 dataset/episode/transition-uniform 的来源占比，并列出会让 realized exposure 再次偏离配置的过滤步骤。
-7. **窗口分母**：保持来源权重不变，为 horizon `H=3` 比较 drop-tail 与 padding 两种窗口策略；说明短 episode 为什么可能从训练中消失，以及 padding 时必须记录哪些 mask。
+7. **窗口分母**：保持来源权重不变，为 horizon $H=3$ 比较 drop-tail 与 padding 两种窗口策略；说明短 episode 为什么可能从训练中消失，以及 padding 时必须记录哪些 mask。
 
 ## 自检要点
 
@@ -410,7 +410,7 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 <details markdown="1">
 <summary>自检 16-2：等数据集与温度权重</summary>
 
-等数据集权重忽略 episode 数量，三者均为 `1/3`，再在各数据集内部采 episode。温度方案可预注册 `w_i∝n_i^α`；取 `α=0.5`（等价于 size temperature T=2）时，`sqrt(100):sqrt(1000):sqrt(10000)=10:31.62:100`，归一化约为 `0.0706,0.2233,0.7061`。作对照，α=1 的按规模权重约为 `0.0090,0.0901,0.9009`，α=0 回到等数据集。还应报告有效步/任务权重和重复率；episode 数不同不等于质量或多样性不同。
+等数据集权重忽略 episode 数量，三者均为 `1/3`，再在各数据集内部采 episode。温度方案可预注册 $w_i\propto n_i^{\alpha}$；取 $\alpha=0.5$（等价于 size temperature T=2）时，`sqrt(100):sqrt(1000):sqrt(10000)=10:31.62:100`，归一化约为 `0.0706,0.2233,0.7061`。作对照，α=1 的按规模权重约为 `0.0090,0.0901,0.9009`，α=0 回到等数据集。还应报告有效步/任务权重和重复率；episode 数不同不等于质量或多样性不同。
 
 </details>
 
@@ -431,7 +431,7 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 <details markdown="1">
 <summary>自检 16-5：驾驶日志到统一轨迹合同</summary>
 
-可统一为 ego frame、固定未来时间戳的 `(x,y,yaw,v)` 轨迹及可选 `(curvature,acceleration)`，并保存车辆参数和原始字段。方向盘角先经符号、零偏、转向比/非线性得到前轮角，再在低侧偏 bicycle 假设下用 `κ=tan(δ)/L`；曲率配合速度和初态积分成轨迹；已有轨迹则重采样到共同时间网格。转换不可逆：方向盘力矩、间隙/顺从、轮胎侧偏、低层 controller 和执行延迟会丢失；曲率不能在未知车型/滑移下唯一恢复方向盘角；轨迹也不能唯一恢复产生它的控制、路面扰动或驾驶意图。故需保存 raw log 与有损标记，无法校准的车队使用专用 head。
+可统一为 ego frame、固定未来时间戳的 `(x,y,yaw,v)` 轨迹及可选 `(curvature,acceleration)`，并保存车辆参数和原始字段。方向盘角先经符号、零偏、转向比/非线性得到前轮角，再在低侧偏 bicycle 假设下用 $\kappa=\tan(\delta)/L$；曲率配合速度和初态积分成轨迹；已有轨迹则重采样到共同时间网格。转换不可逆：方向盘力矩、间隙/顺从、轮胎侧偏、低层 controller 和执行延迟会丢失；曲率不能在未知车型/滑移下唯一恢复方向盘角；轨迹也不能唯一恢复产生它的控制、路面扰动或驾驶意图。故需保存 raw log 与有损标记，无法校准的车队使用专用 head。
 
 </details>
 
@@ -445,7 +445,7 @@ LoRA 只减少可训练参数和优化器状态，不一定让 activation、输�
 <details markdown="1">
 <summary>自检 16-7：transition 多不代表合格 action window 多</summary>
 
-stride one、drop-tail 时，长度 `L` 的 episode 只有 `max(L-H+1,0)` 个连续窗口。固定 `H=3` 后，短来源 `(2,)` 贡献0个窗口，长来源三条长度4的 episode 各贡献2个、共6个；所以 long 的 raw-transition 暴露是 `12/14≈85.71%`，window-uniform 暴露却是 `6/6=100%`。若 padding 保留短 episode，必须把真实动作与 padding 的 mask、终止/截断原因、有效 horizon 和 loss denominator 一起记录；否则零填充值可能被当作监督动作。实际训练还需审计过滤、窗口 stride/重叠、重复采样、分布式 shard 与每来源有效 token/梯度，不能把这个解析端点当作真实数据质量或迁移结果。
+stride one、drop-tail 时，长度 `L` 的 episode 只有 `max(L-H+1,0)` 个连续窗口。固定 $H=3$ 后，短来源 `(2,)` 贡献0个窗口，长来源三条长度4的 episode 各贡献2个、共6个；所以 long 的 raw-transition 暴露是 `12/14≈85.71%`，window-uniform 暴露却是 `6/6=100%`。若 padding 保留短 episode，必须把真实动作与 padding 的 mask、终止/截断原因、有效 horizon 和 loss denominator 一起记录；否则零填充值可能被当作监督动作。实际训练还需审计过滤、窗口 stride/重叠、重复采样、分布式 shard 与每来源有效 token/梯度，不能把这个解析端点当作真实数据质量或迁移结果。
 
 </details>
 

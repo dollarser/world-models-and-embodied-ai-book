@@ -201,7 +201,7 @@ receding horizon 能用新观测纠偏，却不能消除第一步就错误的碰
 
 *表 17-2：代理策略排序的时间化三分区合同。来源：本书原创；策略身份应沿第4、22章的训练 lineage 与选择历史记录。*<!-- INTERNAL_ASSET_ID: TAB-17-02 -->
 
-实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 先只看 `safe_route/idle` 两个 calibration policy：世界模型对它们的 return 完全正确，Spearman 为 `1.0`、最大 gap 为 `0`。模型冻结后才加入从未进入 calibration 的 `phantom_shortcut`；三策略 Spearman 立刻变为 `-0.5`，代理选中真实碰撞策略，regret 为 `1.85`。两策略上的 `ρ=1` 本身极不稳定，这正是不能把小型回顾性 panel 包装成泛化证书的原因。
+实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 先只看 `safe_route/idle` 两个 calibration policy：世界模型对它们的 return 完全正确，Spearman 为 `1.0`、最大 gap 为 `0`。模型冻结后才加入从未进入 calibration 的 `phantom_shortcut`；三策略 Spearman 立刻变为 `-0.5`，代理选中真实碰撞策略，regret 为 `1.85`。两策略上的 $\rho=1$ 本身极不稳定，这正是不能把小型回顾性 panel 包装成泛化证书的原因。
 
 <!-- CLAIM_META: CLAIM-17-11 result -->
 实验 17-1 v6<!-- INTERNAL_ASSET_ID: EXP-17-01 v6 --> 的两策略 calibration panel 具有 Spearman `1.0` 和零 return gap，但加入一个不相交 held-out policy 后，prospective 排序变为 `-0.5` 并选中真实碰撞策略；因此冻结 panel 上的完美回顾性相关不蕴含对新策略的排序有效性。该结果只验证三个手工策略的 split 机制，不估计 learned simulator 对真实新策略的失败概率。

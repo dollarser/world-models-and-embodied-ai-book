@@ -67,7 +67,7 @@ flowchart TB
 - `occupied`：当前观测对空间被占用提供了正证据；
 - `unknown`：证据不足、被遮挡、视野外或时效已过。
 
-概率 occupancy 可保存 `P(occupied)`，但工程接口仍要定义何时映射为自由、占用和未知。阈值附近、不确定度很高或长期未更新的格子，不能静默落到 free。
+概率 occupancy 可保存 $P(\text{occupied})$，但工程接口仍要定义何时映射为自由、占用和未知。阈值附近、不确定度很高或长期未更新的格子，不能静默落到 free。
 
 ```mermaid
 flowchart TB
@@ -112,7 +112,7 @@ flowchart TB
 
 *表 12-1：常见空间表征及其行动接口。它们可以组合，不应按“新旧”排成单一路线。*<!-- INTERNAL_ASSET_ID: TAB-12-01 -->
 
-体素边长为 `r`，覆盖范围为 `L_x×L_y×L_z` 时，稠密格子数量约为：
+体素边长为 `r`，覆盖范围为 $L_x\times L_y\times L_z$ 时，稠密格子数量约为：
 
 \[
 N=\left\lceil\frac{L_x}{r}\right\rceil
@@ -124,7 +124,7 @@ N=\left\lceil\frac{L_x}{r}\right\rceil
 
 ### 12.3.1 米制点怎样落进格子
 
-“点已经在共同 frame”仍不足以得到 cell。二维栅格至少还要声明米制原点 `(x_min,y_min)`、分辨率 `r`、有限范围、轴顺序，以及边界属于哪一格。本章采用 `(x_index,y_index)`，并将第 `(i,j)` 格定义为半开区域：
+“点已经在共同 frame”仍不足以得到 cell。二维栅格至少还要声明米制原点 $(x_{\min},y_{\min})$、分辨率 `r`、有限范围、轴顺序，以及边界属于哪一格。本章采用 $(x_{\text{index}},y_{\text{index}})$，并将第 `(i,j)` 格定义为半开区域：
 
 \[
 x\in[x_{min}+ir,\ x_{min}+(i+1)r),\qquad
@@ -138,7 +138,7 @@ i=\left\lfloor\frac{x-x_{min}}{r}\right\rfloor,\qquad
 j=\left\lfloor\frac{y-y_{min}}{r}\right\rfloor.
 \]
 
-这里必须用 floor，而不是把浮点数直接转为整数：许多语言的整数转换向 0 截断，`-0.02` 会变成 `0`，从而把原点左侧的越界点错误吸进第 0 格。映射后还要独立检查 `0≤i<W, 0≤j<H`；上边界 `x=x_min+Wr` 属于格外，不是最后一格。数组实现若采用 `[row,column]=[y_index,x_index]`，也必须在接口处显式交换，不能让数学坐标顺序随实现悄悄改变。
+这里必须用 floor，而不是把浮点数直接转为整数：许多语言的整数转换向 0 截断，`-0.02` 会变成 `0`，从而把原点左侧的越界点错误吸进第 0 格。映射后还要独立检查 $0\le i<W,\ 0\le j<H$；上边界 $x=x_{\min}+Wr$ 属于格外，不是最后一格。数组实现若采用 $[\text{row},\text{column}]=[y_{\text{index}},x_{\text{index}}]$，也必须在接口处显式交换，不能让数学坐标顺序随实现悄悄改变。
 
 半开数学定义还不等于任意浮点实现都能精确命中十进制边界。例如 `0.1` 通常不能被二进制浮点精确表示；项目应固定 dtype、坐标量化与边界容差策略，并用边界两侧的 `nextafter`/整数单位负对照测试。不能随意给所有坐标加 epsilon，因为这会把一侧误差转移到另一侧。本章 fixture 选择二进制可精确表示的 `0.5 m`，没有验证一般浮点栅格化。
 
@@ -404,14 +404,14 @@ Affordance 是状态、本体、动作和任务阶段之间的关系，还要检
 <details markdown="1">
 <summary>自检 12-2：分辨率与同一物理 footprint</summary>
 
-必须保持米制 footprint 不变，而不是保持 `footprint_radius_cells` 不变。对半宽 `R` 的方形近似，可先取保守半径 `k=ceil(R/r)`：例如 `R=0.5 m` 时，0.1 m 格取 k=5、检查 11×11 邻域，0.5 m 格取 k=1、检查 3×3；粗格覆盖更量化、薄缝和窄障碍更容易混叠。这个 cell dilation 还不是精确车辆/机器人形状，边界保守度与 cell-center 约定有关；正式比较应在同一米制地图上栅格化 polygon/Minkowski footprint，并报告 false-safe/false-blocked。
+必须保持米制 footprint 不变，而不是保持 `footprint_radius_cells` 不变。对半宽 `R` 的方形近似，可先取保守半径 $k=\lceil R/r\rceil$：例如 $R=0.5\ \text{m}$ 时，0.1 m 格取 k=5、检查 11×11 邻域，0.5 m 格取 k=1、检查 3×3；粗格覆盖更量化、薄缝和窄障碍更容易混叠。这个 cell dilation 还不是精确车辆/机器人形状，边界保守度与 cell-center 约定有关；正式比较应在同一米制地图上栅格化 polygon/Minkowski footprint，并报告 false-safe/false-blocked。
 
 </details>
 
 <details markdown="1">
 <summary>自检 12-3：新鲜度、速度与制动距离</summary>
 
-当前 fixture 的 cell 在 step 0 观测、step 3 查询，规则是 `age>max_age` 才过期：阈值 0、1、2 时路径因该 cell 变 unknown 而不安全，阈值≥3 时仍保留 free。工程阈值应换算为秒，并约束未观测期间可能位移 `v_rel τ`，同时考虑感知/规划/制动延迟和停止距离 `v²/(2a)`；速度越高、相对目标越快或定位误差越大，可接受 τ 通常越小。路径从 safe 变 unknown 的时刻只是触发重新观测、减速或 fallback，不证明此处已有障碍。
+当前 fixture 的 cell 在 step 0 观测、step 3 查询，规则是 $\text{age}>\text{max\_age}$ 才过期：阈值 0、1、2 时路径因该 cell 变 unknown 而不安全，阈值≥3 时仍保留 free。工程阈值应换算为秒，并约束未观测期间可能位移 $v_{\text{rel}}\tau$，同时考虑感知/规划/制动延迟和停止距离 `v²/(2a)`；速度越高、相对目标越快或定位误差越大，可接受 τ 通常越小。路径从 safe 变 unknown 的时刻只是触发重新观测、减速或 fallback，不证明此处已有障碍。
 
 </details>
 

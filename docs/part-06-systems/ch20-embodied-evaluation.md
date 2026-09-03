@@ -56,28 +56,28 @@ Estimand 应明确目标单位、总体、条件和聚合规则。例如“从�
 
 ### 20.1.2 给二项成功率加一个可解释的区间
 
-当每个 episode 只有成功/失败两种结果，且暂时把 episode 视为独立同分布的 Bernoulli 试验时，可以用 Wilson score interval 表达有限样本的不确定性。令成功数为 `k`、样本数为 `n`、点估计为 `p_hat=k/n`，区间中心与半宽为：
+当每个 episode 只有成功/失败两种结果，且暂时把 episode 视为独立同分布的 Bernoulli 试验时，可以用 Wilson score interval 表达有限样本的不确定性。令成功数为 `k`、样本数为 `n`、点估计为 $\hat{p}=k/n$，区间中心与半宽为：
 
 \[
 c=\frac{\hat p+z^2/(2n)}{1+z^2/n},\qquad
 m=\frac{z\sqrt{\hat p(1-\hat p)/n+z^2/(4n^2)}}{1+z^2/n}.
 \]
 
-95% 区间取 `z≈1.96`，端点是 `c-m` 与 `c+m`。它比直接使用 `p_hat ± 1.96 sqrt(p_hat(1-p_hat)/n)` 的 Wald 区间更适合小样本和接近 0/1 的比例；后者甚至会在 `4/4` 时给出零宽区间。NIST 的二项比例指南也建议小样本优先考虑 Wilson 或 Agresti–Coull，而不是标准 Wald 区间。
+95% 区间取 $z\approx1.96$，端点是 `c-m` 与 `c+m`。它比直接使用 $\hat{p}\pm 1.96\sqrt{\hat{p}(1-\hat{p})/n}$ 的 Wald 区间更适合小样本和接近 0/1 的比例；后者甚至会在 `4/4` 时给出零宽区间。NIST 的二项比例指南也建议小样本优先考虑 Wilson 或 Agresti–Coull，而不是标准 Wald 区间。
 
 但区间成立有前提：如果多次运行共享同一场景、初始轨迹或随机种子，名义上的 `n` 可能高估有效样本量。此时应按场景/任务分层报告，或对独立采样单元做 cluster bootstrap。置信区间只量化固定协议下的抽样不确定性，不能修复任务总体、成功定义或分母不同造成的不可比性。
 
 ### 20.1.3 零次安全事件仍对应正的风险上界
 
-“测试中没有碰撞”不是风险为零。若暂时把每次暴露视为独立同分布 Bernoulli 试验，真实事件概率为 `p`，那么 `n` 次均无事件的概率为 `(1-p)^n`。一侧置信水平 `1-α` 的精确二项上界由 `(1-p_U)^n=α` 给出：
+“测试中没有碰撞”不是风险为零。若暂时把每次暴露视为独立同分布 Bernoulli 试验，真实事件概率为 `p`，那么 `n` 次均无事件的概率为 $(1-p)^n$。一侧置信水平 $1-\alpha$ 的精确二项上界由 $(1-p_U)^n=\alpha$ 给出：
 
 \[
 p_U=1-\alpha^{1/n}.
 \]
 
-95% 时 `α=0.05`；常见的 “rule of three” 用 `3/n` 近似它，因为 `-ln(0.05)≈2.996`。[Hanley 与 Lippman-Hand](https://pubmed.ncbi.nlm.nih.gov/6827763/)用零分子的解释说明了这一近似 `[P]`。本书 fixture 直接计算精确式：
+95% 时 $\alpha=0.05$；常见的 “rule of three” 用 $3/n$ 近似它，因为 `-ln(0.05)≈2.996`。[Hanley 与 Lippman-Hand](https://pubmed.ncbi.nlm.nih.gov/6827763/)用零分子的解释说明了这一近似 `[P]`。本书 fixture 直接计算精确式：
 
-| 零事件暴露数 `n` | 95% 一侧精确上界 | `3/n` 近似 |
+| 零事件暴露数 `n` | 95% 一侧精确上界 | $3/n$ 近似 |
 | ---: | ---: | ---: |
 | 20 | 13.9108% | 15.0% |
 | 100 | 2.9513% | 3.0% |
@@ -86,7 +86,7 @@ p_U=1-\alpha^{1/n}.
 *表 20-1：零次观测事件的一侧二项风险上界。来源：实验 20-1 v11 解析计算；独立同分布 Bernoulli 只是一项显式教学假设。*<!-- INTERNAL_ASSET_ID: TAB-20-01 -->
 
 <!-- CLAIM_META: CLAIM-20-09 result -->
-实验 20-1 v11<!-- INTERNAL_ASSET_ID: EXP-20-01 v11 --> 在零观测事件下计算出 `n=20/100/1000` 的 95% 一侧上界分别为 `0.139108/0.029513/0.002991`；因此即使 `0/100`，该假设下仍不能排除约 2.95% 的事件概率。该结果不估计机器人或车辆风险，也不覆盖相关 route、重复 seed、未见危险类型、scorer 漏检或 sim-to-real gap。
+实验 20-1 v11<!-- INTERNAL_ASSET_ID: EXP-20-01 v11 --> 在零观测事件下计算出 $n=20/100/1000$ 的 95% 一侧上界分别为 `0.139108/0.029513/0.002991`；因此即使 `0/100`，该假设下仍不能排除约 2.95% 的事件概率。该结果不估计机器人或车辆风险，也不覆盖相关 route、重复 seed、未见危险类型、scorer 漏检或 sim-to-real gap。
 
 ### 20.1.4 重复 replay 不能伪装成独立暴露
 
@@ -267,7 +267,7 @@ micro 差值让每个 episode 权重相同，因此重复 4 次的 `route-b` 对
 
 ### 20.5.3 进阶审计：边际成功率相同，配对证据仍可能不同
 
-如果 candidate 与 baseline 在同一批初态上逐对运行，两个边际成功率会丢掉 joint outcome。令 `b` 为“candidate 成功、baseline 失败”的对数，`c` 为相反方向，`m=b+c` 为 discordant pairs。exact conditional McNemar 诊断在“两个方向在 discordant pairs 中等概率”的零假设下使用：
+如果 candidate 与 baseline 在同一批初态上逐对运行，两个边际成功率会丢掉 joint outcome。令 `b` 为“candidate 成功、baseline 失败”的对数，`c` 为相反方向，$m=b+c$ 为 discordant pairs。exact conditional McNemar 诊断在“两个方向在 discordant pairs 中等概率”的零假设下使用：
 
 \[
 p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\right).
@@ -284,16 +284,16 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 
 *表 20-6：相同边际成功率、不同 joint pairing 的负对照。`p` 是固定手工表在具名零假设下的 exact conditional 诊断，不是模型成绩、效应量或安全证据。*<!-- INTERNAL_ASSET_ID: TAB-20-06 -->
 
-第一张表的 4 个 discordant pairs 全朝 candidate 方向；第二张虽然 discordant 更多，却分成 `8:4`，相对方向不平衡更弱。因此相同的 `+0.2` 点差并不能确定配对检验结果。这里不能反过来总结“discordant 越多，证据越弱”：决定数值的是 `b:c` 与 `m` 的联合结构。实际发布还应给配对差及预先选定的区间，不用 `p>0.05` 宣称等效，也不用 `p<0.05` 代替实际效应、任务覆盖或风险判断。
+第一张表的 4 个 discordant pairs 全朝 candidate 方向；第二张虽然 discordant 更多，却分成 `8:4`，相对方向不平衡更弱。因此相同的 `+0.2` 点差并不能确定配对检验结果。这里不能反过来总结“discordant 越多，证据越弱”：决定数值的是 `b:c` 与 `m` 的联合结构。实际发布还应给配对差及预先选定的区间，不用 $p>0.05$ 宣称等效，也不用 $p<0.05$ 代替实际效应、任务覆盖或风险判断。
 
 该诊断要求 pair 之间是目标总体下可辩护的独立单元。若多对结果嵌套在同一 route、scene lineage 或 seed family 中，20.5.1 的 cluster 层仍然存在；对 episode 直接做 McNemar 不会消除伪重复。多策略、多任务、多阈值或反复查看结果还会引入 multiplicity/adaptivity，必须预注册主比较或另做相应控制。
 
 <!-- CLAIM_META: CLAIM-20-12 result -->
-实验 20-1 v11<!-- INTERNAL_ASSET_ID: EXP-20-01 v11 --> 的两张20对手工表都给出 candidate/baseline=`0.6/0.4` 与点差 `+0.2`，但 high-concordance 表的 `b/c=4/0`、exact conditional two-sided `p=0.125`，more-discordant 表为 `8/4`、`p=0.387695`。该结果只证明边际成功率不能恢复 paired joint table 或其具名条件诊断；不估计策略效应、显著性功效、cluster 相关、等效性、多重比较或部署安全。
+实验 20-1 v11<!-- INTERNAL_ASSET_ID: EXP-20-01 v11 --> 的两张20对手工表都给出 candidate/baseline=`0.6/0.4` 与点差 `+0.2`，但 high-concordance 表的 $b/c=4/0$、exact conditional two-sided $p=0.125$，more-discordant 表为 `8/4`、$p=0.387695$。该结果只证明边际成功率不能恢复 paired joint table 或其具名条件诊断；不估计策略效应、显著性功效、cluster 相关、等效性、多重比较或部署安全。
 
 ### 20.5.4 进阶审计：不显著不是等效
 
-为给前述“不能由 `p>0.05` 宣称等效”一个可执行的最低基线，令每对差值 `D_i=candidate_i-baseline_i∈{-1,0,1}`，并定义这些固定设计位置的平均期望 `μ_n=n^{-1}Σ_i E[D_i]`。若把 `n` 个 pair 视为相互独立且协议固定，[Hoeffding 的有界变量不等式](https://doi.org/10.1080/01621459.1963.10500830)给出：
+为给前述“不能由 $p>0.05$ 宣称等效”一个可执行的最低基线，令每对差值 $D_i=\text{candidate}_i-\text{baseline}_i\in\{-1,0,1\}$，并定义这些固定设计位置的平均期望 $\mu_n=n^{-1}\sum_i E[D_i]$。若把 `n` 个 pair 视为相互独立且协议固定，[Hoeffding 的有界变量不等式](https://doi.org/10.1080/01621459.1963.10500830)给出：
 
 \[
 \Pr\!\left(\left|\bar D-\mu_n\right|\geq\epsilon\right)
@@ -301,7 +301,7 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 \epsilon=\sqrt{\frac{2\ln(2/\alpha)}{n}}.
 \]
 
-这里范围宽度为 `2`。`α=0.05,n=20` 时半宽为 `0.607361`；围绕点差 `0.2` 并裁到可行范围 `[-1,1]`，得到保守区间 `[-0.407361,0.807361]`。两张表的区间相同，因为这个最低基线只使用 pair 数、均值和已知范围；McNemar 诊断却使用 discordant 方向，所以数值不同。
+这里范围宽度为 `2`。$\alpha=0.05,\,n=20$ 时半宽为 `0.607361`；围绕点差 `0.2` 并裁到可行范围 `[-1,1]`，得到保守区间 `[-0.407361,0.807361]`。两张表的区间相同，因为这个最低基线只使用 pair 数、均值和已知范围；McNemar 诊断却使用 discordant 方向，所以数值不同。
 
 | joint pairing | paired difference | exact two-sided `p` | Hoeffding 95% 区间 | 是否完全落入预注册 `[-0.3,0.3]` |
 | --- | ---: | ---: | ---: | --- |
@@ -449,7 +449,7 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 <details markdown="1">
 <summary>自检 20-2：一次重试产生两个不同 estimand</summary>
 
-把每个 task/seed 最多运行两次，第二次只在首次失败后发生，并保存 `task_id, attempt_id, attempted, outcome, cost`。per-attempt 成功率的分母是所有实际 attempt，回答“任一执行尝试成功的概率”；best-of-two 的分母是 task，每个 task 只要一次成功即记成功，回答“允许该恢复政策后任务成功的概率”。若独立且每次成功率恒为 `p`，理论 best-of-two 为 `1-(1-p)^2`，但自适应重试通常不满足独立同分布，实测应按 task 聚合。报告还要包含平均/尾部尝试数、时延、干预与第二次尝试的安全风险；不能把 best-of-two 与只允许一次执行的部署系统直接比较。
+把每个 task/seed 最多运行两次，第二次只在首次失败后发生，并保存 `task_id, attempt_id, attempted, outcome, cost`。per-attempt 成功率的分母是所有实际 attempt，回答“任一执行尝试成功的概率”；best-of-two 的分母是 task，每个 task 只要一次成功即记成功，回答“允许该恢复政策后任务成功的概率”。若独立且每次成功率恒为 `p`，理论 best-of-two 为 $1-(1-p)^2$，但自适应重试通常不满足独立同分布，实测应按 task 聚合。报告还要包含平均/尾部尝试数、时延、干预与第二次尝试的安全风险；不能把 best-of-two 与只允许一次执行的部署系统直接比较。
 
 </details>
 
@@ -477,7 +477,7 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 <details markdown="1">
 <summary>自检 20-6：100 个 replay 不等于 100 条独立 route</summary>
 
-先写目标量：episode 行回答“一个独立抽取 episode 的事件概率”，route 行回答“一条独立抽取的新 route 在固定10次 replay 中至少出现一次事件的概率”。零事件精确式在 `n=100` 与 `n=10` 时分别给出 `0.029513` 和 `0.258866`，但它们不是同一参数，不能用后者除以前者宣称风险高约8.8倍，也不能把 `n=10` 当作未经模型证明的 per-episode 有效样本量。把固定重复数改为1还会改变 route-level outcome 本身，即使公式数值仍只由10个 cluster 决定。合格协议要保存 route/scene/seed/生成谱系、每 cluster 重复数和 cluster 内事件；缺少这些身份时停止总体上界发布。若要估计 per-episode 风险，应预先指定相关数据模型或稳健区间并验证假设；若目标是发现新场景失败，应增加独立 route 覆盖，而不是只重复已有 route。
+先写目标量：episode 行回答“一个独立抽取 episode 的事件概率”，route 行回答“一条独立抽取的新 route 在固定10次 replay 中至少出现一次事件的概率”。零事件精确式在 $n=100$ 与 $n=10$ 时分别给出 `0.029513` 和 `0.258866`，但它们不是同一参数，不能用后者除以前者宣称风险高约8.8倍，也不能把 $n=10$ 当作未经模型证明的 per-episode 有效样本量。把固定重复数改为1还会改变 route-level outcome 本身，即使公式数值仍只由10个 cluster 决定。合格协议要保存 route/scene/seed/生成谱系、每 cluster 重复数和 cluster 内事件；缺少这些身份时停止总体上界发布。若要估计 per-episode 风险，应预先指定相关数据模型或稳健区间并验证假设；若目标是发现新场景失败，应增加独立 route 覆盖，而不是只重复已有 route。
 
 </details>
 
@@ -491,7 +491,7 @@ p_{\mathrm{exact}}=\min\left(1,\;2\sum_{j=0}^{\min(b,c)} {m\choose j}2^{-m}\righ
 <details markdown="1">
 <summary>自检 20-8：边际成功率不能恢复配对联合表</summary>
 
-先固定两张20对表的边际数都为 candidate `12/20`、baseline `8/20`。表A可取 `(both success,candidate only,baseline only,both failure)=(8,4,0,8)`，表B取 `(4,8,4,4)`；两者点差都是 `+0.2`，但 discordant cells 分别为 `4:0` 与 `8:4`。按正文 equal-tail exact conditional 公式，双侧值分别是 `0.125` 与 `0.387695`。合格解释必须保留四格 joint counts、pair identity、方向、效应点差和预注册检验版本；不能由两个 `p>0.05` 宣称等效，也不能把较小值解释为安全或实际收益。若 pair 嵌套于 route/scene/seed family，独立单元仍是 cluster，应使用预先规定的 cluster-aware 设计；McNemar 只保留 episode pairing，不会修复伪重复。多任务、阈值或策略比较还需另行处理 multiplicity，不能挑最有利的一张表报告。
+先固定两张20对表的边际数都为 candidate `12/20`、baseline `8/20`。表A可取 `(both success,candidate only,baseline only,both failure)=(8,4,0,8)`，表B取 `(4,8,4,4)`；两者点差都是 `+0.2`，但 discordant cells 分别为 `4:0` 与 `8:4`。按正文 equal-tail exact conditional 公式，双侧值分别是 `0.125` 与 `0.387695`。合格解释必须保留四格 joint counts、pair identity、方向、效应点差和预注册检验版本；不能由两个 $p>0.05$ 宣称等效，也不能把较小值解释为安全或实际收益。若 pair 嵌套于 route/scene/seed family，独立单元仍是 cluster，应使用预先规定的 cluster-aware 设计；McNemar 只保留 episode pairing，不会修复伪重复。多任务、阈值或策略比较还需另行处理 multiplicity，不能挑最有利的一张表报告。
 
 </details>
 

@@ -39,13 +39,13 @@
 flowchart TB
     accTitle: FIG-03-01 图 3-1 具身智能的观测决策闭环
     accDescr: 不可直接获得的真实状态产生观测，智能体由观测形成状态或信念并选择动作，环境转移后再返回新观测。
-    E[真实状态 e_t] --> S[传感器]
-    S --> O[观测 o_t]
-    O --> B[状态/信念 z_t]
+    E["真实状态 $$e_t$$"] --> S[传感器]
+    S --> O["观测 $$o_t$$"]
+    O --> B["状态/信念 $$z_t$$"]
     B --> P[策略或规划器]
-    P --> A[动作 a_t]
+    P --> A["动作 $$a_t$$"]
     A --> C[下层控制器与安全层]
-    C --> E2[下一真实状态 e_t+1]
+    C --> E2["下一真实状态 $$e_{t+1}$$"]
     E2 --> S
 ```
 
@@ -64,9 +64,9 @@ flowchart TB
 | --- | --- | --- | --- |
 | 像素 | `(u,v)`，单位 px | 图像尺寸与像素原点 | 离相机多远 |
 | 深度/range | `d` 或 `r`，单位 m | 传感器定义、有效 mask | 单独一个数不能给出横向位置 |
-| 相机点 | `p_camera=(X,Y,Z)` | 像素、深度类型、内参 | 不知道机器人/车辆中的方向 |
-| 本体点 | `p_body` | 相机点与 `T_body_camera` | 不知道全局地图位置 |
-| 位姿/变换 | `T_target_source(t)` | 源/目标 frame、时刻与约定 | 不等同某个物体点本身 |
+| 相机点 | $p_{\text{camera}}=(X,Y,Z)$ | 像素、深度类型、内参 | 不知道机器人/车辆中的方向 |
+| 本体点 | $p_{\text{body}}$ | 相机点与 $T_{\text{body_camera}}$ | 不知道全局地图位置 |
+| 位姿/变换 | $T_{\text{target_source}}(t)$ | 源/目标 frame、时刻与约定 | 不等同某个物体点本身 |
 | voxel/BEV cell | `(i,j,k)` 或 `(i,j)` | 范围、分辨率、原点与栅格规则 | 没有点不等于确认 free |
 
 *表 3-1：零基础 3D 量的最小区分。每向下一级都增加假设；逆向压缩通常会丢信息。*<!-- INTERNAL_ASSET_ID: TAB-03-01 -->
@@ -87,13 +87,13 @@ flowchart TB
 
 像素 `(u,v)` 表示图像平面的位置，深度 `d` 提供沿相机光轴的尺度。为便于桥接，本章 fixture 采用常见光学坐标约定：`x` 向右、`y` 向下、`z` 向前，深度单位为米。不同库和硬件可能不同，必须读取其文档而不是猜测。
 
-忽略畸变时，内参 `f_x,f_y,c_x,c_y` 将像素反投影为相机坐标：
+忽略畸变时，内参 $f_x,f_y,c_x,c_y$ 将像素反投影为相机坐标：
 
 \[
 X_c=(u-c_x)d/f_x,\qquad Y_c=(v-c_y)d/f_y,\qquad Z_c=d.
 \]
 
-这里 `f_x,f_y` 用像素表示焦距，`(c_x,c_y)` 是主点。它不是“从单张 RGB 猜深度”：深度必须来自 RGB-D、双目、LiDAR、模型预测或其他来源，来源和不确定性要单独记录。
+这里 $f_x,f_y$ 用像素表示焦距，$(c_x,c_y)$ 是主点。它不是“从单张 RGB 猜深度”：深度必须来自 RGB-D、双目、LiDAR、模型预测或其他来源，来源和不确定性要单独记录。
 
 还要先问设备给的是 **z-depth** 还是沿成像射线的欧氏 **range**。上式要求 \(Z_c=d\)；若给定 range \(r\)，应先令
 
@@ -115,17 +115,17 @@ OpenCV 官方标定接口区分针孔与 fisheye 等相机模型。实验 3-1<!-
 {}^{t}p = {}^{t}R_s\,{}^{s}p + {}^{t}t_s.
 \]
 
-记号左上角表示“这个量用哪个 frame 表达”。`R` 是旋转，`t` 是源坐标原点在目标坐标中的位置。齐次变换把两者放入 `4×4` 矩阵，属于特殊欧氏群 `SE(3)`；本书只要求会组合和检查变换，不要求推导李群指数映射。
+记号左上角表示“这个量用哪个 frame 表达”。`R` 是旋转，`t` 是源坐标原点在目标坐标中的位置。齐次变换把两者放入 `4×4` 矩阵，属于特殊欧氏群 $SE(3)$；本书只要求会组合和检查变换，不要求推导李群指数映射。
 
 刚体旋转不只是任意 `3×3` 数组。proper rotation 必须满足 $R^\top R=I$ 且 $\det(R)=+1$：缩放/剪切不满足正交性，镜像虽然可能正交却有 $\det(R)=-1$。若代码直接用 $R^\top$ 当逆矩阵而不检查这些条件，错误矩阵也可能产生看似完整的点云。
 
-变换方向是最常见错误。`T_body_camera` 应解释为“把 camera 表达的点变到 body”，不能仅靠变量名中的两个 frame 猜乘法方向。链式变换要让相邻 frame 抵消，例如：
+变换方向是最常见错误。$T_{\text{body_camera}}$ 应解释为“把 camera 表达的点变到 body”，不能仅靠变量名中的两个 frame 猜乘法方向。链式变换要让相邻 frame 抵消，例如：
 
 ```text
 p_world = T_world_body @ T_body_camera @ p_camera
 ```
 
-因此 $T_{world\leftarrow camera}=T_{world\leftarrow body}T_{body\leftarrow camera}$。组合后的平移不是把两个三维向量直接相加，而是先把中间变换的平移旋转到 target frame，再相加。相机安装外参通常相对 body 固定，`T_world_body(t)` 却随机器人运动而变化；二者还必须对应同一时间基准。
+因此 $T_{world\leftarrow camera}=T_{world\leftarrow body}T_{body\leftarrow camera}$。组合后的平移不是把两个三维向量直接相加，而是先把中间变换的平移旋转到 target frame，再相加。相机安装外参通常相对 body 固定，$T_{\text{world_body}}(t)$ 却随机器人运动而变化；二者还必须对应同一时间基准。
 
 推荐的三项自检：原点变到哪里、单位轴变到哪里、正变换后再乘逆变换能否回到原点。只检查最终可视化“看起来差不多”不足以发现左右手系或轴交换。
 
@@ -137,7 +137,7 @@ p_world = T_world_body @ T_body_camera @ p_camera
 
 即 camera 的前、右、下分别映到 body 的前、右（`-y`）、下（`-z`）。先前若用单位旋转，投影 round trip 仍可为 0，却会把 optical `y` 当 body 横向、把 optical `z` 当 body 高度；这正是为什么必须测试单位轴和完整变换链。
 
-[Modern Robotics](https://modernrobotics.northwestern.edu/nu-gm-book-resource/) 系统讲解刚体运动、齐次变换和 `SE(3)`；本章只提取后续学习系统需要的接口，完整推导交给该开放教材。
+[Modern Robotics](https://modernrobotics.northwestern.edu/nu-gm-book-resource/) 系统讲解刚体运动、齐次变换和 $SE(3)$；本章只提取后续学习系统需要的接口，完整推导交给该开放教材。
 
 ### 3.3.1 时间戳也是几何的一部分
 
@@ -166,15 +166,15 @@ p_world = T_world_body @ T_body_camera @ p_camera
 | 仅转动 | 10 m | $\omega=0.5$ rad/s | 1.0 / 0.9 s | 0.499947918294 m |
 | 时间匹配 | 10 m | $v_x=2$ m/s，$\omega=0.5$ rad/s | 1.0 / 1.0 s | 0 m |
 
-*表 3-2：实验 3-1 的解析时间错位夹具。平移和转动行是两个独立对照；不能把两行误差简单相加来近似一般 `SE(3)` 运动。*<!-- INTERNAL_ASSET_ID: TAB-03-02 -->
+*表 3-2：实验 3-1 的解析时间错位夹具。平移和转动行是两个独立对照；不能把两行误差简单相加来近似一般 $SE(3)$ 运动。*<!-- INTERNAL_ASSET_ID: TAB-03-02 -->
 
 真实链路还要分别处理 clock offset、传输/排队延迟、一次扫描或 rolling shutter 内部的采样跨度，以及位姿插值。ROS 2 [`tf2` 时间旅行接口](https://docs.ros.org/en/lyrical/Tutorials/Intermediate/Tf2/Time-Travel-With-Tf2-Cpp.html)显式区分 source time、target time 与 fixed frame；Autoware 的 [point-cloud distortion corrector](https://autowarefoundation.github.io/autoware_universe/pr-10077/sensing/autoware_pointcloud_preprocessor/docs/distortion-corrector/)则按点时间戳结合 twist/IMU 做运动补偿，并把输入同步作为前提。这些接口说明“使用最新 transform”并不等价于“时间已经对齐”；本书没有运行 ROS 或 Autoware，也不据此声称完成真实 deskew。
 
 ### 3.3.2 离散 pose 不能直接平均角度
 
-实际 pose 常以离散时间样本到达。查询时刻位于两个样本之间时，至少要预登记：平移如何插值、旋转走哪条弧、最大允许间隔，以及区间外是否允许外推。特别是 yaw 使用 `[-π,π]` 表示时，`+170°` 与 `-170°` 在物理上只差 20°；直接算术平均却得到 `0°`，等价于绕长弧经过错误方向。
+实际 pose 常以离散时间样本到达。查询时刻位于两个样本之间时，至少要预登记：平移如何插值、旋转走哪条弧、最大允许间隔，以及区间外是否允许外推。特别是 yaw 使用 $[-\pi,\pi]$ 表示时，`+170°` 与 `-170°` 在物理上只差 20°；直接算术平均却得到 $0^\circ$，等价于绕长弧经过错误方向。
 
-实验 3-1 v5<!-- INTERNAL_ASSET_ID: EXP-03-01 v5 --> 固定两帧 planar pose：`t=0 s` 时 `(x=0 m,yaw=+170°)`，`t=1 s` 时 `(x=2 m,yaw=-170°)`，查询 `t=0.5 s`。线性平移与预登记最短 yaw 弧给出 `(x=1 m,yaw=180°)`；把 yaw 直接平均则得到 `0°`。对 body frame 中 `(10,0,0) m` 的点，两种 world point 相差 20 m。
+实验 3-1 v5<!-- INTERNAL_ASSET_ID: EXP-03-01 v5 --> 固定两帧 planar pose：$t=0\ \text{s}$ 时 $(x=0\ \text{m},\ \text{yaw}=+170^\circ)$，$t=1\ \text{s}$ 时 $(x=2\ \text{m},\ \text{yaw}=-170^\circ)$，查询 $t=0.5\ \text{s}$。线性平移与预登记最短 yaw 弧给出 $(x=1\ \text{m},\ \text{yaw}=180^\circ)$；把 yaw 直接平均则得到 $0^\circ$。对 body frame 中 `(10,0,0) m` 的点，两种 world point 相差 20 m。
 
 | 插值规则 | 中点 x | 中点 yaw | 10 m 点相对预登记中点误差 |
 | --- | ---: | ---: | ---: |
@@ -184,7 +184,7 @@ p_world = T_world_body @ T_body_camera @ p_camera
 *表 3-3：角度 wrap 的确定性反例。20 m 来自作者构造的 10 m 点和对向角度，不是定位误差分布。*<!-- INTERNAL_ASSET_ID: TAB-03-03 -->
 
 <!-- CLAIM_META: CLAIM-03-10 result -->
-实验 3-1 v5<!-- INTERNAL_ASSET_ID: EXP-03-01 v5 --> 的两帧 wrapped-yaw fixture 中，最短角弧插值与预登记中点完全一致，而直接平均 `+170°/-170°` 得到的 world point 相差 20 m；实现同时拒绝无 bracket 的外推和非严格递增时间戳。该结果只验证 planar yaw wrap 与固定点，不证明一般 `SE(3)` 插值、pose 质量、同步、deskew 或真实车辆误差。
+实验 3-1 v5<!-- INTERNAL_ASSET_ID: EXP-03-01 v5 --> 的两帧 wrapped-yaw fixture 中，最短角弧插值与预登记中点完全一致，而直接平均 `+170°/-170°` 得到的 world point 相差 20 m；实现同时拒绝无 bracket 的外推和非严格递增时间戳。该结果只验证 planar yaw wrap 与固定点，不证明一般 $SE(3)$ 插值、pose 质量、同步、deskew 或真实车辆误差。
 
 ## 3.4 点云、遮挡与简化 BEV
 
@@ -209,7 +209,7 @@ flowchart TB
 
 ## 3.5 从关节到末端：只掌握动作接口
 
-二维双连杆机械臂的关节角为 `q=(q_1,q_2)`，连杆长度为 `l_1,l_2`。正运动学把关节状态映射为末端位置：
+二维双连杆机械臂的关节角为 $q=(q_1,q_2)$，连杆长度为 $l_1,l_2$。正运动学把关节状态映射为末端位置：
 
 \[
 x=l_1\cos q_1+l_2\cos(q_1+q_2),\quad
@@ -232,15 +232,15 @@ y=l_1\sin q_1+l_2\sin(q_1+q_2).
 
 ## 3.6 控制频率、延迟与反馈
 
-动作 `a_t` 的含义依赖控制周期 `Δt`。同样的速度命令保持 20 ms 与 200 ms，造成的位移不同；同样 `chunk_size=8`，在 50 Hz 与 5 Hz 系统中分别覆盖 0.16 s 和 1.6 s。频率、保持方式、丢帧和时间戳必须进入实验卡。
+动作 $a_t$ 的含义依赖控制周期 $\Delta t$。同样的速度命令保持 20 ms 与 200 ms，造成的位移不同；同样 `chunk_size=8`，在 50 Hz 与 5 Hz 系统中分别覆盖 0.16 s 和 1.6 s。频率、保持方式、丢帧和时间戳必须进入实验卡。
 
-开环控制预先生成动作后不根据新观测修正；闭环控制根据误差持续调整。一个最简比例控制器是 `a_t=k(q^*-q_obs)`。它不解决动力学、接触或稳定性证明，却足以展示反馈为何能够修正固定执行偏差。
+开环控制预先生成动作后不根据新观测修正；闭环控制根据误差持续调整。一个最简比例控制器是 $a_t=k(q^*-q_{\text{obs}})$。它不解决动力学、接触或稳定性证明，却足以展示反馈为何能够修正固定执行偏差。
 
 规划器决定较长时域的目标或动作序列，控制器在更高频率上跟踪并抑制扰动；策略可能承担其中任一层。论文中都写 `action`，并不代表动作接口相同。
 
 ## 3.7 MDP、POMDP、策略与规划
 
-马尔可夫决策过程（MDP）用状态、动作、转移、奖励和折扣描述序贯决策。若真实状态 `e_t` 不可完全观测，系统只得到 `o_t`，问题更接近部分可观测 MDP（POMDP）。策略可以基于历史或信念状态：
+马尔可夫决策过程（MDP）用状态、动作、转移、奖励和折扣描述序贯决策。若真实状态 $e_t$ 不可完全观测，系统只得到 $o_t$，问题更接近部分可观测 MDP（POMDP）。策略可以基于历史或信念状态：
 
 ```text
 真实状态 e_t --传感器--> 观测 o_t
@@ -283,7 +283,7 @@ make ch03-smoke
 | 0.5 rad/s 转动中的 100 ms 过期位姿（10 m 点） | 0.49995 m | 转动错位还依赖点到旋转中心的距离 |
 | 匹配时间戳的位姿 | 0 m | 固定解析模型的零偏移基线 |
 | wrapped yaw 最短角弧插值 | 0 m | 与预登记中点一致 |
-| wrapped yaw 直接平均 | 20 m | 角度表示跨 `±π` 时走错弧 |
+| wrapped yaw 直接平均 | 20 m | 角度表示跨 $\pm\pi$ 时走错弧 |
 | 固定开环末端误差 | 0.12595 m | 执行偏差逐步累积 |
 | 观测反馈末端误差 | 0.01905 m | 在本 fixture 中反馈减小误差 |
 
@@ -302,7 +302,7 @@ make ch03-smoke
 在归一化离轴坐标 `(1,0)` 上，把数值 1 m 当作 z-depth 得到的射线距离为 1.41421 m；这证明 z-depth 与 range 的接口不可混用，不估计真实深度传感器误差。
 
 <!-- CLAIM_META: CLAIM-03-08 result -->
-实验 3-1 v5<!-- INTERNAL_ASSET_ID: EXP-03-01 v5 --> 保留了 v3 的刚体链检查：将 `T_world_body @ T_body_camera` 的组合结果与逐段作用于三个点的结果比较，最大差为 0 m；测试同时拒绝缩放、镜像和剪切矩阵作为 rotation。它验证固定变换实现与输入合同，不证明真实外参或定位正确。
+实验 3-1 v5<!-- INTERNAL_ASSET_ID: EXP-03-01 v5 --> 保留了 v3 的刚体链检查：将 $T_{\text{world_body}}@T_{\text{body_camera}}$ 的组合结果与逐段作用于三个点的结果比较，最大差为 0 m；测试同时拒绝缩放、镜像和剪切矩阵作为 rotation。它验证固定变换实现与输入合同，不证明真实外参或定位正确。
 
 <!-- CLAIM_META: CLAIM-03-09 result -->
 实验 3-1 v5<!-- INTERNAL_ASSET_ID: EXP-03-01 v5 --> 在常数 world-x 平移与常数 yaw 的解析夹具中，分别把 100 ms 过期位姿映射为 0.20 m 平移误差，以及 10 m 点上的 0.499947918294 m 转动误差；匹配时间戳时误差为 0 m。这只验证单点、精确时间戳和手工运动参数下的变换合同，不是 localization、pose interpolation、scan deskew、clock synchronization 或真实传感器精度结果。
@@ -312,7 +312,7 @@ make ch03-smoke
 1. **轴向**：单位轴和手系是否符合约定，图像 `v` 向下是否被误当世界 `z`；
 2. **单位**：深度、平移、角度、速度和时间分别是什么单位；
 3. **刚体性**：rotation 是否满足正交性和 `det=+1`，有没有把缩放、镜像或剪切混进外参；
-4. **方向**：保存的是 `T_target_source` 还是逆变换，矩阵左乘还是右乘；
+4. **方向**：保存的是 $T_{\text{target_source}}$ 还是逆变换，矩阵左乘还是右乘；
 5. **同步**：RGB、深度、位姿和动作是否属于同一时刻，插值和时钟源是什么；
 6. **控制周期**：动作在何时采样、持续多久、是否被限幅或丢弃。
 
@@ -324,7 +324,7 @@ make ch03-smoke
 
 本书默认项目必须自行声明轴向；可参考 ROS [REP-103](https://www.ros.org/reps/rep-0103.html) 的单位与坐标约定和 [REP-105](https://www.ros.org/reps/rep-0105.html) 的移动平台 frame 关系，但“参考”不等于所有驾驶数据集和仿真器都使用同一约定。
 
-一个车辆在弯道中移动时，静态相机外参可以保持不变，`T_map_vehicle(t)` 却随时间变化。将不同时间的点云变到同一地图坐标前必须做运动补偿。错误时间戳可能表现为动态对象拖影或道路边界弯曲，容易被误诊为 3D 模型能力不足。
+一个车辆在弯道中移动时，静态相机外参可以保持不变，$T_{\text{map_vehicle}}(t)$ 却随时间变化。将不同时间的点云变到同一地图坐标前必须做运动补偿。错误时间戳可能表现为动态对象拖影或道路边界弯曲，容易被误诊为 3D 模型能力不足。
 
 <!-- CLAIM_META: CLAIM-03-05 recommendation -->
 自动驾驶训练与评测应把实际使用的传感器 frame、车辆/map 变换、时间基准和动作持续时间写成数据 schema 的必填字段，并用固定轨迹做变换与同步 smoke；缺失或无法验证的变换不得凭默认值补造，应显式标为无效并排除依赖该字段的样本或任务。
@@ -374,7 +374,7 @@ episode:
 5. 约 60 min：改变控制频率、噪声和执行偏差，比较开环与反馈；
 6. 约 30 min：为自己的目标任务填写观测/状态/动作 schema。
 
-通过标准不是记住 `SE(3)` 定义，而是能在合成数据中定位轴向、单位、外参和时间错误。未通过仍可阅读世界模型或 VLA 主线；进入第12章 occupancy 实验前应补齐此门。
+通过标准不是记住 $SE(3)$ 定义，而是能在合成数据中定位轴向、单位、外参和时间错误。未通过仍可阅读世界模型或 VLA 主线；进入第12章 occupancy 实验前应补齐此门。
 
 ## 3.13 结果、资源、许可与安全边界
 
@@ -383,7 +383,7 @@ episode:
 | 本书结果 | 反投影 round trip 与错误注入可检出 | 实验 3-1<!-- INTERNAL_ASSET_ID: EXP-03-01 --> | CPU smoke | 三个理想像素 |
 | 本书结果 | 过期位姿产生可计算的空间错位 | 实验 3-1<!-- INTERNAL_ASSET_ID: EXP-03-01 --> | CPU smoke | 单点、常速度/常 yaw 解析模型 |
 | 本书结果 | 反馈降低固定二维控制误差 | 实验 3-1<!-- INTERNAL_ASSET_ID: EXP-03-01 --> | CPU smoke | 无动力学与接触 |
-| 开放教材 | `SE(3)`、运动学与操作系统框架 | Modern Robotics / MIT notes | `[O,R1]` | 本书未运行配套栈 |
+| 开放教材 | $SE(3)$、运动学与操作系统框架 | Modern Robotics / MIT notes | `[O,R1]` | 本书未运行配套栈 |
 | 官方规范 | ROS 单位和移动 frame 约定 | REP-103/105 | `[O,R1]` | 数据源可采用不同约定 |
 
 实验下载量 0、无需 GPU、无外部数据或硬件；代码和 fixture 按 MIT 发布，本书原创图按 CC BY-NC 4.0 发布。外部教材和规范保持各自许可，只提供链接，不复制其图表。
@@ -418,21 +418,21 @@ episode:
 <details markdown="1">
 <summary>自检 3-2：代码实验</summary>
 
-0.10 m 平移错误对所有点增加同一个目标-frame 位移向量；5° yaw 错误绕旋转中心转动点，误差方向随方位变化，大小近似随距离 `r` 增长为 `2r sin(2.5°)`。应冻结同一组三维点，分别注入平移和旋转，报告每点误差而不只报均值，并运行 `make ch03-test-local`。数值只描述固定点集，不能外推真实外参标定精度。
+0.10 m 平移错误对所有点增加同一个目标-frame 位移向量；5° yaw 错误绕旋转中心转动点，误差方向随方位变化，大小近似随距离 `r` 增长为 $2r\sin(2.5^\circ)$。应冻结同一组三维点，分别注入平移和旋转，报告每点误差而不只报均值，并运行 `make ch03-test-local`。数值只描述固定点集，不能外推真实外参标定精度。
 
 </details>
 
 <details markdown="1">
 <summary>自检 3-3：几何练习</summary>
 
-正确检查是 `p_camera ≈ T_camera_body @ (T_body_camera @ p_camera)`，同时验证 rotation 正交且 `det=+1`。若 optical→body 错用单位矩阵，而正反投影始终在 camera frame 内使用同一针孔模型，像素 round trip 仍可为 0；错误只在跨 frame 的单位轴语义中出现。合格答案必须解释为何“同一错误用于正反两程”会自洽，并加入 optical right/down/forward 的单位轴测试。
+正确检查是 $p_{\text{camera}}\approx T_{\text{camera_body}}@(T_{\text{body_camera}}@p_{\text{camera}})$，同时验证 rotation 正交且 `det=+1`。若 optical→body 错用单位矩阵，而正反投影始终在 camera frame 内使用同一针孔模型，像素 round trip 仍可为 0；错误只在跨 frame 的单位轴语义中出现。合格答案必须解释为何“同一错误用于正反两程”会自洽，并加入 optical right/down/forward 的单位轴测试。
 
 </details>
 
 <details markdown="1">
 <summary>自检 3-4：控制练习</summary>
 
-20 Hz 的 `Δt=0.05 s`，5 Hz 的 `Δt=0.2 s`。若动作字段表示每步位置增量，为保持同一每秒速度，单步增量应放大 4 倍、每秒步数降为四分之一；若字段本来就是 `m/s`，数值可不变但保持时长和积分必须改。还要复核控制增益、限幅、噪声/延迟的“按步还是按秒”定义，不能只改循环次数。
+20 Hz 的 $\Delta t=0.05\ \text{s}$，5 Hz 的 $\Delta t=0.2\ \text{s}$。若动作字段表示每步位置增量，为保持同一每秒速度，单步增量应放大 4 倍、每秒步数降为四分之一；若字段本来就是 `m/s`，数值可不变但保持时长和积分必须改。还要复核控制增益、限幅、噪声/延迟的“按步还是按秒”定义，不能只改循环次数。
 
 </details>
 
@@ -446,14 +446,14 @@ episode:
 <details markdown="1">
 <summary>自检 3-6：数量级练习</summary>
 
-平移误差为 `|v|·|Δt| = 15 m/s × 0.05 s = 0.75 m`。平面 yaw 误差还取决于角速度和点到旋转中心的距离：弦长为 `2r sin(|ωΔt|/2)`，同一 yaw 时间差对近点和远点的米制错位不同。只给角度而不给 `r` 不能唯一确定空间误差；一般 SE(3) 运动也不能把独立平移/转动例的标量误差直接相加。
+平移误差为 $|v|\cdot|\Delta t|=15\ \text{m/s}\times 0.05\ \text{s}=0.75\ \text{m}$。平面 yaw 误差还取决于角速度和点到旋转中心的距离：弦长为 $2r\sin(|\omega\Delta t|/2)$，同一 yaw 时间差对近点和远点的米制错位不同。只给角度而不给 `r` 不能唯一确定空间误差；一般 SE(3) 运动也不能把独立平移/转动例的标量误差直接相加。
 
 </details>
 
 <details markdown="1">
 <summary>自检 3-7：插值练习</summary>
 
-两个角度的坐标表示跨过 `±π` 分支切口；应先把角差 wrap 到 `(-π,π]`，再沿预登记最短弧插值，因此中点是 `±180°` 而不是 `0°`。查询时间早于最早样本、晚于最晚样本、样本时间重复/倒序或时间非有限时都应 fail closed。该规则仍需声明最大 bracket 宽度，且 planar yaw 不能替代一般三维旋转插值。
+两个角度的坐标表示跨过 $\pm\pi$ 分支切口；应先把角差 wrap 到 $(-\pi,\pi]$，再沿预登记最短弧插值，因此中点是 $\pm180^\circ$ 而不是 $0^\circ$。查询时间早于最早样本、晚于最晚样本、样本时间重复/倒序或时间非有限时都应 fail closed。该规则仍需声明最大 bracket 宽度，且 planar yaw 不能替代一般三维旋转插值。
 
 </details>
 

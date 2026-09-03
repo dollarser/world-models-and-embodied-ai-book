@@ -71,7 +71,7 @@ flowchart TB
 
 ## 14.2 Diffusion Policy：在动作空间反复去噪
 
-扩散策略把一段干净动作 `A^0` 逐步扰动为噪声动作，并训练网络在观测条件下预测噪声、干净样本或等价参数化。一种常见前向表达是：
+扩散策略把一段干净动作 $A^0$ 逐步扰动为噪声动作，并训练网络在观测条件下预测噪声、干净样本或等价参数化。一种常见前向表达是：
 
 \[
 A^k=\sqrt{\bar\alpha_k}A^0+\sqrt{1-\bar\alpha_k}\,\epsilon,
@@ -96,7 +96,7 @@ Diffusion Policy 的关键不是“把图像扩散代码的输出维度换成关
 
 ## 14.3 Flow Matching：学习把 base 分布搬到动作分布
 
-Flow Matching 学习条件向量场 `v_θ(A,t,o)`，使 base action 沿常微分方程流向数据动作：
+Flow Matching 学习条件向量场 $v_\theta(A,t,o)$，使 base action 沿常微分方程流向数据动作：
 
 \[
 \frac{dA_t}{dt}=v_\theta(A_t,t,o),\qquad A_0\sim p_0.
@@ -114,9 +114,9 @@ Diffusion 与 flow 不应按营销标签做速度结论。公平比较至少固�
 
 ## 14.4 从动作时域到采样预算
 
-第13章已经把动作策略的时域统一为预测时域 `K_pred`、执行时域 `K_exec`、重规划间隔和 temporal ensemble，本章不再另立一套定义。配置中的 `prediction_horizon` 对应 `K_pred`，`execution_horizon` 或 `n_action_steps` 对应 `K_exec`；`observation_horizon` 描述输入历史长度，不属于动作时域。生成式策略在这套物理时间合同之外，还多出一条独立的**计算轴**：一次动作查询要进行多少次去噪或 ODE 求解，并生成多少个候选。
+第13章已经把动作策略的时域统一为预测时域 $K_{\text{pred}}$、执行时域 $K_{\text{exec}}$、重规划间隔和 temporal ensemble，本章不再另立一套定义。配置中的 `prediction_horizon` 对应 $K_{\text{pred}}$，`execution_horizon` 或 `n_action_steps` 对应 $K_{\text{exec}}$；`observation_horizon` 描述输入历史长度，不属于动作时域。生成式策略在这套物理时间合同之外，还多出一条独立的**计算轴**：一次动作查询要进行多少次去噪或 ODE 求解，并生成多少个候选。
 
-因此，预测 32 个控制步不等于盲执行 32 步，也不等于进行 32 次去噪。系统可以生成长度为 `K_pred=32` 的 chunk，只执行 `K_exec=4` 步后便用新观测重规划；与此同时，每个 chunk 可能经过若干次求解器更新。缩短 `K_exec` 能更快吸收反馈，却会提高查询频率；增加求解步数可能改善离散化精度，却会侵占每次查询的实时预算。这两个取舍必须分别说明。
+因此，预测 32 个控制步不等于盲执行 32 步，也不等于进行 32 次去噪。系统可以生成长度为 $K_{\text{pred}}=32$ 的 chunk，只执行 $K_{\text{exec}}=4$ 步后便用新观测重规划；与此同时，每个 chunk 可能经过若干次求解器更新。缩短 $K_{\text{exec}}$ 能更快吸收反馈，却会提高查询频率；增加求解步数可能改善离散化精度，却会侵占每次查询的实时预算。这两个取舍必须分别说明。
 
 设求解器顺序步数为 `K`，同一观测下生成的候选数为 `N`，一次 forward 可容纳的候选数为 `B`。若每个求解步都按 batch 处理候选，抽象的顺序 forward 数为
 
@@ -126,9 +126,9 @@ F_{\mathrm{seq}}=K\left\lceil\frac{N}{B}\right\rceil,
 F_{\mathrm{sample}}=KN.
 \]
 
-前者更接近墙钟关键路径，后者表示总 sample-model evaluations；两者不能互相替代。若候选逐个串行，`B=1`，二者都退化为 `KN`。增大 batch 可能减少顺序调用，却会增加显存，并改变单次 forward 的延迟分布。
+前者更接近墙钟关键路径，后者表示总 sample-model evaluations；两者不能互相替代。若候选逐个串行，$B=1$，二者都退化为 `KN`。增大 batch 可能减少顺序调用，却会增加显存，并改变单次 forward 的延迟分布。
 
-实时约束还应覆盖完整动作查询，而不只是模型 kernel。把控制周期记为 `T_control`，感知同步、预处理、反归一化、安全检查和传输等非生成开销记为 `T_nonmodel`，目标 batch 下单次 forward 的高分位延迟记为 `t_fwd`，则下面的关系只能作为设计筛查：
+实时约束还应覆盖完整动作查询，而不只是模型 kernel。把控制周期记为 $T_{\text{control}}$，感知同步、预处理、反归一化、安全检查和传输等非生成开销记为 $T_{\text{nonmodel}}$，目标 batch 下单次 forward 的高分位延迟记为 $t_{\text{fwd}}$，则下面的关系只能作为设计筛查：
 
 \[
 K\left\lceil\frac{N}{B}\right\rceil t_{\mathrm{fwd}}
@@ -180,7 +180,7 @@ make ch14-smoke
 *表 14-1：实验 14-1 固定解析结果。后两类知道或使用手工模式方向，不是 learned diffusion/flow 性能。*<!-- INTERNAL_ASSET_ID: TAB-14-01 -->
 
 <!-- CLAIM_META: CLAIM-14-02 result -->
-实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> 中，MSE 均值为 0，样本均值也为 0，但相对 `±1` 两个有效模式的无效率为 100%。样本均值“平衡”没有证明动作有效。
+实验 14-1<!-- INTERNAL_ASSET_ID: EXP-14-01 --> 中，MSE 均值为 0，样本均值也为 0，但相对 $\pm1$ 两个有效模式的无效率为 100%。样本均值“平衡”没有证明动作有效。
 
 <!-- CLAIM_META: CLAIM-14-03 result -->
 手工 refinement 从 1 步增加到 4 步时，平均最近模式距离从 `0.275` 降到 `0.034375`，每样本模型求值从 1 增到 4。它只展示求值—精度接口，不代表 DDPM 的收敛率。
@@ -203,13 +203,13 @@ oracle straight flow 在一步后到达两个指定模式，因为目标配对�
 
 ### 14.5.1 best-of-N 的可靠性增益取决于候选相关性
 
-假设单个候选通过 model-valid 与 safety gate 的边际概率都是手写的 `q=0.2`。若 N 个候选条件独立，至少一个通过的概率为
+假设单个候选通过 model-valid 与 safety gate 的边际概率都是手写的 $q=0.2$。若 N 个候选条件独立，至少一个通过的概率为
 
 \[
 P(\text{any accepted})=1-(1-q)^N.
 \]
 
-但边际概率不决定联合分布：若所有候选完全相关——例如 sampler 的条件忽略让它们总是一起成功或一起失败——无论 N 多大，至少一个通过的概率仍是 `q`。实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 把 iid 与完全相关作为两个解析端点，同时按 `K=4`、batch capacity=10 记录抽象计算量：
+但边际概率不决定联合分布：若所有候选完全相关——例如 sampler 的条件忽略让它们总是一起成功或一起失败——无论 N 多大，至少一个通过的概率仍是 `q`。实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 把 iid 与完全相关作为两个解析端点，同时按 $K=4$、batch capacity=10 记录抽象计算量：
 
 | 候选 N | iid 至少一个通过 | 完全相关至少一个通过 | iid fallback | 完全相关 fallback | sample-model eval / 顺序 forward |
 | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -217,7 +217,7 @@ P(\text{any accepted})=1-(1-q)^N.
 | 4 | 59.04% | 20.00% | 40.96% | 80.00% | 16 / 4 |
 | 16 | 97.1852502329% | 20.00% | 2.8147497671% | 80.00% | 64 / 8 |
 
-*表 14-3：固定边际 `q=0.2` 下的候选依赖结构负对照。q、iid 和完全相关结构均为手写解析端点；forward 只是抽象 batch 计数，不是实测时延。*<!-- INTERNAL_ASSET_ID: TAB-14-03 -->
+*表 14-3：固定边际 $q=0.2$ 下的候选依赖结构负对照。q、iid 和完全相关结构均为手写解析端点；forward 只是抽象 batch 计数，不是实测时延。*<!-- INTERNAL_ASSET_ID: TAB-14-03 -->
 
 <!-- CLAIM_META: CLAIM-14-10 result -->
 实验 14-1 v4<!-- INTERNAL_ASSET_ID: EXP-14-01 v4 --> 中，单候选接受概率固定为0.2时，16个 iid 候选的至少一个接受概率为0.971852502329、fallback 概率为0.028147497671；16个完全相关候选对应数值仍为0.2和0.8。该反例只证明 best-of-N 可靠性计算需要候选联合依赖假设，不估计生成器多样性、真实接受率、在线 selector、碰撞风险或闭环成功率。
@@ -234,7 +234,7 @@ fixture 还把“接近演示模式”和“当前场景允许执行”分开。
 <!-- CLAIM_META: CLAIM-14-08 result -->
 fixture 中 10 个候选全部靠近数据模式，但独立门禁只接受 5 个；当两个模式有效候选都落入阻塞区时，系统不继续随机重采样，而是使用确定性 fallback。模式有效率不能替代场景安全接受率。
 
-fixture 还固定目标条件分布为 `P(-1)=P(+1)=0.5`，比较两组都完全模式有效的10个样本。对经验模式频率 `p_hat` 与已知目标频率 `p`，这里只计算描述性距离
+fixture 还固定目标条件分布为 $P(-1)=P(+1)=0.5$，比较两组都完全模式有效的10个样本。对经验模式频率 $\hat{p}$ 与已知目标频率 `p`，这里只计算描述性距离
 
 \[
 \operatorname{TV}(\hat p,p)=\frac{1}{2}\sum_m\left|\hat p(m)-p(m)\right|.
@@ -354,7 +354,7 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 <details markdown="1">
 <summary>自检 14-1：不对称双峰的均值</summary>
 
-若 `-2` 的权重为 p、`+1` 的权重为 `1-p`，条件均值为 `μ=1-3p`；等权时 μ=-0.5，距两个 mode 都是1.5，因此不是任一有效模式。若同时把 fixture 的 `VALID_MODES` 改为 `(-2,1)` 并保留 tolerance 0.25，均值有效当且仅当 `3 min(p,1-p)≤0.25`，即 `p≤1/12` 或 `p≥11/12`；严格只承认 mode 本身时则只有 p=0或1。必须同步更新 mode oracle，不能只改 demonstrations、仍用旧 `(-1,1)` 计算有效性。
+若 `-2` 的权重为 p、`+1` 的权重为 `1-p`，条件均值为 $\mu=1-3p$；等权时 μ=-0.5，距两个 mode 都是1.5，因此不是任一有效模式。若同时把 fixture 的 `VALID_MODES` 改为 `(-2,1)` 并保留 tolerance 0.25，均值有效当且仅当 $3\min(p,1-p)\le0.25$，即 $p\le1/12$ 或 $p\ge11/12$；严格只承认 mode 本身时则只有 p=0或1。必须同步更新 mode oracle，不能只改 demonstrations、仍用旧 `(-1,1)` 计算有效性。
 
 </details>
 
@@ -368,7 +368,7 @@ Diffusion 通过反复去噪采样，Flow Matching 通过向量场搬运 base �
 <details markdown="1">
 <summary>自检 14-3：Push-T 三策略公平对照</summary>
 
-至少冻结十项：①原始 demonstrations/许可与 train-selection-test seed；②观察模态、历史长度、图像预处理；③动作 frame、单位、频率、归一化；④预测时域 `K_pred`、执行时域 `K_exec` 与重规划规则；⑤backbone、conditioning 与参数预算；⑥训练更新数、batch、optimizer/schedule；⑦数据增广与采样权重；⑧候选数、solver steps、随机 seed 和选择规则；⑨硬件、precision、batching/runtime 与端到端时延测法；⑩闭环初态、任务 horizon、成功/失败分母和统计区间。MSE 头无需生成32候选也应在相同执行协议下比较，不能靠给某一方法额外 oracle 或计算预算取胜。
+至少冻结十项：①原始 demonstrations/许可与 train-selection-test seed；②观察模态、历史长度、图像预处理；③动作 frame、单位、频率、归一化；④预测时域 $K_{\text{pred}}$、执行时域 $K_{\text{exec}}$ 与重规划规则；⑤backbone、conditioning 与参数预算；⑥训练更新数、batch、optimizer/schedule；⑦数据增广与采样权重；⑧候选数、solver steps、随机 seed 和选择规则；⑨硬件、precision、batching/runtime 与端到端时延测法；⑩闭环初态、任务 horizon、成功/失败分母和统计区间。MSE 头无需生成32候选也应在相同执行协议下比较，不能靠给某一方法额外 oracle 或计算预算取胜。
 
 </details>
 

@@ -329,14 +329,14 @@ Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复�
 <details markdown="1">
 <summary>自检 10-2：纹理相关性的翻转区域</summary>
 
-可把平衡二分类任务写成 `y∈{-1,1}`，纹理符号以概率 `(1+ρ_s)/2` 与 y 一致，幅度为 `A_s>0`，分别冻结 `ρ_train,ρ_ID,ρ_shift`。无噪声 centroid probe 在 `ρ_train≠0` 时学习其符号，split s 的期望准确率为 `(1+sign(ρ_train)ρ_s)/2`：ID 与训练同号时高于 0.5，shift 反号时低于 0.5，`ρ_s=0` 为 chance；`A=0` 时表示坍塌。当前确定 fixture 相当于训练/ID 同号、shift 反号，因此 appearance 为 `1/1/0`，task-predictive 保持 `1/1/1`，collapsed 为 `0.5/0.5/0.5`。无噪声下正幅度只缩放距离，不改变分类；要研究幅度边界需显式加入噪声或正则化，不能凭图假造翻转。
+可把平衡二分类任务写成 $y\in\{-1,1\}$，纹理符号以概率 $(1+\rho_s)/2$ 与 y 一致，幅度为 $A_s>0$，分别冻结 $\rho_{\text{train}},\rho_{\text{ID}},\rho_{\text{shift}}$。无噪声 centroid probe 在 $\rho_{\text{train}}\ne0$ 时学习其符号，split s 的期望准确率为 $(1+\mathrm{sign}(\rho_{\text{train}})\rho_s)/2$：ID 与训练同号时高于 0.5，shift 反号时低于 0.5，$\rho_s=0$ 为 chance；$A=0$ 时表示坍塌。当前确定 fixture 相当于训练/ID 同号、shift 反号，因此 appearance 为 `1/1/0`，task-predictive 保持 `1/1/1`，collapsed 为 `0.5/0.5/0.5`。无噪声下正幅度只缩放距离，不改变分类；要研究幅度边界需显式加入噪声或正则化，不能凭图假造翻转。
 
 </details>
 
 <details markdown="1">
 <summary>自检 10-3：随机高维特征负对照</summary>
 
-生成与标签独立的 `d` 维高斯特征，并在 `d≥n`、训练样本很少时拟合低正则线性 probe；它可能插值训练标签而得到接近 100% train accuracy，但独立 group test 应回到约 50%。应同时画 train/validation/test 随 n、d 和正则变化的曲线，并加入 label permutation、多 seed 区间、嵌套选择集和固定 probe 容量。若用 test split 选维度或正则，负对照本身也会发生选择泄漏。
+生成与标签独立的 `d` 维高斯特征，并在 $d\ge n$、训练样本很少时拟合低正则线性 probe；它可能插值训练标签而得到接近 100% train accuracy，但独立 group test 应回到约 50%。应同时画 train/validation/test 随 n、d 和正则变化的曲线，并加入 label permutation、多 seed 区间、嵌套选择集和固定 probe 容量。若用 test split 选维度或正则，负对照本身也会发生选择泄漏。
 
 </details>
 
@@ -350,7 +350,7 @@ Probe 只证明“在冻结表示和指定协议下，某个读出器能恢复�
 <details markdown="1">
 <summary>自检 10-5：驾驶量、单位与 route split</summary>
 
-先以物理 route/scenario group 切 train、selection 和 test，同一路线的天气、相机版本、裁剪片段和派生 replay 不得跨组。相对纵向速度用 ego/body frame 的 `m/s`，明确正号表示目标远离还是接近；车道偏移用 map/lane frame 的有符号米，注明参考点和左/右正方向；TTC 用秒，只对 closing speed 为正且路径有冲突时定义，其他情况记为 censored/`+∞` 而非 0。按速度、遮挡、道路和 horizon 分桶报告 MAE/区间，单位和 frame 必须与标签时间戳一起冻结。
+先以物理 route/scenario group 切 train、selection 和 test，同一路线的天气、相机版本、裁剪片段和派生 replay 不得跨组。相对纵向速度用 ego/body frame 的 `m/s`，明确正号表示目标远离还是接近；车道偏移用 map/lane frame 的有符号米，注明参考点和左/右正方向；TTC 用秒，只对 closing speed 为正且路径有冲突时定义，其他情况记为 censored/$+\infty$ 而非 0。按速度、遮挡、道路和 horizon 分桶报告 MAE/区间，单位和 frame 必须与标签时间戳一起冻结。
 
 </details>
 

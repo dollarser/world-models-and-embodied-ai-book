@@ -23,7 +23,7 @@
 
 读者应能：
 
-1. 画出 `o_t → a_t → o_{t+1}` 的精确时间关系；
+1. 画出 $o_t\rightarrow a_t\rightarrow o_{t+1}$ 的精确时间关系；
 2. 按 episode、任务、场景、路线或主体做组级切分；
 3. 为一个数据集检查 schema、频率、缺帧、动作范围和终止状态；
 4. 选择随机、恒定、oracle 和任务基线，并说明各自排查什么问题；
@@ -31,13 +31,13 @@
 
 ## 4.1 训练样本不是孤立图片
 
-传统图像数据常写成 `(x_i,y_i)`。具身数据的基本单位更接近一段 trajectory：
+传统图像数据常写成 $(x_i,y_i)$。具身数据的基本单位更接近一段 trajectory：
 
 \[
 \tau=(o_0,a_0,r_0,d_0,o_1,a_1,r_1,d_1,\ldots,o_T)
 \]
 
-其中 `d_t` 表示终止或 continuation 相关信号。一次 episode 通常从重置开始，到成功、失败、超时、人工终止或数据截断结束。一条长日志也可能包含多个 episode；一个 episode 还可能跨多个视频或表格分片。
+其中 $d_t$ 表示终止或 continuation 相关信号。一次 episode 通常从重置开始，到成功、失败、超时、人工终止或数据截断结束。一条长日志也可能包含多个 episode；一个 episode 还可能跨多个视频或表格分片。
 
 如果先把所有帧打散再随机切分，相邻帧、同一场景背景甚至同一条轨迹的未来就可能同时出现在训练和测试中。模型看似泛化，实际可能只是在识别录制环境。
 
@@ -74,13 +74,13 @@ shape 相同并不表示语义相同。六维向量可能是关节位置、关�
 
 ## 4.3 时间对齐：动作到底影响哪一帧
 
-最常见的隐蔽错误是 off-by-one。假设传感器观测 `o_t` 到达后，策略计算动作 `a_t`，控制器经过延迟才执行，下一观测为 `o_{t+1}`。世界模型通常学习：
+最常见的隐蔽错误是 off-by-one。假设传感器观测 $o_t$ 到达后，策略计算动作 $a_t$，控制器经过延迟才执行，下一观测为 $o_{t+1}$。世界模型通常学习：
 
 \[
 p(o_{t+1},r_t,d_t\mid o_{\le t},a_t)
 \]
 
-但数据表的一行可能把 `o_t` 与“上一周期执行的动作”放在一起，也可能保存本周期下发但尚未生效的命令。如果不核对采集时序，模型会学到看似合理但方向错误的动力学。
+但数据表的一行可能把 $o_t$ 与“上一周期执行的动作”放在一起，也可能保存本周期下发但尚未生效的命令。如果不核对采集时序，模型会学到看似合理但方向错误的动力学。
 
 ```mermaid
 sequenceDiagram
@@ -109,7 +109,7 @@ sequenceDiagram
 7. 缺帧是丢弃、插值、重复上一帧还是显式 mask。
 
 <!-- CLAIM_META: CLAIM-04-02 fact -->
-不先定义动作和观测的时间关系，就无法解释转移模型预测的是 `a_t` 之前还是之后的环境；shape 检查不能发现这一语义错误。
+不先定义动作和观测的时间关系，就无法解释转移模型预测的是 $a_t$ 之前还是之后的环境；shape 检查不能发现这一语义错误。
 
 多传感器数据还要把“是否有样本”和“样本是什么时间”拆开。每个必需模态至少保存来源时间戳、clock domain、有效位和同步策略；本书 fixture 规定缺失样本写成 `valid=false, timestamp=null`，整个字段消失则视为合同错误。若采用近似同步，必须冻结最大允许 skew 并报告实际分布。[ROS 2 `ApproximateTimeSynchronizer`](https://docs.ros.org/en/ros2_packages/rolling/api/message_filters/message_filters.html)同样用消息 header timestamp 和秒级 `slop` 容差配对；容差内配对只说明协议接受，不证明硬件同时曝光，更不能替代时钟偏移、漂移、rolling shutter 或运动补偿审计。
 
@@ -123,7 +123,7 @@ sequenceDiagram
 具身数据还要注意：
 
 - 关节、末端和车辆变量的单位不同，不应共用一个全局标准差；
-- 角度需要处理周期性，`-π` 与 `π` 在物理上接近；
+- 角度需要处理周期性，$-\pi$ 与 $\pi$ 在物理上接近；
 - 四元数有符号等价和归一化约束；
 - 动作 clipping 需要记录原始越界率，不能静默修正；
 - 图像增强应对同一时间窗口保持几何一致，除非实验专门测试不一致增强；
@@ -141,7 +141,7 @@ sequenceDiagram
 | --- | --- | --- | --- |
 | sample count | 3 | 3 | 一致 |
 | mean | `[1,2]` | `[1,2]` | 最大逐维差 0 |
-| population scale | `[sqrt(2/3),sqrt(2/3)]` | 同左 | 最大逐维差 0 |
+| population scale | $[\sqrt{2/3},\sqrt{2/3}]$ | 同左 | 最大逐维差 0 |
 | source split | train | train | 无非 train source |
 
 *表 4-1：微型 normalization provenance 合同。三行 state 是作者构造值，不代表真实数据分布。*<!-- INTERNAL_ASSET_ID: TAB-04-01 -->
@@ -149,7 +149,7 @@ sequenceDiagram
 错误 fixture 仍写 `normalization_scope=train`，但 artifact 同时登记一个 eval episode，且 mean/scale 与这些 source 不一致，因此分别触发 `normalization_source_split` 和 `normalization_stat_mismatch`。这两个原因码不能合并：来源违规与数值损坏需要不同修复路径。
 
 <!-- CLAIM_META: CLAIM-04-10 result -->
-实验 4-1 v5<!-- INTERNAL_ASSET_ID: EXP-04-01 v5 --> 从已绑定的三行 train state 精确重算 count=3、mean=`[1,2]` 与 population scale=`[sqrt(2/3),sqrt(2/3)]`，最大 mean/scale gap 均为 0；错误 fixture 即使保留 `train` 标签，仍因 eval source 和不一致统计被拒绝。该结果只证明作者构造 metadata 的 provenance/recompute 合同，不验证真实数据统计、padding/mask、权重、周期变量、checkpoint compatibility 或泛化性能。
+实验 4-1 v5<!-- INTERNAL_ASSET_ID: EXP-04-01 v5 --> 从已绑定的三行 train state 精确重算 count=3、mean=`[1,2]` 与 population scale=$[\sqrt{2/3},\sqrt{2/3}]$，最大 mean/scale gap 均为 0；错误 fixture 即使保留 `train` 标签，仍因 eval source 和不一致统计被拒绝。该结果只证明作者构造 metadata 的 provenance/recompute 合同，不验证真实数据统计、padding/mask、权重、周期变量、checkpoint compatibility 或泛化性能。
 
 ## 4.5 切分：按照会导致记忆的共同因素分组
 
@@ -282,7 +282,7 @@ S 档实验将使用一个可随书分发的微型 metadata fixture，检查：
 1. feature 名称、dtype、shape、单位和范围；
 2. episode/frame ID 唯一性与边界；
 3. timestamp 单调性、声明 fps、多传感器 skew 和显式缺帧 mask；
-4. `o_t`、`a_t`、`o_{t+1}` 的对齐；
+4. $o_t$、$a_t$、$o_{t+1}$ 的对齐；
 5. 动作越界、NaN、自然终止/外部截断和终止后帧；
 6. group、原始来源、精确内容指纹与预先登记的近重复簇交集；
 7. 训练统计是否误用了 eval 数据。
@@ -385,7 +385,7 @@ M 档选做路径可以审计一个锁定版本的真实数据集，但必须在
 <details markdown="1">
 <summary>自检 4-2：时间审计</summary>
 
-协议一：若动作戳是实际开始执行时刻且 80 ms 是已标定固定感知到执行延迟，可把 `o(t)` 与 `a(t+0.08)` 配成因果样本，并用随后状态验证作用区间。协议二：若动作戳来自独立 logger 的固定 clock offset，可先校正时钟，再按 10 Hz 的保持区间 `[t,t+0.1)` 配对，而不是直接最近邻。两者都必须声明 timestamp 语义、clock、保持方式和容差；不知道 80 ms 来源时不能任选一种当真值。
+协议一：若动作戳是实际开始执行时刻且 80 ms 是已标定固定感知到执行延迟，可把 `o(t)` 与 $a(t+0.08)$ 配成因果样本，并用随后状态验证作用区间。协议二：若动作戳来自独立 logger 的固定 clock offset，可先校正时钟，再按 10 Hz 的保持区间 $[t,t+0.1)$ 配对，而不是直接最近邻。两者都必须声明 timestamp 语义、clock、保持方式和容差；不知道 80 ms 来源时不能任选一种当真值。
 
 </details>
 

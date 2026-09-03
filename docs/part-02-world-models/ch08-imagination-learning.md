@@ -85,7 +85,7 @@ reward head 给出 \hat r_\tau，continuation head 估计轨迹是否仍应继�
 d_\tau=\gamma\hat c_\tau,
 \]
 
-其中 \hat c_\tau 可表示 predicted continuation。真实 replay transition 还需要把两个职责分开：`d_t` 决定是否从当前行的下一状态 value bootstrap，`m_t` 决定 λ 递推是否可以读取数组中的下一行。自然终止通常令 `d_t=0,m_t=0`；外部截断且最终观测有效时令 `d_t=γ,m_t=0`；同一 episode 内的普通 transition 才是 `d_t=γ,m_t=1`。将 timeout 错当 terminal 会截断有效 bootstrap；只保留 discount 却忘记 trace 边界，又会把下一 episode 的 reward 接回来。
+其中 \hat c_\tau 可表示 predicted continuation。真实 replay transition 还需要把两个职责分开：$d_t$ 决定是否从当前行的下一状态 value bootstrap，$m_t$ 决定 λ 递推是否可以读取数组中的下一行。自然终止通常令 $d_t=0,\,m_t=0$；外部截断且最终观测有效时令 $d_t=\gamma,\,m_t=0$；同一 episode 内的普通 transition 才是 $d_t=\gamma,\,m_t=1$。将 timeout 错当 terminal 会截断有效 bootstrap；只保留 discount 却忘记 trace 边界，又会把下一 episode 的 reward 接回来。
 
 Imagined horizon 不是越长越好。它越长，越能看见延迟回报，也越会累积 dynamics、reward、continuation 与 actor-induced OOD 误差。第7章的 planning horizon 与这里的 imagination horizon 面临相同误差—远见权衡，但用途不同：前者在线选择动作，后者生成学习 target。
 
@@ -111,7 +111,7 @@ imagination 通常不是从任意潜状态开始，而是从 replay 序列经过
 G_t^\lambda=\hat r_t+d_t\left[(1-\lambda m_t)V(s_{t+1})+\lambda m_t G_{t+1}^\lambda\right].
 \]
 
-在未中断的 imagined rollout 内 `m_t=1`，即退化为常见 λ-return；在截断边界 `m_t=0`，仍可由非零 `d_t` 保留 `V(s_{t+1})`，但不会读取下一行的 `G_{t+1}`。若实现保证每个 batch slice 恰好止于边界，末端 bootstrap 与显式 `m_t=0` 数值等价；一旦数组可能拼接多个 episode，独立 trace mask 就是防止跨段污染的机器合同。
+在未中断的 imagined rollout 内 $m_t=1$，即退化为常见 λ-return；在截断边界 $m_t=0$，仍可由非零 $d_t$ 保留 $V(s_{t+1})$，但不会读取下一行的 $G_{t+1}$。若实现保证每个 batch slice 恰好止于边界，末端 bootstrap 与显式 $m_t=0$ 数值等价；一旦数组可能拼接多个 episode，独立 trace mask 就是防止跨段污染的机器合同。
 
 - λ=0 时每步只看一步 reward 加 critic bootstrap，通常方差较低但更依赖 critic；
 - λ=1 时把后续 imagined reward 全部向前传播，更少依赖中间 value，却更暴露于长 rollout 的 model error；
@@ -195,7 +195,7 @@ make ch08-smoke
 *表 8-3：截断 bootstrap 与 λ-trace 边界的双信号反例。来源：实验 8-1 v4，本书原创，CC BY-NC 4.0，2026-09-02。第二行的100是手工放大的新 episode reward。*<!-- INTERNAL_ASSET_ID: TAB-08-03 -->
 
 <!-- CLAIM_META: CLAIM-08-09 result -->
-实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 的两行跨 episode 反例中，正确的 `d₀=1,m₀=0` 得到第一行 target 5；若保留 bootstrap discount 却遗漏 trace 边界，target 变为101，产生96的跨 episode 泄漏。该结果只验证数组边界与递推接口，不估计真实 replay 污染率、critic bias、训练稳定性或策略性能。
+实验 8-1 v4<!-- INTERNAL_ASSET_ID: EXP-08-01 v4 --> 的两行跨 episode 反例中，正确的 $d_0=1,\,m_0=0$ 得到第一行 target 5；若保留 bootstrap discount 却遗漏 trace 边界，target 变为101，产生96的跨 episode 泄漏。该结果只验证数组边界与递推接口，不估计真实 replay 污染率、critic bias、训练稳定性或策略性能。
 
 ### 8.5.1 Target 正确不等于 loss 权重正确
 
@@ -357,14 +357,14 @@ critic 用 learned reward、continuation 与 bootstrap 估计 imagined state 的
 <details markdown="1">
 <summary>自检 8-5：累计 loss weight</summary>
 
-按 `w0=1,w_t=∏_{i<t}d_i`，discount `[0.9,0.9,0]` 对三个 step 的权重是 `[1,0.9,0.81]`；最后一个 0 只会关闭下一步，不能反向把终止 transition 自身权重清零。只检查 λ-return target 会漏掉另一条路径：即使 target 已正确 mask，终止后的伪 latent 仍可能以错误的非零 survival weight进入 actor/critic loss。应分别测试 target recursion 和 loss contribution，含一个终止后超大伪 loss 的负对照。
+按 $w_0=1,\,w_t=\prod_{i<t}d_i$，discount `[0.9,0.9,0]` 对三个 step 的权重是 `[1,0.9,0.81]`；最后一个 0 只会关闭下一步，不能反向把终止 transition 自身权重清零。只检查 λ-return target 会漏掉另一条路径：即使 target 已正确 mask，终止后的伪 latent 仍可能以错误的非零 survival weight进入 actor/critic loss。应分别测试 target recursion 和 loss contribution，含一个终止后超大伪 loss 的负对照。
 
 </details>
 
 <details markdown="1">
 <summary>自检 8-6：bootstrap 与 λ-trace 是两个问题</summary>
 
-例如三行 reward 为 `[0,1,100]`，第二行是外部截断且其有效 final observation 的 value 为4，第三行来自新 episode。可令 bootstrap discounts 为 `[1,1,0]`，因为第二行需要 `1+V(final)=5`；trace masks 应为 `[1,0,0]`，因为第二行之后不得读取第三行 return。λ=1 时正确 targets 的前两项为 `[5,5]`；若错误使用全1 trace，第二行会变成101，第一行也变成101，两个当前 episode target 都被新 episode 的100污染。若第二行是自然终止，则其 discount 应为0；若 final observation 无效，则不能用“设成0”伪造合法 target。生产实现还必须确认 replay sampler 是否已经在边界切片；切片保证与 mask 仍应至少有一个可测试合同。
+例如三行 reward 为 `[0,1,100]`，第二行是外部截断且其有效 final observation 的 value 为4，第三行来自新 episode。可令 bootstrap discounts 为 `[1,1,0]`，因为第二行需要 $1+V(\text{final})=5$；trace masks 应为 `[1,0,0]`，因为第二行之后不得读取第三行 return。λ=1 时正确 targets 的前两项为 `[5,5]`；若错误使用全1 trace，第二行会变成101，第一行也变成101，两个当前 episode target 都被新 episode 的100污染。若第二行是自然终止，则其 discount 应为0；若 final observation 无效，则不能用“设成0”伪造合法 target。生产实现还必须确认 replay sampler 是否已经在边界切片；切片保证与 mask 仍应至少有一个可测试合同。
 
 </details>
 

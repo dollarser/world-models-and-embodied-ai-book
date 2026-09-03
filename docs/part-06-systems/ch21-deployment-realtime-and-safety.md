@@ -37,7 +37,7 @@
 L_{e2e}=L_{sensor}+L_{transport}+L_{pre}+L_{infer}+L_{post}+L_{queue}+L_{actuator}.
 \]
 
-只测 `L_infer` 会漏掉图像解码、网络、排队、后处理和执行器。更重要的是，实时系统关心 deadline 是否被满足；一次 150 ms 卡顿不会因为其余五次很快而消失。
+只测 $L_{\text{infer}}$ 会漏掉图像解码、网络、排队、后处理和执行器。更重要的是，实时系统关心 deadline 是否被满足；一次 150 ms 卡顿不会因为其余五次很快而消失。
 
 <!-- CLAIM_META: CLAIM-21-01 recommendation -->
 吞吐、单次推理延迟和端到端控制 deadline 应作为不同指标报告；部署记录至少应包含测量边界、warm-up、并发、批量、输入尺寸、硬件、频率、尾分位和 deadline miss。
@@ -84,11 +84,11 @@ flowchart TB
 flowchart TB
     accTitle: FIG-21-02 图 21-2 一次控制周期中的信息年龄与截止时间
     accDescr: 观测在采样时刻产生，经过传输、预处理和推理后到达网关；按时且新鲜的动作进入目标执行槽，迟到或过期的动作被拒绝并触发降级，不能因计算已经完成而补执行。
-    O[观测采样 t_obs<br/>信息年龄从此开始] --> P[传输与预处理<br/>L_transport + L_pre]
-    P --> I[推理与后处理<br/>L_infer + L_post]
-    I --> G{网关在 t_gate 裁决<br/>身份/age/deadline/边界}
+    O["观测采样 $$t_{\text{obs}}$$<br/>信息年龄从此开始"] --> P["传输与预处理<br/>$$L_{\text{transport}} + L_{\text{pre}}$$"]
+    P --> I["推理与后处理<br/>$$L_{\text{infer}} + L_{\text{post}}$$"]
+    I --> G{"网关在 $$t_{\text{gate}}$$ 裁决<br/>身份/age/deadline/边界"}
     G -->|按时且新鲜| S[绑定目标 start step<br/>进入有效执行槽]
-    S --> A[执行器生效 t_act<br/>记录 ack 与实际动作]
+    S --> A["执行器生效 $$t_{\text{act}}$$<br/>记录 ack 与实际动作"]
     G -->|迟到、过期或非法| R[拒绝该动作<br/>不得补执行]
     R --> F[触发具名 fallback<br/>记录原因与连续次数]
     D[deadline<br/>超过后结果失去授权] -.-> G
@@ -96,7 +96,7 @@ flowchart TB
 
 *图 21-2：控制周期的时间语义。来源：本书原创，CC BY-NC 4.0，2026-09-02。deadline 约束的是动作是否仍被授权，不只是计算是否结束。*<!-- INTERNAL_ASSET_ID: FIG-21-02 -->
 
-这张图强调一个容易遗漏的事实：计算完成不是执行授权。动作若在目标执行槽之后才到达，即使数值本身合理，也不能“补发”到下一个槽；否则一次 deadline miss 会转化为时序错位。系统应保存 `t_obs`、`t_gate`、目标 start step、实际 `t_act` 和 ack，才能区分模型慢、队列旧、传输迟到与执行器未响应。
+这张图强调一个容易遗漏的事实：计算完成不是执行授权。动作若在目标执行槽之后才到达，即使数值本身合理，也不能“补发”到下一个槽；否则一次 deadline miss 会转化为时序错位。系统应保存 $t_{\text{obs}}$、$t_{\text{gate}}$、目标 start step、实际 $t_{\text{act}}$ 和 ack，才能区分模型慢、队列旧、传输迟到与执行器未响应。
 
 每个动作 packet 至少携带：输入时间戳、生成时间、适用起始步、有效截止步、控制频率、单位/frame、归一化版本、动作范围、模型/checkpoint 和 trace ID。若系统依赖 uncertainty/OOD gate，还要携带分数、方向、估计器版本和校准协议版本。网关不需要理解语言，却必须拒绝旧观测、超时、NaN/Inf、越界、过期 chunk、非法不确定性字段和版本不兼容。静态范围只回答“当前端点是否合法”；加速度、jerk、转向角速度或关节速度等跨步约束还依赖前一条**已确认执行**命令和控制周期。不能把“上一条生成值”冒充“上一条实际执行值”，也不能在丢 ack、重启或步号不连续时沿用旧历史。
 
@@ -189,7 +189,7 @@ fixture 的 mean 为 45 ms，看似通过 50 ms deadline，但 p95/max 为 150 m
 |a_{t,j}-a^{\mathrm{applied}}_{t-1,j}| \le \Delta_{max,j},\quad \forall j.
 \]
 
-这里的 `a_applied` 必须来自绑定到紧邻步号的执行确认，而不是策略刚生成但可能被网关拒绝、队列丢弃或执行器未执行的向量。`Δ_max,j` 也必须逐字段带单位，不能把 `m/s` 与 `rad/s` 取一个无量纲最大值。实验 21-1 v11<!-- INTERNAL_ASSET_ID: EXP-21-01 v11 --> 与第15章共同导入 `labs/shared/action_schema.py` 中唯一的 `mobile-base-v1`：`base_link`、10 Hz、`control_monotonic_ms`，线速度范围 `[-0.5,0.5] m/s`、角速度范围 `[-1,1] rad/s`，两个字段的教学单步变化上限分别为 `0.25 m/s/step` 与 `0.25 rad/s/step`。
+这里的 $a_{\text{applied}}$ 必须来自绑定到紧邻步号的执行确认，而不是策略刚生成但可能被网关拒绝、队列丢弃或执行器未执行的向量。$\Delta_{\max,j}$ 也必须逐字段带单位，不能把 `m/s` 与 `rad/s` 取一个无量纲最大值。实验 21-1 v11<!-- INTERNAL_ASSET_ID: EXP-21-01 v11 --> 与第15章共同导入 `labs/shared/action_schema.py` 中唯一的 `mobile-base-v1`：`base_link`、10 Hz、`control_monotonic_ms`，线速度范围 `[-0.5,0.5] m/s`、角速度范围 `[-1,1] rad/s`，两个字段的教学单步变化上限分别为 `0.25 m/s/step` 与 `0.25 rad/s/step`。
 
 固定负对照的前序手工“已执行”动作为 `(0 m/s,0 rad/s)`；当前 `(0.2,-0.1)` 的逐字段变化为 `(0.2,0.1)`，通过；当前 `(0.4,-0.1)` 的两个端点也在各自物理范围内，但线速度变化为 `0.4 m/s/step`，以 `action_delta_exceeded:linear_velocity` 拒绝。开启跃迁门却不提供前序记录时，另以 `missing_previous_applied_action` 失败关闭。
 
@@ -264,14 +264,14 @@ K=(\text{command\_session\_id},\ \text{executor\_boot\_id},\ \text{command\_id})
 
 ### 21.4.3 不要只发布一个拒绝阈值
 
-令 `u_i` 是“越大越不确定”的冻结分数，阈值 `τ` 下接受 `u_i≤τ` 的样本。选择性执行的 coverage 与接受样本风险为：
+令 $u_i$ 是“越大越不确定”的冻结分数，阈值 $\tau$ 下接受 $u_i\le\tau$ 的样本。选择性执行的 coverage 与接受样本风险为：
 
 \[
 C(\tau)=\frac{1}{N}\sum_i \mathbb{1}[u_i\le\tau],\qquad
 R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}.
 \]
 
-分母为零时 `R(τ)` 未定义，不能写成“零风险”。实验 21-1<!-- INTERNAL_ASSET_ID: EXP-21-01 --> 用六个手工 `(score, failure)` 对展示两个工作点：
+分母为零时 $R(\tau)$ 未定义，不能写成“零风险”。实验 21-1<!-- INTERNAL_ASSET_ID: EXP-21-01 --> 用六个手工 `(score, failure)` 对展示两个工作点：
 
 | 阈值 | coverage | 接受样本 failure rate | 拒绝捕获的 failure 比例 |
 | ---: | ---: | ---: | ---: |
@@ -301,7 +301,7 @@ R(\tau)=\frac{\sum_i \ell_i\mathbb{1}[u_i\le\tau]}{\sum_i\mathbb{1}[u_i\le\tau]}
 
 *表 21-7：固定事件计数下的严重度负对照。`1/10` 是作者指定的无外部标定的敏感性分析代理权重，不是概率、伤害等级、货币损失或经验证的现实风险。*<!-- INTERNAL_ASSET_ID: TAB-21-07 -->
 
-若 `w_i` 是预先登记且有来源的后果量，可以同时报告接受失败后果 `\sum_{i\in A}w_i\ell_i` 和按后果权重的拒绝召回 `\sum_{i\notin A}w_i\ell_i/\sum_iw_i\ell_i`。但当权重只是无外部标定的任意代理量时，不能把它汇总成“预计伤亡”或跨场景比较的单一风险值；应保留原始 failure type、场景/道路使用者/速度分桶、计数与权重来源。若高严重度分桶没有足够暴露、标签不可靠，或 fallback 后果未闭环验证，应停止部署外推并回到仿真、封闭场地或人工审查，而不是用总体 failure rate 放行。
+若 $w_i$ 是预先登记且有来源的后果量，可以同时报告接受失败后果 $\sum_{i\in A}w_i\ell_i$ 和按后果权重的拒绝召回 $\sum_{i\notin A}w_i\ell_i/\sum_i w_i\ell_i$。但当权重只是无外部标定的任意代理量时，不能把它汇总成“预计伤亡”或跨场景比较的单一风险值；应保留原始 failure type、场景/道路使用者/速度分桶、计数与权重来源。若高严重度分桶没有足够暴露、标签不可靠，或 fallback 后果未闭环验证，应停止部署外推并回到仿真、封闭场地或人工审查，而不是用总体 failure rate 放行。
 
 <!-- CLAIM_META: CLAIM-21-14 result -->
 实验 21-1 v11<!-- INTERNAL_ASSET_ID: EXP-21-01 v11 --> 的两个严重度负对照具有相同 `0.666667` coverage、`0.25` 接受失败率和 `0.5` 按个数拒绝召回，但接受失败 authored weight 分别为 `1` 与 `10`，按权重拒绝召回分别为 `0.909091` 与 `0.090909`。它只证明聚合计数可能隐藏手工后果差异，不估计真实事故概率、伤害、成本、门禁性能或安全性。
